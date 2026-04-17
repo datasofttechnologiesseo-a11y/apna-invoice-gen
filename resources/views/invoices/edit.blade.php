@@ -83,12 +83,17 @@
                         </div>
 
                         <div>
-                            <x-input-label value="Tax mode" />
+                            <x-input-label value="Tax mode (auto)" />
                             <div class="mt-2 text-sm">
                                 <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
                                 <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
                                 <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
                             </div>
+                            <label class="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="reverse_charge" value="1" @checked(old('reverse_charge', $invoice->reverse_charge ?? false)) class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                <span>Reverse charge applicable</span>
+                                <span class="text-xs text-gray-400" title="Tax paid by recipient under Section 9(3)/(4) of CGST Act">(?)</span>
+                            </label>
                         </div>
                     </div>
                 </div>

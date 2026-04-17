@@ -27,6 +27,14 @@ class DashboardController extends Controller
 
         $recent = (clone $invoices)->with('customer')->latest('id')->take(10)->get();
 
-        return view('dashboard', compact('stats', 'recent', 'currency'));
+        $setup = [
+            'business' => $company->isBusinessComplete(),
+            'customer' => $user->customers()->exists(),
+            'first_invoice' => (clone $invoices)->exists(),
+        ];
+        $setupComplete = ! in_array(false, $setup, true);
+        $setupProgress = round((array_sum($setup) / count($setup)) * 100);
+
+        return view('dashboard', compact('stats', 'recent', 'currency', 'company', 'setup', 'setupComplete', 'setupProgress'));
     }
 }

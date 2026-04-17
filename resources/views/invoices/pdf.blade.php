@@ -70,7 +70,8 @@
                     <strong>Invoice #:</strong> {{ str_starts_with($invoice->invoice_number, 'DRAFT-') ? 'DRAFT' : $invoice->invoice_number }}<br>
                     <strong>Date:</strong> {{ $invoice->invoice_date?->format('d M Y') }}<br>
                     @if ($invoice->due_date)<strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}<br>@endif
-                    <strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '—' }}
+                    <strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '—' }}<br>
+                    <strong>Reverse charge:</strong> {{ $invoice->reverse_charge ? 'Yes' : 'No' }}
                 </div>
             </td>
         </tr>
@@ -167,10 +168,43 @@
         </tr>
     </table>
 
+    @if ($c->bank_name || $c->bank_account_number || $c->upi_id)
+        <div class="mt20" style="padding: 10px; background: #f9fafb; border-radius: 4px;">
+            <div class="bold muted small" style="text-transform: uppercase;">Bank details for payment</div>
+            <table style="width: 100%; margin-top: 4px; font-size: 10px;">
+                <tr>
+                    @if ($c->bank_name)
+                        <td style="padding-right: 12px;"><strong>Bank:</strong> {{ $c->bank_name }}</td>
+                    @endif
+                    @if ($c->bank_branch)
+                        <td style="padding-right: 12px;"><strong>Branch:</strong> {{ $c->bank_branch }}</td>
+                    @endif
+                    @if ($c->bank_account_number)
+                        <td style="padding-right: 12px;"><strong>A/c:</strong> <span class="mono">{{ $c->bank_account_number }}</span></td>
+                    @endif
+                </tr>
+                <tr>
+                    @if ($c->bank_ifsc)
+                        <td style="padding-right: 12px;"><strong>IFSC:</strong> <span class="mono">{{ $c->bank_ifsc }}</span></td>
+                    @endif
+                    @if ($c->upi_id)
+                        <td colspan="2"><strong>UPI:</strong> <span class="mono">{{ $c->upi_id }}</span></td>
+                    @endif
+                </tr>
+            </table>
+        </div>
+    @endif
+
     @if ($invoice->terms)
         <div class="terms">
             <div class="bold muted" style="text-transform: uppercase;">Terms &amp; Conditions</div>
             <div style="white-space: pre-line;">{{ $invoice->terms }}</div>
+        </div>
+    @endif
+
+    @if ($c->declaration)
+        <div class="small mt20" style="padding-top: 8px; border-top: 1px solid #d1d5db; font-style: italic; color: #4b5563;">
+            <strong>Declaration:</strong> {{ $c->declaration }}
         </div>
     @endif
 

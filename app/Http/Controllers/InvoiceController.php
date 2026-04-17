@@ -34,7 +34,7 @@ class InvoiceController extends Controller
         return view('invoices.index', compact('invoices'));
     }
 
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         $user = $request->user();
         $company = $user->ensureCompany();
@@ -89,6 +89,7 @@ class InvoiceController extends Controller
                 'due_date' => $data['due_date'] ?? null,
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
+                'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
                 'currency' => $data['currency'],
                 'exchange_rate' => $data['exchange_rate'] ?? 1,
                 'status' => 'draft',
@@ -156,6 +157,7 @@ class InvoiceController extends Controller
                 'due_date' => $data['due_date'] ?? null,
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
+                'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
                 'currency' => $data['currency'],
                 'exchange_rate' => $data['exchange_rate'] ?? 1,
                 'notes' => $data['notes'] ?? null,
@@ -271,6 +273,7 @@ class InvoiceController extends Controller
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['required', 'string', 'size:3'],
             'exchange_rate' => ['nullable', 'numeric', 'min:0'],
+            'reverse_charge' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],

@@ -138,11 +138,46 @@
 
                     <div>
                         <x-input-label for="default_terms" value="Default terms & conditions (shown at bottom of invoices)" />
-                        <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">{{ old('default_terms', $company->default_terms) }}</textarea>
+                        <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" placeholder="1. Payment due within 30 days.&#10;2. Late payment attracts 2% monthly interest.">{{ old('default_terms', $company->default_terms) }}</textarea>
                     </div>
 
-                    <div class="flex items-center gap-4">
-                        <x-primary-button>{{ __('Save') }}</x-primary-button>
+                    <div>
+                        <x-input-label for="declaration" value="Declaration (appears on every invoice PDF)" />
+                        <textarea id="declaration" name="declaration" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" placeholder="We declare that this invoice shows the actual price of the goods/services described and that all particulars are true and correct.">{{ old('declaration', $company->declaration) }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">Standard legal declaration required by CBIC for tax invoices.</p>
+                    </div>
+
+                    <div class="border-t pt-6">
+                        <h3 class="font-display font-bold text-gray-900 text-lg">Bank / payment details</h3>
+                        <p class="text-sm text-gray-500 mt-0.5">Shown on invoice PDF so customers know how to pay</p>
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <x-input-label for="bank_name" value="Bank name" />
+                                <x-text-input id="bank_name" name="bank_name" type="text" class="mt-1 block w-full" :value="old('bank_name', $company->bank_name)" placeholder="HDFC Bank" />
+                            </div>
+                            <div>
+                                <x-input-label for="bank_branch" value="Branch" />
+                                <x-text-input id="bank_branch" name="bank_branch" type="text" class="mt-1 block w-full" :value="old('bank_branch', $company->bank_branch)" placeholder="Powai" />
+                            </div>
+                            <div>
+                                <x-input-label for="bank_account_number" value="Account number" />
+                                <x-text-input id="bank_account_number" name="bank_account_number" type="text" class="mt-1 block w-full font-mono" :value="old('bank_account_number', $company->bank_account_number)" />
+                            </div>
+                            <div>
+                                <x-input-label for="bank_ifsc" value="IFSC code" />
+                                <x-text-input id="bank_ifsc" name="bank_ifsc" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('bank_ifsc', $company->bank_ifsc)" maxlength="11" placeholder="HDFC0001234" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <x-input-label for="upi_id" value="UPI ID (optional)" />
+                                <x-text-input id="upi_id" name="upi_id" type="text" class="mt-1 block w-full font-mono" :value="old('upi_id', $company->upi_id)" placeholder="yourname@okhdfcbank" />
+                                <p class="mt-1 text-xs text-gray-500">Customers can scan-and-pay from the invoice PDF.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-6 flex items-center gap-4">
+                        <x-primary-button>{{ __('Save profile') }}</x-primary-button>
+                        <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:text-gray-700">Back to dashboard</a>
                     </div>
                 </form>
             </div>

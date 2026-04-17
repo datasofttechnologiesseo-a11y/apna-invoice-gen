@@ -39,6 +39,12 @@ class CompanyController extends Controller
             'signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:1024'],
             'default_currency' => ['required', 'string', 'size:3'],
             'default_terms' => ['nullable', 'string'],
+            'declaration' => ['nullable', 'string'],
+            'bank_name' => ['nullable', 'string', 'max:120'],
+            'bank_account_number' => ['nullable', 'string', 'max:30'],
+            'bank_ifsc' => ['nullable', 'string', 'max:15'],
+            'bank_branch' => ['nullable', 'string', 'max:120'],
+            'upi_id' => ['nullable', 'string', 'max:60'],
             'invoice_prefix' => ['required', 'string', 'max:10'],
             'invoice_number_padding' => ['required', 'integer', 'min:1', 'max:8'],
         ]);

@@ -28,7 +28,19 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+        $company = $user->ensureCompany();
+        $intended = $request->session()->pull('url.intended');
+
+        if ($intended) {
+            return redirect($intended);
+        }
+
+        if (! $company->isOnboarded() && ! $company->isBusinessComplete()) {
+            return redirect()->route('onboarding.index');
+        }
+
+        return redirect()->route('dashboard');
     }
 
     /**

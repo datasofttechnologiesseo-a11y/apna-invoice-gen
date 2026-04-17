@@ -25,6 +25,56 @@
                 </div>
             @endif
 
+            @unless ($setupComplete)
+                <div class="bg-white rounded-2xl shadow-card ring-1 ring-accent-200 overflow-hidden">
+                    <div class="p-6 bg-gradient-to-r from-brand-900 via-brand-800 to-accent-900 text-white flex items-center justify-between">
+                        <div>
+                            <div class="text-xs uppercase font-bold tracking-widest text-accent-300">Getting started</div>
+                            <h3 class="mt-1 font-display text-xl font-extrabold">You're {{ $setupProgress }}% set up.</h3>
+                            <p class="mt-1 text-brand-100 text-sm">Complete the remaining steps to issue your first invoice.</p>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="w-20 h-20 rounded-full ring-4 ring-white/20 flex items-center justify-center font-display font-extrabold text-2xl bg-white/10 backdrop-blur">
+                                {{ $setupProgress }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @php
+                            $checklist = [
+                                ['done' => $setup['business'], 'title' => 'Complete your business profile', 'sub' => 'Business name, GSTIN, address, state, logo', 'href' => route('company.edit'), 'cta' => $setup['business'] ? 'Edit' : 'Complete →'],
+                                ['done' => $setup['customer'], 'title' => 'Add your first customer', 'sub' => 'Save details once, reuse on every invoice', 'href' => route('customers.create'), 'cta' => $setup['customer'] ? 'Manage' : 'Add customer →'],
+                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, finalize, download PDF', 'href' => route('invoices.create'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
+                            ];
+                        @endphp
+                        @foreach ($checklist as $item)
+                            <div class="flex items-center gap-4 p-5 {{ $item['done'] ? 'bg-money-50/40' : '' }}">
+                                <div @class([
+                                    'w-10 h-10 rounded-full flex items-center justify-center shrink-0 ring-4',
+                                    'bg-money-500 text-white ring-money-100' => $item['done'],
+                                    'bg-white text-gray-400 ring-gray-100 border border-gray-200' => ! $item['done'],
+                                ])>
+                                    @if ($item['done'])
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    @else
+                                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                                    @endif
+                                </div>
+                                <div class="flex-1">
+                                    <div @class(['font-semibold', 'text-money-800 line-through' => $item['done'], 'text-gray-900' => ! $item['done']])>{{ $item['title'] }}</div>
+                                    <div class="text-sm text-gray-500">{{ $item['sub'] }}</div>
+                                </div>
+                                <a href="{{ $item['href'] }}" @class([
+                                    'text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap',
+                                    'text-gray-600 hover:text-gray-900 hover:bg-gray-100' => $item['done'],
+                                    'text-white bg-brand-700 hover:bg-brand-800 shadow-sm' => ! $item['done'],
+                                ])>{{ $item['cta'] }}</a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endunless
+
             <!-- KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">

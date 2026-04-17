@@ -22,7 +22,7 @@
 <header class="relative bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <a href="/" class="flex items-center gap-3 py-3">
-            <x-brand-logo class="h-20 md:h-24 w-auto" />
+            <x-brand-logo class="h-24 md:h-28 w-auto" />
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">
             <a href="#features" class="hidden md:inline-block text-gray-600 hover:text-brand-700 font-medium">Features</a>

@@ -11,7 +11,7 @@ class Invoice extends Model
     protected $fillable = [
         'user_id', 'company_id', 'customer_id',
         'invoice_number', 'invoice_date', 'due_date',
-        'place_of_supply_state_id', 'is_interstate',
+        'place_of_supply_state_id', 'is_interstate', 'reverse_charge',
         'currency', 'exchange_rate', 'status',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
         'round_off', 'grand_total', 'paid_amount', 'balance',
@@ -23,6 +23,7 @@ class Invoice extends Model
         'due_date' => 'date',
         'finalized_at' => 'datetime',
         'is_interstate' => 'boolean',
+        'reverse_charge' => 'boolean',
         'subtotal' => 'decimal:2',
         'total_cgst' => 'decimal:2',
         'total_sgst' => 'decimal:2',

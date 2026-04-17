@@ -13,9 +13,25 @@ class Company extends Model
         'address_line1', 'address_line2', 'city', 'state_id', 'postal_code', 'country',
         'phone', 'email', 'website',
         'logo_path', 'signature_path',
-        'default_currency', 'default_terms',
+        'bank_name', 'bank_account_number', 'bank_ifsc', 'bank_branch', 'upi_id',
+        'default_currency', 'default_terms', 'declaration',
         'invoice_prefix', 'invoice_counter', 'invoice_number_padding',
+        'onboarded_at',
     ];
+
+    protected $casts = [
+        'onboarded_at' => 'datetime',
+    ];
+
+    public function isBusinessComplete(): bool
+    {
+        return filled($this->name) && filled($this->state_id) && filled($this->address_line1);
+    }
+
+    public function isOnboarded(): bool
+    {
+        return $this->onboarded_at !== null;
+    }
 
     public function user(): BelongsTo
     {
