@@ -47,7 +47,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <a href="{{ route('customers.create') }}" target="_blank" class="text-indigo-600 text-sm whitespace-nowrap">+ New</a>
+                                <a href="{{ route('customers.create') }}" target="_blank" class="text-brand-600 text-sm whitespace-nowrap">+ New</a>
                             </div>
                         </div>
 
@@ -85,8 +85,9 @@
                         <div>
                             <x-input-label value="Tax mode" />
                             <div class="mt-2 text-sm">
-                                <span x-show="isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
-                                <span x-show="!isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
+                                <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
+                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
+                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
                             </div>
                         </div>
                     </div>
@@ -95,7 +96,7 @@
                 <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                     <div class="px-6 py-4 border-b flex items-center justify-between">
                         <h3 class="font-medium text-gray-900">Line items</h3>
-                        <button type="button" @click="addRow" class="text-indigo-600 text-sm hover:underline">+ Add row</button>
+                        <button type="button" @click="addRow" class="text-brand-600 text-sm hover:underline">+ Add row</button>
                     </div>
 
                     <div class="overflow-x-auto">

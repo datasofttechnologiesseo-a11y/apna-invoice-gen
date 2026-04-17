@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Invoices') }}</h2>
-            <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
+            <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
         </div>
     </x-slot>
 
@@ -21,7 +21,7 @@
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                         @endforeach
                     </select>
-                    <button class="px-3 py-1.5 bg-gray-700 text-white rounded text-sm">Filter</button>
+                    <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
                     @if (request('search') || request('status'))
                         <a href="{{ route('invoices.index') }}" class="text-gray-500 text-sm">clear</a>
                     @endif
@@ -29,9 +29,10 @@
 
                 @if ($invoices->isEmpty())
                     <div class="p-8 text-center text-gray-500">
-                        No invoices. <a href="{{ route('invoices.create') }}" class="text-indigo-600 hover:underline">Create your first</a>.
+                        No invoices. <a href="{{ route('invoices.create') }}" class="text-brand-600 hover:underline">Create your first</a>.
                     </div>
                 @else
+                    <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
                             <tr>
@@ -71,13 +72,14 @@
                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm space-x-2">
-                                        <a href="{{ route('invoices.show', $inv) }}" class="text-indigo-600 hover:underline">View</a>
+                                        <a href="{{ route('invoices.show', $inv) }}" class="text-brand-600 hover:underline">View</a>
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                     <div class="p-4">{{ $invoices->links() }}</div>
                 @endif
             </div>

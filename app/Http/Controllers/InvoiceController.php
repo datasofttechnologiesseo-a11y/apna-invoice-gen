@@ -12,6 +12,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class InvoiceController extends Controller
@@ -36,7 +38,18 @@ class InvoiceController extends Controller
     {
         $user = $request->user();
         $company = $user->ensureCompany();
+
+        if (! $company->state_id) {
+            return redirect()->route('company.edit')
+                ->with('status', 'Set your company state before creating invoices — GST place-of-supply needs it.');
+        }
+
         $customers = $user->customers()->orderBy('name')->get();
+        if ($customers->isEmpty()) {
+            return redirect()->route('customers.create')
+                ->with('status', 'Add at least one customer before creating an invoice.');
+        }
+
         $states = State::orderBy('name')->get();
 
         $invoice = new Invoice([
@@ -71,7 +84,7 @@ class InvoiceController extends Controller
             $invoice = $user->invoices()->create([
                 'company_id' => $company->id,
                 'customer_id' => $customer->id,
-                'invoice_number' => 'DRAFT-' . uniqid(),
+                'invoice_number' => 'DRAFT-' . Str::upper(Str::random(12)),
                 'invoice_date' => $data['invoice_date'],
                 'due_date' => $data['due_date'] ?? null,
                 'place_of_supply_state_id' => $customer->state_id,
@@ -174,6 +187,13 @@ class InvoiceController extends Controller
         $this->authorizeInvoice($request, $invoice);
         abort_unless($invoice->isDraft(), 403);
 
+        if ($invoice->items()->count() === 0) {
+            return back()->withErrors(['finalize' => 'Cannot finalize an invoice with no line items.']);
+        }
+        if ((float) $invoice->grand_total <= 0) {
+            return back()->withErrors(['finalize' => 'Cannot finalize a zero-amount invoice.']);
+        }
+
         DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
             $company->increment('invoice_counter');
@@ -191,12 +211,12 @@ class InvoiceController extends Controller
     {
         $this->authorizeInvoice($request, $invoice);
 
+        $remaining = max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount);
         $data = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', 'min:0.01', "max:{$remaining}"],
         ]);
 
         $paid = (float) $invoice->paid_amount + (float) $data['amount'];
-        $paid = min($paid, (float) $invoice->grand_total);
         $balance = (float) $invoice->grand_total - $paid;
 
         $status = $invoice->status;
@@ -244,8 +264,9 @@ class InvoiceController extends Controller
 
     private function validateInvoice(Request $request): array
     {
+        $userId = $request->user()->id;
         return $request->validate([
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', $userId)],
             'invoice_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['required', 'string', 'size:3'],

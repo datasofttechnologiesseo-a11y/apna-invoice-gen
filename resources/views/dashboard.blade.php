@@ -9,6 +9,9 @@
                 <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded">{{ session('status') }}</div>
             @endif
 
+            @php
+                $sym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'][$currency] ?? ($currency . ' ');
+            @endphp
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="p-5 bg-white rounded-lg shadow">
                     <div class="text-xs uppercase text-gray-500">Total invoices</div>
@@ -19,17 +22,17 @@
                     <div class="text-2xl font-semibold mt-1">{{ $stats['drafts'] }}</div>
                 </div>
                 <div class="p-5 bg-white rounded-lg shadow">
-                    <div class="text-xs uppercase text-gray-500">Outstanding</div>
-                    <div class="text-2xl font-semibold mt-1 text-amber-700">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
+                    <div class="text-xs uppercase text-gray-500">Outstanding <span class="text-[10px] text-gray-400">({{ $currency }})</span></div>
+                    <div class="text-2xl font-semibold mt-1 text-amber-700">{{ $sym }}{{ number_format((float) $stats['outstanding'], 2) }}</div>
                 </div>
                 <div class="p-5 bg-white rounded-lg shadow">
-                    <div class="text-xs uppercase text-gray-500">Paid this month</div>
-                    <div class="text-2xl font-semibold mt-1 text-green-700">₹{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
+                    <div class="text-xs uppercase text-gray-500">Paid this month <span class="text-[10px] text-gray-400">({{ $currency }})</span></div>
+                    <div class="text-2xl font-semibold mt-1 text-green-700">{{ $sym }}{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
                 </div>
             </div>
 
             <div class="flex gap-3 flex-wrap">
-                <a href="{{ route('invoices.create') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">+ New invoice</a>
+                <a href="{{ route('invoices.create') }}" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded">+ New invoice</a>
                 <a href="{{ route('customers.create') }}" class="px-4 py-2 bg-white border text-gray-700 rounded hover:bg-gray-50">+ New customer</a>
                 <a href="{{ route('company.edit') }}" class="px-4 py-2 bg-white border text-gray-700 rounded hover:bg-gray-50">Company profile</a>
             </div>
@@ -37,7 +40,7 @@
             <div class="bg-white shadow sm:rounded-lg">
                 <div class="px-6 py-4 border-b font-medium">Recent invoices</div>
                 @if ($recent->isEmpty())
-                    <div class="p-8 text-center text-gray-500">No invoices yet. <a href="{{ route('invoices.create') }}" class="text-indigo-600 hover:underline">Create your first</a>.</div>
+                    <div class="p-8 text-center text-gray-500">No invoices yet. <a href="{{ route('invoices.create') }}" class="text-brand-600 hover:underline">Create your first</a>.</div>
                 @else
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead class="bg-gray-50 text-xs uppercase text-gray-500 text-left">
@@ -53,7 +56,7 @@
                             @foreach ($recent as $inv)
                                 <tr>
                                     <td class="px-4 py-2 font-mono">
-                                        <a href="{{ route('invoices.show', $inv) }}" class="text-indigo-600 hover:underline">
+                                        <a href="{{ route('invoices.show', $inv) }}" class="text-brand-600 hover:underline">
                                             {{ str_starts_with($inv->invoice_number, 'DRAFT-') ? '—' : $inv->invoice_number }}
                                         </a>
                                     </td>

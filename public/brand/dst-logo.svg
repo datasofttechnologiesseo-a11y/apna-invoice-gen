@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 180" role="img" aria-label="DST Datasoft Technologies">
+  <defs>
+    <linearGradient id="dstBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+  </defs>
+  <!-- Pixel-grid mark -->
+  <g transform="translate(6 18)">
+    <rect x="0"  y="18" width="16" height="16" fill="#3b82f6"/>
+    <rect x="18" y="0"  width="16" height="16" fill="#1e3a8a"/>
+    <rect x="18" y="18" width="16" height="16" fill="#1e40af"/>
+    <rect x="36" y="18" width="16" height="16" fill="#f59e0b"/>
+    <rect x="0"  y="36" width="16" height="16" fill="#1e3a8a"/>
+    <rect x="18" y="36" width="16" height="16" fill="#2453f0"/>
+  </g>
+  <!-- DST wordmark -->
+  <g font-family="Arial Black, Helvetica, sans-serif" font-weight="900" font-style="italic">
+    <text x="70" y="90" font-size="96" fill="url(#dstBlue)" letter-spacing="-4">DST</text>
+  </g>
+  <!-- Tagline -->
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="800" letter-spacing="3">
+    <text x="6" y="148" font-size="26" fill="#f59e0b">DATASOFT</text>
+    <text x="175" y="148" font-size="26" fill="#1e3a8a">TECHNOLOGIES</text>
+  </g>
+</svg>

@@ -78,7 +78,7 @@
                         </div>
                         <div>
                             <x-input-label for="state_id" value="State *" />
-                            <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                            <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
                                 <option value="">— Select —</option>
                                 @foreach ($states as $state)
                                     <option value="{{ $state->id }}" @selected(old('state_id', $company->state_id) == $state->id)>
@@ -138,7 +138,7 @@
 
                     <div>
                         <x-input-label for="default_terms" value="Default terms & conditions (shown at bottom of invoices)" />
-                        <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('default_terms', $company->default_terms) }}</textarea>
+                        <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">{{ old('default_terms', $company->default_terms) }}</textarea>
                     </div>
 
                     <div class="flex items-center gap-4">
