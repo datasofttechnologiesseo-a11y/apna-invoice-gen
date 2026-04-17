@@ -16,7 +16,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gradient-to-br from-brand-50 via-white to-accent-50">
             <div class="mb-6">
                 <a href="/" aria-label="Home">
-                    <x-brand-logo class="h-24 w-auto" />
+                    <x-brand-logo class="h-44 w-auto" />
                 </a>
             </div>
 

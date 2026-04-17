@@ -34,11 +34,11 @@
 
             <footer class="mt-16 border-t border-gray-200 bg-white">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-                    <div>© {{ now()->year }} {{ config('app.name') }}</div>
+                    <div>© 2026 Datasoft Technologies · All rights reserved.</div>
                     <div class="flex items-center gap-3">
                         <span>Powered by</span>
                         <a href="/" class="inline-flex items-center">
-                            <x-brand-logo class="h-10 w-auto" />
+                            <x-brand-logo class="h-20 w-auto" />
                         </a>
                     </div>
                 </div>
