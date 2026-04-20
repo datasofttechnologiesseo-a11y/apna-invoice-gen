@@ -4,8 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -14,9 +14,14 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    public function company(): HasOne
+    public function companies(): HasMany
     {
-        return $this->hasOne(Company::class);
+        return $this->hasMany(Company::class);
+    }
+
+    public function activeCompany(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'active_company_id');
     }
 
     public function customers(): HasMany
@@ -29,12 +34,41 @@ class User extends Authenticatable
         return $this->hasMany(Invoice::class);
     }
 
+    /**
+     * Return (creating if necessary) the currently selected company for this user.
+     * Used by every controller that needs "the company context for this request".
+     */
     public function ensureCompany(): Company
     {
-        return $this->company()->firstOrCreate(
-            ['user_id' => $this->id],
-            ['name' => $this->name . "'s Company", 'country' => 'India', 'default_currency' => 'INR']
-        );
+        if ($this->active_company_id) {
+            $active = $this->companies()->find($this->active_company_id);
+            if ($active) {
+                return $active;
+            }
+        }
+
+        $first = $this->companies()->orderBy('id')->first();
+        if ($first) {
+            $this->forceFill(['active_company_id' => $first->id])->save();
+            return $first;
+        }
+
+        $new = $this->companies()->create([
+            'user_id' => $this->id,
+            'name' => $this->name . "'s Company",
+            'country' => 'India',
+            'default_currency' => 'INR',
+        ]);
+        $this->forceFill(['active_company_id' => $new->id])->save();
+        return $new;
+    }
+
+    public function switchCompany(Company $company): void
+    {
+        if ($company->user_id !== $this->id) {
+            abort(403);
+        }
+        $this->forceFill(['active_company_id' => $company->id])->save();
     }
 
     /**
@@ -46,6 +80,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'active_company_id',
     ];
 
     /**

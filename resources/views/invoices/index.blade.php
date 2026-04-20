@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Invoices') }}</h2>
-            <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
+            <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
         </div>
     </x-slot>
 
@@ -29,7 +29,7 @@
 
                 @if ($invoices->isEmpty())
                     <div class="p-8 text-center text-gray-500">
-                        No invoices. <a href="{{ route('invoices.create') }}" class="text-brand-600 hover:underline">Create your first</a>.
+                        No invoices. <a href="{{ route('invoices.templates') }}" class="text-brand-600 hover:underline">Create your first</a>.
                     </div>
                 @else
                     <div class="overflow-x-auto">
@@ -49,16 +49,16 @@
                             @foreach ($invoices as $inv)
                                 <tr>
                                     <td class="px-4 py-3 font-mono text-sm">
-                                        @if (str_starts_with($inv->invoice_number, 'DRAFT-'))
-                                            <span class="text-gray-400">—</span>
+                                        @if ($inv->isDraft())
+                                            <span class="text-gray-400 italic">Draft #{{ $inv->id }}</span>
                                         @else
-                                            {{ $inv->invoice_number }}
+                                            <span class="font-semibold text-gray-900">{{ $inv->invoice_number }}</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $inv->invoice_date?->format('d M Y') }}</td>
                                     <td class="px-4 py-3">{{ $inv->customer?->name }}</td>
-                                    <td class="px-4 py-3 text-right font-mono">{{ $inv->currency }} {{ number_format((float) $inv->grand_total, 2) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono">{{ number_format((float) $inv->balance, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $inv->grand_total, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $inv->balance, 2) }}</td>
                                     <td class="px-4 py-3">
                                         @php
                                             $colors = [
@@ -71,9 +71,18 @@
                                         @endphp
                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-right text-sm space-x-2">
+                                    <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         <a href="{{ route('invoices.show', $inv) }}" class="text-brand-600 hover:underline">View</a>
+                                        <span class="text-gray-300 mx-1">·</span>
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
+                                        @if ($inv->isEditable())
+                                            <span class="text-gray-300 mx-1">·</span>
+                                            <form method="POST" action="{{ route('invoices.destroy', $inv) }}" class="inline" onsubmit="return confirm('Delete draft #{{ $inv->id }}? This cannot be undone.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="text-red-600 hover:underline">Delete</button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

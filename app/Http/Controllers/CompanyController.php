@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\State;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,18 +11,118 @@ use Illuminate\View\View;
 
 class CompanyController extends Controller
 {
-    public function edit(Request $request): View
+    public function index(Request $request): View
     {
-        $company = $request->user()->ensureCompany();
+        $user = $request->user();
+        $companies = $user->companies()
+            ->withCount(['customers', 'invoices'])
+            ->orderBy('name')
+            ->get();
+        $active = $user->ensureCompany();
+
+        return view('companies.index', compact('companies', 'active'));
+    }
+
+    public function create(): View
+    {
+        $company = new Company([
+            'country' => 'India',
+            'default_currency' => 'INR',
+            'invoice_prefix' => 'INV',
+            'invoice_counter' => 0,
+            'invoice_number_padding' => 4,
+        ]);
         $states = State::orderBy('name')->get();
 
         return view('company.edit', compact('company', 'states'));
     }
 
-    public function update(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $company = $request->user()->ensureCompany();
+        $user = $request->user();
+        $data = $this->validated($request);
 
+        $company = $user->companies()->create($data);
+
+        if ($request->hasFile('logo')) {
+            $company->update(['logo_path' => $request->file('logo')->store('logos', 'public')]);
+        }
+        if ($request->hasFile('signature')) {
+            $company->update(['signature_path' => $request->file('signature')->store('signatures', 'public')]);
+        }
+
+        // Make the new company the active one so follow-up actions target it
+        $user->switchCompany($company);
+
+        return redirect()->route('companies.index')
+            ->with('status', "Company '{$company->name}' created and made active.");
+    }
+
+    public function edit(Request $request, Company $company): View
+    {
+        abort_unless($company->user_id === $request->user()->id, 403);
+        $states = State::orderBy('name')->get();
+
+        return view('company.edit', compact('company', 'states'));
+    }
+
+    public function update(Request $request, Company $company): RedirectResponse
+    {
+        abort_unless($company->user_id === $request->user()->id, 403);
+
+        $data = $this->validated($request);
+
+        if ($request->hasFile('logo')) {
+            if ($company->logo_path) {
+                Storage::disk('public')->delete($company->logo_path);
+            }
+            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+        }
+        if ($request->hasFile('signature')) {
+            if ($company->signature_path) {
+                Storage::disk('public')->delete($company->signature_path);
+            }
+            $data['signature_path'] = $request->file('signature')->store('signatures', 'public');
+        }
+        unset($data['logo'], $data['signature']);
+
+        $company->update($data);
+
+        return redirect()->route('companies.index')->with('status', "'{$company->name}' saved.");
+    }
+
+    public function destroy(Request $request, Company $company): RedirectResponse
+    {
+        abort_unless($company->user_id === $request->user()->id, 403);
+
+        if ($company->invoices()->exists()) {
+            return back()->withErrors(['company' => 'Cannot delete a company that has invoices. Archive instead.']);
+        }
+
+        $user = $request->user();
+        $willDeleteActive = $user->active_company_id === $company->id;
+
+        $company->customers()->delete(); // cascade-delete unused customers tied to this company
+        $company->delete();
+
+        if ($willDeleteActive) {
+            $next = $user->companies()->orderBy('id')->first();
+            $user->forceFill(['active_company_id' => $next?->id])->save();
+        }
+
+        return redirect()->route('companies.index')->with('status', "Company deleted.");
+    }
+
+    public function switch(Request $request, Company $company): RedirectResponse
+    {
+        abort_unless($company->user_id === $request->user()->id, 403);
+        $request->user()->switchCompany($company);
+
+        return back()->with('status', "Switched to {$company->name}.");
+    }
+
+    private function validated(Request $request): array
+    {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'gstin' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
@@ -49,24 +150,7 @@ class CompanyController extends Controller
             'invoice_number_padding' => ['required', 'integer', 'min:1', 'max:8'],
         ]);
 
-        if ($request->hasFile('logo')) {
-            if ($company->logo_path) {
-                Storage::disk('public')->delete($company->logo_path);
-            }
-            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
-        }
-
-        if ($request->hasFile('signature')) {
-            if ($company->signature_path) {
-                Storage::disk('public')->delete($company->signature_path);
-            }
-            $data['signature_path'] = $request->file('signature')->store('signatures', 'public');
-        }
-
         unset($data['logo'], $data['signature']);
-
-        $company->update($data);
-
-        return redirect()->route('company.edit')->with('status', 'Company profile saved.');
+        return $data;
     }
 }

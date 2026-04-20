@@ -12,8 +12,9 @@ class CustomerController extends Controller
 {
     public function index(Request $request): View
     {
-        $customers = $request->user()
-            ->customers()
+        $company = $request->user()->ensureCompany();
+
+        $customers = $company->customers()
             ->with('state')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
@@ -22,7 +23,7 @@ class CustomerController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('customers.index', compact('customers'));
+        return view('customers.index', compact('customers', 'company'));
     }
 
     public function create(): View
@@ -34,9 +35,13 @@ class CustomerController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        $company = $user->ensureCompany();
+
         $data = $this->validated($request);
-        $customer = $request->user()->customers()->create($data);
-        return redirect()->route('customers.index')->with('status', "Customer '{$customer->name}' added.");
+        $data['company_id'] = $company->id;
+        $customer = $user->customers()->create($data);
+        return redirect()->route('customers.index')->with('status', "Customer '{$customer->name}' added to {$company->name}.");
     }
 
     public function edit(Request $request, Customer $customer): View
@@ -49,6 +54,7 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer): RedirectResponse
     {
         abort_unless($customer->user_id === $request->user()->id, 403);
+
         $customer->update($this->validated($request));
         return redirect()->route('customers.index')->with('status', "Customer '{$customer->name}' updated.");
     }

@@ -1,7 +1,5 @@
-@props(['class' => 'h-10 w-auto'])
+@props(['class' => 'h-10 w-auto', 'variant' => 'light'])
 
-@if (file_exists(public_path('brand/dst-logo.png')))
-    <img src="{{ asset('brand/dst-logo.png') }}" alt="DST Datasoft Technologies" {{ $attributes->merge(['class' => $class]) }}>
-@else
-    <img src="{{ asset('brand/dst-logo.svg') }}" alt="DST Datasoft Technologies" {{ $attributes->merge(['class' => $class]) }}>
-@endif
+<img src="{{ asset('brand/apna-invoice-logo.png') }}"
+     alt="Apna Invoice"
+     {{ $attributes->merge(['class' => $class]) }}>

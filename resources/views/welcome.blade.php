@@ -1,9 +1,84 @@
+@php
+    $faqs = [
+        ['q' => 'Are these invoices GST-compliant?', 'a' => "Yes. We include GSTIN, HSN/SAC codes, place of supply, CGST/SGST or IGST split, invoice number, and amount in words (Indian format — lakhs and crores). The format aligns with CBIC's prescribed tax invoice requirements."],
+        ['q' => 'Do I need to know the GST rate for each item?', 'a' => 'Yes, but we pre-load the standard slabs (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%). You pick one per line item; the system handles CGST/SGST or IGST math based on customer state.'],
+        ['q' => "What's the difference between draft and final?", 'a' => 'Drafts are editable and have no invoice number yet. Once you finalize, the invoice gets a permanent number (e.g. INV-0001), becomes read-only, and is considered legally issued. You can still mark payments against finalized invoices.'],
+        ['q' => 'Can I bill international clients?', 'a' => 'Yes. We support INR, USD, EUR, GBP, AED, SGD, AUD and CAD. Exchange rate is captured per invoice. Export invoices still use the tax invoice format.'],
+        ['q' => 'What happens to my data?', 'a' => 'It lives in your account, on our servers in India. You can export your invoices and customer data any time. We never sell data to third parties.'],
+        ['q' => 'Who builds this?', 'a' => 'Datasoft Technologies (DST) — an Indian software company focused on practical tools for modern businesses. This product is free during beta while we grow.'],
+    ];
+
+    $appUrl = rtrim(config('app.url'), '/');
+    $siteName = config('seo.name');
+
+    $jsonLd = [
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => config('seo.organization.name'),
+            'legalName' => config('seo.organization.legal_name'),
+            'url' => config('seo.organization.url'),
+            'logo' => $appUrl . config('seo.organization.logo'),
+            'foundingLocation' => ['@type' => 'Country', 'name' => 'India'],
+            'areaServed' => 'IN',
+        ],
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => $siteName,
+            'url' => $appUrl,
+            'inLanguage' => 'en-IN',
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => $appUrl . '/?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ],
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'SoftwareApplication',
+            'name' => $siteName,
+            'url' => $appUrl,
+            'applicationCategory' => 'BusinessApplication',
+            'applicationSubCategory' => 'InvoicingSoftware',
+            'operatingSystem' => 'Web',
+            'description' => config('seo.description'),
+            'offers' => [
+                '@type' => 'Offer',
+                'price' => '0',
+                'priceCurrency' => 'INR',
+                'availability' => 'https://schema.org/InStock',
+            ],
+            'inLanguage' => 'en-IN',
+            'audience' => ['@type' => 'BusinessAudience', 'geographicArea' => 'India'],
+            'featureList' => 'GST-compliant invoices, HSN/SAC codes, CGST/SGST/IGST auto-split, Indian number format (lakhs & crores), PDF export, multi-currency, customer management',
+            'provider' => [
+                '@type' => 'Organization',
+                'name' => config('seo.organization.legal_name'),
+                'url' => config('seo.organization.url'),
+            ],
+        ],
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => array_map(fn ($f) => [
+                '@type' => 'Question',
+                'name' => $f['q'],
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
+            ], $faqs),
+        ],
+    ];
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name') }} — GST Invoicing, Built for Indian Businesses</title>
+    <x-seo
+        title="Free GST Invoice Generator Online"
+        description="Create GST-compliant invoices in under a minute. Free for Indian SMEs, startups, freelancers & CAs. HSN/SAC codes, CGST/SGST auto-split, amount in words (lakhs & crores), professional PDF export. GST 2.0 ready."
+        type="website"
+        :json-ld="$jsonLd" />
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -21,8 +96,10 @@
 <!-- Header -->
 <header class="relative bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-3 py-3">
-            <x-brand-logo class="h-24 md:h-28 w-auto" />
+        <a href="{{ url('/') }}" class="flex items-center gap-3 py-4" aria-label="Apna Invoice home">
+            <span class="inline-block bg-white rounded">
+                <x-brand-logo class="h-12 md:h-14 w-auto block" />
+            </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">
             <a href="#features" class="hidden md:inline-block text-gray-600 hover:text-brand-700 font-medium">Features</a>
@@ -65,7 +142,7 @@
             </h1>
             <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-xl leading-relaxed">
                 Professional GST invoices in under a minute. Auto CGST/SGST or IGST, HSN codes,
-                letterhead, one-click PDF — priced for the way Indian SMBs actually work.
+                letterhead, one-click PDF — priced for the way Indian SMEs & Startups actually work.
             </p>
             <div class="mt-8 flex flex-wrap gap-3">
                 <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-xl shadow-brand transition">
@@ -237,7 +314,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
             <span class="inline-block px-3 py-1 rounded-full bg-saffron-50 text-saffron-700 text-xs font-bold uppercase tracking-wider">What users say</span>
-            <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Loved by India's SMBs.</h2>
+            <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Loved by India's SMEs & Startups.</h2>
             <p class="mt-4 text-lg text-gray-600">From Mumbai consultancies to Bengaluru agencies, business owners use DST's invoice tool to close the month in hours, not days.</p>
         </div>
         <div class="mt-14 grid md:grid-cols-3 gap-6">
@@ -281,7 +358,7 @@
                         <span class="text-6xl font-black font-display">₹0</span>
                         <span class="text-brand-200 text-sm">/forever</span>
                     </div>
-                    <p class="mt-4 text-brand-100 text-sm">For Indian solo professionals and SMBs billing up to 500 invoices/month.</p>
+                    <p class="mt-4 text-brand-100 text-sm">For Indian solo professionals, SMEs &amp; startups billing up to 500 invoices/month.</p>
                     <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-900 font-bold rounded-xl transition">Claim free account →</a>
                 </div>
                 <div class="p-8 md:p-10">
@@ -319,14 +396,7 @@
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Questions? We have answers.</h2>
         </div>
         <div class="mt-12 space-y-3">
-            @foreach ([
-                ['q' => 'Are these invoices GST-compliant?', 'a' => "Yes. We include GSTIN, HSN/SAC codes, place of supply, CGST/SGST or IGST split, invoice number, and amount in words (Indian format — lakhs and crores). The format aligns with CBIC's prescribed tax invoice requirements."],
-                ['q' => 'Do I need to know the GST rate for each item?', 'a' => 'Yes, but we pre-load the standard slabs (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%). You pick one per line item; the system handles CGST/SGST or IGST math based on customer state.'],
-                ['q' => "What's the difference between draft and final?", 'a' => 'Drafts are editable and have no invoice number yet. Once you finalize, the invoice gets a permanent number (e.g. INV-0001), becomes read-only, and is considered legally issued. You can still mark payments against finalized invoices.'],
-                ['q' => 'Can I bill international clients?', 'a' => 'Yes. We support INR, USD, EUR, GBP, AED, SGD, AUD and CAD. Exchange rate is captured per invoice. Export invoices still use the tax invoice format.'],
-                ['q' => 'What happens to my data?', 'a' => 'It lives in your account, on our servers in India. You can export your invoices and customer data any time. We never sell data to third parties.'],
-                ['q' => 'Who builds this?', 'a' => 'Datasoft Technologies (DST) — an Indian software company focused on practical tools for modern businesses. This product is free during beta while we grow.'],
-            ] as $faq)
+            @foreach ($faqs as $faq)
                 <details class="group rounded-xl bg-gray-50 hover:bg-white ring-1 ring-gray-200 hover:ring-brand-200 transition">
                     <summary class="flex items-center justify-between p-5 cursor-pointer font-semibold text-gray-900">
                         <span>{{ $faq['q'] }}</span>
@@ -356,57 +426,7 @@
     </div>
 </section>
 
-<!-- Footer -->
-<footer class="bg-gray-950 text-gray-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid md:grid-cols-4 gap-10">
-        <div class="md:col-span-2">
-            <div class="bg-white rounded-xl p-4 inline-block">
-                <x-brand-logo class="h-20 w-auto" />
-            </div>
-            <p class="mt-5 text-gray-400 text-sm max-w-md leading-relaxed">
-                A product by <span class="text-white font-semibold">Datasoft Technologies</span> — building
-                practical software for modern Indian businesses. Headquartered in India. Built for India.
-            </p>
-            <div class="mt-5 flex items-center gap-2 text-sm text-gray-500">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-saffron-900/40 text-saffron-300 text-xs font-bold">
-                    <span class="w-1.5 h-1.5 rounded-full bg-saffron-400"></span> Made in India
-                </span>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-900/40 text-brand-300 text-xs font-bold">
-                    GST 2.0 Ready
-                </span>
-            </div>
-        </div>
-        <div>
-            <h4 class="text-white font-semibold mb-4">Product</h4>
-            <ul class="space-y-3 text-sm">
-                <li><a href="#features" class="hover:text-white">Features</a></li>
-                <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
-                <li><a href="#faq" class="hover:text-white">FAQ</a></li>
-                <li><a href="{{ route('register') }}" class="hover:text-white">Sign up</a></li>
-                <li><a href="{{ route('login') }}" class="hover:text-white">Log in</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4 class="text-white font-semibold mb-4">Legal</h4>
-            <ul class="space-y-3 text-sm text-gray-400">
-                <li>© 2026 Datasoft Technologies · All rights reserved.</li>
-                <li>Terms of Service</li>
-                <li>Privacy Policy</li>
-                <li>Contact us</li>
-            </ul>
-        </div>
-    </div>
-    <div class="border-t border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-gray-500 flex flex-col md:flex-row items-center justify-between gap-2">
-            <div>All trademarks are property of their respective owners.</div>
-            <div class="flex items-center gap-2">
-                <span>Built with</span>
-                <span class="text-red-400">♥</span>
-                <span>in India</span>
-            </div>
-        </div>
-    </div>
-</footer>
+<x-site-footer variant="full" />
 
 </body>
 </html>

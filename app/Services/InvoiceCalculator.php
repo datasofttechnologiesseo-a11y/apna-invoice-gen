@@ -32,12 +32,12 @@ class InvoiceCalculator
             $igst = 0.0;
 
             if ($gstRate > 0) {
+                $tax = round($amount * ($gstRate / 100), 2);
                 if ($isInterstate) {
-                    $igst = round($amount * ($gstRate / 100), 2);
+                    $igst = $tax;
                 } else {
-                    $half = $gstRate / 2;
-                    $cgst = round($amount * ($half / 100), 2);
-                    $sgst = round($amount * ($half / 100), 2);
+                    $cgst = round($tax / 2, 2);
+                    $sgst = round($tax - $cgst, 2);
                 }
             }
 

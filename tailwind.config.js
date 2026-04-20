@@ -16,34 +16,35 @@ export default {
                 display: ['"Plus Jakarta Sans"', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                // DST primary deep-blue (from logo)
+                // Apna Invoice primary — deep navy (from "Apna Invoice" wordmark)
                 brand: {
-                    50:  '#eff5ff',
-                    100: '#dbe7ff',
-                    200: '#bfd4ff',
-                    300: '#93b8ff',
-                    400: '#6093ff',
-                    500: '#3b6eff',
-                    600: '#2453f0',
-                    700: '#1c40d0',
-                    800: '#1e40af',
-                    900: '#1e3a8a',
-                    950: '#172554',
+                    50:  '#eef3fc',
+                    100: '#dbe3f5',
+                    200: '#b8c8e9',
+                    300: '#90a8da',
+                    400: '#5a7dc0',
+                    500: '#3a5ba8',
+                    600: '#274690',
+                    700: '#1e3a8a',
+                    800: '#162c6b',
+                    900: '#0f1f4f',
+                    950: '#091535',
                 },
-                // DST warm orange accent (from logo)
+                // Apna Invoice accent — warm saffron-orange (from the document/check icon)
                 accent: {
-                    50:  '#fff8eb',
-                    100: '#ffeac6',
-                    200: '#ffd488',
-                    300: '#ffb74a',
-                    400: '#ff9a20',
-                    500: '#f59e0b',
-                    600: '#d97706',
-                    700: '#b45309',
-                    800: '#92400e',
-                    900: '#78350f',
+                    50:  '#fff7ed',
+                    100: '#ffedd5',
+                    200: '#fed7aa',
+                    300: '#fdba74',
+                    400: '#fb923c',
+                    500: '#f97316',
+                    600: '#ea580c',
+                    700: '#c2410c',
+                    800: '#9a3412',
+                    900: '#7c2d12',
+                    950: '#481e0d',
                 },
-                // Indian saffron for festive highlights
+                // Kept as saffron alias (same palette as accent) for festive/India-cue spots
                 saffron: {
                     50:  '#fff7ed',
                     100: '#ffedd5',
@@ -56,7 +57,7 @@ export default {
                     800: '#9a3412',
                     900: '#7c2d12',
                 },
-                // Money/success
+                // Money/success (unchanged — semantic, not brand)
                 money: {
                     50:  '#ecfdf5',
                     100: '#d1fae5',
@@ -71,12 +72,12 @@ export default {
                 },
             },
             boxShadow: {
-                brand: '0 10px 25px -5px rgba(30, 64, 175, 0.25), 0 8px 10px -6px rgba(30, 64, 175, 0.15)',
-                glow: '0 0 0 4px rgba(245, 158, 11, 0.18)',
-                card: '0 1px 2px 0 rgba(0,0,0,0.04), 0 4px 20px -4px rgba(30, 64, 175, 0.08)',
+                brand: '0 10px 25px -5px rgba(30, 58, 138, 0.30), 0 8px 10px -6px rgba(30, 58, 138, 0.18)',
+                glow: '0 0 0 4px rgba(249, 115, 22, 0.20)',
+                card: '0 1px 2px 0 rgba(0,0,0,0.04), 0 4px 20px -4px rgba(30, 58, 138, 0.08)',
             },
             backgroundImage: {
-                'hero-mesh': 'radial-gradient(at 30% 20%, rgba(245, 158, 11, 0.18) 0, transparent 40%), radial-gradient(at 80% 0%, rgba(59, 110, 255, 0.28) 0, transparent 50%), radial-gradient(at 70% 80%, rgba(16, 185, 129, 0.16) 0, transparent 45%), radial-gradient(at 10% 90%, rgba(249, 115, 22, 0.15) 0, transparent 40%)',
+                'hero-mesh': 'radial-gradient(at 30% 20%, rgba(249, 115, 22, 0.18) 0, transparent 40%), radial-gradient(at 80% 0%, rgba(30, 58, 138, 0.28) 0, transparent 50%), radial-gradient(at 70% 80%, rgba(16, 185, 129, 0.14) 0, transparent 45%), radial-gradient(at 10% 90%, rgba(249, 115, 22, 0.15) 0, transparent 40%)',
                 'grid-soft': 'linear-gradient(to right, rgba(30,58,138,0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(30,58,138,0.07) 1px, transparent 1px)',
             },
             backgroundSize: {

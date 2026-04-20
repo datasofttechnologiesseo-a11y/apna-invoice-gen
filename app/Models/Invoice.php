@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id', 'company_id', 'customer_id',
         'invoice_number', 'invoice_date', 'due_date',
         'place_of_supply_state_id', 'is_interstate', 'reverse_charge',
+        'transporter_name', 'transporter_id', 'vehicle_number', 'transport_mode', 'eway_bill_number',
         'currency', 'exchange_rate', 'status',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
         'round_off', 'grand_total', 'paid_amount', 'balance',
@@ -66,8 +70,26 @@ class Invoice extends Model
         return $this->status === 'draft';
     }
 
+    /** Full edit (line items, customer, dates, amounts). Drafts only. */
     public function isEditable(): bool
     {
-        return in_array($this->status, ['draft']);
+        return $this->status === 'draft';
+    }
+
+    /**
+     * Soft-edit allowed (notes, terms, due date, transporter details).
+     * Finalized invoices can fix non-amount fields; cancelled cannot.
+     */
+    public function isSoftEditable(): bool
+    {
+        return in_array($this->status, ['draft', 'final', 'partially_paid', 'paid'], true);
+    }
+
+    public function displayNumber(): string
+    {
+        if ($this->invoice_number && ! str_starts_with($this->invoice_number, 'DRAFT-')) {
+            return $this->invoice_number;
+        }
+        return 'Draft #' . $this->id;
     }
 }

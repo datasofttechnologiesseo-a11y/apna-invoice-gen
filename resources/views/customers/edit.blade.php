@@ -21,7 +21,7 @@
 
                         <div>
                             <x-input-label for="gstin" value="GSTIN (optional, for B2B)" />
-                            <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase" :value="old('gstin', $customer->gstin)" maxlength="15" />
+                            <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('gstin', $customer->gstin)" maxlength="15" placeholder="27AABCU9603R1ZM" />
                             <x-input-error :messages="$errors->get('gstin')" class="mt-2" />
                         </div>
                         <div>
@@ -74,4 +74,5 @@
             </div>
         </div>
     </div>
+
 </x-app-layout>

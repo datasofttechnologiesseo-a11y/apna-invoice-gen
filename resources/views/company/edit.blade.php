@@ -1,8 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Company Profile') }}
-        </h2>
+        <div class="flex items-center justify-between gap-3">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ $company->exists ? 'Edit ' . $company->name : 'New company' }}
+            </h2>
+            <a href="{{ route('companies.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← All companies</a>
+        </div>
     </x-slot>
 
     <div class="py-10">
@@ -21,9 +24,9 @@
                     </p>
                 </header>
 
-                <form method="POST" action="{{ route('company.update') }}" enctype="multipart/form-data" class="space-y-6">
+                <form method="POST" action="{{ $company->exists ? route('companies.update', $company) : route('companies.store') }}" enctype="multipart/form-data" class="space-y-6">
                     @csrf
-                    @method('PATCH')
+                    @if ($company->exists) @method('PATCH') @endif
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -117,7 +120,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <input type="hidden" name="default_currency" value="INR">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <x-input-label for="invoice_prefix" value="Invoice prefix *" />
                             <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full" :value="old('invoice_prefix', $company->invoice_prefix)" required />
@@ -125,14 +129,6 @@
                         <div>
                             <x-input-label for="invoice_number_padding" value="Number padding (digits) *" />
                             <x-text-input id="invoice_number_padding" name="invoice_number_padding" type="number" min="1" max="8" class="mt-1 block w-full" :value="old('invoice_number_padding', $company->invoice_number_padding)" required />
-                        </div>
-                        <div>
-                            <x-input-label for="default_currency" value="Default currency *" />
-                            <select id="default_currency" name="default_currency" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                @foreach (['INR','USD','EUR','GBP','AED','SGD','AUD','CAD'] as $code)
-                                    <option value="{{ $code }}" @selected(old('default_currency', $company->default_currency) === $code)>{{ $code }}</option>
-                                @endforeach
-                            </select>
                         </div>
                     </div>
 

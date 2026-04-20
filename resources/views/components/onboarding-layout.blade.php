@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Set up · {{ config('app.name') }}</title>
+    <x-seo title="Set up your account" :noindex="true" />
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -14,8 +14,8 @@
 
 <header class="bg-white border-b border-gray-100">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-3">
-        <a href="/" class="flex items-center">
-            <x-brand-logo class="h-20 md:h-24 w-auto" />
+        <a href="{{ url('/') }}" class="inline-flex items-center bg-white rounded" aria-label="Apna Invoice home">
+            <x-brand-logo class="h-10 md:h-12 w-auto block" />
         </a>
         <div class="flex items-center gap-4 text-sm">
             <span class="hidden md:inline text-gray-500">Hi, {{ auth()->user()->name }}</span>
@@ -84,7 +84,7 @@
 </main>
 
 <footer class="text-center py-6 text-xs text-gray-500">
-    © 2026 Datasoft Technologies · All rights reserved.
+    © 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a> · All rights reserved.
 </footer>
 
 </body>

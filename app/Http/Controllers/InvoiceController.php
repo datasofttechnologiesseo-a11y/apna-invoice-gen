@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\State;
 use App\Services\InvoiceCalculator;
 use App\Support\NumberToWords;
@@ -22,7 +23,9 @@ class InvoiceController extends Controller
 
     public function index(Request $request): View
     {
-        $invoices = $request->user()->invoices()
+        $company = $request->user()->ensureCompany();
+
+        $invoices = $company->invoices()
             ->with(['customer', 'company'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->search, fn ($q, $s) => $q->where('invoice_number', 'like', "%{$s}%"))
@@ -31,7 +34,105 @@ class InvoiceController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('invoices.index', compact('invoices'));
+        return view('invoices.index', compact('invoices', 'company'));
+    }
+
+    public function templatePreview(Request $request, string $template): Response|RedirectResponse
+    {
+        $templates = config('invoice_templates');
+        abort_unless(isset($templates[$template]), 404);
+        $tpl = $templates[$template];
+
+        $user = $request->user();
+        $company = $user->ensureCompany();
+
+        // Build an ephemeral invoice for preview (not saved)
+        $calc = app(\App\Services\InvoiceCalculator::class);
+        $isInterstate = false; // Preview uses same-state customer
+        $result = $calc->recalculate(new Invoice(), $tpl['items'], $isInterstate);
+
+        $fakeState = $company->state ?? State::first();
+
+        $fakeCustomer = new Customer([
+            'name' => 'Sample Customer Pvt. Ltd.',
+            'gstin' => '27ABCDE1234F1Z5',
+            'address_line1' => '123 Demo Street',
+            'address_line2' => 'Sample Area',
+            'city' => $fakeState?->name ? explode(' ', $fakeState->name)[0] : 'Sample City',
+            'state_id' => $fakeState?->id,
+            'postal_code' => '400001',
+            'country' => 'India',
+            'email' => 'sample@customer.com',
+            'phone' => '+91 98765 43210',
+        ]);
+        $fakeCustomer->setRelation('state', $fakeState);
+
+        $invoice = new Invoice([
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'customer_id' => 0,
+            'invoice_number' => $company->invoice_prefix . '-SAMPLE',
+            'invoice_date' => now(),
+            'due_date' => now()->addDays(30),
+            'place_of_supply_state_id' => $fakeState?->id,
+            'is_interstate' => $isInterstate,
+            'reverse_charge' => false,
+            'currency' => $tpl['currency'] ?? $company->default_currency,
+            'exchange_rate' => 1,
+            'status' => 'draft',
+            'terms' => $company->default_terms ?? "Sample preview — this is how your invoice will look.\nReplace with your own terms.",
+            ...$result['totals'],
+            'paid_amount' => 0,
+            'balance' => $result['totals']['grand_total'],
+        ]);
+        $invoice->id = 0;
+        $invoice->setRelation('company', $company);
+        $invoice->setRelation('customer', $fakeCustomer);
+        $invoice->setRelation('placeOfSupply', $fakeState);
+
+        $items = collect($result['items'])->map(fn ($i) => new InvoiceItem($i));
+        $invoice->setRelation('items', $items);
+
+        $amountInWords = \App\Support\NumberToWords::indianRupees(
+            (float) $invoice->grand_total,
+            $invoice->currency
+        );
+
+        $style = $tpl['style'] ?? 'classic';
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style'))
+            ->setPaper('A4')
+            ->setOption(['isRemoteEnabled' => true]);
+
+        return $pdf->stream('preview-' . $template . '.pdf');
+    }
+
+    public function templates(Request $request): View|RedirectResponse
+    {
+        $user = $request->user();
+        $company = $user->ensureCompany();
+
+        if (! $company->state_id) {
+            return redirect()->route('company.edit')
+                ->with('status', 'Set your company state before creating invoices — GST place-of-supply needs it.');
+        }
+        if ($company->customers()->count() === 0) {
+            return redirect()->route('customers.create')
+                ->with('status', 'Add at least one customer to ' . $company->name . ' before creating an invoice.');
+        }
+
+        $calc = $this->calculator;
+        $templates = collect(config('invoice_templates'))->map(function ($tpl) use ($calc) {
+            $result = $calc->recalculate(new Invoice(), $tpl['items'], isInterstate: false);
+            $tpl['totals'] = $result['totals'];
+            $tpl['computed_items'] = $result['items'];
+            return $tpl;
+        })->all();
+
+        return view('invoices.templates', [
+            'templates' => $templates,
+            'company' => $company,
+        ]);
     }
 
     public function create(Request $request): View|RedirectResponse
@@ -44,7 +145,7 @@ class InvoiceController extends Controller
                 ->with('status', 'Set your company state before creating invoices — GST place-of-supply needs it.');
         }
 
-        $customers = $user->customers()->orderBy('name')->get();
+        $customers = $company->customers()->orderBy('name')->get();
         if ($customers->isEmpty()) {
             return redirect()->route('customers.create')
                 ->with('status', 'Add at least one customer before creating an invoice.');
@@ -52,31 +153,39 @@ class InvoiceController extends Controller
 
         $states = State::orderBy('name')->get();
 
+        $templateKey = $request->query('template');
+        $templates = config('invoice_templates');
+        $template = $templateKey && isset($templates[$templateKey]) ? $templates[$templateKey] : null;
+
         $invoice = new Invoice([
             'invoice_date' => now()->toDateString(),
             'due_date' => now()->addDays(30)->toDateString(),
-            'currency' => $company->default_currency,
+            'currency' => $template['currency'] ?? $company->default_currency,
             'terms' => $company->default_terms,
             'status' => 'draft',
         ]);
-        $invoice->setRelation('items', collect());
+
+        // Pre-fill items from template (ephemeral — not persisted until submit)
+        $templateItems = collect($template['items'] ?? [])->map(fn ($i, $idx) => (new InvoiceItem($i))->forceFill(['id' => null]));
+        $invoice->setRelation('items', $templateItems);
 
         return view('invoices.edit', [
             'invoice' => $invoice,
             'company' => $company,
             'customers' => $customers,
             'states' => $states,
-            'previewNumber' => $company->nextInvoiceNumber() . ' (preview)',
+            'previewNumber' => $company->nextInvoiceNumber(),
+            'templateLabel' => $template['label'] ?? null,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $this->validateInvoice($request);
         $user = $request->user();
         $company = $user->ensureCompany();
+        $data = $this->validateInvoice($request, $company->id);
 
-        $customer = $user->customers()->findOrFail($data['customer_id']);
+        $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
         $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate);
 
@@ -84,14 +193,14 @@ class InvoiceController extends Controller
             $invoice = $user->invoices()->create([
                 'company_id' => $company->id,
                 'customer_id' => $customer->id,
-                'invoice_number' => 'DRAFT-' . Str::upper(Str::random(12)),
+                'invoice_number' => null,
                 'invoice_date' => $data['invoice_date'],
                 'due_date' => $data['due_date'] ?? null,
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
-                'currency' => $data['currency'],
-                'exchange_rate' => $data['exchange_rate'] ?? 1,
+                'currency' => 'INR',
+                'exchange_rate' => 1,
                 'status' => 'draft',
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
@@ -120,11 +229,13 @@ class InvoiceController extends Controller
     public function edit(Request $request, Invoice $invoice): View
     {
         $this->authorizeInvoice($request, $invoice);
-        abort_unless($invoice->isEditable(), 403, 'Finalized invoices cannot be edited.');
+        abort_unless($invoice->isSoftEditable(), 403, 'This invoice cannot be edited.');
 
-        $user = $request->user();
-        $company = $user->ensureCompany();
-        $customers = $user->customers()->orderBy('name')->get();
+        // Scope the customer dropdown and counter preview to the invoice's OWN
+        // company, not the currently-active company. Lets users edit invoices
+        // that belong to a non-active company without needing to switch first.
+        $company = $invoice->company;
+        $customers = $company->customers()->orderBy('name')->get();
         $states = State::orderBy('name')->get();
         $invoice->load('items');
 
@@ -133,19 +244,49 @@ class InvoiceController extends Controller
             'company' => $company,
             'customers' => $customers,
             'states' => $states,
-            'previewNumber' => null,
+            'previewNumber' => $company->nextInvoiceNumber(),
+            'restricted' => ! $invoice->isEditable(),
         ]);
     }
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
         $this->authorizeInvoice($request, $invoice);
-        abort_unless($invoice->isEditable(), 403, 'Finalized invoices cannot be edited.');
+        abort_unless($invoice->isSoftEditable(), 403, 'This invoice cannot be edited.');
 
-        $data = $this->validateInvoice($request);
-        $user = $request->user();
+        // Finalized invoices: only notes, terms, due_date, and transporter fields
+        // may change. Amounts, items, customer, and invoice number are immutable.
+        if (! $invoice->isEditable()) {
+            $soft = $request->validate([
+                'due_date' => ['nullable', 'date'],
+                'notes' => ['nullable', 'string'],
+                'terms' => ['nullable', 'string'],
+                'transporter_name' => ['nullable', 'string', 'max:120'],
+                'transporter_id' => ['nullable', 'string', 'max:40'],
+                'vehicle_number' => ['nullable', 'string', 'max:30'],
+                'transport_mode' => ['nullable', 'string', 'in:Road,Rail,Air,Ship'],
+                'eway_bill_number' => ['nullable', 'string', 'max:30'],
+            ]);
+
+            $invoice->update([
+                'due_date' => $soft['due_date'] ?? null,
+                'notes' => $soft['notes'] ?? null,
+                'terms' => $soft['terms'] ?? null,
+                'transporter_name' => $soft['transporter_name'] ?? null,
+                'transporter_id' => $soft['transporter_id'] ?? null,
+                'vehicle_number' => $soft['vehicle_number'] ?? null,
+                'transport_mode' => $soft['transport_mode'] ?? null,
+                'eway_bill_number' => $soft['eway_bill_number'] ?? null,
+            ]);
+
+            return redirect()->route('invoices.show', $invoice)
+                ->with('status', 'Invoice details updated. (Amounts, items and customer are locked after finalisation.)');
+        }
+
         $company = $invoice->company;
-        $customer = $user->customers()->findOrFail($data['customer_id']);
+        $data = $this->validateInvoice($request, $company->id);
+        $user = $request->user();
+        $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
         $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate);
 
@@ -158,8 +299,13 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
-                'currency' => $data['currency'],
-                'exchange_rate' => $data['exchange_rate'] ?? 1,
+                'transporter_name' => $data['transporter_name'] ?? null,
+                'transporter_id' => $data['transporter_id'] ?? null,
+                'vehicle_number' => $data['vehicle_number'] ?? null,
+                'transport_mode' => $data['transport_mode'] ?? null,
+                'eway_bill_number' => $data['eway_bill_number'] ?? null,
+                'currency' => 'INR',
+                'exchange_rate' => 1,
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
@@ -240,12 +386,13 @@ class InvoiceController extends Controller
         $this->authorizeInvoice($request, $invoice);
         $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
+        $style = 'classic';
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords'))
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style'))
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
-        $filename = 'invoice-' . ($invoice->isDraft() ? 'DRAFT' : $invoice->invoice_number) . '.pdf';
+        $filename = 'invoice-' . ($invoice->isDraft() ? 'draft-' . $invoice->id : $invoice->invoice_number) . '.pdf';
 
         return $pdf->download($filename);
     }
@@ -264,16 +411,19 @@ class InvoiceController extends Controller
         abort_unless($invoice->user_id === $request->user()->id, 403);
     }
 
-    private function validateInvoice(Request $request): array
+    private function validateInvoice(Request $request, int $companyId): array
     {
-        $userId = $request->user()->id;
         return $request->validate([
-            'customer_id' => ['required', Rule::exists('customers', 'id')->where('user_id', $userId)],
+            'customer_id' => ['required', Rule::exists('customers', 'id')->where('company_id', $companyId)],
             'invoice_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
-            'currency' => ['required', 'string', 'size:3'],
-            'exchange_rate' => ['nullable', 'numeric', 'min:0'],
+            'currency' => ['nullable', 'string', 'size:3'],
             'reverse_charge' => ['nullable', 'boolean'],
+            'transporter_name' => ['nullable', 'string', 'max:120'],
+            'transporter_id' => ['nullable', 'string', 'max:40'],
+            'vehicle_number' => ['nullable', 'string', 'max:30'],
+            'transport_mode' => ['nullable', 'string', 'in:Road,Rail,Air,Ship'],
+            'eway_bill_number' => ['nullable', 'string', 'max:30'],
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
@@ -283,7 +433,7 @@ class InvoiceController extends Controller
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
-            'items.*.gst_rate' => ['required', 'numeric', 'in:0,0.10,0.25,3,5,12,18,28'],
+            'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
         ]);
     }
 }

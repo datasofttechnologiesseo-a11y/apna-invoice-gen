@@ -1,4 +1,7 @@
-<x-guest-layout>
+<x-guest-layout
+    :title="'Log in to your free GST invoice account'"
+    :description="'Log in to Apna Invoice — free GST-compliant online invoice generator for Indian SMEs, startups, freelancers, and CAs.'"
+    :keywords="'Apna Invoice login, GST invoice login, invoice generator India login'">
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
@@ -15,12 +18,7 @@
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
+            <x-password-input id="password" name="password" autocomplete="current-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 

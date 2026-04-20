@@ -5,16 +5,12 @@
                 <h2 class="font-display font-extrabold text-2xl text-gray-900 leading-tight">{{ __('Dashboard') }}</h2>
                 <p class="text-sm text-gray-500 mt-1">Welcome back, {{ auth()->user()->name }}. Here's the view of your business today.</p>
             </div>
-            <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
+            <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 New invoice
             </a>
         </div>
     </x-slot>
-
-    @php
-        $sym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£'][$currency] ?? ($currency . ' ');
-    @endphp
 
     <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
@@ -44,7 +40,7 @@
                             $checklist = [
                                 ['done' => $setup['business'], 'title' => 'Complete your business profile', 'sub' => 'Business name, GSTIN, address, state, logo', 'href' => route('company.edit'), 'cta' => $setup['business'] ? 'Edit' : 'Complete →'],
                                 ['done' => $setup['customer'], 'title' => 'Add your first customer', 'sub' => 'Save details once, reuse on every invoice', 'href' => route('customers.create'), 'cta' => $setup['customer'] ? 'Manage' : 'Add customer →'],
-                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, finalize, download PDF', 'href' => route('invoices.create'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
+                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, finalize, download PDF', 'href' => route('invoices.templates'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
                             ];
                         @endphp
                         @foreach ($checklist as $item)
@@ -96,16 +92,16 @@
                 <div class="relative p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 overflow-hidden">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-accent-200/40 rounded-full -mr-8 -mt-8"></div>
                     <div class="relative">
-                        <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding <span class="text-[10px] text-accent-600">({{ $currency }})</span></div>
-                        <div class="text-3xl font-display font-extrabold mt-2 text-accent-900">{{ $sym }}{{ number_format((float) $stats['outstanding'], 2) }}</div>
+                        <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
+                        <div class="text-3xl font-display font-extrabold mt-2 text-accent-900">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
                         <div class="mt-3 text-xs text-accent-700">awaiting payment</div>
                     </div>
                 </div>
                 <div class="relative p-6 bg-gradient-to-br from-money-50 to-money-100 rounded-2xl shadow-card ring-1 ring-money-200 overflow-hidden">
                     <div class="absolute top-0 right-0 w-24 h-24 bg-money-300/30 rounded-full -mr-8 -mt-8"></div>
                     <div class="relative">
-                        <div class="text-xs uppercase font-bold tracking-wider text-money-800">Paid this month <span class="text-[10px] text-money-600">({{ $currency }})</span></div>
-                        <div class="text-3xl font-display font-extrabold mt-2 text-money-900">{{ $sym }}{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
+                        <div class="text-xs uppercase font-bold tracking-wider text-money-800">Paid this month</div>
+                        <div class="text-3xl font-display font-extrabold mt-2 text-money-900">₹{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
                         <div class="mt-3 text-xs text-money-700">{{ now()->format('F Y') }}</div>
                     </div>
                 </div>
@@ -118,7 +114,7 @@
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
                         <h3 class="font-display font-bold text-gray-900">Quick actions</h3>
                         <div class="mt-4 space-y-2">
-                            <a href="{{ route('invoices.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
+                            <a href="{{ route('invoices.templates') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center group-hover:bg-brand-700 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
@@ -191,7 +187,7 @@
                                 </div>
                                 <h4 class="mt-4 font-semibold text-gray-900">No invoices yet</h4>
                                 <p class="mt-1 text-sm text-gray-500">Create your first invoice to see it here.</p>
-                                <a href="{{ route('invoices.create') }}" class="mt-5 inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition">+ Create invoice</a>
+                                <a href="{{ route('invoices.templates') }}" class="mt-5 inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition">+ Create invoice</a>
                             </div>
                         @else
                             <div class="divide-y divide-gray-100">
@@ -212,12 +208,12 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="font-medium text-gray-900 truncate">{{ $inv->customer?->name }}</div>
                                             <div class="text-xs text-gray-500 font-mono">
-                                                {{ str_starts_with($inv->invoice_number, 'DRAFT-') ? '— Draft' : $inv->invoice_number }}
+                                                {{ $inv->isDraft() ? 'Draft #' . $inv->id : $inv->invoice_number }}
                                                 · {{ $inv->invoice_date?->format('d M Y') }}
                                             </div>
                                         </div>
                                         <div class="text-right">
-                                            <div class="font-mono font-semibold text-gray-900">{{ $inv->currency }} {{ number_format((float) $inv->grand_total, 2) }}</div>
+                                            <div class="font-mono font-semibold text-gray-900">₹{{ number_format((float) $inv->grand_total, 2) }}</div>
                                             <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $badge['bg'] }} {{ $badge['text'] }}">{{ $badge['label'] }}</span>
                                         </div>
                                     </a>

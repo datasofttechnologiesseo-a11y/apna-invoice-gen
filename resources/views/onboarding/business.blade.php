@@ -9,6 +9,17 @@
         <form method="POST" action="{{ route('onboarding.business.save') }}" enctype="multipart/form-data" class="p-6 md:p-8 space-y-6">
             @csrf
 
+            @if ($errors->any())
+                <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                    <div class="font-semibold mb-1">Please fix the following before saving:</div>
+                    <ul class="list-disc pl-5 space-y-0.5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div>
                 <h3 class="font-display font-bold text-gray-900 text-lg">Basics</h3>
                 <p class="text-sm text-gray-500 mt-0.5">Legal name and tax IDs</p>
@@ -95,6 +106,7 @@
                 <p class="mt-1 text-xs text-gray-500">PNG or JPG, up to 2 MB. Recommended 400×120 px.</p>
             </div>
 
+            <input type="hidden" name="default_currency" value="INR">
             <div class="border-t pt-6">
                 <h3 class="font-display font-bold text-gray-900 text-lg">Invoice numbering</h3>
                 <p class="text-sm text-gray-500 mt-0.5">How your invoice numbers will be formatted</p>
@@ -104,13 +116,40 @@
                         <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="old('invoice_prefix', $company->invoice_prefix ?? 'INV')" required maxlength="10" />
                         <p class="mt-1 text-xs text-gray-500">First invoice will be {{ old('invoice_prefix', $company->invoice_prefix ?? 'INV') }}-0001</p>
                     </div>
+                </div>
+            </div>
+
+            <div class="border-t pt-6">
+                <h3 class="font-display font-bold text-gray-900 text-lg">Payment details</h3>
+                <p class="text-sm text-gray-500 mt-0.5">
+                    Shown in the "Payment details" block on every invoice. Add a UPI ID to auto-generate a Scan-to-Pay QR on bills. All fields are optional — fill what applies.
+                </p>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <x-input-label for="default_currency" value="Default currency *" />
-                        <select id="default_currency" name="default_currency" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                            @foreach (['INR','USD','EUR','GBP','AED','SGD','AUD','CAD'] as $code)
-                                <option value="{{ $code }}" @selected(old('default_currency', $company->default_currency ?? 'INR') === $code)>{{ $code }}</option>
-                            @endforeach
-                        </select>
+                        <x-input-label for="bank_name" value="Bank name" />
+                        <x-text-input id="bank_name" name="bank_name" type="text" class="mt-1 block w-full" :value="old('bank_name', $company->bank_name)" maxlength="120" placeholder="HDFC Bank" />
+                        <x-input-error :messages="$errors->get('bank_name')" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-input-label for="bank_branch" value="Branch" />
+                        <x-text-input id="bank_branch" name="bank_branch" type="text" class="mt-1 block w-full" :value="old('bank_branch', $company->bank_branch)" maxlength="120" placeholder="Saket, New Delhi" />
+                        <x-input-error :messages="$errors->get('bank_branch')" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-input-label for="bank_account_number" value="Account number" />
+                        <x-text-input id="bank_account_number" name="bank_account_number" type="text" class="mt-1 block w-full font-mono" :value="old('bank_account_number', $company->bank_account_number)" maxlength="30" />
+                        <x-input-error :messages="$errors->get('bank_account_number')" class="mt-2" />
+                    </div>
+                    <div>
+                        <x-input-label for="bank_ifsc" value="IFSC code" />
+                        <x-text-input id="bank_ifsc" name="bank_ifsc" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('bank_ifsc', $company->bank_ifsc)" maxlength="15" placeholder="HDFC0001234" />
+                        <x-input-error :messages="$errors->get('bank_ifsc')" class="mt-2" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="upi_id" value="UPI ID (VPA)" />
+                        <x-text-input id="upi_id" name="upi_id" type="text" class="mt-1 block w-full font-mono" :value="old('upi_id', $company->upi_id)" maxlength="60" placeholder="yourname@okhdfcbank" />
+                        <p class="mt-1 text-xs text-gray-500">If set, a QR code is auto-generated on each invoice so clients can scan and pay via any UPI app.</p>
+                        <x-input-error :messages="$errors->get('upi_id')" class="mt-2" />
                     </div>
                 </div>
             </div>

@@ -13,7 +13,7 @@ class DashboardController extends Controller
         $company = $user->ensureCompany();
         $currency = $company->default_currency;
 
-        $invoices = $user->invoices();
+        $invoices = $company->invoices();
 
         $stats = [
             'total' => (clone $invoices)->count(),
@@ -29,7 +29,7 @@ class DashboardController extends Controller
 
         $setup = [
             'business' => $company->isBusinessComplete(),
-            'customer' => $user->customers()->exists(),
+            'customer' => $company->customers()->exists(),
             'first_invoice' => (clone $invoices)->exists(),
         ];
         $setupComplete = ! in_array(false, $setup, true);

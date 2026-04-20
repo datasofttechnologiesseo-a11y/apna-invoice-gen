@@ -40,7 +40,7 @@
 
             <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
                 @if ($hasCustomer)
-                    <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-8 py-4 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-brand transition text-lg">
+                    <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-8 py-4 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-brand transition text-lg">
                         Create first invoice
                         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
                     </a>
@@ -55,7 +55,7 @@
             </div>
 
             <div class="mt-8 pt-6 border-t text-sm text-gray-500">
-                Need help? Visit <a href="/" class="text-brand-700 hover:underline">the FAQ</a> or contact Datasoft Technologies support.
+                Need help? Visit <a href="/" class="text-brand-700 hover:underline">the FAQ</a> or contact <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="text-brand-700 hover:underline font-medium">Datasoft Technologies</a> support.
             </div>
         </div>
     </div>

@@ -25,9 +25,15 @@ class OnboardingController extends Controller
         return redirect()->route('onboarding.done');
     }
 
-    public function business(Request $request): View
+    public function business(Request $request): View|RedirectResponse
     {
         $company = $request->user()->ensureCompany();
+
+        // If already complete, skip forward unless explicit edit via ?edit=1
+        if ($company->isBusinessComplete() && ! $request->boolean('edit')) {
+            return redirect()->route('onboarding.index');
+        }
+
         $states = State::orderBy('name')->get();
 
         return view('onboarding.business', compact('company', 'states'));
@@ -53,6 +59,11 @@ class OnboardingController extends Controller
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'invoice_prefix' => ['required', 'string', 'max:10'],
             'default_currency' => ['required', 'string', 'size:3'],
+            'bank_name' => ['nullable', 'string', 'max:120'],
+            'bank_account_number' => ['nullable', 'string', 'max:30'],
+            'bank_ifsc' => ['nullable', 'string', 'max:15'],
+            'bank_branch' => ['nullable', 'string', 'max:120'],
+            'upi_id' => ['nullable', 'string', 'max:60'],
         ]);
 
         if ($request->hasFile('logo')) {
@@ -68,8 +79,20 @@ class OnboardingController extends Controller
         return redirect()->route('onboarding.customer')->with('status', 'Business details saved.');
     }
 
-    public function customer(Request $request): View
+    public function customer(Request $request): View|RedirectResponse
     {
+        $user = $request->user();
+        $company = $user->ensureCompany();
+
+        // Prerequisites
+        if (! $company->isBusinessComplete()) {
+            return redirect()->route('onboarding.business');
+        }
+        // If already has customers, skip forward unless explicit add via ?more=1
+        if ($user->customers()->count() > 0 && ! $request->boolean('more')) {
+            return redirect()->route('onboarding.done');
+        }
+
         $states = State::orderBy('name')->get();
         $customer = new Customer(['country' => 'India']);
 
@@ -91,7 +114,9 @@ class OnboardingController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
         ]);
 
-        $request->user()->customers()->create($data);
+        $user = $request->user();
+        $data['company_id'] = $user->ensureCompany()->id;
+        $user->customers()->create($data);
 
         return redirect()->route('onboarding.done');
     }

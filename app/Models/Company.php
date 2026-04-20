@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id', 'name', 'gstin', 'pan',
         'address_line1', 'address_line2', 'city', 'state_id', 'postal_code', 'country',
@@ -46,6 +49,11 @@ class Company extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function customers(): HasMany
+    {
+        return $this->hasMany(Customer::class);
     }
 
     public function nextInvoiceNumber(): string

@@ -1,7 +1,11 @@
 <x-app-layout>
+    @php $restricted = $restricted ?? false; @endphp
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ $invoice->exists ? 'Edit invoice ' . ($invoice->invoice_number ?? '(draft)') : 'New invoice' }}
+            {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
+            @if ($restricted)
+                <span class="ml-2 text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase font-bold tracking-wider">Limited edit</span>
+            @endif
         </h2>
     </x-slot>
 
@@ -30,6 +34,16 @@
                 </div>
             @endif
 
+            @if ($restricted)
+                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded flex items-start gap-3">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                    <div class="text-sm">
+                        <div class="font-semibold">This invoice is finalised — limited editing only.</div>
+                        <div class="mt-0.5">You can update <strong>notes, terms, due date, and transporter details</strong>. Amounts, line items, customer, and invoice number are legally locked per GST rules. To change those, cancel this invoice and issue a credit note / revised invoice.</div>
+                    </div>
+                </div>
+            @endif
+
             <form method="POST" action="{{ $invoice->exists ? route('invoices.update', $invoice) : route('invoices.store') }}" class="space-y-6">
                 @csrf
                 @if ($invoice->exists) @method('PATCH') @endif
@@ -39,7 +53,7 @@
                         <div class="md:col-span-2">
                             <x-input-label for="customer_id" value="Customer *" />
                             <div class="flex items-center gap-2 mt-1">
-                                <select id="customer_id" name="customer_id" x-model="customerId" @change="recompute()" class="block w-full border-gray-300 rounded-md shadow-sm" required>
+                                <select id="customer_id" name="customer_id" x-model="customerId" @change="recompute()" class="block w-full border-gray-300 rounded-md shadow-sm {{ $restricted ? 'bg-gray-100 cursor-not-allowed' : '' }}" required @disabled($restricted)>
                                     <option value="">— Select customer —</option>
                                     @foreach ($customers as $c)
                                         <option value="{{ $c->id }}" @selected(old('customer_id', $invoice->customer_id) == $c->id)>
@@ -53,33 +67,26 @@
 
                         <div>
                             <x-input-label value="Invoice no." />
-                            <div class="mt-1 py-2 text-gray-700 font-mono text-sm">
-                                {{ $invoice->invoice_number && ! str_starts_with($invoice->invoice_number, 'DRAFT-') ? $invoice->invoice_number : ($previewNumber ?? 'Assigned on finalize') }}
+                            <div class="mt-1 py-2 font-mono text-sm">
+                                @if ($invoice->exists && ! $invoice->isDraft())
+                                    <span class="text-gray-900 font-semibold">{{ $invoice->invoice_number }}</span>
+                                @else
+                                    <span class="text-brand-700 font-semibold">{{ $previewNumber ?? $invoice->company?->nextInvoiceNumber() }}</span>
+                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned on finalize</span>
+                                @endif
                             </div>
                         </div>
 
-                        <div>
-                            <x-input-label for="currency" value="Currency *" />
-                            <select id="currency" name="currency" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                @foreach (['INR','USD','EUR','GBP','AED','SGD','AUD','CAD'] as $code)
-                                    <option value="{{ $code }}" @selected(old('currency', $invoice->currency) === $code)>{{ $code }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <input type="hidden" name="currency" value="INR">
 
                         <div>
                             <x-input-label for="invoice_date" value="Invoice date *" />
-                            <x-text-input id="invoice_date" name="invoice_date" type="date" class="mt-1 block w-full" :value="old('invoice_date', $invoice->invoice_date?->toDateString() ?? now()->toDateString())" required />
+                            <x-text-input id="invoice_date" name="invoice_date" type="date" class="mt-1 block w-full {{ $restricted ? 'bg-gray-100 cursor-not-allowed' : '' }}" :value="old('invoice_date', $invoice->invoice_date?->toDateString() ?? now()->toDateString())" required :disabled="$restricted" />
                         </div>
 
                         <div>
                             <x-input-label for="due_date" value="Due date" />
                             <x-text-input id="due_date" name="due_date" type="date" class="mt-1 block w-full" :value="old('due_date', $invoice->due_date?->toDateString())" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="exchange_rate" value="Exchange rate (to INR)" />
-                            <x-text-input id="exchange_rate" name="exchange_rate" type="number" step="0.000001" min="0" class="mt-1 block w-full" :value="old('exchange_rate', $invoice->exchange_rate ?? 1)" />
                         </div>
 
                         <div>
@@ -98,11 +105,14 @@
                     </div>
                 </div>
 
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+                <div class="bg-white shadow sm:rounded-lg overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between">
-                        <h3 class="font-medium text-gray-900">Line items</h3>
-                        <button type="button" @click="addRow" class="text-brand-600 text-sm hover:underline">+ Add row</button>
+                        <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked — amounts are immutable</span>@endif</h3>
+                        @if (! $restricted)
+                            <button type="button" @click="addRow" class="text-brand-600 text-sm hover:underline">+ Add row</button>
+                        @endif
                     </div>
+                    <fieldset @disabled($restricted) class="{{ $restricted ? 'pointer-events-none' : '' }}">
 
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
@@ -110,13 +120,10 @@
                                 <tr>
                                     <th class="px-3 py-2 text-left">Description</th>
                                     <th class="px-3 py-2 text-left">HSN/SAC</th>
-                                    <th class="px-3 py-2 text-right">Qty</th>
-                                    <th class="px-3 py-2 text-left">Unit</th>
-                                    <th class="px-3 py-2 text-right">Rate</th>
+                                    <th class="px-3 py-2 text-left">Quantity</th>
+                                    <th class="px-3 py-2 text-right">Rate (₹)</th>
                                     <th class="px-3 py-2 text-right">GST%</th>
                                     <th class="px-3 py-2 text-right">Amount</th>
-                                    <th class="px-3 py-2 text-right">Tax</th>
-                                    <th class="px-3 py-2 text-right">Total</th>
                                     <th class="px-3 py-2"></th>
                                 </tr>
                             </thead>
@@ -125,40 +132,95 @@
                                     <tr class="border-t">
                                         <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" class="w-full border-gray-300 rounded text-sm" required></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" class="w-28 border-gray-300 rounded text-sm" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" class="w-20 border-gray-300 rounded text-sm text-right" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="pcs"></td>
+                                        <td class="px-2 py-2">
+                                            <div class="flex items-center gap-1">
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
+                                            </div>
+                                        </td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
                                         <td class="px-2 py-2">
-                                            <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
-                                                <option value="0">0</option>
-                                                <option value="0.10">0.10</option>
-                                                <option value="0.25">0.25</option>
-                                                <option value="3">3</option>
-                                                <option value="5">5</option>
-                                                <option value="12">12</option>
-                                                <option value="18">18</option>
-                                                <option value="28">28</option>
+                                            <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-36 border-gray-300 rounded text-sm">
+                                                @foreach (config('gst.rates') as $r)
+                                                    <option value="{{ $r['value'] }}" title="{{ $r['note'] }}">{{ $r['label'] }}</option>
+                                                @endforeach
                                             </select>
                                         </td>
-                                        <td class="px-2 py-2 text-right font-mono text-sm" x-text="fmt(item.amount)"></td>
-                                        <td class="px-2 py-2 text-right font-mono text-sm text-gray-600" x-text="fmt(item.tax)"></td>
-                                        <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.total)"></td>
-                                        <td class="px-2 py-2 text-right"><button type="button" @click="removeRow(idx)" class="text-red-500 hover:text-red-700" x-show="items.length > 1">×</button></td>
+                                        <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
+                                        <td class="px-2 py-2 text-right">@if (! $restricted)<button type="button" @click="removeRow(idx)" class="text-red-500 hover:text-red-700" x-show="items.length > 1">×</button>@endif</td>
                                     </tr>
                                 </template>
                             </tbody>
                         </table>
                     </div>
+                    </fieldset>
+
+                    @php
+                        $transporterPrefilled = old('transporter_name', $invoice->transporter_name)
+                            || old('transporter_id', $invoice->transporter_id)
+                            || old('vehicle_number', $invoice->vehicle_number)
+                            || old('transport_mode', $invoice->transport_mode)
+                            || old('eway_bill_number', $invoice->eway_bill_number);
+                    @endphp
+
+                    <div class="border-t bg-gray-50" x-data="{ open: {{ $transporterPrefilled ? 'true' : 'false' }} }">
+                        <button type="button" @click="open = !open"
+                                class="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-100 transition"
+                                :aria-expanded="open">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6 0a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                                </svg>
+                                <div>
+                                    <div class="text-sm font-semibold text-gray-900">Shipping goods? Add transporter details</div>
+                                    <div class="text-xs text-gray-500">Skip this if you're billing for services. Used for e-way bill and goods delivery.</div>
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-cloak class="px-6 pb-6 pt-2 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <x-input-label for="transporter_name" value="Transporter name" />
+                                    <x-text-input id="transporter_name" name="transporter_name" type="text" class="mt-1 block w-full" :value="old('transporter_name', $invoice->transporter_name)" />
+                                </div>
+                                <div>
+                                    <x-input-label for="transporter_id" value="Transporter ID / GSTIN" />
+                                    <x-text-input id="transporter_id" name="transporter_id" type="text" class="mt-1 block w-full" :value="old('transporter_id', $invoice->transporter_id)" />
+                                </div>
+                                <div>
+                                    <x-input-label for="vehicle_number" value="Vehicle number" />
+                                    <x-text-input id="vehicle_number" name="vehicle_number" type="text" class="mt-1 block w-full uppercase" :value="old('vehicle_number', $invoice->vehicle_number)" placeholder="e.g. MH12AB1234" />
+                                </div>
+                                <div>
+                                    <x-input-label for="transport_mode" value="Mode" />
+                                    <select id="transport_mode" name="transport_mode" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                        <option value="">— Select —</option>
+                                        @foreach (['Road', 'Rail', 'Air', 'Ship'] as $m)
+                                            <option value="{{ $m }}" @selected(old('transport_mode', $invoice->transport_mode) === $m)>{{ $m }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <x-input-label for="eway_bill_number" value="E-way bill number" />
+                                    <x-text-input id="eway_bill_number" name="eway_bill_number" type="text" class="mt-1 block w-full font-mono" :value="old('eway_bill_number', $invoice->eway_bill_number)" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-t bg-gray-50">
                         <div class="space-y-4">
                             <div>
-                                <x-input-label for="notes" value="Notes" />
-                                <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ old('notes', $invoice->notes) }}</textarea>
-                            </div>
-                            <div>
                                 <x-input-label for="terms" value="Terms & conditions" />
                                 <textarea id="terms" name="terms" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ old('terms', $invoice->terms ?? $company->default_terms) }}</textarea>
+                            </div>
+                            <div>
+                                <x-input-label for="notes" value="Notes (shown below Terms)" />
+                                <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ old('notes', $invoice->notes) }}</textarea>
                             </div>
                         </div>
 
@@ -167,7 +229,6 @@
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>SGST</span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
                             <div class="flex justify-between" x-show="isInterstate"><span>IGST</span><span class="font-mono" x-text="fmt(totals.igst)"></span></div>
-                            <div class="flex justify-between border-t pt-2"><span>Total tax</span><span class="font-mono" x-text="fmt(totals.totalTax)"></span></div>
                             <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono" x-text="fmt(totals.grandTotal)"></span></div>
                             <div class="flex justify-between items-center">
                                 <label for="paid_amount">Paid amount</label>
@@ -180,9 +241,23 @@
 
                 <div class="flex items-center justify-between">
                     <a href="{{ route('invoices.index') }}" class="text-gray-500 hover:underline">← Cancel</a>
-                    <x-primary-button>{{ $invoice->exists ? 'Save draft' : 'Create draft' }}</x-primary-button>
+                    <x-primary-button>{{ $restricted ? 'Save changes' : ($invoice->exists ? 'Save draft' : 'Create draft') }}</x-primary-button>
                 </div>
             </form>
+
+            @if ($invoice->exists && $invoice->isEditable() && ! $restricted)
+                <div class="mt-6 p-5 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                    <div class="text-sm">
+                        <div class="font-semibold text-red-800">Delete this draft</div>
+                        <div class="text-red-700">Once deleted, the draft and its line items are gone permanently.</div>
+                    </div>
+                    <form method="POST" action="{{ route('invoices.destroy', $invoice) }}" onsubmit="return confirm('Delete this draft? This cannot be undone.')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold text-sm">Delete draft</button>
+                    </form>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -219,8 +294,13 @@
                         const amount = +(qty * rate).toFixed(2);
                         let c = 0, s = 0, ig = 0;
                         if (gst > 0) {
-                            if (inter) ig = +(amount * gst / 100).toFixed(2);
-                            else { c = +(amount * (gst / 2) / 100).toFixed(2); s = +(amount * (gst / 2) / 100).toFixed(2); }
+                            const tax = +(amount * gst / 100).toFixed(2);
+                            if (inter) {
+                                ig = tax;
+                            } else {
+                                c = +(tax / 2).toFixed(2);
+                                s = +(tax - c).toFixed(2);
+                            }
                         }
                         item.amount = amount;
                         item.tax = +(c + s + ig).toFixed(2);
