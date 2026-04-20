@@ -16,7 +16,7 @@ class Invoice extends Model
         'invoice_number', 'invoice_date', 'due_date',
         'place_of_supply_state_id', 'is_interstate', 'reverse_charge',
         'transporter_name', 'transporter_id', 'vehicle_number', 'transport_mode', 'eway_bill_number',
-        'currency', 'exchange_rate', 'status',
+        'currency', 'exchange_rate', 'status', 'style',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
         'round_off', 'grand_total', 'paid_amount', 'balance',
         'notes', 'terms', 'finalized_at',

@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="font-display font-extrabold text-2xl text-gray-900 leading-tight">{{ __('Dashboard') }}</h2>
-                <p class="text-sm text-gray-500 mt-1">Welcome back, {{ auth()->user()->name }}. Here's the view of your business today.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="min-w-0">
+                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Dashboard') }}</h2>
+                <p class="text-sm text-gray-500 mt-1">Welcome back, {{ Str::limit(auth()->user()->name, 30) }}. Here's today's view.</p>
             </div>
-            <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
+            <a href="{{ route('invoices.templates') }}" class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition whitespace-nowrap">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 New invoice
             </a>
@@ -93,7 +93,7 @@
                     <div class="absolute top-0 right-0 w-24 h-24 bg-accent-200/40 rounded-full -mr-8 -mt-8"></div>
                     <div class="relative">
                         <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
-                        <div class="text-3xl font-display font-extrabold mt-2 text-accent-900">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
+                        <div class="text-2xl sm:text-3xl font-display font-extrabold mt-2 text-accent-900 tabular-nums">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
                         <div class="mt-3 text-xs text-accent-700">awaiting payment</div>
                     </div>
                 </div>
@@ -101,11 +101,38 @@
                     <div class="absolute top-0 right-0 w-24 h-24 bg-money-300/30 rounded-full -mr-8 -mt-8"></div>
                     <div class="relative">
                         <div class="text-xs uppercase font-bold tracking-wider text-money-800">Paid this month</div>
-                        <div class="text-3xl font-display font-extrabold mt-2 text-money-900">₹{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
+                        <div class="text-2xl sm:text-3xl font-display font-extrabold mt-2 text-money-900 tabular-nums">₹{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
                         <div class="mt-3 text-xs text-money-700">{{ now()->format('F Y') }}</div>
                     </div>
                 </div>
             </div>
+
+            {{-- This month's P&L snapshot --}}
+            <a href="{{ route('finance.index') }}" class="block bg-white rounded-2xl shadow-card ring-1 ring-gray-100 hover:ring-brand-300 hover:shadow-brand transition p-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <div class="text-xs uppercase font-bold tracking-wider text-gray-500">This month's P&amp;L</div>
+                        <div class="text-sm text-gray-500 mt-0.5">{{ now()->format('F Y') }} · accrual basis (excl. GST)</div>
+                    </div>
+                    <div class="flex items-center gap-6 sm:gap-8 flex-wrap">
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Income</div>
+                            <div class="font-display text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($pnl['income'], 0) }}</div>
+                        </div>
+                        <div class="text-gray-300 font-light text-xl">−</div>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Expenses</div>
+                            <div class="font-display text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($pnl['expense'], 0) }}</div>
+                        </div>
+                        <div class="text-gray-300 font-light text-xl">=</div>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Net profit</div>
+                            <div class="font-display text-xl sm:text-2xl font-extrabold tabular-nums {{ $pnl['profit'] >= 0 ? 'text-money-700' : 'text-red-700' }}">₹{{ number_format($pnl['profit'], 0) }}</div>
+                        </div>
+                        <div class="text-brand-700 text-sm font-semibold">View analytics →</div>
+                    </div>
+                </div>
+            </a>
 
             <!-- Quick actions + recent grid -->
             <div class="grid lg:grid-cols-3 gap-6">

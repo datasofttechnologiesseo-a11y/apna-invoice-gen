@@ -1,11 +1,11 @@
 @php
     $styles = config('invoice_styles');
-    $styleKey = $style ?? 'classic';
+    $styleKey = $style ?? ($invoice->style ?? 'classic');
     $t = $styles[$styleKey] ?? $styles['classic'];
 
     $c = $invoice->company;
     $cust = $invoice->customer;
-    $currencySymbol = 'Rs. ';
+    $currencySymbol = '₹';
     $invoiceNumber = $invoice->isDraft()
         ? 'DRAFT · ' . ($invoice->company->nextInvoiceNumber() ?? 'preview')
         : $invoice->invoice_number;
@@ -17,6 +17,30 @@
     $qrDataUri = $showUpiQr
         ? \App\Support\UpiQr::svgDataUri($c->upi_id, $c->name, $payableAmount, $invoice->invoice_number ?: 'Invoice', 140)
         : null;
+
+    // HSN-wise summary (Rule 46 best practice — required on GSTR-1 anyway)
+    $hsnSummary = collect($invoice->items ?? [])
+        ->groupBy('hsn_sac')
+        ->map(function ($items, $hsn) use ($invoice) {
+            $items = collect($items);
+            $taxable = $items->sum(fn ($i) => (float) $i->amount);
+            $cgst = $items->sum(fn ($i) => (float) $i->cgst_amount);
+            $sgst = $items->sum(fn ($i) => (float) $i->sgst_amount);
+            $igst = $items->sum(fn ($i) => (float) $i->igst_amount);
+            return [
+                'hsn' => $hsn,
+                'taxable' => $taxable,
+                'cgst' => $cgst,
+                'sgst' => $sgst,
+                'igst' => $igst,
+                'total_tax' => $cgst + $sgst + $igst,
+            ];
+        })
+        ->values();
+    // Only render HSN summary when invoice has enough complexity to benefit — 2-item invoices don't need it
+    $showHsnSummary = $hsnSummary->count() > 1 && collect($invoice->items ?? [])->count() >= 4;
+
+    $jurisdictionCity = $c->city ?: 'India';
 @endphp
 <!DOCTYPE html>
 <html>
@@ -27,12 +51,12 @@
         @page { size: A4; margin: 0; }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
-        body { font-family: {{ $t['font_family'] }}; font-size: 10px; color: {{ $t['body_color'] }}; line-height: 1.4; }
-        .page { padding: 14mm 14mm; border-top: {{ $t['top_rule'] }}; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: {{ $t['body_color'] }}; line-height: 1.45; }
+        .page { padding: 10mm 11mm 8mm; border-top: {{ $t['top_rule'] }}; }
 
         h1, h2, h3 { margin: 0; }
-        .title { font-size: {{ $t['title_size'] }}; font-weight: 700; letter-spacing: {{ $t['title_letter_spacing'] }}; text-transform: {{ $t['title_transform'] }}; color: {{ $t['title_color'] }}; line-height: 1; margin: 0; }
-        .co-name { font-weight: 700; font-size: 14px; color: {{ $t['body_color'] }}; }
+        .title { font-size: {{ $t['title_size'] }}; font-weight: 700; letter-spacing: {{ $t['title_letter_spacing'] }}; text-transform: uppercase; color: {{ $t['title_color'] }}; line-height: 1; }
+        .co-name { font-weight: 700; font-size: 15px; color: {{ $t['body_color'] }}; }
         .small { font-size: 9px; }
         .x-small { font-size: 8.5px; }
         .muted { color: {{ $t['muted'] }}; }
@@ -42,7 +66,7 @@
         .tc { text-align: center; }
         .bold { font-weight: bold; }
         .accent { color: {{ $t['accent'] }}; }
-        .upper { text-transform: uppercase; letter-spacing: 0.6px; }
+        .upper { text-transform: uppercase; letter-spacing: 0.8px; }
         .label {
             display: inline-block;
             font-size: 8px;
@@ -63,26 +87,36 @@
             font-size: 10px;
             letter-spacing: 0.4px;
         }
+        .copy-label {
+            display: inline-block;
+            padding: 2px 8px;
+            border: 1px dashed {{ $t['accent'] }};
+            color: {{ $t['accent'] }};
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
 
         /* Header */
-        .hero { padding-bottom: 10px; border-bottom: {{ $t['header_rule'] }}; }
+        .hero { padding-bottom: 8px; border-bottom: {{ $t['header_rule'] }}; }
 
         /* Meta strip */
         .meta-strip {
             padding: 6px 0;
             border-bottom: 1px solid {{ $t['divider'] }};
-            margin-top: 10px;
+            margin-top: 8px;
             font-size: 9px;
         }
-        .meta-strip td { padding-right: 14px; vertical-align: top; }
+        .meta-strip td { padding-right: 12px; vertical-align: top; }
         .meta-strip .meta-lbl { color: {{ $t['muted'] }}; text-transform: uppercase; letter-spacing: 0.6px; font-size: 8px; }
         .meta-strip .meta-val { font-weight: bold; color: {{ $t['body_color'] }}; font-size: 10px; }
 
-        /* Bill-to / transporter */
-        .parties { margin-top: 12px; padding-bottom: 8px; border-bottom: 1px solid {{ $t['divider'] }}; }
+        /* Parties */
+        .parties { margin-top: 10px; padding-bottom: 8px; border-bottom: 1px solid {{ $t['divider'] }}; }
 
-        /* Items */
-        table.items { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        /* Items table */
+        table.items { width: 100%; border-collapse: collapse; margin-top: 10px; }
         table.items th {
             background: {{ $t['table_head_bg'] }};
             color: {{ $t['table_head_color'] }};
@@ -90,15 +124,37 @@
             text-align: left;
             font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             font-weight: bold;
+            border-top: 1px solid {{ $t['divider'] }};
             border-bottom: 1px solid {{ $t['divider'] }};
         }
         table.items td {
-            padding: 6px 5px;
+            padding: 5px 5px;
             border-bottom: 1px solid {{ $t['table_row_border'] }};
             vertical-align: top;
             font-size: 10px;
+        }
+        table.items tr:last-child td { border-bottom: 1px solid {{ $t['divider'] }}; }
+
+        /* HSN summary */
+        table.hsn-summary { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        table.hsn-summary th {
+            background: {{ $t['accent_soft'] }};
+            color: {{ $t['accent'] }};
+            padding: 5px 6px;
+            text-align: left;
+            font-size: 8.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+            border-top: 1px solid {{ $t['divider'] }};
+            border-bottom: 1px solid {{ $t['divider'] }};
+        }
+        table.hsn-summary td {
+            padding: 4px 6px;
+            border-bottom: 1px solid {{ $t['table_row_border'] }};
+            font-size: 9px;
         }
 
         /* Totals */
@@ -120,30 +176,26 @@
         }
         table.totals tr.total td:last-child { font-size: 13px; text-transform: none; letter-spacing: 0; }
 
-        /* Amount in words */
         .aiw-text { font-style: italic; font-size: 10px; color: {{ $t['body_color'] }}; margin-top: 2px; line-height: 1.4; }
 
-        /* Bank + QR */
         .pay-box {
-            margin-top: 12px;
-            padding: 10px 12px;
+            margin-top: 10px;
+            padding: 9px 11px;
             border: 1px solid {{ $t['divider'] }};
             border-radius: 3px;
         }
         .qr-box { text-align: center; padding: 3px; background: #fff; border: 1px solid {{ $t['divider'] }}; border-radius: 3px; }
 
-        /* Terms / notes */
         .note-card {
-            margin-top: 10px;
-            padding: 8px 10px;
+            margin-top: 6px;
+            padding: 6px 9px;
             border-left: 2px solid {{ $t['divider'] }};
             font-size: 9px;
-            line-height: 1.5;
+            line-height: 1.45;
         }
         .note-card .note-lbl { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: {{ $t['muted'] }}; margin-bottom: 2px; }
 
-        /* Signature */
-        .sig-wrap { margin-top: 20px; }
+        .sig-wrap { margin-top: 12px; }
         .sig-box {
             display: inline-block;
             min-width: 160px;
@@ -154,10 +206,9 @@
             font-size: 9px;
         }
 
-        /* Footer */
         .foot {
-            margin-top: 14px;
-            padding-top: 6px;
+            margin-top: 8px;
+            padding-top: 4px;
             border-top: 1px solid {{ $t['divider'] }};
             text-align: center;
             color: {{ $t['muted'] }};
@@ -165,7 +216,6 @@
             letter-spacing: 0.3px;
         }
 
-        /* Avoid breaks inside key blocks */
         .no-break { page-break-inside: avoid; }
     </style>
 </head>
@@ -176,9 +226,9 @@
     {{-- ========== HEADER ========== --}}
     <table class="hero" style="width:100%;">
         <tr>
-            <td style="vertical-align: top; width: 60%;">
+            <td style="vertical-align: top; width: 58%;">
                 @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 44px; max-width: 180px; margin-bottom: 4px;">
+                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
                 @endif
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted" style="margin-top: 3px; line-height: 1.45;">
@@ -188,41 +238,54 @@
                     @if ($c->phone){{ $c->phone }}@endif
                     @if ($c->phone && $c->email) · @endif
                     @if ($c->email){{ $c->email }}@endif
+                    @if ($c->website) · {{ $c->website }}@endif
                 </div>
-                @if ($c->gstin)
-                    <div class="x-small" style="margin-top: 3px;"><span class="muted upper">GSTIN</span> <span class="mono bold">{{ $c->gstin }}</span></div>
-                @endif
+                <div class="x-small" style="margin-top: 3px;">
+                    @if ($c->gstin)
+                        <span class="muted upper">GSTIN</span> <span class="mono bold">{{ $c->gstin }}</span>
+                    @endif
+                    @if ($c->gstin && $c->pan)
+                        <span class="muted"> · </span>
+                    @endif
+                    @if ($c->pan)
+                        <span class="muted upper">PAN</span> <span class="mono bold">{{ $c->pan }}</span>
+                    @endif
+                </div>
             </td>
-            <td style="vertical-align: top; text-align: right; width: 40%;">
-                <div class="title">TAX INVOICE</div>
-                <div style="margin-top: 6px;"><span class="pill">#{{ $invoiceNumber }}</span></div>
+            <td style="vertical-align: top; text-align: right; width: 42%;">
+                <div class="title">Tax Invoice</div>
+                <div style="margin-top: 4px;">
+                    <span class="copy-label">Original for Recipient</span>
+                </div>
+                <div style="margin-top: 6px;">
+                    <span class="pill">#{{ $invoiceNumber }}</span>
+                </div>
                 <div class="x-small muted" style="margin-top: 6px; line-height: 1.6;">
                     <strong>Date:</strong> {{ $invoice->invoice_date?->format('d M Y') }}
                     @if ($invoice->due_date) · <strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}@endif
-                    @if ($invoice->reverse_charge) · <strong>Reverse charge:</strong> Yes @endif
                 </div>
             </td>
         </tr>
     </table>
 
-    {{-- ========== META STRIP ========== --}}
+    {{-- ========== META STRIP (Rule 46: place of supply, reverse charge) ========== --}}
     <table class="meta-strip" style="width:100%;">
         <tr>
-            <td>
+            <td style="width: 30%;">
                 <div class="meta-lbl">Place of supply</div>
                 <div class="meta-val">{{ $invoice->placeOfSupply?->name ?? '—' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
             </td>
-            <td>
+            <td style="width: 20%;">
                 <div class="meta-lbl">Currency</div>
                 <div class="meta-val">{{ $invoice->currency ?? 'INR' }}</div>
             </td>
-            <td>
+            <td style="width: 28%;">
                 <div class="meta-lbl">Tax treatment</div>
                 <div class="meta-val">{{ $invoice->is_interstate ? 'IGST (interstate)' : 'CGST + SGST (intrastate)' }}</div>
             </td>
-            <td style="text-align: right;">
-                <div class="meta-lbl">Status</div>
-                <div class="meta-val accent">{{ strtoupper(str_replace('_', ' ', $invoice->status ?? 'draft')) }}</div>
+            <td style="width: 22%; text-align: right;">
+                <div class="meta-lbl">Reverse charge</div>
+                <div class="meta-val accent">{{ $invoice->reverse_charge ? 'YES' : 'NO' }}</div>
             </td>
         </tr>
     </table>
@@ -274,13 +337,13 @@
     <table class="items">
         <thead>
             <tr>
-                <th style="width: 24px;">#</th>
-                <th>Description</th>
+                <th style="width: 22px;">#</th>
+                <th>Description of goods / services</th>
                 <th style="width: 58px;">HSN/SAC</th>
                 <th class="tr" style="width: 50px;">Qty</th>
                 <th class="tr" style="width: 60px;">Rate</th>
-                <th class="tr" style="width: 40px;">GST</th>
-                <th class="tr" style="width: 80px;">Amount</th>
+                <th class="tr" style="width: 38px;">GST%</th>
+                <th class="tr" style="width: 80px;">Taxable {{ $currencySymbol }}</th>
             </tr>
         </thead>
         <tbody>
@@ -298,15 +361,49 @@
         </tbody>
     </table>
 
+    {{-- ========== HSN-wise summary (required for GSTR-1; only when multiple HSNs) ========== --}}
+    @if ($showHsnSummary)
+        <table class="hsn-summary no-break">
+            <thead>
+                <tr>
+                    <th>HSN/SAC</th>
+                    <th class="tr" style="width: 85px;">Taxable {{ $currencySymbol }}</th>
+                    @if ($invoice->is_interstate)
+                        <th class="tr" style="width: 85px;">IGST {{ $currencySymbol }}</th>
+                    @else
+                        <th class="tr" style="width: 85px;">CGST {{ $currencySymbol }}</th>
+                        <th class="tr" style="width: 85px;">SGST {{ $currencySymbol }}</th>
+                    @endif
+                    <th class="tr" style="width: 85px;">Total tax {{ $currencySymbol }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($hsnSummary as $row)
+                    <tr>
+                        <td class="mono">{{ $row['hsn'] }}</td>
+                        <td class="tr mono">{{ number_format($row['taxable'], 2) }}</td>
+                        @if ($invoice->is_interstate)
+                            <td class="tr mono">{{ number_format($row['igst'], 2) }}</td>
+                        @else
+                            <td class="tr mono">{{ number_format($row['cgst'], 2) }}</td>
+                            <td class="tr mono">{{ number_format($row['sgst'], 2) }}</td>
+                        @endif
+                        <td class="tr mono bold">{{ number_format($row['total_tax'], 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
     {{-- ========== AMOUNT IN WORDS + TOTALS ========== --}}
-    <table style="width: 100%; margin-top: 14px;" class="no-break">
+    <table style="width: 100%; margin-top: 10px;" class="no-break">
         <tr>
             <td style="width: 55%; vertical-align: top; padding-right: 14px;">
-                <div class="label">Amount in words</div>
+                <div class="label">Amount in words (INR)</div>
                 <div class="aiw-text">{{ $amountInWords }}</div>
 
                 @if ($c->declaration)
-                    <div class="note-card" style="margin-top: 10px;">
+                    <div class="note-card" style="margin-top: 8px;">
                         <div class="note-lbl">Declaration</div>
                         <div style="font-style: italic;">{{ $c->declaration }}</div>
                     </div>
@@ -316,7 +413,7 @@
                 <div class="totals-box">
                     <table class="totals">
                         <tr>
-                            <td class="muted">Subtotal</td>
+                            <td class="muted">Taxable value</td>
                             <td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->subtotal, 2) }}</td>
                         </tr>
                         @if ($invoice->is_interstate)
@@ -348,7 +445,7 @@
         </tr>
     </table>
 
-    {{-- ========== BANK DETAILS + UPI QR ========== --}}
+    {{-- ========== PAYMENT DETAILS + UPI QR ========== --}}
     @if ($c->bank_name || $c->bank_account_number || $c->upi_id)
         <div class="pay-box no-break">
             <div class="label">Payment details</div>
@@ -388,7 +485,7 @@
                                 <img src="{{ $qrDataUri }}" alt="UPI payment QR" style="width: 63px; height: 63px; display: block; margin: 0 auto;">
                             </div>
                             <div class="x-small bold accent" style="margin-top: 3px;">Scan & pay {{ $currencySymbol }}{{ number_format($payableAmount, 2) }}</div>
-                            <div class="x-small muted">GPay · PhonePe · Paytm</div>
+                            <div class="x-small muted">Any UPI app</div>
                         </td>
                     @endif
                 </tr>
@@ -411,17 +508,24 @@
         </div>
     @endif
 
-    {{-- ========== SIGNATURE + FOOTER ========== --}}
+    {{-- ========== SIGNATURE ========== --}}
     <div class="sig-wrap no-break">
         <table style="width: 100%;">
             <tr>
-                <td style="vertical-align: bottom;"></td>
+                <td style="vertical-align: bottom;">
+                    <div class="x-small muted">
+                        <strong>E. &amp; O.E.</strong> (Errors &amp; Omissions Excepted)
+                    </div>
+                    <div class="x-small muted" style="margin-top: 1px;">
+                        Subject to <strong>{{ $jurisdictionCity }}</strong> jurisdiction
+                    </div>
+                </td>
                 <td style="vertical-align: top; text-align: right;">
                     @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
                         <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="Authorised signature" style="max-height: 32px; margin-bottom: 2px;">
                     @endif
                     <div class="sig-box">
-                        for {{ $c->name }}
+                        For {{ $c->name }}
                         <div class="x-small muted" style="font-weight: normal; margin-top: 1px;">Authorised signatory</div>
                     </div>
                 </td>
@@ -429,7 +533,7 @@
         </table>
     </div>
 
-    <div class="foot">Computer-generated invoice — no signature required.</div>
+    <div class="foot">This is a computer-generated invoice and does not require a physical signature.</div>
 </div>
 
 </body>

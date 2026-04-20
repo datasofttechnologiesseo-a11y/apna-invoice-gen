@@ -163,6 +163,7 @@ class InvoiceController extends Controller
             'currency' => $template['currency'] ?? $company->default_currency,
             'terms' => $company->default_terms,
             'status' => 'draft',
+            'style' => $template['style'] ?? 'classic',
         ]);
 
         // Pre-fill items from template (ephemeral — not persisted until submit)
@@ -202,6 +203,7 @@ class InvoiceController extends Controller
                 'currency' => 'INR',
                 'exchange_rate' => 1,
                 'status' => 'draft',
+                'style' => $data['style'] ?? 'classic',
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
@@ -306,6 +308,7 @@ class InvoiceController extends Controller
                 'eway_bill_number' => $data['eway_bill_number'] ?? null,
                 'currency' => 'INR',
                 'exchange_rate' => 1,
+                'style' => $data['style'] ?? $invoice->style ?? 'classic',
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
@@ -386,7 +389,7 @@ class InvoiceController extends Controller
         $this->authorizeInvoice($request, $invoice);
         $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
-        $style = 'classic';
+        $style = $invoice->style ?: 'classic';
 
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style'))
             ->setPaper('A4')
@@ -419,6 +422,7 @@ class InvoiceController extends Controller
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['nullable', 'string', 'size:3'],
             'reverse_charge' => ['nullable', 'boolean'],
+            'style' => ['nullable', 'string', 'in:' . implode(',', array_keys(config('invoice_styles')))],
             'transporter_name' => ['nullable', 'string', 'max:120'],
             'transporter_id' => ['nullable', 'string', 'max:40'],
             'vehicle_number' => ['nullable', 'string', 'max:30'],

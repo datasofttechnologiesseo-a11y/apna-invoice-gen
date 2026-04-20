@@ -3,6 +3,7 @@
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
@@ -117,6 +118,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments');
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'printView'])->name('invoices.print');
+
+    // Finance — P&L analytics + expense tracking
+    Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+    Route::get('/finance/expenses', [FinanceController::class, 'expenses'])->name('finance.expenses');
+    Route::get('/finance/expenses/create', [FinanceController::class, 'createExpense'])->name('finance.expenses.create');
+    Route::post('/finance/expenses', [FinanceController::class, 'storeExpense'])->name('finance.expenses.store');
+    Route::get('/finance/expenses/{expense}/edit', [FinanceController::class, 'editExpense'])->name('finance.expenses.edit');
+    Route::patch('/finance/expenses/{expense}', [FinanceController::class, 'updateExpense'])->name('finance.expenses.update');
+    Route::delete('/finance/expenses/{expense}', [FinanceController::class, 'destroyExpense'])->name('finance.expenses.destroy');
+
+    // Stop impersonation — must be reachable by the CURRENTLY logged-in user
+    // (who isn't a super admin during impersonation), so it sits outside the
+    // super-admin middleware.
+    Route::post('/admin/impersonation/stop', [\App\Http\Controllers\Admin\DashboardController::class, 'stopImpersonate'])
+        ->name('admin.impersonation.stop');
+
+    // Super-admin analytics panel
+    Route::middleware('super-admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/users', [\App\Http\Controllers\Admin\DashboardController::class, 'users'])->name('users');
+        Route::get('/users/{user}', [\App\Http\Controllers\Admin\DashboardController::class, 'userDetail'])->name('users.show');
+        Route::post('/users/{user}/impersonate', [\App\Http\Controllers\Admin\DashboardController::class, 'impersonate'])->name('users.impersonate');
+        Route::get('/invoices', [\App\Http\Controllers\Admin\DashboardController::class, 'invoices'])->name('invoices');
+        Route::get('/companies', [\App\Http\Controllers\Admin\DashboardController::class, 'companies'])->name('companies');
+        Route::get('/customers', [\App\Http\Controllers\Admin\DashboardController::class, 'customers'])->name('customers');
+    });
 });
 
 Route::middleware('auth')->group(function () {

@@ -56,6 +56,11 @@ class Company extends Model
         return $this->hasMany(Customer::class);
     }
 
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class);
+    }
+
     public function nextInvoiceNumber(): string
     {
         $next = $this->invoice_counter + 1;

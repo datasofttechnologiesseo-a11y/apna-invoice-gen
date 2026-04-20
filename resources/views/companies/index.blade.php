@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Your companies</h2>
             <a href="{{ route('companies.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm">+ Add company</a>
         </div>
@@ -29,7 +29,7 @@
                     <ul class="divide-y divide-gray-100">
                         @foreach ($companies as $company)
                             @php $isActive = $company->id === $active->id; @endphp
-                            <li class="p-5 flex items-start justify-between gap-4 {{ $isActive ? 'bg-brand-50/40' : '' }}">
+                            <li class="p-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 {{ $isActive ? 'bg-brand-50/40' : '' }}">
                                 <div class="min-w-0 flex-1 flex items-start gap-4">
                                     @if ($company->logo_path && file_exists(public_path('storage/' . $company->logo_path)))
                                         <img src="{{ asset('storage/' . $company->logo_path) }}" alt="{{ $company->name }} logo" class="h-10 w-auto max-w-[80px] object-contain bg-white ring-1 ring-gray-200 rounded p-1 flex-shrink-0">
@@ -56,7 +56,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-2 flex-shrink-0">
+                                <div class="flex items-center gap-2 flex-shrink-0 flex-wrap">
                                     @if (! $isActive)
                                         <form method="POST" action="{{ route('companies.switch', $company) }}" class="inline">
                                             @csrf

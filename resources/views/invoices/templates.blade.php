@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
-            <div>
-                <h2 class="font-display font-extrabold text-2xl text-gray-900 leading-tight">Pick a starting template</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="min-w-0">
+                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Pick a starting template</h2>
                 <p class="mt-1 text-sm text-gray-500">Every template shows a realistic sample below, pre-filled with your company. Use it as-is or tweak before finalising.</p>
             </div>
             <a href="{{ route('invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">← Back to invoices</a>

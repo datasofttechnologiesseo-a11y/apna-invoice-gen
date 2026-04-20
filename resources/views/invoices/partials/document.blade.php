@@ -18,9 +18,11 @@
                 @if ($c->phone) · {{ $c->phone }} @endif
                 @if ($c->email) · {{ $c->email }} @endif
             </div>
-            @if ($c->gstin)
-                <div class="text-sm mt-1"><strong>GSTIN:</strong> {{ $c->gstin }}</div>
-            @endif
+            <div class="text-sm mt-1">
+                @if ($c->gstin)<strong>GSTIN:</strong> <span class="font-mono">{{ $c->gstin }}</span>@endif
+                @if ($c->gstin && $c->pan) · @endif
+                @if ($c->pan)<strong>PAN:</strong> <span class="font-mono">{{ $c->pan }}</span>@endif
+            </div>
             @if ($c->state?->gst_code)
                 <div class="text-sm"><strong>State code:</strong> <span class="font-mono">{{ $c->state->gst_code }}</span></div>
             @endif
@@ -34,6 +36,7 @@
                     <div><strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}</div>
                 @endif
                 <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '—' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
+                <div><strong>Reverse charge:</strong> {{ $invoice->reverse_charge ? 'Yes' : 'No' }}</div>
             </div>
         </div>
     </div>
@@ -188,8 +191,10 @@
     @endif
 
     <div class="mt-10 flex justify-between items-end text-sm">
-        <div>
-            <div class="text-xs text-gray-500">This is a computer-generated invoice.</div>
+        <div class="text-xs text-gray-500">
+            <div><strong>E. &amp; O.E.</strong> (Errors &amp; Omissions Excepted)</div>
+            <div class="mt-0.5">Subject to <strong>{{ $c->city ?: 'India' }}</strong> jurisdiction</div>
+            <div class="mt-2">This is a computer-generated invoice.</div>
         </div>
         <div class="text-center">
             @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))

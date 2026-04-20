@@ -17,20 +17,28 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+        @if (session('impersonator_id'))
+            <div class="bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-between text-sm font-semibold">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                    <span>You're viewing as <strong>{{ auth()->user()->name }}</strong> — super-admin impersonation active</span>
+                </div>
+                <form method="POST" action="{{ route('admin.impersonation.stop') }}">
+                    @csrf
+                    <button class="px-3 py-1 bg-amber-950 text-amber-100 rounded text-xs font-bold uppercase tracking-wider hover:bg-amber-900">Stop impersonating</button>
+                </form>
+            </div>
+        @endif
+        <div class="min-h-screen flex flex-col bg-gray-100">
             @include('layouts.navigation')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <!-- Page Content (heading slot renders in-flow above the body) -->
+            <main class="flex-1">
+                @isset($header)
+                    <div class="max-w-7xl mx-auto w-full pt-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
-                </header>
-            @endisset
-
-            <!-- Page Content -->
-            <main>
+                @endisset
                 {{ $slot }}
             </main>
 
