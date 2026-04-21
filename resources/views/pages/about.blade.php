@@ -32,7 +32,7 @@
     <h2>Get in touch</h2>
     <p>
         Want to partner, ask a question, or just say hi? Reach us at
-        <a href="mailto:hello@datasoft.example">hello@datasoft.example</a> or visit
+        <a href="mailto:hello@datasofttechnologies.com">hello@datasofttechnologies.com</a> or visit
         <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer">datasofttechnologies.com</a>.
     </p>
 

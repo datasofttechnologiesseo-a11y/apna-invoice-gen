@@ -40,6 +40,6 @@
     <h2>Press contact</h2>
     <p>
         For interviews, review units, or comment on Indian SaaS/GST news, email
-        <a href="mailto:press@datasoft.example">press@datasoft.example</a>. We typically reply within 24 hours.
+        <a href="mailto:press@datasofttechnologies.com">press@datasofttechnologies.com</a>. We typically reply within 24 hours.
     </p>
 </x-layouts.marketing>

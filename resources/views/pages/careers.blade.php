@@ -32,7 +32,7 @@
                     <h3 class="mt-1 font-display font-bold text-lg text-gray-900">{{ $r['title'] }}</h3>
                     <p class="text-sm text-gray-500">{{ $r['location'] }} · {{ $r['type'] }}</p>
                 </div>
-                <a href="mailto:careers@datasoft.example?subject=Application: {{ $r['title'] }}"
+                <a href="mailto:careers@datasofttechnologies.com?subject=Application: {{ $r['title'] }}"
                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold transition">
                     Apply →
                 </a>
@@ -43,6 +43,6 @@
     <h2>Don't see your role?</h2>
     <p>
         We're always happy to hear from exceptional people. Send your resume and a short note to
-        <a href="mailto:careers@datasoft.example">careers@datasoft.example</a>.
+        <a href="mailto:careers@datasofttechnologies.com">careers@datasofttechnologies.com</a>.
     </p>
 </x-layouts.marketing>

@@ -25,7 +25,7 @@
     <h2>Annual subscriptions</h2>
     <p>
         Annual plans include a <strong>14-day money-back guarantee</strong> from the date of first purchase.
-        If you are unsatisfied, email <a href="mailto:billing@datasoft.example">billing@datasoft.example</a>
+        If you are unsatisfied, email <a href="mailto:billing@datasofttechnologies.com">billing@datasofttechnologies.com</a>
         within 14 days for a full refund to your original payment method.
     </p>
     <p>
@@ -51,7 +51,7 @@
 
     <h2>How to request</h2>
     <p>
-        Email <a href="mailto:billing@datasoft.example">billing@datasoft.example</a> from the email on your
+        Email <a href="mailto:billing@datasofttechnologies.com">billing@datasofttechnologies.com</a> from the email on your
         account, with your invoice number and a brief reason. We reply within one business day.
     </p>
 </x-layouts.marketing>

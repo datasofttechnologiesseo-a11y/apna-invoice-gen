@@ -81,5 +81,5 @@
     </p>
 
     <h2>Contact</h2>
-    <p>Questions about these Terms? Email <a href="mailto:legal@datasoft.example">legal@datasoft.example</a>.</p>
+    <p>Questions about these Terms? Email <a href="mailto:legal@datasofttechnologies.com">legal@datasofttechnologies.com</a>.</p>
 </x-layouts.marketing>

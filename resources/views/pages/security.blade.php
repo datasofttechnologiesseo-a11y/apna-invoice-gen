@@ -54,7 +54,7 @@
     <h2>Responsible disclosure</h2>
     <p>
         If you believe you've found a security issue, please report it to
-        <a href="mailto:security@datasoft.example">security@datasoft.example</a>. We commit to:
+        <a href="mailto:security@datasofttechnologies.com">security@datasofttechnologies.com</a>. We commit to:
     </p>
     <ul>
         <li>Acknowledging receipt within <strong>2 business days</strong>.</li>

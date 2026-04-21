@@ -54,7 +54,7 @@
         <li>Withdraw consent for non-essential processing.</li>
     </ul>
     <p>
-        To exercise these rights, email <a href="mailto:privacy@datasoft.example">privacy@datasoft.example</a>.
+        To exercise these rights, email <a href="mailto:privacy@datasofttechnologies.com">privacy@datasofttechnologies.com</a>.
         We respond within 30 days.
     </p>
 
@@ -89,6 +89,6 @@
     <h2>Grievance officer</h2>
     <p>
         As required under Indian law, you may contact our grievance officer at
-        <a href="mailto:grievance@datasoft.example">grievance@datasoft.example</a>.
+        <a href="mailto:grievance@datasofttechnologies.com">grievance@datasofttechnologies.com</a>.
     </p>
 </x-layouts.marketing>

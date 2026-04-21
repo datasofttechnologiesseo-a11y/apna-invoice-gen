@@ -36,7 +36,7 @@
     <h2>Apply</h2>
     <p>
         Tell us a bit about your practice and the clients you'd onboard. Email
-        <a href="mailto:partners@datasoft.example">partners@datasoft.example</a> with "Partner application" in the
+        <a href="mailto:partners@datasofttechnologies.com">partners@datasofttechnologies.com</a> with "Partner application" in the
         subject line.
     </p>
 </x-layouts.marketing>
