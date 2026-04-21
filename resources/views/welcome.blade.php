@@ -266,19 +266,13 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
             @foreach ([
-                ['n' => '60', 'suffix' => 's', 'l' => 'Your first invoice', 'countup' => true],
-                ['n' => '36', 'suffix' => '', 'l' => 'States & UTs supported', 'countup' => true],
-                ['n' => '₹0', 'suffix' => '', 'l' => 'While in beta', 'countup' => false],
-                ['n' => '100', 'suffix' => '%', 'l' => 'GST-compliant format', 'countup' => true],
+                ['n' => '60 s', 'l' => 'Your first invoice'],
+                ['n' => '36',   'l' => 'States & UTs supported'],
+                ['n' => '₹0',   'l' => 'While in beta'],
+                ['n' => '100%', 'l' => 'GST-compliant format'],
             ] as $t)
                 <div class="text-center md:text-left">
-                    <div class="text-3xl md:text-4xl font-display font-extrabold bg-gradient-to-br from-brand-700 to-accent-600 bg-clip-text text-transparent">
-                        @if ($t['countup'])
-                            <span data-countup="{{ $t['n'] }}">0</span>{{ $t['suffix'] }}
-                        @else
-                            {{ $t['n'] }}{{ $t['suffix'] }}
-                        @endif
-                    </div>
+                    <div class="text-3xl md:text-4xl font-display font-extrabold bg-gradient-to-br from-brand-700 to-accent-600 bg-clip-text text-transparent">{{ $t['n'] }}</div>
                     <div class="text-gray-600 text-sm mt-1">{{ $t['l'] }}</div>
                 </div>
             @endforeach
