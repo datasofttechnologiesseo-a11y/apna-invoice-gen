@@ -127,17 +127,6 @@
         /* Header */
         .hero { padding-bottom: 8px; border-bottom: {{ $t['header_rule'] }}; }
 
-        /* Meta strip */
-        .meta-strip {
-            padding: 6px 0;
-            border-bottom: 1px solid {{ $t['divider'] }};
-            margin-top: 8px;
-            font-size: 9px;
-        }
-        .meta-strip td { padding-right: 12px; vertical-align: top; }
-        .meta-strip .meta-lbl { color: {{ $t['muted'] }}; text-transform: uppercase; letter-spacing: 0.6px; font-size: 8px; }
-        .meta-strip .meta-val { font-weight: bold; color: {{ $t['body_color'] }}; font-size: 10px; }
-
         /* Parties */
         .parties { margin-top: 10px; padding-bottom: 8px; border-bottom: 1px solid {{ $t['divider'] }}; }
 
@@ -289,29 +278,13 @@
                 <div class="x-small muted" style="margin-top: 6px; line-height: 1.6;">
                     <strong>Date:</strong> {{ $invoice->invoice_date?->format('d M Y') }}
                     @if ($invoice->due_date) · <strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}@endif
+                    @if ($invoice->placeOfSupply?->name)
+                        <br><strong>Place of supply:</strong> {{ $invoice->placeOfSupply->name }}@if ($invoice->placeOfSupply->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif
+                    @endif
+                    @if ($invoice->reverse_charge)
+                        <br><strong class="accent">Reverse charge applicable</strong>
+                    @endif
                 </div>
-            </td>
-        </tr>
-    </table>
-
-    {{-- ========== META STRIP (Rule 46: place of supply, reverse charge) ========== --}}
-    <table class="meta-strip" style="width:100%;">
-        <tr>
-            <td style="width: 30%;">
-                <div class="meta-lbl">Place of supply</div>
-                <div class="meta-val">{{ $invoice->placeOfSupply?->name ?? '—' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
-            </td>
-            <td style="width: 20%;">
-                <div class="meta-lbl">Currency</div>
-                <div class="meta-val">{{ $invoice->currency ?? 'INR' }}</div>
-            </td>
-            <td style="width: 28%;">
-                <div class="meta-lbl">Tax treatment</div>
-                <div class="meta-val">{{ $invoice->is_interstate ? 'IGST (interstate)' : 'CGST + SGST (intrastate)' }}</div>
-            </td>
-            <td style="width: 22%; text-align: right;">
-                <div class="meta-lbl">Reverse charge</div>
-                <div class="meta-val accent">{{ $invoice->reverse_charge ? 'YES' : 'NO' }}</div>
             </td>
         </tr>
     </table>
