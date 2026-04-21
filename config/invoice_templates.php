@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * Invoice templates = a visual style pre-set + a GST-rate default.
+ *
+ * Line-item sample data used to be pre-filled here, but it created
+ * confusion — users would click "Use this template" and then have to
+ * delete rows like "Product A — SKU-001" before filling in their own.
+ * All templates now start with a single empty row; the user adds real
+ * line items (or picks from their saved products).
+ */
+
+$emptyRow = fn (float $gstRate = 18) => [
+    ['description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'gst_rate' => $gstRate],
+];
+
 return [
     'blank' => [
         'label' => 'Blank invoice',
@@ -11,9 +25,7 @@ return [
         'gradient' => 'from-gray-500 to-gray-700',
         'tag' => 'Default',
         'currency' => null,
-        'items' => [
-            ['description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'gst_rate' => 18],
-        ],
+        'items' => $emptyRow(),
     ],
 
     'consulting' => [
@@ -26,10 +38,7 @@ return [
         'gradient' => 'from-brand-600 to-brand-800',
         'tag' => 'Popular',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'Consulting services', 'hsn_sac' => '998313', 'quantity' => 40, 'unit' => 'hrs', 'rate' => 2500, 'gst_rate' => 18],
-            ['description' => 'Project management & coordination', 'hsn_sac' => '998311', 'quantity' => 1, 'unit' => 'pkg', 'rate' => 10000, 'gst_rate' => 18],
-        ],
+        'items' => $emptyRow(18),
     ],
 
     'product_sale' => [
@@ -42,10 +51,7 @@ return [
         'gradient' => 'from-accent-500 to-saffron-600',
         'tag' => 'Goods',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'Product A — SKU-001', 'hsn_sac' => '8471', 'quantity' => 10, 'unit' => 'pcs', 'rate' => 1500, 'gst_rate' => 18],
-            ['description' => 'Product B — SKU-002', 'hsn_sac' => '8471', 'quantity' => 5, 'unit' => 'pcs', 'rate' => 3000, 'gst_rate' => 18],
-        ],
+        'items' => $emptyRow(18),
     ],
 
     'subscription' => [
@@ -58,9 +64,7 @@ return [
         'gradient' => 'from-money-500 to-money-700',
         'tag' => 'Recurring',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'Monthly subscription — ' . now()->format('F Y'), 'hsn_sac' => '998313', 'quantity' => 1, 'unit' => 'month', 'rate' => 15000, 'gst_rate' => 18],
-        ],
+        'items' => $emptyRow(18),
     ],
 
     'freelance' => [
@@ -73,10 +77,7 @@ return [
         'gradient' => 'from-saffron-500 to-accent-700',
         'tag' => 'Creatives',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'UI/UX design — landing page', 'hsn_sac' => '998314', 'quantity' => 1, 'unit' => 'project', 'rate' => 35000, 'gst_rate' => 18],
-            ['description' => 'Frontend development (2 sprints)', 'hsn_sac' => '998314', 'quantity' => 2, 'unit' => 'sprint', 'rate' => 50000, 'gst_rate' => 18],
-        ],
+        'items' => $emptyRow(18),
     ],
 
     'rental' => [
@@ -89,10 +90,7 @@ return [
         'gradient' => 'from-saffron-600 to-accent-600',
         'tag' => 'Rental',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'Office space rental — ' . now()->format('F Y'), 'hsn_sac' => '997212', 'quantity' => 1, 'unit' => 'month', 'rate' => 75000, 'gst_rate' => 18],
-            ['description' => 'Maintenance & common area charges', 'hsn_sac' => '997212', 'quantity' => 1, 'unit' => 'month', 'rate' => 8000, 'gst_rate' => 18],
-        ],
+        'items' => $emptyRow(18),
     ],
 
     'ecommerce' => [
@@ -105,11 +103,9 @@ return [
         'gradient' => 'from-accent-600 to-brand-700',
         'tag' => 'Retail',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'Cotton T-shirt (M, Blue) — SKU-TSH-001', 'hsn_sac' => '6109', 'quantity' => 3, 'unit' => 'pcs', 'rate' => 599, 'gst_rate' => 5],
-            ['description' => 'Denim Jeans (32, Black) — SKU-JNS-002', 'hsn_sac' => '6203', 'quantity' => 1, 'unit' => 'pcs', 'rate' => 1499, 'gst_rate' => 12],
-            ['description' => 'Shipping & handling', 'hsn_sac' => '996812', 'quantity' => 1, 'unit' => 'order', 'rate' => 99, 'gst_rate' => 18],
-        ],
+        // Most retail items fall in 5% / 12% / 18% slabs — default to 18
+        // and let the user change per row.
+        'items' => $emptyRow(18),
     ],
 
     'restaurant' => [
@@ -122,10 +118,8 @@ return [
         'gradient' => 'from-red-500 to-saffron-600',
         'tag' => 'F&B',
         'currency' => 'INR',
-        'items' => [
-            ['description' => 'Main course dishes (selection)', 'hsn_sac' => '996331', 'quantity' => 4, 'unit' => 'plate', 'rate' => 350, 'gst_rate' => 5],
-            ['description' => 'Beverages', 'hsn_sac' => '996331', 'quantity' => 4, 'unit' => 'glass', 'rate' => 120, 'gst_rate' => 5],
-            ['description' => 'Service charge', 'hsn_sac' => '996331', 'quantity' => 1, 'unit' => 'bill', 'rate' => 94, 'gst_rate' => 5],
-        ],
+        // Food services are typically 5% (no ITC). Pre-select that slab
+        // so the user doesn't have to change it on every line.
+        'items' => $emptyRow(5),
     ],
 ];

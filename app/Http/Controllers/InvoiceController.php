@@ -68,10 +68,22 @@ class InvoiceController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
 
-        // Build an ephemeral invoice for preview (not saved)
+        // Build an ephemeral invoice for preview (not saved).
+        // Templates now start with a blank items row to avoid confusion when
+        // the user clicks "Use this template", but a preview PDF with zero
+        // amounts would be misleading — so we inject one clearly-labelled
+        // SAMPLE row just for the rendered preview.
         $calc = app(\App\Services\InvoiceCalculator::class);
         $isInterstate = false; // Preview uses same-state customer
-        $result = $calc->recalculate(new Invoice(), $tpl['items'], $isInterstate);
+        $previewItems = [[
+            'description' => 'Sample line item — your real entries go here',
+            'hsn_sac' => '998313',
+            'quantity' => 1,
+            'unit' => 'unit',
+            'rate' => 10000,
+            'gst_rate' => $tpl['items'][0]['gst_rate'] ?? 18,
+        ]];
+        $result = $calc->recalculate(new Invoice(), $previewItems, $isInterstate);
 
         $fakeState = $company->state ?? State::first();
 

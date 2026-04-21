@@ -137,8 +137,12 @@
                                         </tfoot>
                                     </table>
                                 @else
-                                    <div class="px-3 py-6 text-center text-xs text-gray-400 italic bg-white">
-                                        One blank line — fill in whatever you need.
+                                    <div class="px-3 py-6 text-center text-xs text-gray-500 bg-white">
+                                        <div class="font-medium text-gray-700">{{ $styleMeta['label'] }} style preview</div>
+                                        <div class="mt-1 italic text-gray-400">Your line items, totals and terms will appear here.</div>
+                                        @if (! empty($tpl['items'][0]['gst_rate']))
+                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Default GST: {{ rtrim(rtrim(number_format((float) $tpl['items'][0]['gst_rate'], 2), '0'), '.') }}%</div>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
