@@ -69,11 +69,11 @@
                         ['href' => route('login'), 'label' => 'Log in'],
                     ]],
                     ['title' => 'Resources', 'color' => 'accent', 'links' => [
-                        ['href' => '#', 'label' => 'Help Center'],
-                        ['href' => '#', 'label' => 'GST Guide'],
-                        ['href' => '#', 'label' => 'HSN Code Finder'],
-                        ['href' => '#', 'label' => 'Templates'],
-                        ['href' => '#', 'label' => 'Blog'],
+                        ['href' => route('help'), 'label' => 'Help Center'],
+                        ['href' => route('invoices.templates'), 'label' => 'Invoice templates'],
+                        // Official CBIC HSN/SAC search — authoritative and always up to date.
+                        ['href' => 'https://services.gst.gov.in/services/searchhsnsac', 'label' => 'HSN/SAC finder', 'external' => true],
+                        ['href' => route('pages.contact'), 'label' => 'Contact support'],
                     ]],
                 ] as $col)
                     <div class="col-span-1 md:col-span-4">
@@ -84,12 +84,19 @@
                         <ul class="mt-5 space-y-3 text-sm">
                             @foreach ($col['links'] as $link)
                                 <li>
-                                    <a href="{{ $link['href'] }}" class="group inline-flex items-center gap-2 text-gray-400 hover:text-white transition">
+                                    <a href="{{ $link['href'] }}"
+                                       @if (! empty($link['external'])) target="_blank" rel="noopener noreferrer" @endif
+                                       class="group inline-flex items-center gap-2 text-gray-400 hover:text-white transition">
                                         <span class="relative">
                                             {{ $link['label'] }}
                                             <span class="absolute inset-x-0 -bottom-0.5 h-px bg-accent-400 scale-x-0 group-hover:scale-x-100 origin-left transition-transform"></span>
                                         </span>
-                                        @if (!empty($link['badge']))
+                                        @if (! empty($link['external']))
+                                            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                            </svg>
+                                        @endif
+                                        @if (! empty($link['badge']))
                                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-accent-500 text-accent-950 uppercase tracking-wider">{{ $link['badge'] }}</span>
                                         @endif
                                     </a>
