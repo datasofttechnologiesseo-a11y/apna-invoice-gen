@@ -51,7 +51,7 @@
             ],
             'inLanguage' => 'en-IN',
             'audience' => ['@type' => 'BusinessAudience', 'geographicArea' => 'India'],
-            'featureList' => 'GST-compliant invoices, HSN/SAC codes, CGST/SGST/IGST auto-split, Indian number format (lakhs & crores), PDF export, multi-currency, customer management',
+            'featureList' => 'GST-compliant invoices, HSN/SAC codes, CGST/SGST/IGST auto-split, Indian number format (lakhs & crores), PDF export, payment reminders, WhatsApp sharing, customer and product management',
             'provider' => [
                 '@type' => 'Organization',
                 'name' => config('seo.organization.legal_name'),
@@ -262,7 +262,7 @@
                 ['gr' => 'from-money-500 to-money-700', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'title' => 'Draft → Final workflow', 'body' => 'Edit drafts as much as you want. Finalize to lock the number and make it legally issued. Atomic numbering, no duplicates.'],
                 ['gr' => 'from-brand-600 to-accent-500', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'title' => 'Partial payments', 'body' => 'Record advance payments, track balance at a glance. Status moves from Final → Partially paid → Paid as you go.'],
                 ['gr' => 'from-saffron-500 to-accent-700', 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 'title' => 'Customer book', 'body' => 'Save customer details once — GSTIN, address, state. Reuse across invoices. Auto-fills the GST tax mode based on state.'],
-                ['gr' => 'from-brand-700 to-money-600', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'title' => 'Multi-currency', 'body' => 'Bill foreign clients in USD, EUR, GBP, AED or SGD with exchange-rate capture. Export invoices remain GST-compliant.'],
+                ['gr' => 'from-brand-700 to-money-600', 'icon' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'title' => 'Payment reminders', 'body' => 'Auto-email nudges at 0 / 3 / 7 / 15 / 30 days past due, or send a one-tap WhatsApp follow-up. Receipts are generated the moment payment is recorded.'],
             ] as $f)
                 <div class="group relative bg-white rounded-2xl p-6 ring-1 ring-gray-100 hover:ring-brand-200 shadow-sm hover:shadow-card transition">
                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br {{ $f['gr'] }} flex items-center justify-center text-white shadow-sm">
@@ -366,11 +366,11 @@
                     <ul class="mt-4 space-y-3">
                         @foreach ([
                             'Unlimited GST invoices (CGST/SGST/IGST)',
-                            'Unlimited customers and HSN/SAC codes',
+                            'Unlimited customers, products & HSN/SAC codes',
                             'Logo, signature, letterhead',
-                            'PDF export & print-ready view',
-                            'Multi-currency (INR, USD, EUR, GBP, AED, SGD)',
-                            'Partial payment tracking',
+                            'Ink-saver PDF export & print-ready view',
+                            'Email, WhatsApp &amp; public-link sharing',
+                            'Payment reminders &amp; receipt numbering',
                             'All 36 Indian states & UTs pre-loaded',
                             'Priority email support',
                         ] as $i)
