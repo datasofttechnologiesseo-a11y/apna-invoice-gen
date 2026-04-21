@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinanceController;
@@ -79,6 +80,9 @@ Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/press', 'pages.press')->name('press');
     Route::view('/partners', 'pages.partners')->name('partners');
     Route::view('/contact', 'pages.contact')->name('contact');
+    Route::post('/contact', [ContactController::class, 'send'])
+        ->middleware('throttle:5,10')
+        ->name('contact.send');
     Route::view('/terms', 'pages.terms')->name('terms');
     Route::view('/privacy', 'pages.privacy')->name('privacy');
     Route::view('/refund', 'pages.refund')->name('refund');

@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
+
+        // Trust reverse-proxy headers (X-Forwarded-Proto / -For / -Host) so
+        // HTTPS detection, signed-URL verification and client IP for rate
+        // limits work correctly behind Cloudflare / load balancers.
+        // In a fully locked-down deployment, swap '*' for an explicit allowlist.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
