@@ -1,12 +1,26 @@
 <x-app-layout>
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Invoices', 'href' => route('invoices.index')],
+            ['label' => $invoice->isDraft() ? 'Draft #' . $invoice->id : $invoice->invoice_number],
+        ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight flex flex-wrap items-center gap-2">
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
                 @if ($invoice->isDraft())
                     <span class="text-gray-500">Draft #{{ $invoice->id }}</span>
                     <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
+                @elseif ($invoice->isCancelled())
+                    <span>Invoice {{ $invoice->invoice_number }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 uppercase font-bold tracking-wider">Cancelled</span>
                 @else
                     <span>Invoice {{ $invoice->invoice_number }}</span>
+                    @if ((float) $invoice->balance <= 0)
+                        <span class="text-xs px-2 py-0.5 rounded bg-money-100 text-money-800 uppercase font-bold tracking-wider">Paid</span>
+                    @elseif ((float) $invoice->paid_amount > 0)
+                        <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase font-bold tracking-wider">Partially paid</span>
+                    @else
+                        <span class="text-xs px-2 py-0.5 rounded bg-brand-100 text-brand-800 uppercase font-bold tracking-wider">Issued</span>
+                    @endif
                 @endif
             </h2>
             <div class="flex flex-wrap items-center gap-2">
@@ -14,10 +28,16 @@
                     <a href="{{ route('invoices.edit', $invoice) }}" class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300" title="{{ $invoice->isEditable() ? 'Edit draft' : 'Edit notes, terms, due date, transporter (amounts are locked)' }}">Edit</a>
                 @endif
                 @if ($invoice->isEditable())
-                    <form method="POST" action="{{ route('invoices.finalize', $invoice) }}" class="inline" onsubmit="return confirm('Finalize this invoice? Amounts and line items cannot be changed after this.')">
-                        @csrf
-                        <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800 shadow-sm">Finalize</button>
-                    </form>
+                    <x-confirm-form
+                        :action="route('invoices.finalize', $invoice)"
+                        method="POST"
+                        title="Finalize this invoice?"
+                        message="Finalising assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable."
+                        confirm-label="Finalize"
+                        confirm-class="bg-brand-700 hover:bg-brand-800"
+                        tone="default">
+                        <button type="button" class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800 shadow-sm">Finalize</button>
+                    </x-confirm-form>
                 @endif
                 <span class="inline-flex rounded overflow-hidden shadow-sm">
                     <a href="{{ route('invoices.pdf', $invoice) }}" class="px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900" title="Ink-saver download — black on white for printing">Download PDF</a>
@@ -25,11 +45,16 @@
                 </span>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
                 @if ($invoice->isEditable())
-                    <form method="POST" action="{{ route('invoices.destroy', $invoice) }}" class="inline" onsubmit="return confirm('Delete this draft? This cannot be undone.')">
-                        @csrf
-                        @method('DELETE')
-                        <button class="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700 shadow-sm">Delete draft</button>
-                    </form>
+                    <x-confirm-form
+                        :action="route('invoices.destroy', $invoice)"
+                        method="DELETE"
+                        title="Delete this draft?"
+                        message="This draft and all its line items are permanently removed. This cannot be undone."
+                        confirm-label="Delete draft"
+                        confirm-class="bg-red-600 hover:bg-red-700"
+                        tone="danger">
+                        <button type="button" class="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700 shadow-sm">Delete draft</button>
+                    </x-confirm-form>
                 @endif
                 @if ($invoice->canBeCancelled())
                     <button type="button" onclick="document.getElementById('cancel-invoice-modal').showModal()" class="px-3 py-1.5 bg-white border border-red-300 text-red-700 rounded text-sm hover:bg-red-50">Cancel invoice</button>
@@ -159,10 +184,16 @@
                                         <td class="px-4 py-2 text-right whitespace-nowrap">
                                             <a href="{{ route('payments.receipt', $p) }}" class="text-brand-600 hover:underline text-sm">PDF</a>
                                             <span class="text-gray-300 mx-1">·</span>
-                                            <form method="POST" action="{{ route('payments.destroy', $p) }}" class="inline" onsubmit="return confirm('Reverse this payment? The receipt number will stay in the log but the invoice balance will be restored.')">
-                                                @csrf @method('DELETE')
-                                                <button class="text-red-600 hover:underline text-sm">Reverse</button>
-                                            </form>
+                                            <x-confirm-form
+                                                :action="route('payments.destroy', $p)"
+                                                method="DELETE"
+                                                title="Reverse this payment?"
+                                                message="Receipt {{ $p->receipt_number }} (₹{{ number_format((float) $p->amount, 2) }}) will be removed. The receipt number stays reserved in the log for audit, but the invoice balance is restored."
+                                                confirm-label="Reverse payment"
+                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                tone="warning">
+                                                <button type="button" class="text-red-600 hover:underline text-sm">Reverse</button>
+                                            </x-confirm-form>
                                         </td>
                                     </tr>
                                 @endforeach

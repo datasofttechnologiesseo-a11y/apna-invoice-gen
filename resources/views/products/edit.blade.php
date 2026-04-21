@@ -7,6 +7,10 @@
 
     <div class="py-10">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <x-breadcrumbs :items="[
+                ['label' => 'Products', 'href' => route('products.index')],
+                ['label' => $product->exists ? $product->name : 'New product'],
+            ]" />
             @if ($errors->any())
                 <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded">
                     <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>

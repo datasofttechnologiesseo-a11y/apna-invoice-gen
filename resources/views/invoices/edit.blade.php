@@ -33,6 +33,10 @@
 
     <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex))'>
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <x-breadcrumbs :items="[
+                ['label' => 'Invoices', 'href' => route('invoices.index')],
+                ['label' => $invoice->exists ? $invoice->displayNumber() : 'New invoice'],
+            ]" />
             @if ($errors->any())
                 <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
                     <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
@@ -336,11 +340,16 @@
                         <div class="font-semibold text-red-800">Delete this draft</div>
                         <div class="text-red-700">Once deleted, the draft and its line items are gone permanently.</div>
                     </div>
-                    <form method="POST" action="{{ route('invoices.destroy', $invoice) }}" onsubmit="return confirm('Delete this draft? This cannot be undone.')">
-                        @csrf
-                        @method('DELETE')
-                        <button class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold text-sm">Delete draft</button>
-                    </form>
+                    <x-confirm-form
+                        :action="route('invoices.destroy', $invoice)"
+                        method="DELETE"
+                        title="Delete this draft?"
+                        message="This draft and all its line items are permanently removed. This cannot be undone."
+                        confirm-label="Delete draft"
+                        confirm-class="bg-red-600 hover:bg-red-700"
+                        tone="danger">
+                        <button type="button" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold text-sm">Delete draft</button>
+                    </x-confirm-form>
                 </div>
             @endif
         </div>

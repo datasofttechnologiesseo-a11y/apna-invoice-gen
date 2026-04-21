@@ -14,12 +14,7 @@
 
     <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
-            @if (session('status'))
-                <div class="p-4 bg-money-50 border-l-4 border-money-500 text-money-800 rounded flex items-start gap-3">
-                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-9.3a1 1 0 00-1.4-1.4L9 10.58l-1.3-1.3a1 1 0 10-1.4 1.42l2 2a1 1 0 001.4 0l4-4z" clip-rule="evenodd"/></svg>
-                    <div>{{ session('status') }}</div>
-                </div>
-            @endif
+            <x-flash />
 
             @unless ($setupComplete)
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-accent-200 overflow-hidden">

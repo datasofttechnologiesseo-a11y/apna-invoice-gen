@@ -17,6 +17,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
+        <a href="#main-content" class="skip-link">Skip to main content</a>
         @if (session('impersonator_id'))
             <div class="bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-between text-sm font-semibold">
                 <div class="flex items-center gap-2">
@@ -33,7 +34,7 @@
             @include('layouts.navigation')
 
             <!-- Page Content (heading slot renders in-flow above the body) -->
-            <main class="flex-1">
+            <main id="main-content" class="flex-1" tabindex="-1">
                 @isset($header)
                     <div class="max-w-7xl mx-auto w-full pt-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}

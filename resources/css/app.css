@@ -4,3 +4,61 @@
 
 /* Alpine.js: hide elements tagged with x-cloak until Alpine initialises. */
 [x-cloak] { display: none !important; }
+
+/* ----------------------------------------------------------------
+ * Global form-submit loading state
+ * Set by resources/js/app.js on the form while a submit is in flight.
+ * -------------------------------------------------------------- */
+form[data-submitting] button[type="submit"],
+form[data-submitting] input[type="submit"] {
+    position: relative;
+    cursor: progress;
+    opacity: 0.75;
+}
+form[data-submitting] button[type="submit"]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0.6rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-top: -0.45rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: submit-spin 0.7s linear infinite;
+    opacity: 0.9;
+}
+@keyframes submit-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ----------------------------------------------------------------
+ * Consistent focus ring for keyboard users across every interactive
+ * element. Uses :focus-visible so mouse clicks don't get a ring.
+ * -------------------------------------------------------------- */
+:focus-visible {
+    outline: 2px solid theme('colors.brand.500', #3b82f6);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Skip link — visible only when focused (keyboard users only). */
+.skip-link {
+    position: absolute;
+    left: -999px;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #1e3a8a;
+    text-decoration: none;
+    border-radius: 0 0 0.5rem 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.skip-link:focus {
+    left: 0;
+    outline: 2px solid #1e3a8a;
+    outline-offset: 2px;
+}

@@ -26,9 +26,15 @@
                 </form>
 
                 @if ($invoices->isEmpty())
-                    <div class="p-8 text-center text-gray-500">
-                        No invoices. <a href="{{ route('invoices.templates') }}" class="text-brand-600 hover:underline">Create your first</a>.
-                    </div>
+                    <x-empty-state
+                        icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        title="{{ request('search') || request('status') ? 'No invoices match that filter' : 'No invoices yet' }}"
+                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Create your first invoice — it takes about 30 seconds once your customer and product details are saved.' }}"
+                        actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.templates') }}"
+                        actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create invoice' }}"
+                        :secondaryHref="request('search') || request('status') ? null : route('help')"
+                        :secondaryLabel="request('search') || request('status') ? null : 'Read the how-to guide'"
+                    />
                 @else
                     <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -80,11 +86,16 @@
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
                                         @if ($inv->isEditable())
                                             <span class="text-gray-300 mx-1">·</span>
-                                            <form method="POST" action="{{ route('invoices.destroy', $inv) }}" class="inline" onsubmit="return confirm('Delete draft #{{ $inv->id }}? This cannot be undone.')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="text-red-600 hover:underline">Delete</button>
-                                            </form>
+                                            <x-confirm-form
+                                                :action="route('invoices.destroy', $inv)"
+                                                method="DELETE"
+                                                title="Delete draft #{{ $inv->id }}?"
+                                                message="This draft and all its line items are permanently deleted. This cannot be undone."
+                                                confirm-label="Delete draft"
+                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                tone="danger">
+                                                <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                            </x-confirm-form>
                                         @endif
                                     </td>
                                 </tr>

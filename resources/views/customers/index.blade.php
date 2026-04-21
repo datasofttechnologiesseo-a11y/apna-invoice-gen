@@ -8,13 +8,9 @@
 
     <div class="py-10">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded">{{ session('status') }}</div>
-            @endif
+            <x-flash />
             @if ($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
-                    <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-                </div>
+                <x-flash type="error" :message="implode(' · ', $errors->all())" :auto="false" />
             @endif
 
             <div class="bg-white shadow sm:rounded-lg">
@@ -23,9 +19,13 @@
                 </form>
 
                 @if ($customers->isEmpty())
-                    <div class="p-8 text-center text-gray-500">
-                        No customers yet. <a href="{{ route('customers.create') }}" class="text-brand-600 hover:underline">Add your first customer</a>.
-                    </div>
+                    <x-empty-state
+                        icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        title="{{ request('search') ? 'No customers match that search' : 'No customers yet' }}"
+                        description="{{ request('search') ? 'Try a different search term or clear the filter.' : 'Save customer details once — name, GSTIN, address, mobile — and reuse them on every invoice. We auto-detect intrastate vs interstate GST based on their state.' }}"
+                        actionHref="{{ request('search') ? route('customers.index') : route('customers.create') }}"
+                        actionLabel="{{ request('search') ? 'Clear search' : 'Add a customer' }}"
+                    />
                 @else
                     <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -47,10 +47,16 @@
                                     <td class="px-4 py-3 text-gray-600 text-sm">{{ $c->email }}<br><span class="text-gray-400">{{ $c->phone }}</span></td>
                                     <td class="px-4 py-3 text-right space-x-2">
                                         <a href="{{ route('customers.edit', $c) }}" class="text-brand-600 hover:underline text-sm">Edit</a>
-                                        <form method="POST" action="{{ route('customers.destroy', $c) }}" class="inline" onsubmit="return confirm('Delete this customer?')">
-                                            @csrf @method('DELETE')
-                                            <button class="text-red-600 hover:underline text-sm">Delete</button>
-                                        </form>
+                                        <x-confirm-form
+                                            :action="route('customers.destroy', $c)"
+                                            method="DELETE"
+                                            title="Delete {{ $c->name }}?"
+                                            message="Customers with issued invoices can't be deleted for GST audit reasons — we'll show a friendly error if that happens."
+                                            confirm-label="Delete customer"
+                                            confirm-class="bg-red-600 hover:bg-red-700"
+                                            tone="danger">
+                                            <button type="button" class="text-red-600 hover:underline text-sm">Delete</button>
+                                        </x-confirm-form>
                                     </td>
                                 </tr>
                             @endforeach

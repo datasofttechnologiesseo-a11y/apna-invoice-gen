@@ -7,6 +7,10 @@
 
     <div class="py-10">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            <x-breadcrumbs :items="[
+                ['label' => 'Customers', 'href' => route('customers.index')],
+                ['label' => $customer->exists ? $customer->name : 'New customer'],
+            ]" />
             <div class="p-6 sm:p-8 bg-white shadow sm:rounded-lg">
                 <form method="POST" action="{{ $customer->exists ? route('customers.update', $customer) : route('customers.store') }}" class="space-y-6">
                     @csrf
