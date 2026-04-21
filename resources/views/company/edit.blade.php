@@ -125,11 +125,25 @@
                         <div>
                             <x-input-label for="invoice_prefix" value="Invoice prefix *" />
                             <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full" :value="old('invoice_prefix', $company->invoice_prefix)" required />
+                            <p class="text-xs text-gray-500 mt-1">Used only when no format template is set (below).</p>
                         </div>
                         <div>
                             <x-input-label for="invoice_number_padding" value="Number padding (digits) *" />
                             <x-text-input id="invoice_number_padding" name="invoice_number_padding" type="number" min="1" max="8" class="mt-1 block w-full" :value="old('invoice_number_padding', $company->invoice_number_padding)" required />
+                            <p class="text-xs text-gray-500 mt-1">0001 vs 00001 etc. Applied to {N} placeholder.</p>
                         </div>
+                    </div>
+
+                    <div>
+                        <x-input-label for="invoice_number_format" value="Invoice number format (recommended for GST: FY-reset)" />
+                        <x-text-input id="invoice_number_format" name="invoice_number_format" type="text" class="mt-1 block w-full font-mono" :value="old('invoice_number_format', $company->invoice_number_format)" placeholder="INV/{FY}/{N}" />
+                        <p class="text-xs text-gray-500 mt-1">
+                            Tokens: <code class="bg-gray-100 px-1 rounded">{FY}</code> → 2025-26 ·
+                            <code class="bg-gray-100 px-1 rounded">{FY_SHORT}</code> → 25-26 ·
+                            <code class="bg-gray-100 px-1 rounded">{YYYY}</code> → 2025 ·
+                            <code class="bg-gray-100 px-1 rounded">{N}</code> → 0001 (sequence).
+                            Counter auto-resets on 1 April. Leave blank to use the simple <code class="bg-gray-100 px-1 rounded">prefix-0001</code> format.
+                        </p>
                     </div>
 
                     <div>

@@ -290,9 +290,18 @@
     </table>
 
     {{-- ========== BILL TO + TRANSPORTER ========== --}}
+    @php
+        $hasShipTo = $invoice->hasSeparateShipTo();
+        $shipState = $invoice->shipToState ?? null;
+        // Layout: one column when no transporter+no ship-to; two when exactly
+        // one exists; three when both (bill / ship / transporter).
+        $cols = 1 + ($hasShipTo ? 1 : 0) + ($hasTransporter ? 1 : 0);
+        $colWidth = round(100 / $cols, 2) . '%';
+    @endphp
+
     <table class="parties" style="width:100%;">
         <tr>
-            <td style="vertical-align: top; width: {{ $hasTransporter ? '50%' : '100%' }}; padding-right: 14px;">
+            <td style="vertical-align: top; width: {{ $colWidth }}; padding-right: 14px;">
                 <div class="label">Billed to</div>
                 <div class="bold" style="font-size: 11px;">{{ $cust->name }}</div>
                 <div class="small muted" style="margin-top: 2px; line-height: 1.45;">
@@ -307,8 +316,25 @@
                     <div class="x-small muted" style="margin-top: 2px;">{{ $cust->phone }}{{ $cust->phone && $cust->email ? ' · ' : '' }}{{ $cust->email }}</div>
                 @endif
             </td>
+            @if ($hasShipTo)
+                <td style="vertical-align: top; width: {{ $colWidth }}; padding: 0 14px; border-left: 1px solid {{ $t['divider'] }};">
+                    <div class="label">Ship to</div>
+                    @if ($invoice->ship_to_name)
+                        <div class="bold" style="font-size: 11px;">{{ $invoice->ship_to_name }}</div>
+                    @endif
+                    <div class="small muted" style="margin-top: 2px; line-height: 1.45;">
+                        @if ($invoice->ship_to_address_line1){{ $invoice->ship_to_address_line1 }}@endif
+                        @if ($invoice->ship_to_address_line2), {{ $invoice->ship_to_address_line2 }}@endif
+                        @if ($invoice->ship_to_address_line1)<br>@endif
+                        {{ trim(($invoice->ship_to_city ?? '') . ($invoice->ship_to_city && $shipState?->name ? ', ' : '') . ($shipState?->name ?? '') . ($shipState?->gst_code ? ' · State ' . $shipState->gst_code : '') . ' ' . ($invoice->ship_to_postal_code ?? '')) }}
+                    </div>
+                    @if ($invoice->ship_to_gstin)
+                        <div class="x-small" style="margin-top: 3px;"><span class="muted upper">GSTIN</span> <span class="mono bold">{{ $invoice->ship_to_gstin }}</span></div>
+                    @endif
+                </td>
+            @endif
             @if ($hasTransporter)
-                <td style="vertical-align: top; width: 50%; padding-left: 14px; border-left: 1px solid {{ $t['divider'] }};">
+                <td style="vertical-align: top; width: {{ $colWidth }}; padding-left: 14px; border-left: 1px solid {{ $t['divider'] }};">
                     <div class="label">Transporter</div>
                     <table style="width: 100%; margin-top: 2px;">
                         @if ($invoice->transporter_name)

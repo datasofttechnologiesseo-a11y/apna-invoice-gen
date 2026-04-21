@@ -16,9 +16,11 @@ class Invoice extends Model
         'invoice_number', 'invoice_date', 'due_date',
         'place_of_supply_state_id', 'is_interstate', 'reverse_charge',
         'transporter_name', 'transporter_id', 'vehicle_number', 'transport_mode', 'eway_bill_number',
+        'ship_to_name', 'ship_to_address_line1', 'ship_to_address_line2',
+        'ship_to_city', 'ship_to_state_id', 'ship_to_postal_code', 'ship_to_gstin',
         'currency', 'exchange_rate', 'status', 'style',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
-        'round_off', 'grand_total', 'paid_amount', 'balance',
+        'round_off', 'grand_total', 'paid_amount', 'credited_amount', 'balance',
         'notes', 'terms', 'finalized_at',
         'cancelled_at', 'cancellation_reason',
     ];
@@ -38,6 +40,7 @@ class Invoice extends Model
         'round_off' => 'decimal:2',
         'grand_total' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'credited_amount' => 'decimal:2',
         'balance' => 'decimal:2',
         'exchange_rate' => 'decimal:6',
     ];
@@ -62,6 +65,23 @@ class Invoice extends Model
         return $this->belongsTo(State::class, 'place_of_supply_state_id');
     }
 
+    public function shipToState(): BelongsTo
+    {
+        return $this->belongsTo(State::class, 'ship_to_state_id');
+    }
+
+    /** True if any ship-to field is set (so we render a separate "Ship to" block). */
+    public function hasSeparateShipTo(): bool
+    {
+        return filled($this->ship_to_name)
+            || filled($this->ship_to_address_line1)
+            || filled($this->ship_to_address_line2)
+            || filled($this->ship_to_city)
+            || filled($this->ship_to_state_id)
+            || filled($this->ship_to_postal_code)
+            || filled($this->ship_to_gstin);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
@@ -75,6 +95,17 @@ class Invoice extends Model
     public function reminders(): HasMany
     {
         return $this->hasMany(InvoiceReminder::class);
+    }
+
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(CreditNote::class)->orderBy('credit_note_date')->orderBy('id');
+    }
+
+    /** Amount left unpaid after payments AND credit notes have been applied. */
+    public function effectiveBalance(): float
+    {
+        return max(0, (float) $this->grand_total - (float) $this->paid_amount - (float) $this->credited_amount);
     }
 
     /**

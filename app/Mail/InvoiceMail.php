@@ -59,7 +59,7 @@ class InvoiceMail extends Mailable
     public function attachments(): array
     {
         $invoice = $this->invoice;
-        $invoice->loadMissing(['items', 'customer.state', 'company.state', 'placeOfSupply']);
+        $invoice->loadMissing(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
 
         $amountInWords = \App\Support\NumberToWords::indianRupees(
             (float) $invoice->grand_total,

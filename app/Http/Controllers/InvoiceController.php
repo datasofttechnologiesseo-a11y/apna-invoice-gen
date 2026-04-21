@@ -222,6 +222,13 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
+                'ship_to_name' => $data['ship_to_name'] ?? null,
+                'ship_to_address_line1' => $data['ship_to_address_line1'] ?? null,
+                'ship_to_address_line2' => $data['ship_to_address_line2'] ?? null,
+                'ship_to_city' => $data['ship_to_city'] ?? null,
+                'ship_to_state_id' => $data['ship_to_state_id'] ?? null,
+                'ship_to_postal_code' => $data['ship_to_postal_code'] ?? null,
+                'ship_to_gstin' => $data['ship_to_gstin'] ?? null,
                 'currency' => 'INR',
                 'exchange_rate' => 1,
                 'status' => 'draft',
@@ -244,7 +251,7 @@ class InvoiceController extends Controller
     public function show(Request $request, Invoice $invoice): View
     {
         $this->authorizeInvoice($request, $invoice);
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply']);
+        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
 
         return view('invoices.show', compact('invoice', 'amountInWords'));
@@ -328,6 +335,13 @@ class InvoiceController extends Controller
                 'vehicle_number' => $data['vehicle_number'] ?? null,
                 'transport_mode' => $data['transport_mode'] ?? null,
                 'eway_bill_number' => $data['eway_bill_number'] ?? null,
+                'ship_to_name' => $data['ship_to_name'] ?? null,
+                'ship_to_address_line1' => $data['ship_to_address_line1'] ?? null,
+                'ship_to_address_line2' => $data['ship_to_address_line2'] ?? null,
+                'ship_to_city' => $data['ship_to_city'] ?? null,
+                'ship_to_state_id' => $data['ship_to_state_id'] ?? null,
+                'ship_to_postal_code' => $data['ship_to_postal_code'] ?? null,
+                'ship_to_gstin' => $data['ship_to_gstin'] ?? null,
                 'currency' => 'INR',
                 'exchange_rate' => 1,
                 'style' => $data['style'] ?? $invoice->style ?? 'classic',
@@ -369,9 +383,11 @@ class InvoiceController extends Controller
 
         DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
-            $company->increment('invoice_counter');
+            // Atomic: resets counter on FY boundary, increments, stamps format.
+            $number = $company->bumpCounterForFinalize($invoice->invoice_date?->toDateString());
+
             $invoice->update([
-                'invoice_number' => $company->invoice_prefix . '-' . str_pad((string) $company->invoice_counter, $company->invoice_number_padding, '0', STR_PAD_LEFT),
+                'invoice_number' => $number,
                 'status' => (float) $invoice->paid_amount >= (float) $invoice->grand_total ? 'paid' : ((float) $invoice->paid_amount > 0 ? 'partially_paid' : 'final'),
                 'finalized_at' => now(),
             ]);
@@ -499,7 +515,7 @@ class InvoiceController extends Controller
     public function pdf(Request $request, Invoice $invoice): Response
     {
         $this->authorizeInvoice($request, $invoice);
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply']);
+        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
         $style = $invoice->style ?: 'classic';
 
@@ -519,7 +535,7 @@ class InvoiceController extends Controller
     public function printView(Request $request, Invoice $invoice): View
     {
         $this->authorizeInvoice($request, $invoice);
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply']);
+        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
 
         return view('invoices.print', compact('invoice', 'amountInWords'));
@@ -544,6 +560,16 @@ class InvoiceController extends Controller
             'vehicle_number' => ['nullable', 'string', 'max:30'],
             'transport_mode' => ['nullable', 'string', 'in:Road,Rail,Air,Ship'],
             'eway_bill_number' => ['nullable', 'string', 'max:30'],
+            // Ship-to override (goods delivered somewhere other than Bill-to).
+            'ship_to_name' => ['nullable', 'string', 'max:255'],
+            'ship_to_address_line1' => ['nullable', 'string', 'max:255'],
+            'ship_to_address_line2' => ['nullable', 'string', 'max:255'],
+            'ship_to_city' => ['nullable', 'string', 'max:100'],
+            'ship_to_state_id' => ['nullable', 'exists:states,id'],
+            'ship_to_postal_code' => ['nullable', 'string', 'max:10'],
+            'ship_to_gstin' => ['nullable', 'string', new \App\Rules\ValidGstin(
+                $request->input('ship_to_state_id') ? (int) $request->input('ship_to_state_id') : null
+            )],
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],

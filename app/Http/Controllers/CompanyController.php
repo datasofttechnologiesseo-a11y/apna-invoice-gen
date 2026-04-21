@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\State;
+use App\Rules\ValidGstin;
+use App\Rules\ValidPan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -125,8 +127,8 @@ class CompanyController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'gstin' => ['nullable', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/'],
-            'pan' => ['nullable', 'string', 'size:10'],
+            'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
+            'pan' => ['nullable', 'string', new ValidPan],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
@@ -148,6 +150,7 @@ class CompanyController extends Controller
             'upi_id' => ['nullable', 'string', 'max:60'],
             'invoice_prefix' => ['required', 'string', 'max:10'],
             'invoice_number_padding' => ['required', 'integer', 'min:1', 'max:8'],
+            'invoice_number_format' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9_\-\/{} ]+$/'],
         ]);
 
         unset($data['logo'], $data['signature']);

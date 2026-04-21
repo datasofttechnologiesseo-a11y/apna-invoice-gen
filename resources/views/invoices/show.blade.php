@@ -44,6 +44,9 @@
                     <a href="{{ route('invoices.pdf', $invoice, false) . '?color=1' }}" class="px-2 py-1.5 bg-gray-700 text-white text-xs hover:bg-gray-800 border-l border-gray-600" title="Download full colour version (uses more ink)" aria-label="Download full colour PDF (uses more ink)">🎨</a>
                 </span>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
+                @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)
+                    <a href="{{ route('credit-notes.create', $invoice) }}" class="px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-sm hover:bg-amber-200" title="Issue a credit note — for returns, post-sale discounts, rate corrections">Issue credit note</a>
+                @endif
                 @if ($invoice->isEditable())
                     <x-confirm-form
                         :action="route('invoices.destroy', $invoice)"
@@ -102,6 +105,7 @@
                 @if ((float) $invoice->balance > 0)
                     @include('invoices.partials.reminder-panel', ['invoice' => $invoice])
                 @endif
+                @include('invoices.partials.credit-notes', ['invoice' => $invoice])
             @endif
 
             @if ($invoice->isCancelled())

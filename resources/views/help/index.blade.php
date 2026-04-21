@@ -22,6 +22,7 @@
                         <a href="#payments" class="block text-gray-700 hover:text-brand-700">6. Record payments</a>
                         <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">7. Track progress</a>
                         <a href="#faq" class="block text-gray-700 hover:text-brand-700">8. FAQ</a>
+                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">9. What we don't cover</a>
                     </nav>
                 </div>
             </aside>
@@ -84,9 +85,9 @@
                         [
                             'id' => 'finalize',
                             'n' => 5,
-                            'title' => 'Finalize, download &amp; share',
+                            'title' => 'Finalize, download, share &amp; amend',
                             'time' => 'instant',
-                            'desc' => 'Open the invoice, click <em>Finalize</em> — we assign the next number in your series. Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL.',
+                            'desc' => 'Open the invoice, click <em>Finalize</em> — we assign the next number in your series (auto-reset on 1 April when you use the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL. For returns / rate corrections / post-sale discounts, use <em>Issue credit note</em> — the adjustment is GSTR-1-compliant and auto-reduces the invoice balance.',
                             'tips' => [
                                 '<strong>Why ink-saver by default?</strong> When you download for printing, you don\'t want coloured table headers burning toner. The on-screen version stays colourful, and the 🎨 button next to Download PDF gives you the full-colour file if you need it.',
                                 '<strong>WhatsApp share</strong> uses <span class="font-mono">wa.me</span> deep links — no extra setup, just works from any phone.',
@@ -186,6 +187,63 @@
                         </div>
                     </section>
                 @endforeach
+
+                {{-- OUT OF SCOPE — honesty about what we don't do, so users self-select correctly. --}}
+                <section id="scope" class="scroll-mt-24">
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8">
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">9</div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-display text-xl sm:text-2xl font-extrabold text-amber-900">What Apna Invoice doesn't (yet) cover</h3>
+                                <p class="mt-2 text-amber-800 leading-relaxed">
+                                    We're built for small-to-mid Indian businesses doing domestic GST-taxable supplies.
+                                    A few Indian GST scenarios are <strong>intentionally out of scope</strong> today — if any
+                                    describe your workflow, we probably aren't the right tool yet.
+                                </p>
+                                <ul class="mt-4 space-y-3 text-sm text-amber-900">
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>E-invoicing (IRN / signed QR via NIC IRP).</strong> Mandatory since Aug 2023 for businesses with aggregate turnover above <strong>₹5 crore</strong>. We don't generate IRNs — if you're in this bracket you'll need a GSP/ASP integration too.</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>GSTR-1 / GSTR-3B auto-filing.</strong> We don't file returns directly. You'll need to transcribe figures into GSTN or a separate filing tool (Cleartax, TaxCloud, etc.).</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>Exports, SEZ supplies, multi-currency.</strong> Invoices meant for export under LUT / Bond, SEZ unit supplies, or billing in USD/EUR/AED etc. We hard-code INR and the standard domestic tax-invoice format.</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>Composition scheme / Bill of Supply.</strong> If you're registered under the Composition Scheme or supply exempt goods, you must issue a "Bill of Supply" (not a Tax Invoice). We only print "Tax Invoice".</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>Compensation cess.</strong> Demerit goods (tobacco, aerated drinks, luxury automobiles) attract GST + a separate compensation cess. We support the GST part but don't have a cess line today.</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>E-way bill auto-generation.</strong> We capture the E-way bill number if you have one, but we don't call the ewaybillgst.gov.in API to generate it. For goods movement above ₹50,000 you'll still need to generate the EWB there.</span>
+                                    </li>
+                                    <li class="flex gap-3">
+                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span><strong>TDS / TCS on invoices.</strong> No fields for TDS under Section 51 (government contracts) or TCS under Section 52 (e-commerce operators).</span>
+                                    </li>
+                                </ul>
+                                <div class="mt-5 p-4 bg-white/60 rounded-lg border border-amber-200">
+                                    <div class="text-xs uppercase tracking-wider font-bold text-amber-800">What we DO cover</div>
+                                    <p class="mt-2 text-sm text-amber-900 leading-relaxed">
+                                        Domestic tax invoices with CGST+SGST / IGST auto-split · HSN/SAC with UQC units ·
+                                        FY-reset invoice numbering · Credit notes (Section 34) · Reverse charge ·
+                                        Place of supply &amp; separate ship-to · Partial payments with receipt numbering ·
+                                        Invoice cancellation with audit trail · Transporter / e-way bill number capture ·
+                                        Multi-company / multi-GSTIN · UPI QR on invoice · Amount in words (Indian lakhs/crores).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <div class="bg-gradient-to-br from-brand-900 to-accent-900 text-white rounded-2xl p-6 sm:p-8 shadow-brand">
                     <h3 class="font-display text-xl font-extrabold">Still stuck?</h3>

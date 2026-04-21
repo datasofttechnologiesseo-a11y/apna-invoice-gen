@@ -3,6 +3,7 @@
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CreditNoteController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinanceController;
@@ -166,6 +167,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])
         ->middleware('throttle:5,1')
         ->name('invoices.remind');
+
+    // Credit notes (Section 34 CGST). Always linked to a parent invoice.
+    Route::get('invoices/{invoice}/credit-notes/create', [CreditNoteController::class, 'create'])->name('credit-notes.create');
+    Route::post('invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->name('credit-notes.store');
+    Route::delete('credit-notes/{creditNote}', [CreditNoteController::class, 'destroy'])->name('credit-notes.destroy');
+    Route::get('credit-notes/{creditNote}/pdf', [CreditNoteController::class, 'pdf'])->name('credit-notes.pdf');
 
     // Finance — P&L analytics + expense tracking
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');

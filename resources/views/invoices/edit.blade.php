@@ -24,6 +24,8 @@
             $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'gst_rate' => 18]];
         }
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
+        // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
+        $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
         $companyStateId = $company->state_id;
         $productIndex = $company->products()
             ->where('is_active', true)
@@ -31,7 +33,7 @@
             ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
     @endphp
 
-    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex))'>
+    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }})'>
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-breadcrumbs :items="[
                 ['label' => 'Invoices', 'href' => route('invoices.index')],
@@ -301,6 +303,83 @@
                         </div>
                     </div>
 
+                    @php
+                        $shipToPrefilled = old('ship_to_name', $invoice->ship_to_name)
+                            || old('ship_to_address_line1', $invoice->ship_to_address_line1)
+                            || old('ship_to_city', $invoice->ship_to_city);
+                    @endphp
+                    <div class="border-t bg-gray-50" x-data="{ open: {{ $shipToPrefilled ? 'true' : 'false' }} }">
+                        <button type="button" @click="open = !open"
+                                class="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-100 transition"
+                                :aria-expanded="open">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <div>
+                                    <div class="text-sm font-semibold text-gray-900">Ship to a different address?</div>
+                                    <div class="text-xs text-gray-500">For goods delivered to a site that isn't the customer's billing address (warehouse, branch, project site…).</div>
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-cloak class="px-6 pb-6 pt-2 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <x-input-label for="ship_to_name" value="Consignee name" />
+                                    <x-text-input id="ship_to_name" name="ship_to_name" type="text" class="mt-1 block w-full" :value="old('ship_to_name', $invoice->ship_to_name)" />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <x-input-label for="ship_to_address_line1" value="Delivery address line 1" />
+                                    <x-text-input id="ship_to_address_line1" name="ship_to_address_line1" type="text" class="mt-1 block w-full" :value="old('ship_to_address_line1', $invoice->ship_to_address_line1)" />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <x-input-label for="ship_to_address_line2" value="Delivery address line 2" />
+                                    <x-text-input id="ship_to_address_line2" name="ship_to_address_line2" type="text" class="mt-1 block w-full" :value="old('ship_to_address_line2', $invoice->ship_to_address_line2)" />
+                                </div>
+                                <div>
+                                    <x-input-label for="ship_to_city" value="City" />
+                                    <x-text-input id="ship_to_city" name="ship_to_city" type="text" class="mt-1 block w-full" :value="old('ship_to_city', $invoice->ship_to_city)" />
+                                </div>
+                                <div>
+                                    <x-input-label for="ship_to_state_id" value="State" />
+                                    <select id="ship_to_state_id" name="ship_to_state_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                        <option value="">— Select —</option>
+                                        @foreach ($states as $s)
+                                            <option value="{{ $s->id }}" @selected(old('ship_to_state_id', $invoice->ship_to_state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <x-input-label for="ship_to_postal_code" value="PIN" />
+                                    <x-text-input id="ship_to_postal_code" name="ship_to_postal_code" type="text" inputmode="numeric" class="mt-1 block w-full" :value="old('ship_to_postal_code', $invoice->ship_to_postal_code)" />
+                                </div>
+                                <div>
+                                    <x-input-label for="ship_to_gstin" value="Consignee GSTIN (optional)" />
+                                    <x-text-input id="ship_to_gstin" name="ship_to_gstin" type="text" class="mt-1 block w-full uppercase font-mono" maxlength="15" :value="old('ship_to_gstin', $invoice->ship_to_gstin)" />
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                If the consignee's state differs from the Bill-to state, GST is still determined by the <strong>place of supply</strong>
+                                (the customer's state on record), not the ship-to state. This is correct per the IGST Act — use the Bill-to state for tax mode.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- B2C > ₹2.5L warning (Rule 46(e) requires recipient name/address/state) --}}
+                    <div x-show="showB2cWarning" x-cloak class="border-t bg-amber-50 px-6 py-3">
+                        <div class="flex items-start gap-2 text-sm text-amber-900">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                            <div>
+                                <div class="font-semibold">B2C invoice over ₹2.5 lakh — Rule 46(e) applies</div>
+                                <div class="mt-0.5">The customer has no GSTIN and the invoice total exceeds ₹2,50,000. Per CGST Rule 46(e), you must include the recipient's <strong>name, full delivery address, and state</strong>. Double-check the customer record has those filled in.</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-t bg-gray-50">
                         <div class="space-y-4">
                             <div>
@@ -357,13 +436,14 @@
 
     @push('scripts')
     <script>
-        function invoiceForm(initialItems, customerStates, companyStateId, productIndex) {
+        function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
             return {
                 items: initialItems.map(i => ({product_id: null, ...i, amount: 0, tax: 0, total: 0})),
                 customerId: @json(old('customer_id', $invoice->customer_id)),
                 customerStates,
+                customerHasGstin: customerHasGstin || {},
                 companyStateId,
                 productMap,
                 totals: {subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
@@ -372,6 +452,11 @@
                     if (!this.customerId || !this.companyStateId) return false;
                     const cs = this.customerStates[this.customerId];
                     return cs && cs !== this.companyStateId;
+                },
+                get showB2cWarning() {
+                    if (!this.customerId) return false;
+                    // Shown only when customer has NO GSTIN and grand total > 2.5 lakh
+                    return !this.customerHasGstin[this.customerId] && this.totals.grandTotal > 250000;
                 },
                 init() { this.recompute(); },
                 addRow() {
