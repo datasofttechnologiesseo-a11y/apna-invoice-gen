@@ -49,6 +49,7 @@ class InvoiceCalculator
             $totalIgst += $igst;
 
             $computed[] = [
+                'product_id' => ! empty($item['product_id']) ? (int) $item['product_id'] : null,
                 'description' => (string) ($item['description'] ?? ''),
                 'hsn_sac' => (string) ($item['hsn_sac'] ?? ''),
                 'quantity' => $qty,

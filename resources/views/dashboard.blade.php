@@ -71,39 +71,57 @@
                 </div>
             @endunless
 
-            <!-- KPIs -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-brand-50 rounded-full -mr-8 -mt-8"></div>
+            <!-- Headline KPIs: Bills issued + Payments received -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="relative p-6 bg-gradient-to-br from-brand-50 to-white rounded-2xl shadow-card ring-1 ring-brand-100 overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-brand-100/60 rounded-full -mr-12 -mt-12"></div>
                     <div class="relative">
-                        <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Total invoices</div>
-                        <div class="text-3xl font-display font-extrabold mt-2">{{ $stats['total'] }}</div>
-                        <div class="mt-3 text-xs text-gray-400">all statuses</div>
-                    </div>
-                </div>
-                <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-8 -mt-8"></div>
-                    <div class="relative">
-                        <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Drafts</div>
-                        <div class="text-3xl font-display font-extrabold mt-2">{{ $stats['drafts'] }}</div>
-                        <div class="mt-3 text-xs text-gray-400">ready to finalize</div>
-                    </div>
-                </div>
-                <div class="relative p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-accent-200/40 rounded-full -mr-8 -mt-8"></div>
-                    <div class="relative">
-                        <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
-                        <div class="text-2xl sm:text-3xl font-display font-extrabold mt-2 text-accent-900 tabular-nums">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
-                        <div class="mt-3 text-xs text-accent-700">awaiting payment</div>
+                        <div class="text-xs uppercase font-bold tracking-wider text-brand-700">Bills issued</div>
+                        <div class="text-4xl font-display font-extrabold mt-2 text-brand-900 tabular-nums">{{ number_format($stats['issued']) }}</div>
+                        <div class="mt-3 text-xs text-brand-700">
+                            <span class="font-semibold">{{ number_format($stats['issued_this_month']) }}</span> issued in {{ now()->format('F') }}
+                            @if ($stats['drafts'] > 0)
+                                <span class="text-gray-400">·</span>
+                                <a href="{{ route('invoices.index', ['status' => 'draft']) }}" class="hover:underline">{{ $stats['drafts'] }} draft{{ $stats['drafts'] > 1 ? 's' : '' }} pending</a>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <div class="relative p-6 bg-gradient-to-br from-money-50 to-money-100 rounded-2xl shadow-card ring-1 ring-money-200 overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-money-300/30 rounded-full -mr-8 -mt-8"></div>
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-money-300/30 rounded-full -mr-12 -mt-12"></div>
                     <div class="relative">
-                        <div class="text-xs uppercase font-bold tracking-wider text-money-800">Paid this month</div>
-                        <div class="text-2xl sm:text-3xl font-display font-extrabold mt-2 text-money-900 tabular-nums">₹{{ number_format((float) $stats['paid_this_month'], 2) }}</div>
-                        <div class="mt-3 text-xs text-money-700">{{ now()->format('F Y') }}</div>
+                        <div class="text-xs uppercase font-bold tracking-wider text-money-800">Payments received</div>
+                        <div class="text-3xl sm:text-4xl font-display font-extrabold mt-2 text-money-900 tabular-nums">₹{{ number_format((float) $stats['received_total'], 2) }}</div>
+                        <div class="mt-3 text-xs text-money-800">
+                            <span class="font-semibold">₹{{ number_format((float) $stats['received_this_month'], 0) }}</span> in {{ now()->format('F') }}
+                            <span class="text-money-600">·</span>
+                            {{ $stats['receipts_issued'] }} receipt{{ $stats['receipts_issued'] != 1 ? 's' : '' }} issued
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Secondary stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                    <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Total invoices</div>
+                    <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['total'] }}</div>
+                    <div class="mt-3 text-xs text-gray-400">all statuses</div>
+                </div>
+                <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                    <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Drafts</div>
+                    <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['drafts'] }}</div>
+                    <div class="mt-3 text-xs text-gray-400">ready to finalize</div>
+                </div>
+                <div class="relative p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 overflow-hidden">
+                    <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
+                    <div class="mt-3 text-xs text-accent-700">awaiting payment</div>
+                </div>
+                <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                    <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums">₹{{ number_format((float) $stats['paid_this_month'], 0) }}</div>
+                    <div class="mt-3 text-xs text-gray-400">paid on {{ now()->format('F') }} bills</div>
                 </div>
             </div>
 
@@ -184,17 +202,30 @@
                         </div>
                     </div>
 
-                    <!-- Tips card -->
-                    <div class="bg-gradient-to-br from-brand-900 to-brand-700 rounded-2xl p-6 text-white shadow-brand">
+                    <!-- Refer a friend card -->
+                    <a href="{{ route('referrals.index') }}" class="block bg-gradient-to-br from-brand-900 to-accent-900 rounded-2xl p-6 text-white shadow-brand hover:shadow-xl transition">
                         <div class="flex items-center gap-2 text-accent-300 text-xs font-bold uppercase tracking-wider">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>
-                            Pro tip
+                            Refer a friend
                         </div>
                         <p class="mt-3 text-brand-100 text-sm leading-relaxed">
-                            Add your <strong class="text-white">logo and signature image</strong> in Company settings — they'll appear on every PDF as a formal letterhead.
+                            Know another business that would benefit? Share your <strong class="text-white">personal referral code</strong> — WhatsApp, email, or a signup link.
                         </p>
-                        <a href="{{ route('company.edit') }}" class="mt-4 inline-flex items-center text-sm font-semibold text-accent-300 hover:text-accent-200">Set up letterhead →</a>
-                    </div>
+                        <div class="mt-4 inline-flex items-center text-sm font-semibold text-accent-300 hover:text-accent-200">
+                            Get your code →
+                        </div>
+                    </a>
+
+                    <!-- Help card -->
+                    <a href="{{ route('help') }}" class="block bg-white rounded-2xl p-6 shadow-card ring-1 ring-gray-100 hover:ring-brand-300 hover:shadow-brand transition">
+                        <div class="flex items-center gap-2 text-brand-700 text-xs font-bold uppercase tracking-wider">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            New here?
+                        </div>
+                        <h3 class="mt-3 font-display font-bold text-gray-900">How to use Apna Invoice</h3>
+                        <p class="mt-1 text-gray-500 text-sm">A 5-minute tour of every feature in the order you'll need them.</p>
+                        <div class="mt-3 text-sm font-semibold text-brand-700">Read the guide →</div>
+                    </a>
                 </div>
 
                 <!-- Recent invoices -->

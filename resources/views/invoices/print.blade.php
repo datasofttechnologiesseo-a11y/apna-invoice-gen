@@ -9,6 +9,27 @@
             body { background: white !important; }
             .no-print { display: none !important; }
             @page { margin: 12mm; }
+            /* Ink-saver: strip coloured fills and tinted backgrounds so the
+               printer uses primarily black ink. Keep structural borders. */
+            * {
+                -webkit-print-color-adjust: economy !important;
+                print-color-adjust: economy !important;
+            }
+            .invoice-doc,
+            .invoice-doc [class*="bg-"],
+            .invoice-doc [style*="background"] {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                background-image: none !important;
+            }
+            .invoice-doc * {
+                color: #000 !important;
+            }
+            .invoice-doc .text-gray-400,
+            .invoice-doc .text-gray-500,
+            .invoice-doc .text-gray-600 {
+                color: #444 !important;
+            }
         }
     </style>
 </head>

@@ -3,6 +3,32 @@
     $styleKey = $style ?? ($invoice->style ?? 'classic');
     $t = $styles[$styleKey] ?? $styles['classic'];
 
+    // "Print" / ink-saver mode: neutralise filled backgrounds and coloured rules
+    // so users spend less toner / ink when printing the downloaded PDF. The
+    // on-screen preview stays colourful; only the download view flips this on.
+    $print = $print ?? false;
+    if ($print) {
+        $t = array_merge($t, [
+            'accent' => '#111111',
+            'accent_soft' => '#ffffff',
+            'title_color' => '#111111',
+            'top_rule' => '1px solid #111111',
+            'header_rule' => '1px solid #111111',
+            'table_head_bg' => '#ffffff',
+            'table_head_color' => '#111111',
+            'table_row_border' => '#cccccc',
+            'divider' => '#bbbbbb',
+            'totals_border' => '1px solid #111111',
+            'total_rule' => '1px solid #111111',
+            'total_color' => '#111111',
+            'pill_bg' => '#ffffff',
+            'pill_color' => '#111111',
+            'pill_border' => '1px solid #111111',
+            'body_color' => '#111111',
+            'muted' => '#555555',
+        ]);
+    }
+
     $c = $invoice->company;
     $cust = $invoice->customer;
     $currencySymbol = '₹';

@@ -1,12 +1,16 @@
 <?php
 
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\InvoiceShareController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReferralController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +66,13 @@ Route::get('/robots.txt', function () {
     return response(implode("\n", $lines) . "\n", 200, ['Content-Type' => 'text/plain']);
 });
 
+// Public signed invoice link — recipient opens PDF without logging in.
+// The `signed` middleware verifies the URL signature and expiry; the `throttle`
+// limits abuse if a link gets shared in the wild.
+Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('invoices.public');
+
 Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/careers', 'pages.careers')->name('careers');
@@ -88,6 +99,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::view('/help', 'help.index')->name('help');
+
+    Route::get('/refer', [ReferralController::class, 'index'])->name('referrals.index');
+
+    // Backups (download + email + toggle). Building a backup ZIP is expensive
+    // and sending email is rate-limited by every provider, so we cap both.
+    Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
+    Route::get('/backup/download', [BackupController::class, 'download'])
+        ->middleware('throttle:6,1')
+        ->name('backup.download');
+    Route::post('/backup/email', [BackupController::class, 'emailNow'])
+        ->middleware('throttle:3,1')
+        ->name('backup.email');
+    Route::post('/backup/toggle', [BackupController::class, 'toggle'])->name('backup.toggle');
+
     // Multi-company routes. /company (singular) keeps the "active company edit"
     // shortcut used by the dashboard and other inbound links.
     Route::get('/company', function (Request $request) {
@@ -111,13 +137,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('customers', CustomerController::class)->except(['show']);
 
+    Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
+    Route::resource('products', ProductController::class)->except(['show']);
+
     Route::get('invoices/templates', [InvoiceController::class, 'templates'])->name('invoices.templates');
     Route::get('invoices/templates/{template}/preview', [InvoiceController::class, 'templatePreview'])->name('invoices.templates.preview');
     Route::resource('invoices', InvoiceController::class);
     Route::post('invoices/{invoice}/finalize', [InvoiceController::class, 'finalize'])->name('invoices.finalize');
     Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment'])->name('invoices.payments');
+    Route::get('payments/{payment}/receipt', [InvoiceController::class, 'receipt'])->name('payments.receipt');
+    Route::delete('payments/{payment}', [InvoiceController::class, 'deletePayment'])->name('payments.destroy');
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'printView'])->name('invoices.print');
+
+    // Share + cancel. Outbound email endpoints are rate-limited to stop a
+    // compromised account from blasting customers / burning SES quota.
+    Route::post('invoices/{invoice}/share/email', [InvoiceShareController::class, 'email'])
+        ->middleware('throttle:10,1')
+        ->name('invoices.share.email');
+    Route::get('invoices/{invoice}/share/link', [InvoiceShareController::class, 'publicLink'])->name('invoices.share.link');
+    Route::post('invoices/{invoice}/cancel', [InvoiceShareController::class, 'cancel'])->name('invoices.cancel');
+
+    // Payment reminders — hard cap to prevent spam against a single customer.
+    Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])
+        ->middleware('throttle:5,1')
+        ->name('invoices.remind');
 
     // Finance — P&L analytics + expense tracking
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');

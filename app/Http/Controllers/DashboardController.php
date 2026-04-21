@@ -14,14 +14,27 @@ class DashboardController extends Controller
         $currency = $company->default_currency;
 
         $invoices = $company->invoices();
+        $payments = $company->payments();
+
+        $monthStart = now()->startOfMonth();
+        $monthEnd = now()->endOfMonth();
 
         $stats = [
             'total' => (clone $invoices)->count(),
             'drafts' => (clone $invoices)->where('status', 'draft')->count(),
+            // "Bills issued" — count of invoices that have actually been finalised (have a statutory number).
+            'issued' => (clone $invoices)->whereNotNull('finalized_at')->count(),
+            'issued_this_month' => (clone $invoices)->whereNotNull('finalized_at')
+                ->whereBetween('finalized_at', [$monthStart, $monthEnd])->count(),
             'outstanding' => (clone $invoices)->where('currency', $currency)
                 ->whereIn('status', ['final', 'partially_paid'])->sum('balance'),
+            // Lifetime payments received (sum of receipts), and this-month subset.
+            'received_total' => (clone $payments)->sum('amount'),
+            'received_this_month' => (clone $payments)
+                ->whereBetween('received_at', [$monthStart, $monthEnd])->sum('amount'),
+            'receipts_issued' => (clone $payments)->count(),
             'paid_this_month' => (clone $invoices)->where('currency', $currency)
-                ->whereBetween('invoice_date', [now()->startOfMonth(), now()->endOfMonth()])
+                ->whereBetween('invoice_date', [$monthStart, $monthEnd])
                 ->sum('paid_amount'),
         ];
 

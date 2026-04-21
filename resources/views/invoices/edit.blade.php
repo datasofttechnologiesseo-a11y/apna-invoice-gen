@@ -11,6 +11,7 @@
 
     @php
         $existingItems = $invoice->items->map(fn ($i) => [
+            'product_id' => $i->product_id,
             'description' => $i->description,
             'hsn_sac' => $i->hsn_sac,
             'quantity' => (float) $i->quantity,
@@ -20,13 +21,17 @@
         ])->toArray();
         $oldItems = old('items', $existingItems);
         if (empty($oldItems)) {
-            $oldItems = [['description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'gst_rate' => 18]];
+            $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'gst_rate' => 18]];
         }
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         $companyStateId = $company->state_id;
+        $productIndex = $company->products()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
     @endphp
 
-    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }})'>
+    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex))'>
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
             @if ($errors->any())
                 <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
@@ -106,18 +111,87 @@
                 </div>
 
                 <div class="bg-white shadow sm:rounded-lg overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
-                    <div class="px-6 py-4 border-b flex items-center justify-between">
+                    <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
                         <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked — amounts are immutable</span>@endif</h3>
-                        @if (! $restricted)
-                            <button type="button" @click="addRow" class="text-brand-600 text-sm hover:underline">+ Add row</button>
-                        @endif
+                        <div class="flex items-center gap-3">
+                            @if ($productIndex->isEmpty() && ! $restricted)
+                                <a href="{{ route('products.create') }}" target="_blank" class="text-xs text-brand-700 hover:underline">💡 Save products for faster billing →</a>
+                            @endif
+                            @if (! $restricted)
+                                <button type="button" @click="addRow" class="text-brand-600 text-sm hover:underline">+ Add row</button>
+                            @endif
+                        </div>
                     </div>
                     <fieldset @disabled($restricted) class="{{ $restricted ? 'pointer-events-none' : '' }}">
 
-                    <div class="overflow-x-auto">
+                    {{-- Mobile: stacked cards (one per row). Table view from md up. --}}
+                    <div class="md:hidden divide-y divide-gray-100">
+                        <template x-for="(item, idx) in items" :key="idx">
+                            <div class="p-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
+                                    @if (! $restricted)
+                                        <button type="button" @click="removeRow(idx)" class="text-red-600 text-sm" x-show="items.length > 1" aria-label="Remove row">Remove</button>
+                                    @endif
+                                </div>
+                                @if ($productIndex->isNotEmpty())
+                                    <div>
+                                        <label class="text-xs text-gray-500 font-semibold">Product</label>
+                                        <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
+                                        <select @change="pickProduct(idx, $event.target.value)" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                            <option value="">— Custom —</option>
+                                            @foreach ($productIndex as $p)
+                                                <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+                                <div>
+                                    <label class="text-xs text-gray-500 font-semibold">Description</label>
+                                    <input :name="`items[${idx}][description]`" x-model="item.description" class="mt-1 block w-full border-gray-300 rounded text-sm" required>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
+                                        <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 font-semibold">Unit</label>
+                                        <input :name="`items[${idx}][unit]`" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS…">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 font-semibold">Quantity</label>
+                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
+                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 font-semibold">GST rate</label>
+                                    <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                        @foreach (config('gst.rates') as $r)
+                                            <option value="{{ $r['value'] }}" title="{{ $r['note'] }}">{{ $r['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="flex justify-between pt-2 border-t text-sm">
+                                    <span class="text-gray-500">Line amount</span>
+                                    <span class="font-mono font-semibold text-gray-900" x-text="'₹ ' + fmt(item.amount)"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- md+: full table --}}
+                    <div class="hidden md:block overflow-x-auto">
                         <table class="min-w-full text-sm">
                             <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
                                 <tr>
+                                    @if ($productIndex->isNotEmpty())
+                                        <th class="px-3 py-2 text-left">Product</th>
+                                    @endif
                                     <th class="px-3 py-2 text-left">Description</th>
                                     <th class="px-3 py-2 text-left">HSN/SAC</th>
                                     <th class="px-3 py-2 text-left">Quantity</th>
@@ -128,17 +202,28 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <template x-for="(item, idx) in items" :key="idx">
+                                <template x-for="(item, idx) in items" :key="`d-${idx}`">
                                     <tr class="border-t">
+                                        @if ($productIndex->isNotEmpty())
+                                            <td class="px-2 py-2">
+                                                <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
+                                                <select @change="pickProduct(idx, $event.target.value)" class="w-40 border-gray-300 rounded text-sm">
+                                                    <option value="">— Custom —</option>
+                                                    @foreach ($productIndex as $p)
+                                                        <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                        @endif
                                         <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" class="w-full border-gray-300 rounded text-sm" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" class="w-28 border-gray-300 rounded text-sm" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" class="w-28 border-gray-300 rounded text-sm font-mono" required></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
                                         <td class="px-2 py-2">
                                             <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-36 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
@@ -147,7 +232,7 @@
                                             </select>
                                         </td>
                                         <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
-                                        <td class="px-2 py-2 text-right">@if (! $restricted)<button type="button" @click="removeRow(idx)" class="text-red-500 hover:text-red-700" x-show="items.length > 1">×</button>@endif</td>
+                                        <td class="px-2 py-2 text-right">@if (! $restricted)<button type="button" @click="removeRow(idx)" class="text-red-500 hover:text-red-700 text-lg leading-none" x-show="items.length > 1" aria-label="Remove row">×</button>@endif</td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -263,12 +348,15 @@
 
     @push('scripts')
     <script>
-        function invoiceForm(initialItems, customerStates, companyStateId) {
+        function invoiceForm(initialItems, customerStates, companyStateId, productIndex) {
+            const productMap = {};
+            (productIndex || []).forEach(p => { productMap[p.id] = p; });
             return {
-                items: initialItems.map(i => ({...i, amount: 0, tax: 0, total: 0})),
+                items: initialItems.map(i => ({product_id: null, ...i, amount: 0, tax: 0, total: 0})),
                 customerId: @json(old('customer_id', $invoice->customer_id)),
                 customerStates,
                 companyStateId,
+                productMap,
                 totals: {subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
                 balance: 0,
                 get isInterstate() {
@@ -278,10 +366,27 @@
                 },
                 init() { this.recompute(); },
                 addRow() {
-                    this.items.push({description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
+                    this.items.push({product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
                 },
                 removeRow(i) {
                     if (this.items.length > 1) this.items.splice(i, 1);
+                    this.recompute();
+                },
+                pickProduct(idx, productId) {
+                    const row = this.items[idx];
+                    if (!productId) {
+                        row.product_id = null;
+                        this.recompute();
+                        return;
+                    }
+                    const p = this.productMap[productId];
+                    if (!p) return;
+                    row.product_id = p.id;
+                    row.description = p.name;
+                    row.hsn_sac = p.hsn_sac;
+                    row.unit = p.unit;
+                    row.rate = parseFloat(p.rate) || 0;
+                    row.gst_rate = parseFloat(p.gst_rate) || 0;
                     this.recompute();
                 },
                 recompute() {

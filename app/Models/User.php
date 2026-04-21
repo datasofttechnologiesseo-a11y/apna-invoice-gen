@@ -34,6 +34,11 @@ class User extends Authenticatable
         return $this->hasMany(Invoice::class);
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
     /**
      * Return (creating if necessary) the currently selected company for this user.
      * Used by every controller that needs "the company context for this request".
@@ -76,6 +81,12 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    /**
+     * Mass-assignable via `create()`/`update($request->all())`. Intentionally
+     * narrow: anything sensitive (is_super_admin, referral_code, referral
+     * link, backup preferences) is set via forceFill in controllers that are
+     * guaranteed to have already validated the caller.
+     */
     protected $fillable = [
         'name',
         'email',
@@ -104,11 +115,56 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_super_admin' => 'boolean',
+            'auto_backup_enabled' => 'boolean',
+            'last_backup_sent_at' => 'datetime',
         ];
     }
 
     public function isSuperAdmin(): bool
     {
         return (bool) $this->is_super_admin;
+    }
+
+    public function referralsMade(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referrer_user_id');
+    }
+
+    public function referredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
+    /**
+     * Return the user's unique referral code, generating one on first access.
+     * Uses AI-<4 char alphanum> — short, shareable, ~1.6m combinations.
+     *
+     * The unique constraint on the column is the source of truth for
+     * uniqueness; we catch the QueryException from a colliding insert and
+     * retry rather than relying on a pre-flight SELECT (which is racy under
+     * concurrent sign-ups).
+     */
+    public function ensureReferralCode(): string
+    {
+        if ($this->referral_code) {
+            return $this->referral_code;
+        }
+
+        for ($i = 0; $i < 10; $i++) {
+            $candidate = 'AI-' . strtoupper(\Illuminate\Support\Str::random(4));
+            try {
+                $this->forceFill(['referral_code' => $candidate])->save();
+                return $candidate;
+            } catch (\Illuminate\Database\QueryException $e) {
+                // 23000 / 23505 = integrity constraint violation. Retry.
+                if (! in_array((string) $e->getCode(), ['23000', '23505'], true)) {
+                    throw $e;
+                }
+                // Clear the local copy so the next save() inserts again.
+                $this->referral_code = null;
+            }
+        }
+
+        throw new \RuntimeException('Could not allocate a unique referral code after 10 attempts.');
     }
 }

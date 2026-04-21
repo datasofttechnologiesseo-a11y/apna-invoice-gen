@@ -19,6 +19,7 @@ class Company extends Model
         'bank_name', 'bank_account_number', 'bank_ifsc', 'bank_branch', 'upi_id',
         'default_currency', 'default_terms', 'declaration',
         'invoice_prefix', 'invoice_counter', 'invoice_number_padding',
+        'receipt_prefix', 'receipt_counter', 'receipt_number_padding',
         'onboarded_at',
     ];
 
@@ -61,9 +62,26 @@ class Company extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function nextInvoiceNumber(): string
     {
         $next = $this->invoice_counter + 1;
         return $this->invoice_prefix . '-' . str_pad((string) $next, $this->invoice_number_padding, '0', STR_PAD_LEFT);
+    }
+
+    public function nextReceiptNumber(): string
+    {
+        $next = ($this->receipt_counter ?? 0) + 1;
+        return ($this->receipt_prefix ?? 'RCPT') . '-' .
+            str_pad((string) $next, $this->receipt_number_padding ?? 4, '0', STR_PAD_LEFT);
     }
 }

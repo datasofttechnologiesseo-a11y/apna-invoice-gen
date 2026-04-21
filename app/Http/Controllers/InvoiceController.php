@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Payment;
 use App\Models\State;
 use App\Services\InvoiceCalculator;
+use App\Services\Reminders\ReminderService;
 use App\Support\NumberToWords;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +30,27 @@ class InvoiceController extends Controller
         $invoices = $company->invoices()
             ->with(['customer', 'company'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($request->search, fn ($q, $s) => $q->where('invoice_number', 'like', "%{$s}%"))
+            ->when($request->search, function ($q, $s) {
+                $term = trim($s);
+                // Normalize phone: strip spaces, dashes, + and parentheses so that
+                // "+91 98765-43210" matches a stored "9876543210" (and vice versa).
+                $digits = preg_replace('/[^0-9]/', '', $term);
+
+                $q->where(function ($w) use ($term, $digits) {
+                    $w->where('invoice_number', 'like', "%{$term}%")
+                      ->orWhereHas('customer', function ($c) use ($term, $digits) {
+                          $c->where('name', 'like', "%{$term}%")
+                            ->orWhere('phone', 'like', "%{$term}%");
+                          if ($digits !== '' && strlen($digits) >= 4) {
+                              // Match the digit-only form of the stored phone too.
+                              $c->orWhereRaw(
+                                  "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone,''),' ',''),'-',''),'+',''),'(',''),')','') LIKE ?",
+                                  ["%{$digits}%"]
+                              );
+                          }
+                      });
+                });
+            })
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)
@@ -362,26 +384,116 @@ class InvoiceController extends Controller
     {
         $this->authorizeInvoice($request, $invoice);
 
+        // Payments are only legally meaningful on issued invoices. Blocking
+        // payment against drafts keeps the audit trail clean.
+        abort_if($invoice->isDraft(), 422, 'Finalize the invoice before recording payments.');
+        abort_if($invoice->status === 'cancelled', 422, 'Cancelled invoices cannot accept payments.');
+
         $remaining = max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount);
+        $methods = array_keys(config('payment_methods.methods'));
+
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01', "max:{$remaining}"],
+            'method' => ['required', 'string', 'in:' . implode(',', $methods)],
+            'received_at' => ['required', 'date', 'before_or_equal:today'],
+            'reference_number' => ['nullable', 'string', 'max:80'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $paid = (float) $invoice->paid_amount + (float) $data['amount'];
-        $balance = (float) $invoice->grand_total - $paid;
+        $payment = DB::transaction(function () use ($invoice, $data, $request) {
+            // Lock the company row and increment the receipt counter atomically
+            // so concurrent payments can never get the same receipt number.
+            $company = $invoice->company()->lockForUpdate()->first();
+            $company->increment('receipt_counter');
 
-        $status = $invoice->status;
-        if (! $invoice->isDraft()) {
-            $status = $paid >= (float) $invoice->grand_total ? 'paid' : 'partially_paid';
+            $receiptNumber = $company->receipt_prefix . '-' .
+                str_pad((string) $company->receipt_counter, $company->receipt_number_padding, '0', STR_PAD_LEFT);
+
+            $payment = Payment::create([
+                'user_id' => $invoice->user_id,
+                'company_id' => $invoice->company_id,
+                'invoice_id' => $invoice->id,
+                'receipt_number' => $receiptNumber,
+                'received_at' => $data['received_at'],
+                'amount' => $data['amount'],
+                'method' => $data['method'],
+                'reference_number' => $data['reference_number'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            // Recompute the invoice's paid/balance/status from the sum of payments
+            // rather than nudging the existing field — single source of truth.
+            $paid = (float) $invoice->payments()->sum('amount');
+            $balance = round((float) $invoice->grand_total - $paid, 2);
+            $status = $paid >= (float) $invoice->grand_total ? 'paid' : ($paid > 0 ? 'partially_paid' : 'final');
+
+            $invoice->update([
+                'paid_amount' => $paid,
+                'balance' => $balance,
+                'status' => $status,
+            ]);
+
+            return $payment;
+        });
+
+        return back()->with('status', "Payment recorded. Receipt {$payment->receipt_number} issued.");
+    }
+
+    public function receipt(Request $request, Payment $payment): Response
+    {
+        $this->authorizePayment($request, $payment);
+        $payment->load(['invoice.company.state', 'invoice.customer.state']);
+
+        $pdf = Pdf::loadView('payments.receipt', ['payment' => $payment])
+            ->setPaper('A4')
+            ->setOption(['isRemoteEnabled' => true]);
+
+        return $pdf->download('receipt-' . $payment->receipt_number . '.pdf');
+    }
+
+    public function deletePayment(Request $request, Payment $payment): RedirectResponse
+    {
+        $this->authorizePayment($request, $payment);
+        $invoice = $payment->invoice;
+
+        DB::transaction(function () use ($payment, $invoice) {
+            $payment->delete();
+
+            $paid = (float) $invoice->payments()->sum('amount');
+            $balance = round((float) $invoice->grand_total - $paid, 2);
+            $status = $paid >= (float) $invoice->grand_total ? 'paid' : ($paid > 0 ? 'partially_paid' : 'final');
+
+            $invoice->update([
+                'paid_amount' => $paid,
+                'balance' => $balance,
+                'status' => $status,
+            ]);
+        });
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('status', 'Payment reversed.');
+    }
+
+    private function authorizePayment(Request $request, Payment $payment): void
+    {
+        abort_unless($payment->user_id === $request->user()->id, 403);
+    }
+
+    public function sendReminder(Request $request, Invoice $invoice, ReminderService $reminders): RedirectResponse
+    {
+        $this->authorizeInvoice($request, $invoice);
+        abort_unless($reminders->isEligible($invoice), 422, 'This invoice is not eligible for reminders.');
+
+        $data = $request->validate([
+            'channel' => ['required', 'in:email,whatsapp,sms'],
+        ]);
+
+        $record = $reminders->send($invoice, $data['channel'], 'manual');
+
+        if ($record->status === 'sent') {
+            return back()->with('status', "Reminder sent via {$data['channel']} to {$record->recipient}.");
         }
-
-        $invoice->update([
-            'paid_amount' => $paid,
-            'balance' => $balance,
-            'status' => $status,
-        ]);
-
-        return back()->with('status', 'Payment recorded.');
+        return back()->withErrors(['reminder' => $record->error ?: 'Failed to send reminder.']);
     }
 
     public function pdf(Request $request, Invoice $invoice): Response
@@ -391,7 +503,11 @@ class InvoiceController extends Controller
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
         $style = $invoice->style ?: 'classic';
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style'))
+        // Default to ink-saving "print" mode for downloads. Users who want the
+        // colourful version can append ?color=1 to the URL.
+        $print = ! $request->boolean('color');
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print'))
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
@@ -432,6 +548,10 @@ class InvoiceController extends Controller
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => [
+                'nullable',
+                Rule::exists('products', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
+            ],
             'items.*.description' => ['required', 'string', 'max:500'],
             'items.*.hsn_sac' => ['required', 'string', 'max:10'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],

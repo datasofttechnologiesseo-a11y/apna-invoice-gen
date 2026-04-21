@@ -8,13 +8,11 @@
 
     <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded">{{ session('status') }}</div>
-            @endif
+            <x-flash />
 
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search number" class="border-gray-300 rounded-md shadow-sm">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-72">
                     <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         @foreach (['draft','final','partially_paid','paid','cancelled'] as $s)
@@ -56,7 +54,12 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $inv->invoice_date?->format('d M Y') }}</td>
-                                    <td class="px-4 py-3">{{ $inv->customer?->name }}</td>
+                                    <td class="px-4 py-3">
+                                        {{ $inv->customer?->name }}
+                                        @if ($inv->customer?->phone)
+                                            <div class="text-xs text-gray-500 font-mono">{{ $inv->customer->phone }}</div>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $inv->grand_total, 2) }}</td>
                                     <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $inv->balance, 2) }}</td>
                                     <td class="px-4 py-3">

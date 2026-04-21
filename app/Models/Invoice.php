@@ -20,12 +20,14 @@ class Invoice extends Model
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
         'round_off', 'grand_total', 'paid_amount', 'balance',
         'notes', 'terms', 'finalized_at',
+        'cancelled_at', 'cancellation_reason',
     ];
 
     protected $casts = [
         'invoice_date' => 'date',
         'due_date' => 'date',
         'finalized_at' => 'datetime',
+        'cancelled_at' => 'datetime',
         'is_interstate' => 'boolean',
         'reverse_charge' => 'boolean',
         'subtotal' => 'decimal:2',
@@ -65,9 +67,44 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->orderBy('received_at')->orderBy('id');
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(InvoiceReminder::class);
+    }
+
+    /**
+     * Invoices eligible for payment reminders — issued, not cancelled, with
+     * an outstanding balance. Single source of truth for the schedule command
+     * and the ReminderService alike.
+     */
+    public function scopeEligibleForReminders($query)
+    {
+        return $query->whereNotNull('finalized_at')
+            ->where('status', '!=', 'cancelled')
+            ->whereNull('cancelled_at')
+            ->where('balance', '>', 0);
+    }
+
     public function isDraft(): bool
     {
         return $this->status === 'draft';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function canBeCancelled(): bool
+    {
+        // Only issued invoices can be cancelled. Drafts should be deleted,
+        // cancelled invoices can't be re-cancelled.
+        return ! $this->isDraft() && ! $this->isCancelled();
     }
 
     /** Full edit (line items, customer, dates, amounts). Drafts only. */
