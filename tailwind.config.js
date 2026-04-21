@@ -92,10 +92,15 @@ export default {
                     '0%, 100%': { opacity: '0.5' },
                     '50%': { opacity: '1' },
                 },
+                'fade-up': {
+                    '0%':   { opacity: '0', transform: 'translateY(14px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
             },
             animation: {
                 float: 'float 6s ease-in-out infinite',
                 shimmer: 'shimmer 2.5s ease-in-out infinite',
+                'fade-up': 'fade-up 0.7s cubic-bezier(.16,1,.3,1) both',
             },
         },
     },

@@ -123,59 +123,81 @@
     <div class="absolute -bottom-40 -left-20 w-[400px] h-[400px] bg-gradient-to-br from-saffron-400 to-brand-500 rounded-full blur-3xl opacity-15 animate-float" style="animation-delay: -3s;"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-24 md:pb-28 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        <div>
+        <div class="animate-fade-up">
             <div class="flex items-center gap-2 flex-wrap mb-5">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-brand-200 text-brand-700 text-xs font-bold tracking-wide uppercase">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-brand-200 text-brand-700 text-xs font-bold tracking-wide uppercase shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>
                     GST-Ready
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-saffron-200 text-saffron-700 text-xs font-bold tracking-wide uppercase">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-saffron-200 text-saffron-700 text-xs font-bold tracking-wide uppercase shadow-sm">
                     <span class="w-1.5 h-1.5 rounded-full bg-saffron-500 animate-shimmer"></span>
                     Made in India
                 </span>
-            </div>
-            <h1 class="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.05]">
-                Invoices that close deals.
-                <span class="block mt-2 bg-gradient-to-r from-brand-700 via-brand-600 to-accent-500 bg-clip-text text-transparent">
-                    Built for India's businesses.
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-money-50 ring-1 ring-money-200 text-money-800 text-xs font-bold tracking-wide uppercase shadow-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-money-500"></span>
+                    Free during beta
                 </span>
+            </div>
+            <h1 class="font-display text-4xl sm:text-5xl md:text-[3.5rem] font-extrabold tracking-tight text-gray-900 leading-[1.05]">
+                Your first GST invoice in
+                <span class="relative inline-block">
+                    <span class="relative bg-gradient-to-r from-brand-700 via-brand-600 to-accent-500 bg-clip-text text-transparent">60 seconds.</span>
+                    <svg class="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M2 7 Q50 1, 100 6 T198 4" stroke="url(#heroUnderline)" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="heroUnderline" x1="0" x2="1" y1="0" y2="0">
+                                <stop offset="0%" stop-color="#1e3a8a"/>
+                                <stop offset="100%" stop-color="#f97316"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </span>
+                <span class="block mt-3 text-gray-900">Built for India's businesses.</span>
             </h1>
             <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-xl leading-relaxed">
-                Professional GST invoices in under a minute. Auto CGST/SGST or IGST, HSN codes,
-                letterhead, one-click PDF — priced for the way Indian SMEs & Startups actually work.
+                Professional tax invoices with auto <strong class="text-gray-900">CGST/SGST/IGST</strong>,
+                HSN/SAC codes, FY-reset numbering, one-click PDF and WhatsApp share —
+                priced for the way Indian SMEs &amp; Startups actually work.
             </p>
             <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-xl shadow-brand transition">
-                    Start free
-                    <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                <a href="{{ route('register') }}" class="group relative inline-flex items-center justify-center px-7 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-xl shadow-brand transition overflow-hidden">
+                    <span class="relative z-10 flex items-center">
+                        Start free — 60 seconds
+                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                    </span>
+                    <span class="absolute inset-0 bg-gradient-to-r from-brand-600 via-accent-500 to-brand-600 bg-[length:200%_100%] opacity-0 group-hover:opacity-100 transition-opacity animate-[shimmer_3s_linear_infinite]"></span>
                 </a>
                 <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-7 py-3.5 bg-white border-2 border-gray-200 hover:border-brand-500 text-gray-800 font-semibold rounded-xl transition">
                     I have an account
                 </a>
             </div>
-            <div class="mt-8 flex items-center gap-6 text-sm text-gray-500">
+            <div class="mt-8 flex items-center gap-6 text-sm text-gray-500 flex-wrap">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-money-600" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
                     No card required
                 </div>
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-money-600" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
-                    Set up in 2 minutes
+                    Unlimited invoices
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-money-600" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+                    Your data stays in India
                 </div>
             </div>
         </div>
 
         <!-- Invoice mockup -->
-        <div class="relative">
+        <div class="relative animate-fade-up" style="animation-delay: 0.15s; animation-fill-mode: both;">
             <div class="absolute -inset-6 bg-gradient-to-br from-brand-300/40 via-accent-300/30 to-saffron-300/30 blur-3xl rounded-[3rem]"></div>
-            <div class="relative bg-white rounded-2xl shadow-brand ring-1 ring-gray-100 overflow-hidden">
+            <div class="relative bg-white rounded-2xl shadow-brand ring-1 ring-gray-100 overflow-hidden transition-transform duration-500 hover:-translate-y-1 hover:shadow-xl">
                 <div class="p-6 bg-gradient-to-br from-brand-900 to-brand-700 text-white">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-xs uppercase tracking-widest text-brand-200 font-semibold">Tax Invoice</div>
-                            <div class="font-black text-2xl mt-1">INV-2026-0042</div>
+                            <div class="font-black text-2xl mt-1">INV/2026-27/0042</div>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-money-400/30 text-money-100 ring-1 ring-money-300/40">● PAID</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-money-400/30 text-money-100 ring-1 ring-money-300/40 animate-[pulse_2.5s_ease-in-out_infinite]">● PAID</span>
                     </div>
                     <div class="mt-5 text-brand-100 text-sm">
                         <div>Acme Consulting LLP · Mumbai</div>
@@ -199,16 +221,20 @@
                         <span>Grand Total</span><span class="font-mono text-brand-700">₹1,47,500</span>
                     </div>
                 </div>
-                <div class="px-6 pb-6 grid grid-cols-2 gap-2">
-                    <button class="px-3 py-2.5 text-sm bg-gray-900 hover:bg-black text-white rounded-lg font-medium">↓ PDF</button>
-                    <button class="px-3 py-2.5 text-sm bg-accent-500 hover:bg-accent-600 text-white rounded-lg font-medium">Share</button>
+                <div class="px-6 pb-6 grid grid-cols-3 gap-2">
+                    <button class="px-3 py-2.5 text-sm bg-gray-900 hover:bg-black text-white rounded-lg font-medium transition">↓ PDF</button>
+                    <button class="px-3 py-2.5 text-sm bg-[#25D366] hover:bg-[#1ebe5b] text-white rounded-lg font-medium inline-flex items-center justify-center gap-1 transition">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+                        WhatsApp
+                    </button>
+                    <button class="px-3 py-2.5 text-sm bg-accent-500 hover:bg-accent-600 text-white rounded-lg font-medium transition">Email</button>
                 </div>
             </div>
             <!-- floating status pills -->
             <div class="hidden md:flex absolute -top-4 -left-4 items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-card ring-1 ring-gray-100 animate-float" style="animation-delay:-1s;">
                 <div class="w-8 h-8 rounded-full bg-money-100 text-money-700 flex items-center justify-center font-bold text-sm">₹</div>
                 <div class="text-xs">
-                    <div class="font-semibold">₹12,50,000</div>
+                    <div class="font-semibold">₹<span data-countup="1250000" data-format="inr">0</span></div>
                     <div class="text-gray-500">collected this month</div>
                 </div>
             </div>
@@ -221,6 +247,16 @@
                     <div class="text-gray-500">HSN, SAC, e-invoice ready</div>
                 </div>
             </div>
+            <!-- Floating reminder-sent toast — shows brand life -->
+            <div class="hidden lg:flex absolute top-1/2 -right-6 -translate-y-1/2 items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-card ring-1 ring-gray-100 animate-float" style="animation-delay:-6s;">
+                <div class="w-8 h-8 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
+                </div>
+                <div class="text-xs">
+                    <div class="font-semibold">Reminder sent</div>
+                    <div class="text-gray-500">via WhatsApp</div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -230,16 +266,66 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
             @foreach ([
-                ['n' => '1 min', 'l' => 'Avg. time per invoice'],
-                ['n' => '36', 'l' => 'States & UTs supported'],
-                ['n' => '₹0', 'l' => 'While in beta'],
-                ['n' => '100%', 'l' => 'GST-compliant format'],
+                ['n' => '60', 'suffix' => 's', 'l' => 'Your first invoice', 'countup' => true],
+                ['n' => '36', 'suffix' => '', 'l' => 'States & UTs supported', 'countup' => true],
+                ['n' => '₹0', 'suffix' => '', 'l' => 'While in beta', 'countup' => false],
+                ['n' => '100', 'suffix' => '%', 'l' => 'GST-compliant format', 'countup' => true],
             ] as $t)
                 <div class="text-center md:text-left">
-                    <div class="text-3xl md:text-4xl font-display font-extrabold bg-gradient-to-br from-brand-700 to-accent-600 bg-clip-text text-transparent">{{ $t['n'] }}</div>
+                    <div class="text-3xl md:text-4xl font-display font-extrabold bg-gradient-to-br from-brand-700 to-accent-600 bg-clip-text text-transparent">
+                        @if ($t['countup'])
+                            <span data-countup="{{ $t['n'] }}">0</span>{{ $t['suffix'] }}
+                        @else
+                            {{ $t['n'] }}{{ $t['suffix'] }}
+                        @endif
+                    </div>
                     <div class="text-gray-600 text-sm mt-1">{{ $t['l'] }}</div>
                 </div>
             @endforeach
+        </div>
+    </div>
+</section>
+
+<!-- How it works — 3 steps from signup to first invoice -->
+<section class="relative py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto text-center">
+            <span class="inline-block px-3 py-1 rounded-full bg-accent-50 text-accent-700 text-xs font-bold uppercase tracking-wider">3-step setup</span>
+            <h2 class="mt-4 font-display text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+                Your first invoice in <span class="text-brand-700">under 2 minutes</span>.
+            </h2>
+            <p class="mt-3 text-gray-600">Nothing to learn, no onboarding call. Here's every step from "never used this" to "invoice sent".</p>
+        </div>
+
+        <div class="mt-14 grid md:grid-cols-3 gap-6 md:gap-8 relative">
+            {{-- Connecting line on desktop --}}
+            <div class="hidden md:block absolute top-10 left-[16%] right-[16%] h-px bg-gradient-to-r from-brand-200 via-accent-200 to-money-200 -z-0"></div>
+
+            @foreach ([
+                ['n' => '01', 'title' => 'Sign up — 30 seconds', 'desc' => 'Just email and password. No credit card, no company docs.', 'gradient' => 'from-brand-500 to-brand-700', 'ring' => 'ring-brand-200', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
+                ['n' => '02', 'title' => 'Add your business — 60 seconds', 'desc' => 'Paste GSTIN, pick state, upload logo. Letterhead auto-generates on every invoice.', 'gradient' => 'from-accent-500 to-saffron-500', 'ring' => 'ring-accent-200', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
+                ['n' => '03', 'title' => 'Issue first invoice — 30 seconds', 'desc' => 'Pick a customer, type one line item, hit Finalize. PDF is ready to WhatsApp.', 'gradient' => 'from-money-500 to-money-700', 'ring' => 'ring-money-200', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+            ] as $step)
+                <div class="relative bg-white rounded-2xl p-6 md:p-8 ring-1 {{ $step['ring'] }} shadow-sm hover:shadow-card transition-all duration-300 hover:-translate-y-1 z-10">
+                    <div class="flex items-start gap-4">
+                        <div class="relative w-20 h-20 shrink-0 rounded-2xl bg-gradient-to-br {{ $step['gradient'] }} flex items-center justify-center text-white shadow-md">
+                            <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $step['icon'] }}"/>
+                            </svg>
+                            <span class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white ring-2 {{ $step['ring'] }} flex items-center justify-center text-gray-900 font-display font-extrabold text-sm">{{ $step['n'] }}</span>
+                        </div>
+                    </div>
+                    <h3 class="mt-5 font-display text-lg font-bold text-gray-900">{{ $step['title'] }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $step['desc'] }}</p>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-xl shadow-brand transition">
+                Start free — no card needed
+                <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
+            </a>
         </div>
     </div>
 </section>

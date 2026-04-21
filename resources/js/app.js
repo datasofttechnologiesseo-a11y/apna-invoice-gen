@@ -46,3 +46,66 @@ window.addEventListener('pageshow', () => {
         });
     });
 });
+
+/* ------------------------------------------------------------------
+ * Count-up animation for marketing-page stats.
+ *
+ * Any element with [data-countup="N"] animates 0 → N when it scrolls
+ * into view. Add data-format="inr" for Indian number system (₹12,50,000).
+ * Respects prefers-reduced-motion: snaps straight to final value.
+ * ---------------------------------------------------------------- */
+(() => {
+    const formatInr = (n) => {
+        // xx,xx,xxx layout — lakhs/crores
+        const s = Math.round(n).toString();
+        if (s.length <= 3) return s;
+        const last3 = s.slice(-3);
+        const rest = s.slice(0, -3);
+        return `${rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',')},${last3}`;
+    };
+
+    const animateOne = (el) => {
+        const target = parseFloat(el.dataset.countup);
+        if (!Number.isFinite(target)) return;
+        const useInr = el.dataset.format === 'inr';
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) {
+            el.textContent = useInr ? formatInr(target) : Math.round(target).toLocaleString('en-IN');
+            return;
+        }
+        const duration = 1400;
+        const start = performance.now();
+        const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+        const tick = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            const v = target * easeOut(t);
+            el.textContent = useInr ? formatInr(v) : Math.round(v).toLocaleString('en-IN');
+            if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+        const targets = document.querySelectorAll('[data-countup]:not([data-countup-done])');
+        if (!targets.length) return;
+        if (!('IntersectionObserver' in window)) {
+            targets.forEach((el) => { animateOne(el); el.setAttribute('data-countup-done', ''); });
+            return;
+        }
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                animateOne(entry.target);
+                entry.target.setAttribute('data-countup-done', '');
+                io.unobserve(entry.target);
+            });
+        }, { threshold: 0.4 });
+        targets.forEach((el) => io.observe(el));
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();
