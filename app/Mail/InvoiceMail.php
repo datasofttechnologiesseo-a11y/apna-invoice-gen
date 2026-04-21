@@ -77,7 +77,7 @@ class InvoiceMail extends Mailable
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
-        $filename = 'invoice-' . ($invoice->invoice_number ?: 'draft-' . $invoice->id) . '.pdf';
+        $filename = 'invoice-' . $invoice->filenameSafeNumber() . '.pdf';
 
         return [
             Attachment::fromData(fn () => $pdf->output(), $filename)

@@ -147,7 +147,8 @@ class CreditNoteController extends Controller
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
-        return $pdf->download('credit-note-' . $creditNote->credit_note_number . '.pdf');
+        $safeNumber = preg_replace('~[\\\\/\\:\\*\\?"<>\\|\\s]+~', '-', $creditNote->credit_note_number);
+        return $pdf->download('credit-note-' . $safeNumber . '.pdf');
     }
 
     private function authorizeInvoice(Request $request, Invoice $invoice): void

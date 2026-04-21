@@ -160,4 +160,16 @@ class Invoice extends Model
         }
         return 'Draft #' . $this->id;
     }
+
+    /**
+     * File-system-safe name for PDF downloads. Invoice numbers under the
+     * FY-format option (e.g. "ACME/2026-27/0001") contain '/' which Symfony's
+     * Content-Disposition header rejects. Replace any forbidden chars with '-'.
+     */
+    public function filenameSafeNumber(): string
+    {
+        $raw = $this->isDraft() ? 'draft-' . $this->id : ($this->invoice_number ?: 'draft-' . $this->id);
+        // Forbidden in Content-Disposition + most file systems
+        return preg_replace('~[\\\\/\\:\\*\\?"<>\\|\\s]+~', '-', $raw);
+    }
 }

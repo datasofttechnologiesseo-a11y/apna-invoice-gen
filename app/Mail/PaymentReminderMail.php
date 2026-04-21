@@ -71,7 +71,7 @@ class PaymentReminderMail extends Mailable
         return [
             Attachment::fromData(
                 fn () => $pdf->output(),
-                'invoice-' . ($invoice->invoice_number ?: 'draft-' . $invoice->id) . '.pdf'
+                'invoice-' . $invoice->filenameSafeNumber() . '.pdf'
             )->withMime('application/pdf'),
         ];
     }

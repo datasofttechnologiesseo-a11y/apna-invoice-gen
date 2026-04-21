@@ -464,7 +464,8 @@ class InvoiceController extends Controller
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
-        return $pdf->download('receipt-' . $payment->receipt_number . '.pdf');
+        $safeNumber = preg_replace('~[\\\\/\\:\\*\\?"<>\\|\\s]+~', '-', $payment->receipt_number);
+        return $pdf->download('receipt-' . $safeNumber . '.pdf');
     }
 
     public function deletePayment(Request $request, Payment $payment): RedirectResponse
@@ -527,7 +528,7 @@ class InvoiceController extends Controller
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
-        $filename = 'invoice-' . ($invoice->isDraft() ? 'draft-' . $invoice->id : $invoice->invoice_number) . '.pdf';
+        $filename = 'invoice-' . $invoice->filenameSafeNumber() . '.pdf';
 
         return $pdf->download($filename);
     }

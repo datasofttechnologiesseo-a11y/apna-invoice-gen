@@ -43,9 +43,13 @@
 
     @php
         $hasTransporter = $invoice->transporter_name || $invoice->vehicle_number || $invoice->eway_bill_number || $invoice->transporter_id || $invoice->transport_mode;
+        $hasShipTo = $invoice->hasSeparateShipTo();
+        $shipState = $invoice->shipToState ?? null;
+        $cols = 1 + ($hasShipTo ? 1 : 0) + ($hasTransporter ? 1 : 0);
+        $gridCols = $cols === 3 ? 'md:grid-cols-3' : ($cols === 2 ? 'md:grid-cols-2' : 'md:grid-cols-1');
     @endphp
 
-    <div class="grid grid-cols-2 gap-8 py-6 border-b">
+    <div class="grid grid-cols-1 {{ $gridCols }} gap-6 py-6 border-b">
         <div>
             <div class="text-xs uppercase text-gray-500 font-semibold">Bill to</div>
             <div class="mt-1"><strong>{{ $cust->name }}</strong></div>
@@ -58,7 +62,24 @@
             @if ($cust->state?->gst_code)<div class="text-sm"><strong>State code:</strong> <span class="font-mono">{{ $cust->state->gst_code }}</span></div>@endif
             @if ($cust->phone)<div class="text-sm">{{ $cust->phone }} @if ($cust->email) · {{ $cust->email }} @endif</div>@endif
         </div>
-        <div class="text-sm">
+        @if ($hasShipTo)
+            <div class="md:border-l md:pl-6">
+                <div class="text-xs uppercase text-gray-500 font-semibold">Ship to</div>
+                @if ($invoice->ship_to_name)
+                    <div class="mt-1"><strong>{{ $invoice->ship_to_name }}</strong></div>
+                @endif
+                <div class="text-sm text-gray-700">
+                    @if ($invoice->ship_to_address_line1){{ $invoice->ship_to_address_line1 }}@endif
+                    @if ($invoice->ship_to_address_line2), {{ $invoice->ship_to_address_line2 }}@endif
+                    @if ($invoice->ship_to_address_line1)<br>@endif
+                    {{ trim(($invoice->ship_to_city ?? '') . ($invoice->ship_to_city && $shipState?->name ? ', ' : '') . ($shipState?->name ?? '') . ($shipState?->gst_code ? ' (' . $shipState->gst_code . ')' : '') . ' ' . ($invoice->ship_to_postal_code ?? '')) }}
+                </div>
+                @if ($invoice->ship_to_gstin)
+                    <div class="text-sm mt-1"><strong>GSTIN:</strong> {{ $invoice->ship_to_gstin }}</div>
+                @endif
+            </div>
+        @endif
+        <div class="text-sm {{ $hasShipTo ? 'md:border-l md:pl-6' : '' }}">
             @if ($hasTransporter)
                 <div class="text-xs uppercase text-gray-500 font-semibold">Transporter details</div>
                 <table class="mt-1 w-full text-sm">

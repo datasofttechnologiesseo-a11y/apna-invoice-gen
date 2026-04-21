@@ -99,7 +99,7 @@ class InvoiceShareController extends Controller
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
-        $filename = 'invoice-' . ($invoice->isDraft() ? 'draft-' . $invoice->id : $invoice->invoice_number) . '.pdf';
+        $filename = 'invoice-' . $invoice->filenameSafeNumber() . '.pdf';
 
         return $pdf->stream($filename);
     }

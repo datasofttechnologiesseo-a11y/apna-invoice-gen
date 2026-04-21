@@ -157,4 +157,22 @@ class InvoiceControllerTest extends TestCase
     {
         $this->get(route('invoices.index'))->assertRedirect(route('login'));
     }
+
+    public function test_pdf_download_works_with_fy_style_invoice_number_containing_slashes(): void
+    {
+        // Regression: FY invoice numbers like "ACME/2026-27/0001" contain '/'
+        // which Symfony's Content-Disposition header rejects. The filename
+        // must be sanitised before download().
+        $user = User::factory()->create();
+        $invoice = Invoice::factory()->recycle($user)->finalized()->create([
+            'invoice_number' => 'ACME/2026-27/0001',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('invoices.pdf', $invoice));
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+        // Header must not contain the raw slashes.
+        $this->assertStringNotContainsString('ACME/2026-27/0001', $response->headers->get('Content-Disposition'));
+    }
 }
