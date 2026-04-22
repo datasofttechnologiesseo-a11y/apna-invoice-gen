@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800|plus-jakarta-sans:700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css'])
+
+    @include('partials.google-analytics')
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col bg-gradient-to-br from-brand-50 via-white to-accent-50">
     <header class="py-6">

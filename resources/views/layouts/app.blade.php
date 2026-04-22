@@ -15,6 +15,8 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        @include('partials.google-analytics')
     </head>
     <body class="font-sans antialiased">
         <a href="#main-content" class="skip-link">Skip to main content</a>
