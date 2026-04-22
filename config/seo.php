@@ -4,7 +4,7 @@ return [
 
     'name' => 'Apna Invoice',
 
-    'legal_name' => 'Datasoft Technologies Pvt. Ltd.',
+    'legal_name' => 'Datasoft Technologies',
 
     'title_suffix' => ' — Free GST Invoice Generator for Indian Businesses',
 
@@ -45,7 +45,7 @@ return [
 
     'organization' => [
         'name' => 'Datasoft Technologies',
-        'legal_name' => 'Datasoft Technologies Pvt. Ltd.',
+        'legal_name' => 'Datasoft Technologies',
         'url' => 'https://www.datasofttechnologies.com/',
         'logo' => '/brand/dst-logo.png',
         'country' => 'IN',

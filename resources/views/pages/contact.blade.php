@@ -84,7 +84,7 @@
 
     <h2>Office</h2>
     <p>
-        Datasoft Technologies Pvt. Ltd.<br>
+        Datasoft Technologies<br>
         India<br>
         <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer">datasofttechnologies.com</a>
     </p>

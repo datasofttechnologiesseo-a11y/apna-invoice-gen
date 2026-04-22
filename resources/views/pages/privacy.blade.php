@@ -11,7 +11,7 @@
 
     <h2>1. Who we are</h2>
     <p>
-        Apna Invoice is operated by Datasoft Technologies Pvt. Ltd. ("DST", "we", "us"), the data fiduciary under
+        Apna Invoice is operated by Datasoft Technologies ("DST", "we", "us"), the data fiduciary under
         the Digital Personal Data Protection Act, 2023 ("DPDP Act").
     </p>
 
