@@ -217,11 +217,13 @@
             <div class="mt-0.5">Subject to <strong>{{ $c->city ?: 'India' }}</strong> jurisdiction</div>
             <div class="mt-2">This is a computer-generated invoice.</div>
         </div>
-        <div class="text-center">
+        <div class="w-48 text-center">
             @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-                <img src="{{ asset('storage/' . $c->signature_path) }}" alt="Signature" style="max-height: 50px;">
+                <img src="{{ asset('storage/' . $c->signature_path) }}" alt="Signature" class="mx-auto" style="max-height: 50px;">
+            @else
+                <div style="height: 50px;"></div>
             @endif
-            <div class="border-t border-gray-400 pt-1 mt-8 w-48">for {{ $c->name }}<br><span class="text-xs text-gray-500">Authorised signatory</span></div>
+            <div class="border-t border-gray-400 pt-1 mt-2">for {{ $c->name }}<br><span class="text-xs text-gray-500">Authorised signatory</span></div>
         </div>
     </div>
 </div>

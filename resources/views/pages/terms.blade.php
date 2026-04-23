@@ -13,7 +13,7 @@
     <p>
         By creating an Apna Invoice account or using the service ("Service"), you agree to these Terms of Service
         ("Terms"). If you do not agree, do not use the Service. The Service is operated by Datasoft Technologies
-        Pvt. Ltd. ("DST", "we", "us").
+        ("DST", "we", "us").
     </p>
 
     <h2>2. Accounts &amp; eligibility</h2>

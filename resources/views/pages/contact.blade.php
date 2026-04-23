@@ -61,7 +61,7 @@
             </div>
             <div>
                 <label for="subject" class="block text-sm font-semibold text-gray-700">Subject *</label>
-                <input id="subject" name="subject" type="text" required minlength="3" maxlength="150" value="{{ old('subject') }}"
+                <input id="subject" name="subject" type="text" required minlength="3" maxlength="150" value="{{ old('subject', request()->query('subject', '')) }}"
                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="Sales enquiry / Bug report / …">
             </div>
         </div>
@@ -85,7 +85,7 @@
     <h2>Office</h2>
     <p>
         Datasoft Technologies<br>
-        India<br>
+        Corporate Office · Delhi NCR, India<br>
         <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer">datasofttechnologies.com</a>
     </p>
 

@@ -547,7 +547,7 @@
                 </td>
                 <td style="vertical-align: top; text-align: right;">
                     @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-                        <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="Authorised signature" style="max-height: 32px; margin-bottom: 2px;">
+                        <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="Authorised signature" style="max-height: 32px; margin-bottom: 2px;"><br>
                     @endif
                     <div class="sig-box">
                         For {{ $c->name }}
