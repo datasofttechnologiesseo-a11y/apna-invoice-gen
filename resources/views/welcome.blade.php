@@ -79,9 +79,10 @@
         description="Create GST-compliant invoices in under a minute. Free for Indian SMEs, startups, freelancers & CAs. HSN/SAC codes, CGST/SGST auto-split, amount in words (lakhs & crores), professional PDF export. GST 2.0 ready."
         type="website"
         :json-ld="$jsonLd" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="image" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" fetchpriority="high">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:700,800&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/landing.js'])
 </head>
 <body class="font-sans antialiased bg-white text-gray-900 overflow-x-hidden">
 
@@ -96,20 +97,20 @@
 <!-- Header -->
 <header class="relative bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <a href="{{ url('/') }}" class="flex items-center gap-3 py-4" aria-label="Apna Invoice home">
+        <a href="{{ url('/') }}" class="flex items-center gap-3 py-4 min-w-0 flex-shrink" aria-label="Apna Invoice home">
             <span class="inline-block bg-white rounded">
-                <x-brand-logo class="h-12 md:h-14 w-auto block" />
+                <x-brand-logo class="h-9 md:h-14 w-auto block" />
             </span>
         </a>
-        <nav class="flex items-center gap-2 md:gap-6 text-sm">
+        <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
             <a href="#features" class="hidden md:inline-block text-gray-600 hover:text-brand-700 font-medium">Features</a>
             <a href="#pricing" class="hidden md:inline-block text-gray-600 hover:text-brand-700 font-medium">Pricing</a>
             <a href="#faq" class="hidden md:inline-block text-gray-600 hover:text-brand-700 font-medium">FAQ</a>
             @auth
-                <a href="{{ route('dashboard') }}" class="px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">Go to dashboard →</a>
+                <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
             @else
-                <a href="{{ route('login') }}" class="text-gray-700 hover:text-brand-700 font-medium px-3 py-2">Log in</a>
-                <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">Start free</a>
+                <a href="{{ route('login') }}" class="text-gray-700 hover:text-brand-700 font-medium px-2 py-2 md:px-3 whitespace-nowrap">Log in</a>
+                <a href="{{ route('register') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Start free</a>
             @endauth
         </nav>
     </div>
@@ -119,8 +120,8 @@
 <section class="relative overflow-hidden">
     <div class="absolute inset-0 bg-hero-mesh"></div>
     <div class="absolute inset-0 bg-grid-soft bg-grid-soft opacity-50"></div>
-    <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-brand-400 to-accent-500 rounded-full blur-3xl opacity-20 animate-float"></div>
-    <div class="absolute -bottom-40 -left-20 w-[400px] h-[400px] bg-gradient-to-br from-saffron-400 to-brand-500 rounded-full blur-3xl opacity-15 animate-float" style="animation-delay: -3s;"></div>
+    <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-brand-400 to-accent-500 rounded-full blur-3xl opacity-20 hidden md:block md:animate-float"></div>
+    <div class="absolute -bottom-40 -left-20 w-[400px] h-[400px] bg-gradient-to-br from-saffron-400 to-brand-500 rounded-full blur-3xl opacity-15 hidden md:block md:animate-float" style="animation-delay: -3s;"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-24 md:pb-28 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div class="animate-fade-up">
