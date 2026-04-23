@@ -112,7 +112,7 @@
         <div class="relative border-t border-white/10 bg-black/40 backdrop-blur-sm">
             <div class="max-w-7xl mx-auto px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">
-                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies Pvt. Ltd.</a></span>
+                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>All rights reserved</span>
                     <span class="hidden md:inline text-white/40">•</span>
@@ -175,7 +175,7 @@
             {{-- Bottom strip --}}
             <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">
-                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies Pvt. Ltd.</a></span>
+                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>All rights reserved</span>
                 </div>
