@@ -8,7 +8,7 @@ return [
 
     'title_suffix' => ' — Free GST Invoice Generator for Indian Businesses',
 
-    'description' => 'Create GST-compliant invoices online in 60 seconds. Free forever for Indian SMEs, startups, freelancers & CAs. GST 2.0 ready with HSN/SAC codes, multi-GSTIN, and professional PDF export.',
+    'description' => 'Free GST invoice generator for Indian SMEs. Auto CGST/SGST/IGST, HSN/SAC codes, lakhs & crores format, WhatsApp share. GST 2.0 ready in 60 seconds.',
 
     'keywords' => implode(', ', [
         'online invoice generator',

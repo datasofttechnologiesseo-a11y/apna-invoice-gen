@@ -70,13 +70,13 @@
     ];
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en-IN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <x-seo
-        title="Free GST Invoice Generator Online"
-        description="Create GST-compliant invoices in 60 seconds. Free for Indian SMEs, startups, freelancers & CAs. HSN/SAC codes, CGST/SGST auto-split, amount in words (lakhs & crores), professional PDF export. GST 2.0 ready."
+        title="Free GST 2.0 Invoice Generator for India"
+        description="Free GST invoice generator for Indian SMEs. Auto CGST/SGST/IGST, HSN/SAC codes, lakhs & crores number format, WhatsApp share. GST 2.0 ready in 60 seconds."
         type="website"
         :json-ld="$jsonLd" />
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
@@ -516,6 +516,7 @@
             <span class="inline-block px-3 py-1 rounded-full bg-saffron-50 text-saffron-700 text-xs font-bold uppercase tracking-wider">What users say</span>
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Loved by India's SMEs & Startups.</h2>
             <p class="mt-4 text-lg text-gray-600">From Mumbai consultancies to Bengaluru agencies, business owners use DST's invoice tool to close the month in hours, not days.</p>
+            <p class="mt-3 text-xs text-gray-400">Representative scenarios from early private-beta users. Full case studies coming post-launch.</p>
         </div>
         <div class="mt-14 grid md:grid-cols-3 gap-6">
             @foreach ([
