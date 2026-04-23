@@ -28,16 +28,16 @@
                                 GST updates, straight to your inbox.
                             </h3>
                             <p class="mt-3 text-gray-300 text-base leading-relaxed max-w-lg">
-                                Monthly roundup for Indian SMEs &amp; startups. Rule changes, deadlines, product releases — no fluff, unsubscribe anytime.
+                                Monthly roundup for Indian SMEs &amp; startups. Rule changes, deadlines, product releases — no fluff. Launching with our paid tiers; drop us a line to get on the list.
                             </p>
                         </div>
-                        <form onsubmit="event.preventDefault(); this.querySelector('button').innerText='✓ Subscribed'" class="md:col-span-2 flex flex-col gap-3">
-                            <label for="newsletter-email" class="sr-only">Your work email</label>
-                            <input id="newsletter-email" name="email" type="email" required placeholder="you@company.com" autocomplete="email" class="w-full px-5 py-3.5 rounded-xl bg-white/10 border-white/10 text-white placeholder-gray-400 focus:border-accent-400 focus:ring-accent-400/40 focus:bg-white/15 transition">
-                            <button class="w-full px-5 py-3.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-400 hover:to-accent-500 text-accent-950 font-bold rounded-xl transition shadow-lg shadow-accent-500/30">
-                                Subscribe →
-                            </button>
-                        </form>
+                        <div class="md:col-span-2 flex flex-col gap-3">
+                            <a href="{{ route('pages.contact') }}?subject={{ urlencode('Newsletter — add me to updates') }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-400 hover:to-accent-500 text-accent-950 font-bold rounded-xl transition shadow-lg shadow-accent-500/30">
+                                Get early updates
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                            </a>
+                            <p class="text-xs text-gray-400 text-center">Takes 30 seconds via our contact form.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,7 +116,7 @@
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>All rights reserved</span>
                     <span class="hidden md:inline text-white/40">•</span>
-                    <span>Jurisdiction: India</span>
+                    <span>Jurisdiction: Delhi NCR, India</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span>Built with</span>
