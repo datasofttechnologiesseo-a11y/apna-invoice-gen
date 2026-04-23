@@ -54,7 +54,7 @@
                     <p class="mt-5 text-gray-400 text-sm leading-relaxed max-w-sm">
                         GST-compliant invoicing built for Indian SMEs &amp; Startups by
                         <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="text-white font-semibold hover:text-accent-400 transition">Datasoft Technologies</a>.
-                        Professional invoices in under a minute.
+                        Professional invoices in 60 seconds.
                     </p>
 
                 </div>
