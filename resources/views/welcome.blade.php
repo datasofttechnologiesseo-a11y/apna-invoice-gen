@@ -305,7 +305,7 @@
                             </div>
                             <div class="text-right text-xs">
                                 <div class="text-brand-300/80">GSTIN</div>
-                                <div class="font-mono text-brand-100 tracking-tight">27AABCU9603R1ZM</div>
+                                <div class="font-mono text-brand-100 tracking-tight">27AAACT2727Q1ZW</div>
                             </div>
                         </div>
                     </div>
@@ -818,6 +818,24 @@
                     <div class="px-5 pb-5 text-gray-600 leading-relaxed">{{ $faq['a'] }}</div>
                 </details>
             @endforeach
+        </div>
+
+        {{-- Downloadable user guide — public, no signup needed.
+             Lets prospects preview the full flow before creating an account. --}}
+        <div class="mt-10 p-5 sm:p-6 rounded-2xl bg-white ring-1 ring-brand-100 shadow-card flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="shrink-0 w-12 h-12 rounded-xl bg-brand-50 ring-1 ring-brand-100 text-brand-700 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="text-[11px] font-bold uppercase tracking-widest text-saffron-600">Free guide · No signup</div>
+                <h3 class="mt-0.5 font-display text-lg font-extrabold text-gray-900">17-slide getting-started deck</h3>
+                <p class="mt-1 text-sm text-gray-600">A complete walkthrough — from sign-up to your first paid GST invoice — in 17 slides. Share with your team or your CA.</p>
+            </div>
+            <a href="{{ asset('downloads/apna-invoice-getting-started.pptx') }}" download
+               class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm transition whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                Download .pptx
+            </a>
         </div>
     </div>
 </section>

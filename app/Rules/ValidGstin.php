@@ -49,11 +49,12 @@ class ValidGstin implements ValidationRule
 
     /**
      * GSTIN checksum: for each of the first 14 characters, multiply its base-36
-     * value by an alternating factor starting with 2 (i.e. 2, 1, 2, 1, …). If the
+     * value by an alternating factor starting with 1 (i.e. 1, 2, 1, 2, …). If the
      * product is >= 36, sum its base-36 "digits" (div 36 + mod 36). Sum all such
      * values, take mod 36, subtract from 36 (mod 36) → that index in the base-36
      * alphabet is the expected check character.
      *
+     * Verified against real public GSTINs (e.g. 27AAACT2727Q1ZW · TCS).
      * Reference: GSTN-approved implementations used across tax SaaS products.
      */
     public static function hasValidChecksum(string $gstin): bool
@@ -64,7 +65,8 @@ class ValidGstin implements ValidationRule
         for ($i = 0; $i < 14; $i++) {
             $pos = strpos(self::BASE36, $gstin[$i]);
             if ($pos === false) return false;
-            $factor = ($i % 2 === 0) ? 2 : 1;
+            // Factors alternate 1, 2, 1, 2, … starting at position 0.
+            $factor = ($i % 2 === 0) ? 1 : 2;
             $product = $pos * $factor;
             $sum += intdiv($product, 36) + ($product % 36);
         }

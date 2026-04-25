@@ -92,13 +92,13 @@
             <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink-0">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center gap-2 px-2 py-1.5 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-brand-300 focus:outline-none transition">
-                            <span class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-600 to-accent-500 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                        <button class="inline-flex items-center gap-2 px-2.5 py-1.5 ring-1 ring-brand-200 text-sm font-semibold rounded-lg text-brand-900 bg-gradient-to-br from-brand-50 to-brand-100 hover:from-brand-100 hover:to-brand-200 hover:ring-brand-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                            <span class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-700 to-accent-500 text-white font-bold flex items-center justify-center text-xs flex-shrink-0 shadow-inner">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                             <div class="text-left hidden xl:block">
-                                <div class="text-[9px] text-gray-400 leading-tight uppercase tracking-wider">Hi,</div>
-                                <div class="leading-tight text-xs font-semibold">{{ Str::limit(Auth::user()->name, 12) }}</div>
+                                <div class="text-[9px] text-brand-700/70 leading-tight uppercase tracking-wider">Hi,</div>
+                                <div class="leading-tight text-xs font-bold text-brand-900">{{ Str::limit(Auth::user()->name, 12) }}</div>
                             </div>
-                            <svg class="fill-current h-3.5 w-3.5 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg class="fill-current h-3.5 w-3.5 text-brand-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
                         </button>

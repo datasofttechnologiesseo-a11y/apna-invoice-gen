@@ -31,7 +31,7 @@
                     </div>
                     <div>
                         <x-input-label for="gstin" value="GSTIN" />
-                        <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('gstin', $company->gstin)" maxlength="15" placeholder="27AABCU9603R1ZM" />
+                        <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('gstin', $company->gstin)" maxlength="15" placeholder="27AAACT2727Q1ZW" />
                         <p class="mt-1 text-xs text-gray-500">15-char GST number. Leave blank if not registered.</p>
                         <x-input-error :messages="$errors->get('gstin')" class="mt-2" />
                     </div>
