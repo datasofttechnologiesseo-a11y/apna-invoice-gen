@@ -1,9 +1,9 @@
 <x-layouts.marketing
-    title="Talk to sales"
+    title="Contact Apna Invoice — India-based Support, Sales & Partnerships"
     eyebrow="Contact"
-    lead="Running 100+ invoices a month, managing multiple GSTINs, or need a custom plan? We're happy to help."
-    description="Contact Apna Invoice sales and support. Indian SMEs, high-volume invoicers, and multi-GSTIN businesses — email us for custom plans and priority onboarding."
-    keywords="Apna Invoice contact, invoice software support India, GST invoice sales, Datasoft Technologies contact, enterprise GST invoicing India">
+    lead="Running 100+ invoices a month, managing multiple GSTINs, or just stuck on a setting? Our India-based team replies within one business day."
+    description="Contact Apna Invoice — India-based support and sales for MSMEs, SMEs, startups, freelancers and CAs. Help with GST invoicing, multi-GSTIN, custom plans, and partnerships."
+    keywords="Apna Invoice contact, GST invoice support India, invoice software help India, MSME invoicing support, Datasoft Technologies contact, CA partnership India">
 
     <h2>Get in touch</h2>
     <div class="not-prose mt-4 grid sm:grid-cols-2 gap-4">

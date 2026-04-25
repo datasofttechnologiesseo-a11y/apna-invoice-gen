@@ -48,6 +48,7 @@
             <x-site-footer variant="minimal" />
         </div>
 
+        @include('partials.cookie-banner')
         @stack('scripts')
     </body>
 </html>

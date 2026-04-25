@@ -14,20 +14,20 @@
         @method('put')
 
         <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
-            <x-password-input id="update_password_current_password" name="current_password" autocomplete="current-password" :required="false" />
+            <x-input-label for="update_password_current_password" :value="__('Current password *')" />
+            <x-password-input id="update_password_current_password" name="current_password" autocomplete="current-password" />
             <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" />
-            <x-password-input id="update_password_password" name="password" autocomplete="new-password" :required="false" />
+            <x-input-label for="update_password_password" :value="__('New password *')" />
+            <x-password-input id="update_password_password" name="password" autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
-            <x-password-input id="update_password_password_confirmation" name="password_confirmation" autocomplete="new-password" :required="false" />
+            <x-input-label for="update_password_password_confirmation" :value="__('Confirm new password *')" />
+            <x-password-input id="update_password_password_confirmation" name="password_confirmation" autocomplete="new-password" />
             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
         </div>
 

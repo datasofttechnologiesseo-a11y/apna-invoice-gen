@@ -1,9 +1,9 @@
 <x-layouts.marketing
-    title="Press kit"
+    title="Apna Invoice Press Kit — Brand Assets, Boilerplate & India Media Contact"
     eyebrow="Media"
-    lead="Logos, product shots, and boilerplate for journalists, partners, and reviewers covering Apna Invoice."
-    description="Press kit for Apna Invoice and Datasoft Technologies — brand assets, logos, boilerplate copy, and media contact for journalists covering Indian SaaS and GST tools."
-    keywords="Apna Invoice press kit, Datasoft Technologies media, Indian SaaS press, GST software press coverage, DST brand assets">
+    lead="Logos, product shots, boilerplate, and founder quotes for journalists, partners, and reviewers covering Apna Invoice and India's MSME/SaaS landscape."
+    description="Apna Invoice press kit — logos, product screenshots, boilerplate, and media contact for journalists covering Indian SaaS, GST tools, MSMEs, and startups."
+    keywords="Apna Invoice press kit, Apna Invoice media, Indian SaaS press, GST software press coverage, MSME SaaS India journalist, Datasoft Technologies brand assets">
 
     <h2>Boilerplate</h2>
     <p>

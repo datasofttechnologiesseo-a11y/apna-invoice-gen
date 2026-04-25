@@ -132,7 +132,10 @@ class CompanyController extends Controller
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
-            'state_id' => ['nullable', 'exists:states,id'],
+            // State drives CGST/SGST vs IGST on every invoice — make it required
+            // here too, matching the onboarding rule. A company with no state breaks
+            // GST determination downstream.
+            'state_id' => ['required', 'exists:states,id'],
             'postal_code' => ['nullable', 'string', 'max:10'],
             'country' => ['required', 'string', 'max:80'],
             'phone' => ['nullable', 'string', 'max:30'],

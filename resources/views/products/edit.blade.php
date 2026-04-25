@@ -30,7 +30,7 @@
 
                         <div>
                             <x-input-label for="kind" value="Kind *" />
-                            <select id="kind" name="kind" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <select id="kind" name="kind" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                 @foreach (config('uqc_units.kinds') as $value => $label)
                                     <option value="{{ $value }}" @selected(old('kind', $product->kind) === $value)>{{ $label }}</option>
                                 @endforeach
@@ -51,7 +51,7 @@
 
                         <div>
                             <x-input-label for="unit" value="Unit (UQC) *" />
-                            <select id="unit" name="unit" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <select id="unit" name="unit" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                 @foreach (config('uqc_units.codes') as $u)
                                     <option value="{{ $u['code'] }}" @selected(old('unit', $product->unit ?: 'NOS') === $u['code'])>{{ $u['label'] }}</option>
                                 @endforeach
@@ -65,7 +65,7 @@
 
                         <div>
                             <x-input-label for="gst_rate" value="Default GST% *" />
-                            <select id="gst_rate" name="gst_rate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <select id="gst_rate" name="gst_rate" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                                 @foreach (config('gst.rates') as $r)
                                     <option value="{{ $r['value'] }}" @selected((float) old('gst_rate', $product->gst_rate ?? 18) === (float) $r['value']) title="{{ $r['note'] }}">{{ $r['label'] }}</option>
                                 @endforeach

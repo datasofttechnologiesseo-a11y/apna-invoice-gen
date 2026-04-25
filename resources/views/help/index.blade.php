@@ -9,7 +9,26 @@
     <div class="py-8">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 grid lg:grid-cols-[220px_1fr] gap-8">
 
-            {{-- Sticky TOC (hidden on <lg since it's a vertical space-eater) --}}
+            {{-- Mobile TOC — a collapsible <details> so users on phones can jump to sections without endless scrolling --}}
+            <details class="lg:hidden bg-white rounded-xl shadow-card ring-1 ring-gray-100 p-4 text-sm">
+                <summary class="cursor-pointer font-semibold text-gray-900 flex items-center justify-between">
+                    <span class="text-xs uppercase tracking-wider font-bold text-gray-500">Jump to section</span>
+                    <svg class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <nav class="mt-3 space-y-1.5">
+                    <a href="#setup" class="block py-1.5 text-gray-700 hover:text-brand-700">1. Set up your business</a>
+                    <a href="#customers" class="block py-1.5 text-gray-700 hover:text-brand-700">2. Add customers</a>
+                    <a href="#products" class="block py-1.5 text-gray-700 hover:text-brand-700">3. Save products</a>
+                    <a href="#invoice" class="block py-1.5 text-gray-700 hover:text-brand-700">4. Create an invoice</a>
+                    <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">5. Finalize &amp; share</a>
+                    <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Record payments</a>
+                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Track progress</a>
+                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">8. FAQ</a>
+                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">9. What we don't cover</a>
+                </nav>
+            </details>
+
+            {{-- Sticky TOC on lg+ — unchanged from before --}}
             <aside class="hidden lg:block lg:sticky lg:top-6 self-start">
                 <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 p-4 text-sm">
                     <div class="text-xs uppercase tracking-wider font-bold text-gray-500 mb-2">On this page</div>
@@ -85,7 +104,7 @@
                         [
                             'id' => 'finalize',
                             'n' => 5,
-                            'title' => 'Finalize, download, share &amp; amend',
+                            'title' => 'Finalize, download, share & amend',
                             'time' => 'instant',
                             'desc' => 'Open the invoice, click <em>Finalize</em> — we assign the next number in your series (auto-reset on 1 April when you use the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL. For returns / rate corrections / post-sale discounts, use <em>Issue credit note</em> — the adjustment is GSTR-1-compliant and auto-reduces the invoice balance.',
                             'tips' => [
@@ -98,7 +117,7 @@
                         [
                             'id' => 'payments',
                             'n' => 6,
-                            'title' => 'Record payments &amp; issue receipts',
+                            'title' => 'Record payments & issue receipts',
                             'time' => '20 seconds per payment',
                             'desc' => 'On a finalized invoice, fill the <em>Record a payment</em> form — amount, method (UPI / NEFT / Cash / Cheque…), date, reference. We generate a sequential receipt number, update the balance, and give you a printable receipt PDF.',
                             'tips' => [

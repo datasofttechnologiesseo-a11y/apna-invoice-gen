@@ -86,7 +86,7 @@ export default {
             keyframes: {
                 float: {
                     '0%, 100%': { transform: 'translateY(0)' },
-                    '50%': { transform: 'translateY(-8px)' },
+                    '50%': { transform: 'translateY(-16px)' },
                 },
                 shimmer: {
                     '0%, 100%': { opacity: '0.5' },
@@ -99,6 +99,7 @@ export default {
             },
             animation: {
                 float: 'float 6s ease-in-out infinite',
+                'float-fast': 'float 3s ease-in-out infinite',
                 shimmer: 'shimmer 2.5s ease-in-out infinite',
                 'fade-up': 'fade-up 0.7s cubic-bezier(.16,1,.3,1) both',
             },

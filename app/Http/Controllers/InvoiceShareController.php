@@ -46,8 +46,10 @@ class InvoiceShareController extends Controller
             }
             $mail->send(new InvoiceMail($invoice, $data['subject'], $data['body'], $publicUrl));
         } catch (\Throwable $e) {
-            Log::error('Invoice email failed: ' . $e->getMessage(), ['invoice_id' => $invoice->id]);
-            return back()->withErrors(['email' => 'Could not send the email: ' . $e->getMessage()]);
+            // Log the real exception (with stack) for debugging, but surface a
+            // generic message — detailed SMTP/provider errors leak infra hints.
+            Log::error('Invoice email failed', ['invoice_id' => $invoice->id, 'exception' => $e]);
+            return back()->withErrors(['email' => "We couldn't send the email right now. Please try again in a moment or contact support if the problem persists."]);
         }
 
         return back()->with('status', "Invoice emailed to {$data['to']}.");

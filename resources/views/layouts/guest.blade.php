@@ -40,6 +40,7 @@
                 Powered by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="font-semibold text-gray-700 hover:text-brand-700 transition">Datasoft Technologies</a>
             </p>
         </div>
+        @include('partials.cookie-banner')
         @stack('scripts')
     </body>
 </html>

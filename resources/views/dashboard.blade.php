@@ -19,13 +19,14 @@
             @unless ($setupComplete)
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-accent-200 overflow-hidden">
                     <div class="p-6 bg-gradient-to-r from-brand-900 via-brand-800 to-accent-900 text-white flex items-center justify-between">
-                        <div>
+                        <div class="flex-1 min-w-0">
                             <div class="text-xs uppercase font-bold tracking-widest text-accent-300">Getting started</div>
                             <h3 class="mt-1 font-display text-xl font-extrabold">You're {{ $setupProgress }}% set up.</h3>
                             <p class="mt-1 text-brand-100 text-sm">Complete the remaining steps to issue your first invoice.</p>
                         </div>
-                        <div class="hidden md:block">
-                            <div class="w-20 h-20 rounded-full ring-4 ring-white/20 flex items-center justify-center font-display font-extrabold text-2xl bg-white/10 backdrop-blur">
+                        {{-- Progress circle — mobile shows a smaller inline version so the % is always visible --}}
+                        <div class="shrink-0 ml-4">
+                            <div class="w-14 h-14 md:w-20 md:h-20 rounded-full ring-2 md:ring-4 ring-white/20 flex items-center justify-center font-display font-extrabold text-base md:text-2xl bg-white/10 backdrop-blur">
                                 {{ $setupProgress }}%
                             </div>
                         </div>

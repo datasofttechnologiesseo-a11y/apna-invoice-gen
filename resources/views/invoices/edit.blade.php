@@ -55,6 +55,43 @@
                 </div>
             @endif
 
+            {{-- First-time user tip: shown only on a brand-new invoice (no invoice exists yet).
+                 Dismissible via localStorage so it doesn't nag returning users. --}}
+            @unless ($invoice->exists)
+                <div x-data="{ show: !localStorage.getItem('hideFirstInvoiceTip') }" x-show="show" x-cloak
+                     class="p-4 bg-brand-50 border border-brand-200 text-brand-900 rounded-lg flex items-start gap-3">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="text-sm flex-1">
+                        <div class="font-semibold">New to invoicing? Here's all you need to do:</div>
+                        <ol class="mt-1 list-decimal pl-5 space-y-0.5">
+                            <li>Pick a <strong>customer</strong> (or click <em>+ New</em> to add one).</li>
+                            <li>Fill <strong>at least one line item</strong> — description, HSN/SAC, qty, rate, GST%.</li>
+                            <li>Click <strong>Create draft</strong> — it stays editable. <strong>Finalize</strong> locks the invoice number and makes the PDF.</li>
+                        </ol>
+                        <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to fields are optional — open them only if needed.</div>
+                    </div>
+                    <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-500 hover:text-brand-800 hover:bg-brand-100 rounded-lg text-2xl leading-none" aria-label="Dismiss tip">×</button>
+                </div>
+            @endunless
+
+            {{-- Empty-state nudge when the user has zero customers — the invoice form is unusable without one --}}
+            @if ($customers->isEmpty() && ! $restricted)
+                <div class="p-5 bg-saffron-50 border border-saffron-200 text-saffron-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-4">
+                    <svg class="w-6 h-6 flex-shrink-0 text-saffron-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <div class="font-semibold">You need at least one customer before you can create an invoice.</div>
+                        <div class="text-sm mt-0.5">Save customer details once — name, GSTIN, state — and reuse them on every future invoice.</div>
+                    </div>
+                    <a href="{{ route('customers.create') }}" class="inline-flex items-center justify-center px-4 py-2 bg-saffron-600 hover:bg-saffron-700 text-white font-semibold rounded-lg text-sm whitespace-nowrap">
+                        + Add first customer
+                    </a>
+                </div>
+            @endif
+
             <form method="POST" action="{{ $invoice->exists ? route('invoices.update', $invoice) : route('invoices.store') }}" class="space-y-6">
                 @csrf
                 @if ($invoice->exists) @method('PATCH') @endif
@@ -72,7 +109,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <a href="{{ route('customers.create') }}" target="_blank" class="text-brand-600 text-sm whitespace-nowrap">+ New</a>
+                                <a href="{{ route('customers.create') }}" target="_blank" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap">+ New</a>
                             </div>
                         </div>
 
@@ -121,10 +158,10 @@
                         <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked — amounts are immutable</span>@endif</h3>
                         <div class="flex items-center gap-3">
                             @if ($productIndex->isEmpty() && ! $restricted)
-                                <a href="{{ route('products.create') }}" target="_blank" class="text-xs text-brand-700 hover:underline">💡 Save products for faster billing →</a>
+                                <a href="{{ route('products.create') }}" target="_blank" class="inline-flex items-center min-h-[40px] text-xs text-brand-700 hover:underline">💡 Save products for faster billing →</a>
                             @endif
                             @if (! $restricted)
-                                <button type="button" @click="addRow" class="text-brand-600 text-sm hover:underline">+ Add row</button>
+                                <button type="button" @click="addRow" class="inline-flex items-center justify-center min-h-[40px] px-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-md text-sm font-semibold">+ Add row</button>
                             @endif
                         </div>
                     </div>
@@ -153,17 +190,18 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <label class="text-xs text-gray-500 font-semibold">Description</label>
-                                    <input :name="`items[${idx}][description]`" x-model="item.description" class="mt-1 block w-full border-gray-300 rounded text-sm" required>
+                                    <label class="text-xs text-gray-500 font-semibold">Description <span class="text-gray-400 font-normal">(max 150)</span></label>
+                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="e.g. Website development — July 2026" class="mt-1 block w-full border-gray-300 rounded text-sm" required>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
-                                        <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" required>
+                                        <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" required>
+                                        <p class="mt-1 text-[10px] text-gray-400">4–8 digits. <a href="https://services.gst.gov.in/services/searchhsnsac" target="_blank" rel="noopener" class="inline-block py-1 text-brand-600 hover:underline font-semibold">Find code ↗</a></p>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Unit</label>
-                                        <input :name="`items[${idx}][unit]`" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS…">
+                                        <input :name="`items[${idx}][unit]`" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS, HRS…">
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
@@ -221,8 +259,8 @@
                                                 </select>
                                             </td>
                                         @endif
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" class="w-full border-gray-300 rounded text-sm" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" class="w-28 border-gray-300 rounded text-sm font-mono" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="e.g. Website development — July 2026" class="w-full border-gray-300 rounded text-sm" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono" required></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
                                                 <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
@@ -238,7 +276,7 @@
                                             </select>
                                         </td>
                                         <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
-                                        <td class="px-2 py-2 text-right">@if (! $restricted)<button type="button" @click="removeRow(idx)" class="text-red-500 hover:text-red-700 text-lg leading-none" x-show="items.length > 1" aria-label="Remove row">×</button>@endif</td>
+                                        <td class="px-2 py-2 text-right">@if (! $restricted)<button type="button" @click="removeRow(idx)" class="inline-flex items-center justify-center w-8 h-8 text-red-500 hover:text-white hover:bg-red-500 rounded-md text-lg leading-none" x-show="items.length > 1" aria-label="Remove row">×</button>@endif</td>
                                     </tr>
                                 </template>
                             </tbody>

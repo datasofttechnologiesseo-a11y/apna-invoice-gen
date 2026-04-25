@@ -28,6 +28,20 @@
                     @csrf
                     @if ($company->exists) @method('PATCH') @endif
 
+                    {{-- Safety net: show every validation error at the top so the user
+                         always sees something actionable, even for fields that don't
+                         surface their own <x-input-error> slot yet (e.g. bank_*). --}}
+                    @if ($errors->any())
+                        <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm" role="alert">
+                            <div class="font-semibold mb-1">Please fix the following before saving:</div>
+                            <ul class="list-disc pl-5 space-y-0.5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <x-input-label for="name" value="Business Name *" />
@@ -81,7 +95,7 @@
                         </div>
                         <div>
                             <x-input-label for="state_id" value="State *" />
-                            <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
+                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
                                 <option value="">— Select —</option>
                                 @foreach ($states as $state)
                                     <option value="{{ $state->id }}" @selected(old('state_id', $company->state_id) == $state->id)>

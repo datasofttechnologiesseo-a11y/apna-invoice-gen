@@ -67,8 +67,8 @@
     </x-slot>
 
     @if ($invoice->canBeCancelled())
-        <dialog id="cancel-invoice-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-full max-w-lg">
-            <form method="POST" action="{{ route('invoices.cancel', $invoice) }}" class="p-6 space-y-4">
+        <dialog id="cancel-invoice-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100vh-3rem)]">
+            <form method="POST" action="{{ route('invoices.cancel', $invoice) }}" class="p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
                 <div>
                     <h3 class="font-display font-bold text-lg text-gray-900">Cancel this invoice?</h3>

@@ -8,18 +8,42 @@
     'noindex' => false,
     'jsonLd' => [],
 ])
+@php
+    // Auto-generate a BreadcrumbList JSON-LD for every marketing page so Google
+    // shows Home › {page} breadcrumbs in SERPs — free rich-result boost.
+    $breadcrumb = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            [
+                '@type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => url('/'),
+            ],
+            [
+                '@type' => 'ListItem',
+                'position' => 2,
+                'name' => $title,
+                'item' => url()->current(),
+            ],
+        ],
+    ];
+    $allJsonLd = array_merge([$breadcrumb], (array) $jsonLd);
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
         :title="$title"
         :description="$description ?: $lead"
         :keywords="$keywords"
         :type="$type"
         :noindex="$noindex"
-        :json-ld="$jsonLd" />
+        :json-ld="$allJsonLd" />
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -80,6 +104,7 @@
 
 <x-site-footer />
 
+@include('partials.cookie-banner')
 @stack('scripts')
 
 </body>

@@ -12,7 +12,7 @@
 
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-72">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
                     <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         @foreach (['draft','final','partially_paid','paid','cancelled'] as $s)
@@ -36,7 +36,61 @@
                         :secondaryLabel="request('search') || request('status') ? null : 'Read the how-to guide'"
                     />
                 @else
-                    <div class="overflow-x-auto">
+                    {{-- Mobile card view — one card per invoice, no horizontal scroll --}}
+                    <ul class="md:hidden divide-y divide-gray-100">
+                        @foreach ($invoices as $inv)
+                            @php
+                                $colors = [
+                                    'draft' => 'bg-gray-100 text-gray-700',
+                                    'final' => 'bg-blue-100 text-blue-800',
+                                    'partially_paid' => 'bg-amber-100 text-amber-800',
+                                    'paid' => 'bg-green-100 text-green-800',
+                                    'cancelled' => 'bg-red-100 text-red-800',
+                                ];
+                            @endphp
+                            <li class="p-4 flex flex-col gap-2">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-mono text-sm">
+                                            @if ($inv->isDraft())
+                                                <span class="text-gray-400 italic">Draft #{{ $inv->id }}</span>
+                                            @else
+                                                <span class="font-semibold text-gray-900">{{ $inv->invoice_number }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '—' }}</div>
+                                        <div class="text-xs text-gray-500">{{ $inv->invoice_date?->format('d M Y') }}</div>
+                                    </div>
+                                    <span class="shrink-0 inline-block px-2 py-0.5 rounded text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
+                                </div>
+                                <div class="flex items-baseline justify-between text-sm">
+                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ number_format((float) $inv->grand_total, 2) }}</span></span>
+                                    @if ((float) $inv->balance > 0)
+                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-amber-700 ml-1">₹{{ number_format((float) $inv->balance, 2) }}</span></span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-3 pt-1 text-sm">
+                                    <a href="{{ route('invoices.show', $inv) }}" class="inline-flex items-center min-h-[36px] text-brand-700 font-semibold">View</a>
+                                    <a href="{{ route('invoices.pdf', $inv) }}" class="inline-flex items-center min-h-[36px] text-gray-700">PDF</a>
+                                    @if ($inv->isEditable())
+                                        <x-confirm-form
+                                            :action="route('invoices.destroy', $inv)"
+                                            method="DELETE"
+                                            title="Delete draft #{{ $inv->id }}?"
+                                            message="This draft and all its line items are permanently deleted. This cannot be undone."
+                                            confirm-label="Delete draft"
+                                            confirm-class="bg-red-600 hover:bg-red-700"
+                                            tone="danger">
+                                            <button type="button" class="inline-flex items-center min-h-[36px] text-red-600">Delete</button>
+                                        </x-confirm-form>
+                                    @endif
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    {{-- Desktop: full table (unchanged) --}}
+                    <div class="hidden md:block overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
                             <tr>

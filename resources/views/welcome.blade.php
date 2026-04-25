@@ -5,7 +5,7 @@
         ['q' => "What's the difference between draft and final?", 'a' => 'Drafts are editable and have no invoice number yet. Once you finalize, the invoice gets a permanent number (e.g. INV-0001), becomes read-only, and is considered legally issued. You can still mark payments against finalized invoices.'],
         ['q' => 'Can I issue credit notes against a finalized invoice?', 'a' => "Yes. Credit notes follow the GST Section 34 format — reason code, reference to the original invoice, CGST/SGST or IGST reversal. They flow through your books and are ready for GSTR-1 reporting."],
         ['q' => 'I already use Excel / Tally / Vyapar. Is it hard to switch?', 'a' => "No setup migration required for most users — add your company once, paste in customers as you bill them, and carry on. You keep your existing invoice numbering series (we don't force ours). You can also export your Apna Invoice data at any time as a ZIP, so you're never locked in."],
-        ['q' => 'Can I bill international clients?', 'a' => 'Yes. We support INR, USD, EUR, GBP, AED, SGD, AUD and CAD. Exchange rate is captured per invoice. Export invoices still use the tax invoice format.'],
+        ['q' => 'Can I bill international clients?', 'a' => 'Not yet. Apna Invoice is built for Indian domestic GST invoicing in INR (₹) only — export under LUT/Bond, SEZ supplies, and multi-currency billing are intentionally out of scope while we stay focused on MSMEs, SMEs, startups and freelancers billing within India.'],
         ['q' => 'What happens to my data?', 'a' => 'It lives in your account, on our servers in India. You can export your invoices and customer data any time. We never sell data to third parties.'],
         ['q' => 'Who builds this?', 'a' => 'Datasoft Technologies (DST) — an Indian software company focused on practical tools for modern businesses. This product is free during beta while we grow.'],
     ];
@@ -82,6 +82,38 @@
                 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
             ], $faqs),
         ],
+        // HowTo schema — targets "how to create GST invoice in India" rich results
+        // and reinforces the "60-second setup" ranking promise.
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'HowTo',
+            'name' => 'How to make your first GST invoice in 60 seconds with Apna Invoice',
+            'description' => 'Create a GST-compliant tax invoice online for free — auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share.',
+            'totalTime' => 'PT60S',
+            'estimatedCost' => ['@type' => 'MonetaryAmount', 'currency' => 'INR', 'value' => '0'],
+            'tool' => [['@type' => 'HowToTool', 'name' => 'Apna Invoice (web)']],
+            'step' => [
+                [
+                    '@type' => 'HowToStep',
+                    'position' => 1,
+                    'name' => 'Add your business',
+                    'text' => 'Sign up free and enter your business name, GSTIN, state and invoice prefix. Apna Invoice pre-loads 36 Indian states and UTs so place-of-supply is auto-detected.',
+                    'url' => $appUrl . '/register',
+                ],
+                [
+                    '@type' => 'HowToStep',
+                    'position' => 2,
+                    'name' => 'Add a customer',
+                    'text' => 'Save the customer\'s name, GSTIN (for B2B), address and state. Intra-state customers trigger CGST+SGST automatically; inter-state customers trigger IGST.',
+                ],
+                [
+                    '@type' => 'HowToStep',
+                    'position' => 3,
+                    'name' => 'Issue the invoice',
+                    'text' => 'Pick the customer, add one or more line items with HSN/SAC, qty, rate and GST rate, then Finalize. The system assigns the next sequential invoice number, generates a GST-compliant PDF, and lets you share via WhatsApp, email or a 30-day public link.',
+                ],
+            ],
+        ],
     ];
 @endphp
 <!DOCTYPE html>
@@ -89,11 +121,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="Free GST 2.0 Invoice Generator for India"
-        description="Free GST invoice generator for Indian SMEs. Auto CGST/SGST/IGST, HSN/SAC codes, lakhs & crores number format, WhatsApp share. GST 2.0 ready in 60 seconds."
+        title="Best Free GST Invoice & Bill Generator for India — Make GST-compliant invoices in 60 seconds"
+        description="Best free GST invoice & bill generator online. Make GST-compliant tax invoices with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR & WhatsApp share in 60 seconds. Made in India for MSMEs, SMEs, startups, freelancers & CAs — a Tally, Zoho Books & Vyapar alternative."
         type="website"
         :json-ld="$jsonLd" />
+    {{-- Preload the brand logo — it's the LCP element on the landing header. --}}
+    <link rel="preload" href="{{ asset('brand/apna-invoice-logo.png') }}" as="image" type="image/png">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -106,7 +141,7 @@
 <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white text-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-2 flex-wrap">
         <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent-500 text-accent-900 text-[10px] font-bold uppercase tracking-wider">New</span>
-        <span>Free forever during beta — unlimited GST invoices, unlimited customers. <a href="{{ route('register') }}" class="underline font-semibold hover:text-accent-300">Claim now →</a></span>
+        <span>Free for India's MSMEs, SMEs &amp; startups — unlimited GST invoices, unlimited customers. <a href="{{ route('register') }}" class="underline font-semibold hover:text-accent-300">Claim now →</a></span>
     </div>
 </div>
 
@@ -136,18 +171,31 @@
 <section class="relative overflow-hidden">
     <div class="absolute inset-0 bg-hero-mesh"></div>
     <div class="absolute inset-0 bg-grid-soft bg-grid-soft opacity-50"></div>
-    <div class="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-brand-400 to-accent-500 rounded-full blur-3xl opacity-20 hidden md:block md:animate-float"></div>
-    <div class="absolute -bottom-40 -left-20 w-[400px] h-[400px] bg-gradient-to-br from-saffron-400 to-brand-500 rounded-full blur-3xl opacity-15 hidden md:block md:animate-float" style="animation-delay: -3s;"></div>
+    {{-- Decorative orbs — now visible on mobile too (smaller), for depth --}}
+    <div class="absolute -top-32 -right-32 w-[320px] h-[320px] md:w-[500px] md:h-[500px] md:-top-40 md:-right-40 bg-gradient-to-br from-brand-400 to-accent-500 rounded-full blur-3xl opacity-25 md:animate-float"></div>
+    <div class="absolute -bottom-32 -left-16 w-[260px] h-[260px] md:w-[400px] md:h-[400px] md:-bottom-40 md:-left-20 bg-gradient-to-br from-saffron-400 to-brand-500 rounded-full blur-3xl opacity-20 md:animate-float" style="animation-delay: -3s;"></div>
+    {{-- Subtle mid-hero accent orb (desktop only) for extra depth --}}
+    <div class="hidden lg:block absolute top-1/3 left-1/3 w-[260px] h-[260px] bg-gradient-to-br from-money-300 to-accent-300 rounded-full blur-3xl opacity-10 animate-float" style="animation-delay: -5s;"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-24 md:pb-28 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div class="animate-fade-up">
             <div class="flex items-center gap-2 flex-wrap mb-5">
+                {{-- Bilingual namaste pill — enterprise-clean, single saffron accent --}}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-800 text-xs font-bold tracking-wide shadow-sm" aria-label="Namaste, welcome">
+                    <span class="text-sm leading-none text-saffron-600" aria-hidden="true">🙏</span>
+                    <span class="text-brand-800">नमस्ते · Welcome</span>
+                </span>
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-brand-200 text-brand-700 text-xs font-bold tracking-wide uppercase shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>
                     GST-Ready
                 </span>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-saffron-200 text-saffron-700 text-xs font-bold tracking-wide uppercase shadow-sm">
-                    <span class="w-1.5 h-1.5 rounded-full bg-saffron-500 animate-shimmer"></span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-800 text-xs font-bold tracking-wide uppercase shadow-sm">
+                    {{-- Mini Indian tricolour — the chip does the signalling, not the whole pill --}}
+                    <span class="inline-flex flex-col w-3 h-3 rounded-sm overflow-hidden ring-1 ring-gray-200 bg-white" aria-hidden="true">
+                        <span class="block h-1 bg-[#ff9933]"></span>
+                        <span class="block h-1 border-y border-brand-700/30"></span>
+                        <span class="block h-1 bg-[#138808]"></span>
+                    </span>
                     Made in India
                 </span>
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-money-50 ring-1 ring-money-200 text-money-800 text-xs font-bold tracking-wide uppercase shadow-sm">
@@ -171,10 +219,19 @@
                 </span>
                 <span class="block mt-3 text-gray-900">Built for India's businesses.</span>
             </h1>
+            {{-- Screen-reader-visible H2 with the primary ranking phrase. Reinforces
+                 H1's keyword relevance for "best GST invoice generator India" /
+                 "top bill generator" search queries without disrupting visual flow. --}}
+            <h2 class="sr-only">Best free GST invoice generator and online bill maker for India — make GST-compliant tax invoices, credit notes and receipts with auto CGST, SGST and IGST.</h2>
+            {{-- Hindi tagline — deep navy for sophistication, not decoration --}}
+            <p class="mt-3 text-base md:text-lg font-medium text-brand-800/90" lang="hi">
+                आपका अपना GST बिलिंग साथी — हर चालान सिर्फ़ 60 सेकंड में।
+            </p>
             <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-xl leading-relaxed">
                 Professional tax invoices with auto <strong class="text-gray-900">CGST/SGST/IGST</strong>,
-                HSN/SAC codes, FY-reset numbering, one-click PDF and WhatsApp share —
-                priced for the way Indian SMEs &amp; Startups actually work.
+                HSN/SAC codes, FY-reset numbering, <strong class="text-gray-900">UPI QR</strong> and one-click
+                WhatsApp share — a simpler, India-first alternative to Tally, Zoho Books and Vyapar, priced
+                for the way Indian MSMEs, SMEs, Startups, freelancers and CAs actually work.
             </p>
             <div class="mt-8 flex flex-wrap gap-3">
                 <a href="{{ route('register') }}" class="group relative inline-flex items-center justify-center px-7 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-xl shadow-brand transition overflow-hidden">
@@ -188,18 +245,30 @@
                     I have an account
                 </a>
             </div>
-            <div class="mt-8 flex items-center gap-6 text-sm text-gray-500 flex-wrap">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-money-600" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            {{-- Reassurance chips — uniform 2×2 grid, aligned to the CTAs above.
+                 Each cell fills its column so sizes match regardless of label length. --}}
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+                <div class="flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-full bg-money-50 ring-1 ring-money-300 shadow-sm text-sm font-semibold text-money-900">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-money-600 text-white flex-shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+                    </span>
                     No card required
                 </div>
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-money-600" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+                <div class="flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-full bg-brand-50 ring-1 ring-brand-300 shadow-sm text-sm font-semibold text-brand-900">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-700 text-white flex-shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                    </span>
                     Unlimited invoices
                 </div>
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-money-600" fill="currentColor" viewBox="0 0 20 20"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
-                    Your data stays in India
+                <div class="flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-full bg-saffron-50 ring-1 ring-saffron-300 shadow-sm text-sm font-semibold text-saffron-900">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-saffron-600 text-white font-bold text-[10px] tracking-tight flex-shrink-0">%</span>
+                    Auto CGST/SGST/IGST
+                </div>
+                <div class="flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-full bg-accent-50 ring-1 ring-accent-300 shadow-sm text-sm font-semibold text-accent-900">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent-600 text-white flex-shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm6-2h6v6h-6V3zm2 2v2h2V5h-2zM3 11h6v6H3v-6zm2 2v2h2v-2H5zm6 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2z"/></svg>
+                    </span>
+                    UPI QR on every invoice
                 </div>
             </div>
         </div>
@@ -287,31 +356,35 @@
             </div>
 
             {{-- Floating status pills — corners, no overlap with invoice content --}}
-            <div class="hidden md:flex absolute -top-5 -left-5 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-1s;">
+            <div class="hidden md:flex absolute -top-10 -left-8 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-1s;">
                 <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-money-400 to-money-600 text-white flex items-center justify-center font-bold shadow-sm">₹</div>
-                <div class="text-xs">
+                <div class="text-xs leading-snug space-y-0.5">
                     <div class="font-bold text-gray-900 font-display tabular-nums">₹<span data-countup="1250000" data-format="inr">0</span></div>
                     <div class="text-gray-500 text-[11px]">collected this month</div>
                 </div>
             </div>
 
-            <div class="hidden md:flex absolute -top-5 -right-5 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-4s;">
+            <div class="hidden md:flex absolute -top-10 -right-8 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-4s;">
                 <div class="w-9 h-9 rounded-lg bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shadow-sm">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
                 </div>
-                <div class="text-xs">
+                <div class="text-xs leading-snug space-y-0.5">
                     <div class="font-bold text-gray-900">Reminder sent</div>
                     <div class="text-gray-500 text-[11px]">via WhatsApp · just now</div>
                 </div>
             </div>
 
-            <div class="hidden md:flex absolute -bottom-5 -left-5 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-6s;">
-                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-saffron-400 to-accent-500 text-white flex items-center justify-center shadow-sm">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>
-                </div>
-                <div class="text-xs">
-                    <div class="font-bold text-gray-900">GST 2.0 compliant</div>
-                    <div class="text-gray-500 text-[11px]">HSN, SAC, e-invoice ready</div>
+            {{-- Outer div handles absolute positioning + horizontal centering;
+                 inner div runs the float keyframe so its transform can't clobber translate-x-1/2. --}}
+            <div class="hidden md:block absolute -bottom-14 left-1/2 -translate-x-1/2 z-10">
+                <div class="flex items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float-fast" style="animation-delay:-1.5s;">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-saffron-400 to-accent-500 text-white flex items-center justify-center shadow-sm">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>
+                    </div>
+                    <div class="text-xs leading-snug space-y-0.5">
+                        <div class="font-bold text-gray-900">GST 2.0 compliant</div>
+                        <div class="text-gray-500 text-[11px]">HSN, SAC, e-invoice ready</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -333,6 +406,25 @@
                     <div class="text-gray-600 text-sm mt-1">{{ $t['l'] }}</div>
                 </div>
             @endforeach
+        </div>
+
+        {{-- Bharat city strip — 12 major business hubs as location pills.
+             Higher-contrast than the previous text-dot line to signal national reach. --}}
+        <div class="mt-10 pt-8 border-t border-gray-200">
+            <div class="text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-saffron-50 ring-1 ring-saffron-200">
+                    <svg class="w-3.5 h-3.5 text-saffron-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-saffron-800">Serving businesses across Bharat</span>
+                </div>
+                <div class="mt-5 flex flex-wrap items-center justify-center gap-2 md:gap-2.5">
+                    @foreach (['Delhi','Mumbai','Bengaluru','Chennai','Hyderabad','Pune','Kolkata','Ahmedabad','Jaipur','Lucknow','Surat','Kochi'] as $city)
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white ring-1 ring-gray-200 shadow-sm text-sm font-semibold text-gray-800 hover:ring-saffron-300 hover:text-saffron-800 transition">
+                            <svg class="w-3 h-3 text-saffron-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                            {{ $city }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -603,8 +695,8 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
             <span class="inline-block px-3 py-1 rounded-full bg-accent-100 text-accent-800 text-xs font-bold uppercase tracking-wider">Beta pricing</span>
-            <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Free forever. Seriously.</h2>
-            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Sign up today and get unlimited invoices, customers, and PDF exports — no credit card, no feature locks. When we launch paid tiers, early users keep the free plan.</p>
+            <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Free for Indian MSMEs, SMEs <span class="text-brand-700">&amp; startups</span>.</h2>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Sign up today and get unlimited invoices, customers, and PDF exports — no credit card, no feature locks, no hidden add-ons. When we launch paid tiers for larger businesses, beta users keep the free plan.</p>
         </div>
 
         <div class="mt-12 relative">
@@ -653,10 +745,12 @@
     <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-money-200 to-transparent"></div>
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-saffron-50 text-saffron-700 text-xs font-bold uppercase tracking-wider ring-1 ring-saffron-100">
-                <span class="relative flex w-2 h-2">
-                    <span class="absolute inline-flex h-full w-full rounded-full bg-saffron-400 opacity-60"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-saffron-500"></span>
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-gray-800 text-xs font-bold uppercase tracking-wider ring-1 ring-gray-200 shadow-sm">
+                {{-- Horizontal tricolour bar: saffron / white (Ashoka-navy ring) / green --}}
+                <span class="inline-flex w-5 h-3 rounded-[2px] overflow-hidden ring-1 ring-gray-200" aria-hidden="true">
+                    <span class="flex-1 bg-[#ff9933]"></span>
+                    <span class="flex-1 bg-white border-y border-brand-700/30"></span>
+                    <span class="flex-1 bg-[#138808]"></span>
                 </span>
                 Made in India · Built for Bharat
             </span>
@@ -746,6 +840,8 @@
 </section>
 
 <x-site-footer variant="full" />
+
+@include('partials.cookie-banner')
 
 </body>
 </html>

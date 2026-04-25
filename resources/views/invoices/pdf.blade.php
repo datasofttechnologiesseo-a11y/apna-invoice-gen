@@ -455,13 +455,18 @@
                             <td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->grand_total, 2) }}</td>
                         </tr>
                         @if ((float) $invoice->paid_amount > 0)
+                            @php
+                                $balance = (float) $invoice->balance;
+                                $balanceLabel = $balance < 0 ? 'Advance (overpaid)' : 'Balance due';
+                                $balanceStr = ($balance < 0 ? '-' : '') . $currencySymbol . number_format(abs($balance), 2);
+                            @endphp
                             <tr>
                                 <td class="muted" style="padding-top: 6px;">Paid</td>
                                 <td class="tr mono muted" style="padding-top: 6px;">{{ $currencySymbol }}{{ number_format((float) $invoice->paid_amount, 2) }}</td>
                             </tr>
                             <tr>
-                                <td class="bold" style="padding-top: 4px; border-top: 1px solid {{ $t['divider'] }};">Balance due</td>
-                                <td class="tr mono bold accent" style="padding-top: 4px; border-top: 1px solid {{ $t['divider'] }};">{{ $currencySymbol }}{{ number_format((float) $invoice->balance, 2) }}</td>
+                                <td class="bold" style="padding-top: 4px; border-top: 1px solid {{ $t['divider'] }};">{{ $balanceLabel }}</td>
+                                <td class="tr mono bold accent" style="padding-top: 4px; border-top: 1px solid {{ $t['divider'] }};">{{ $balanceStr }}</td>
                             </tr>
                         @endif
                     </table>

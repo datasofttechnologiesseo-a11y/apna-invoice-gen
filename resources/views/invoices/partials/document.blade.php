@@ -151,7 +151,15 @@
                 <tr class="border-t"><td class="py-1.5 font-bold">Grand Total</td><td class="py-1.5 text-right font-mono font-bold">{{ $currencySymbol }}{{ number_format((float) $invoice->grand_total, 2) }}</td></tr>
                 @if ((float) $invoice->paid_amount > 0)
                     <tr><td class="py-1 text-gray-600">Paid</td><td class="py-1 text-right font-mono text-gray-600">{{ number_format((float) $invoice->paid_amount, 2) }}</td></tr>
-                    <tr class="border-t"><td class="py-1 font-semibold">Balance</td><td class="py-1 text-right font-mono font-semibold">{{ $currencySymbol }}{{ number_format((float) $invoice->balance, 2) }}</td></tr>
+                    @php
+                        // Negative balance = customer overpaid; show sign BEFORE the currency
+                        // symbol (Indian accounting convention) and relabel as "Advance" so
+                        // readers don't mistake it for an outstanding amount.
+                        $balance = (float) $invoice->balance;
+                        $balanceLabel = $balance < 0 ? 'Advance (overpaid)' : 'Balance';
+                        $balanceStr = ($balance < 0 ? '-' : '') . $currencySymbol . number_format(abs($balance), 2);
+                    @endphp
+                    <tr class="border-t"><td class="py-1 font-semibold">{{ $balanceLabel }}</td><td class="py-1 text-right font-mono font-semibold">{{ $balanceStr }}</td></tr>
                 @endif
             </table>
         </div>

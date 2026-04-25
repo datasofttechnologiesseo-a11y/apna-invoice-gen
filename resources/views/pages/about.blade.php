@@ -2,11 +2,11 @@
     $effectiveDate = now()->format('F j, Y');
 @endphp
 <x-layouts.marketing
-    title="About Datasoft Technologies"
+    title="About Apna Invoice — Indian SaaS for GST Invoicing"
     eyebrow="Company"
-    lead="We build practical software for Indian businesses. Apna Invoice is our flagship product — GST-compliant invoicing that just works."
-    description="Meet Datasoft Technologies (DST) — the Indian software company behind Apna Invoice, a free GST-compliant invoice generator built for SMEs, startups, freelancers, and CAs."
-    keywords="about Datasoft Technologies, Apna Invoice company, Indian SaaS company, GST invoicing software India, DST invoice generator">
+    lead="Apna Invoice is built in India, for Indian MSMEs, SMEs, startups, freelancers and CAs. Practical software for people who'd rather be billing customers than wrestling spreadsheets."
+    description="Meet Datasoft Technologies — the Indian SaaS company behind Apna Invoice. A free, GST 2.0-compliant invoice generator made in India for MSMEs, SMEs, startups, freelancers and CAs."
+    keywords="about Apna Invoice, Indian SaaS company, made in India invoice software, GST invoicing India, MSME SaaS India, Datasoft Technologies">
 
     <h2>Who we are</h2>
     <p>

@@ -234,6 +234,13 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
+                // Transporter / e-way bill fields — previously missing on the create
+                // path, causing user input to validate then silently vanish on draft save.
+                'transporter_name' => $data['transporter_name'] ?? null,
+                'transporter_id' => $data['transporter_id'] ?? null,
+                'vehicle_number' => $data['vehicle_number'] ?? null,
+                'transport_mode' => $data['transport_mode'] ?? null,
+                'eway_bill_number' => $data['eway_bill_number'] ?? null,
                 'ship_to_name' => $data['ship_to_name'] ?? null,
                 'ship_to_address_line1' => $data['ship_to_address_line1'] ?? null,
                 'ship_to_address_line2' => $data['ship_to_address_line2'] ?? null,
@@ -417,7 +424,10 @@ class InvoiceController extends Controller
         abort_if($invoice->isDraft(), 422, 'Finalize the invoice before recording payments.');
         abort_if($invoice->status === 'cancelled', 422, 'Cancelled invoices cannot accept payments.');
 
-        $remaining = max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount);
+        // Remaining also subtracts credited_amount — a credit note reduces how
+        // much is actually owed, so the payment cap shouldn't let users overpay
+        // into a negative balance just because paid alone hasn't hit grand_total.
+        $remaining = max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount - (float) $invoice->credited_amount);
         $methods = array_keys(config('payment_methods.methods'));
 
         $data = $request->validate([
@@ -449,11 +459,15 @@ class InvoiceController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            // Recompute the invoice's paid/balance/status from the sum of payments
-            // rather than nudging the existing field — single source of truth.
+            // Recompute from authoritative sources (payments + credit notes),
+            // not by nudging existing fields. Credit notes reduce the effective
+            // amount owed — a paid-plus-credited total that covers grand_total
+            // means the invoice is settled, same rule as CreditNoteController.
             $paid = (float) $invoice->payments()->sum('amount');
-            $balance = round((float) $invoice->grand_total - $paid, 2);
-            $status = $paid >= (float) $invoice->grand_total ? 'paid' : ($paid > 0 ? 'partially_paid' : 'final');
+            $credited = (float) $invoice->credited_amount;
+            $balance = round((float) $invoice->grand_total - $paid - $credited, 2);
+            $settled = ($paid + $credited) >= (float) $invoice->grand_total;
+            $status = $settled ? 'paid' : ($paid > 0 ? 'partially_paid' : 'final');
 
             $invoice->update([
                 'paid_amount' => $paid,
@@ -489,8 +503,10 @@ class InvoiceController extends Controller
             $payment->delete();
 
             $paid = (float) $invoice->payments()->sum('amount');
-            $balance = round((float) $invoice->grand_total - $paid, 2);
-            $status = $paid >= (float) $invoice->grand_total ? 'paid' : ($paid > 0 ? 'partially_paid' : 'final');
+            $credited = (float) $invoice->credited_amount;
+            $balance = round((float) $invoice->grand_total - $paid - $credited, 2);
+            $settled = ($paid + $credited) >= (float) $invoice->grand_total;
+            $status = $settled ? 'paid' : ($paid > 0 ? 'partially_paid' : 'final');
 
             $invoice->update([
                 'paid_amount' => $paid,
@@ -591,7 +607,10 @@ class InvoiceController extends Controller
                 'nullable',
                 Rule::exists('products', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
-            'items.*.description' => ['required', 'string', 'max:500'],
+            // Cap at 150 — the invoice_items.description column is VARCHAR(255),
+            // and 150 is plenty for a real line-item description. Keeping validation
+            // below the column size prevents a DB 1406 leaking a 500 page.
+            'items.*.description' => ['required', 'string', 'max:150'],
             'items.*.hsn_sac' => ['required', 'string', 'max:10'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],

@@ -3,6 +3,7 @@
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\CreditNoteController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
@@ -29,7 +30,6 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/' . ltrim(route('register', [], false), '/'), 'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/' . ltrim(route('login', [], false), '/'),    'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => $base . '/about',              'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['loc' => $base . '/careers',            'priority' => '0.7', 'changefreq' => 'weekly'],
         ['loc' => $base . '/press',              'priority' => '0.5', 'changefreq' => 'monthly'],
         ['loc' => $base . '/partners',           'priority' => '0.6', 'changefreq' => 'monthly'],
         ['loc' => $base . '/contact',            'priority' => '0.6', 'changefreq' => 'monthly'],
@@ -68,6 +68,13 @@ Route::get('/robots.txt', function () {
     return response(implode("\n", $lines) . "\n", 200, ['Content-Type' => 'text/plain']);
 });
 
+// Cookie banner sync — open to guests and users; rate-limited so it can't be
+// used to fill the consent log. Anonymous choices stay in localStorage; this
+// endpoint is only useful once a user has an ID to attach the record to.
+Route::post('/cookie-consent', [CookieConsentController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('cookie-consent.store');
+
 // Public signed invoice link — recipient opens PDF without logging in.
 // The `signed` middleware verifies the URL signature and expiry; the `throttle`
 // limits abuse if a link gets shared in the wild.
@@ -77,7 +84,6 @@ Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
 
 Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/about', 'pages.about')->name('about');
-    Route::view('/careers', 'pages.careers')->name('careers');
     Route::view('/press', 'pages.press')->name('press');
     Route::view('/partners', 'pages.partners')->name('partners');
     Route::view('/contact', 'pages.contact')->name('contact');

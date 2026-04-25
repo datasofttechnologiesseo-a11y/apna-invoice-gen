@@ -145,7 +145,7 @@ class FinanceController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'entry_date' => ['required', 'date'],
             'category' => ['required', 'string', 'in:' . implode(',', array_keys(config('expense_categories')))],
             'vendor_name' => ['nullable', 'string', 'max:120'],
@@ -156,6 +156,13 @@ class FinanceController extends Controller
             'reference_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        // gst_amount is validated as nullable but its DB column is NOT NULL default 0.
+        // Coerce empty / null to 0 so Laravel doesn't insert a literal NULL that
+        // bypasses the column default and triggers a 1048 integrity violation.
+        $data['gst_amount'] = $data['gst_amount'] ?? 0;
+
+        return $data;
     }
 
     /**
