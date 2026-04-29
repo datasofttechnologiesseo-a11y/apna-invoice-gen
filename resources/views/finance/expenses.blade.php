@@ -7,12 +7,10 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('finance.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back to P&amp;L</a>
-                @if (Route::has('finance.cash-memos.index'))
-                    <a href="{{ route('finance.cash-memos.index') }}" class="inline-flex items-center px-3 py-2 bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold rounded-lg text-sm whitespace-nowrap">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Cash Memos
-                    </a>
-                @endif
+                <a href="{{ route('finance.cash-memos.index') }}" class="inline-flex items-center px-3 py-2 bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold rounded-lg text-sm whitespace-nowrap">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Cash Memos
+                </a>
                 <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ Add expense</a>
             </div>
         </div>
@@ -41,7 +39,7 @@
                 <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm print:hidden">🔒 {{ session('error') }}</div>
             @endif
 
-            @includeIf('finance.partials.tabs')
+            @include('finance.partials.tabs')
 
             {{-- ─── Period chooser (dropdown) ─── --}}
             <div class="bg-white p-4 rounded-xl border border-gray-200 print:hidden">
@@ -87,20 +85,16 @@
                         <span class="text-gray-400 ml-2">({{ $periodStart->format('d M Y') }} → {{ $periodEnd->format('d M Y') }})</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        @if (Route::has('finance.expenses.export.pdf'))
-                            <a href="{{ route('finance.expenses.export.pdf', $exportQuery) }}"
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                Download PDF
-                            </a>
-                        @endif
-                        @if (Route::has('finance.expenses.export.csv'))
-                            <a href="{{ route('finance.expenses.export.csv', $exportQuery) }}"
-                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
-                                Excel / CSV
-                            </a>
-                        @endif
+                        <a href="{{ route('finance.expenses.export.pdf', $exportQuery) }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Download PDF
+                        </a>
+                        <a href="{{ route('finance.expenses.export.csv', $exportQuery) }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
+                            Excel / CSV
+                        </a>
                         <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold rounded">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             Print
@@ -230,10 +224,8 @@
                             </div>
                         </div>
                         <div class="mt-3 pt-2 border-t border-gray-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                            @if (Route::has('finance.expenses.pdf'))
-                                <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">View</a>
-                                <a href="{{ route('finance.expenses.pdf', $e) }}" class="text-emerald-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
-                            @endif
+                            <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">View</a>
+                            <a href="{{ route('finance.expenses.pdf', $e) }}" class="text-emerald-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
                             <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
                             <form method="POST" action="{{ route('finance.expenses.destroy', $e) }}" class="inline ml-auto" onsubmit="return confirm('Delete this expense?')">
                                 @csrf @method('DELETE')
@@ -281,18 +273,16 @@
                                     <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . number_format((float) $e->gst_amount, 2) : '—' }}</td>
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $e->payment_method ?? '—' }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
-                                        @if (Route::has('finance.expenses.pdf'))
-                                            <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                                View
-                                            </a>
-                                            <span class="text-gray-300 mx-1">·</span>
-                                            <a href="{{ route('finance.expenses.pdf', $e) }}" class="inline-flex items-center gap-1 text-emerald-700 hover:underline font-medium" title="Download voucher PDF">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                                PDF
-                                            </a>
-                                            <span class="text-gray-300 mx-1">·</span>
-                                        @endif
+                                        <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            View
+                                        </a>
+                                        <span class="text-gray-300 mx-1">·</span>
+                                        <a href="{{ route('finance.expenses.pdf', $e) }}" class="inline-flex items-center gap-1 text-emerald-700 hover:underline font-medium" title="Download voucher PDF">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            PDF
+                                        </a>
+                                        <span class="text-gray-300 mx-1">·</span>
                                         <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
                                         <span class="text-gray-300 mx-1">·</span>
                                         <form method="POST" action="{{ route('finance.expenses.destroy', $e) }}" class="inline" onsubmit="return confirm('Delete this expense?')">

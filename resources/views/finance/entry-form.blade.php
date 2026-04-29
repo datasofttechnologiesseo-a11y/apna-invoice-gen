@@ -10,7 +10,7 @@
 
     <div class="py-8">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @includeIf('finance.partials.tabs')
+            @include('finance.partials.tabs')
 
             @if (session('error'))
                 <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">🔒 {{ session('error') }}</div>
@@ -53,7 +53,6 @@
                         </div>
 
                         {{-- Card 2: Cash Memo --}}
-                        @if (Route::has('finance.cash-memos.create'))
                         <a href="{{ route('finance.cash-memos.create') }}" class="group relative bg-white border-2 border-gray-200 hover:border-amber-500 hover:shadow-md transition-all rounded-xl p-5 shadow-sm block">
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
@@ -78,7 +77,6 @@
                                 Create Cash Memo →
                             </div>
                         </a>
-                        @endif
 
                     </div>
                 </div>
