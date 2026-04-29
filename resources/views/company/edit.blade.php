@@ -61,6 +61,29 @@
                             <x-input-error :messages="$errors->get('pan')" class="mt-2" />
                         </div>
 
+                        <div class="md:col-span-2">
+                            <label class="inline-flex items-start gap-2 cursor-pointer">
+                                <input type="hidden" name="composition_dealer" value="0">
+                                <input type="checkbox" id="composition_dealer" name="composition_dealer" value="1"
+                                       class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                                       @checked(old('composition_dealer', $company->composition_dealer))>
+                                <span class="text-sm">
+                                    <span class="font-semibold text-gray-900">Registered under Composition Scheme</span>
+                                    <span class="block text-xs text-gray-500 mt-0.5">Section 10 of CGST Act. When enabled, your invoices will print as "Bill of Supply" with the mandatory declaration "composition taxable person, not eligible to collect tax on supplies".</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <x-input-label for="books_locked_until" value="Lock books up to (optional)" />
+                            <x-text-input id="books_locked_until" name="books_locked_until" type="date" class="mt-1 block w-full md:w-1/2"
+                                          :value="old('books_locked_until', $company->books_locked_until?->toDateString())" />
+                            <p class="text-xs text-gray-500 mt-1">
+                                After your CA finalises a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash memo dated on or before this date can be added, edited, or deleted — protecting your closed-FY books from accidental tampering. <span class="text-amber-700">Leave empty to keep all entries editable.</span>
+                            </p>
+                            <x-input-error :messages="$errors->get('books_locked_until')" class="mt-2" />
+                        </div>
+
                         <div>
                             <x-input-label for="email" value="Email" />
                             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $company->email)" />

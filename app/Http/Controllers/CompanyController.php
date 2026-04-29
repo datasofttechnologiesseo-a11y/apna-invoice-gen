@@ -128,6 +128,8 @@ class CompanyController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
+            'composition_dealer' => ['nullable', 'boolean'],
+            'books_locked_until' => ['nullable', 'date'],
             'pan' => ['nullable', 'string', new ValidPan],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],

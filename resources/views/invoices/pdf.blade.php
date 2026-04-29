@@ -267,8 +267,21 @@
                     @endif
                 </div>
             </td>
+            @php
+                // Section 31(3)(c) + Rule 49: Bill of Supply when supplier is a
+                // composition dealer OR when no GST is charged (exempt supply).
+                $isBillOfSupply = $c->composition_dealer || (float) ($invoice->total_tax ?? 0) === 0.0;
+                $documentTitle = $isBillOfSupply ? 'Bill of Supply' : 'Tax Invoice';
+            @endphp
             <td style="vertical-align: top; text-align: right; width: 42%;">
-                <div class="title">Tax Invoice</div>
+                <div class="title">{{ $documentTitle }}</div>
+                @if ($c->composition_dealer)
+                    <div style="margin-top: 4px; padding: 4px 6px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 3px; font-size: 8.5px; color: #78350f; line-height: 1.3;">
+                        <strong>Composition taxable person, not eligible to collect tax on supplies.</strong>
+                    </div>
+                @elseif ($isBillOfSupply)
+                    <div style="margin-top: 4px; font-size: 8.5px; color: #555;"><em>Issued under Section 31(3)(c) — exempt supply</em></div>
+                @endif
                 <div style="margin-top: 4px;">
                     <span class="copy-label">Original for Recipient</span>
                 </div>
@@ -359,6 +372,11 @@
     </table>
 
     {{-- ========== ITEMS ========== --}}
+    @php
+        // Only show the discount column if at least one line carries a discount —
+        // keeps the invoice clean when not used.
+        $hasDiscount = $invoice->items->sum(fn ($i) => (float) ($i->discount ?? 0)) > 0;
+    @endphp
     <table class="items">
         <thead>
             <tr>
@@ -367,6 +385,9 @@
                 <th style="width: 58px;">HSN/SAC</th>
                 <th class="tr" style="width: 50px;">Qty</th>
                 <th class="tr" style="width: 60px;">Rate</th>
+                @if ($hasDiscount)
+                    <th class="tr" style="width: 60px;">Discount</th>
+                @endif
                 <th class="tr" style="width: 38px;">GST%</th>
                 <th class="tr" style="width: 80px;">Taxable {{ $currencySymbol }}</th>
             </tr>
@@ -379,6 +400,9 @@
                     <td class="mono x-small">{{ $item->hsn_sac }}</td>
                     <td class="tr mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="tr mono">{{ number_format((float) $item->rate, 2) }}</td>
+                    @if ($hasDiscount)
+                        <td class="tr mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . number_format((float) $item->discount, 2) : '—' }}</td>
+                    @endif
                     <td class="tr">{{ rtrim(rtrim(number_format((float) $item->gst_rate, 2), '0'), '.') }}%</td>
                     <td class="tr mono bold">{{ number_format((float) $item->amount, 2) }}</td>
                 </tr>

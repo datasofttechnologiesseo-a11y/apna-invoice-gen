@@ -12,7 +12,7 @@ class Company extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'name', 'gstin', 'pan',
+        'user_id', 'name', 'gstin', 'composition_dealer', 'pan',
         'address_line1', 'address_line2', 'city', 'state_id', 'postal_code', 'country',
         'phone', 'email', 'website',
         'logo_path', 'signature_path',
@@ -22,12 +22,30 @@ class Company extends Model
         'invoice_number_format', 'invoice_counter_fy',
         'receipt_prefix', 'receipt_counter', 'receipt_number_padding',
         'credit_note_prefix', 'credit_note_counter', 'credit_note_number_padding', 'credit_note_counter_fy',
+        'cash_memo_prefix', 'cash_memo_counter', 'cash_memo_number_padding', 'cash_memo_counter_fy',
+        'books_locked_until',
         'onboarded_at',
     ];
 
     protected $casts = [
         'onboarded_at' => 'datetime',
+        'composition_dealer' => 'boolean',
+        'books_locked_until' => 'date',
     ];
+
+    /**
+     * True if the given date falls inside a period that has been locked
+     * for editing (e.g. closed FY). Used by controllers to refuse mutations
+     * to old invoices / expenses / cash memos / payments.
+     */
+    public function isBooksLockedOn(\Illuminate\Support\Carbon|string|null $date): bool
+    {
+        if (! $this->books_locked_until || ! $date) return false;
+        $d = $date instanceof \Illuminate\Support\Carbon
+            ? $date
+            : \Illuminate\Support\Carbon::parse($date);
+        return $d->lte($this->books_locked_until);
+    }
 
     public function isBusinessComplete(): bool
     {
@@ -77,6 +95,53 @@ class Company extends Model
     public function creditNotes(): HasMany
     {
         return $this->hasMany(CreditNote::class);
+    }
+
+    public function cashMemos(): HasMany
+    {
+        return $this->hasMany(CashMemo::class);
+    }
+
+    /**
+     * Preview the NEXT cash-memo number without mutating the counter.
+     * Used to pre-fill the form so the user can accept or override it.
+     */
+    public function nextCashMemoNumber(?string $referenceDate = null): string
+    {
+        $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();
+        [$fyStart, $fyEnd] = self::financialYearFor($ref);
+
+        $counter = ($this->cash_memo_counter_fy && $this->cash_memo_counter_fy < $fyStart)
+            ? 0
+            : ($this->cash_memo_counter ?? 0);
+
+        $next = $counter + 1;
+        $padded = str_pad((string) $next, $this->cash_memo_number_padding ?? 4, '0', STR_PAD_LEFT);
+        $fyTag = sprintf('%02d-%02d', $fyStart % 100, $fyEnd % 100);
+
+        return ($this->cash_memo_prefix ?? 'CM') . '/' . $fyTag . '/' . $padded;
+    }
+
+    /**
+     * Atomically advance the cash-memo counter with FY-aware reset semantics.
+     * Caller must hold a DB lock on this row.
+     */
+    public function bumpCashMemoCounter(?string $referenceDate = null): string
+    {
+        $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();
+        [$fyStart, $fyEnd] = self::financialYearFor($ref);
+
+        if ($this->cash_memo_counter_fy !== null && $this->cash_memo_counter_fy < $fyStart) {
+            $this->cash_memo_counter = 0;
+        }
+        $this->cash_memo_counter = ($this->cash_memo_counter ?? 0) + 1;
+        $this->cash_memo_counter_fy = $fyStart;
+        $this->save();
+
+        $padded = str_pad((string) $this->cash_memo_counter, $this->cash_memo_number_padding ?? 4, '0', STR_PAD_LEFT);
+        $fyTag = sprintf('%02d-%02d', $fyStart % 100, $fyEnd % 100);
+
+        return ($this->cash_memo_prefix ?? 'CM') . '/' . $fyTag . '/' . $padded;
     }
 
     /**
