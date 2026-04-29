@@ -104,7 +104,7 @@
             </div>
 
             {{-- ─── Summary cards ─── --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 print:hidden">
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Entries</div>
                     <div class="mt-1 text-2xl font-bold text-gray-900">{{ number_format($summary['count']) }}</div>
@@ -125,7 +125,7 @@
 
             {{-- ─── Category breakdown (collapsed by default on mobile) ─── --}}
             @if ($byCategory->isNotEmpty())
-                <details class="bg-white border border-gray-200 rounded-lg" open>
+                <details class="bg-white border border-gray-200 rounded-lg print:hidden" open>
                     <summary class="px-4 py-3 cursor-pointer font-semibold text-sm text-gray-800 flex items-center justify-between">
                         <span>Category-wise breakdown <span class="text-gray-400 font-normal">({{ $byCategory->count() }})</span></span>
                         <span class="text-xs text-gray-400">click to collapse</span>
@@ -186,6 +186,9 @@
                     <a href="{{ route('finance.expenses', ['period' => $periodKey]) }}" class="text-sm text-gray-500 hover:text-gray-900">Clear filters</a>
                 @endif
             </form>
+
+            {{-- ─── Wrapper for everything that should print (header + table only) ─── --}}
+            <div class="expenses-print-area">
 
             {{-- ─── Print-only header (visible only when printing) ─── --}}
             <div class="hidden print:block mb-3">
@@ -308,6 +311,8 @@
                 </div>
             </div>
 
+            </div>{{-- /expenses-print-area --}}
+
             <div class="print:hidden">{{ $expenses->links() }}</div>
         </div>
     </div>
@@ -315,11 +320,24 @@
     <style>
         @media print {
             @page { size: A4 portrait; margin: 10mm; }
-            body { background: white !important; font-size: 10px; }
-            details { open: true; }
-            summary { display: none; }
-            table { font-size: 9px !important; }
-            th, td { padding: 4px 6px !important; }
+            html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
+
+            /* Hide everything by default — navbar, topbar, finance tabs, summary cards, etc. */
+            body * { visibility: hidden !important; }
+
+            /* Then re-show only the expenses-print-area and its descendants */
+            .expenses-print-area, .expenses-print-area * { visibility: visible !important; }
+
+            /* Pull the print area to the top-left so it owns the page */
+            .expenses-print-area {
+                position: absolute !important;
+                inset: 0 !important;
+                width: 100% !important;
+            }
+
+            /* Tighter typography for the printed table */
+            .expenses-print-area table { font-size: 9px !important; }
+            .expenses-print-area th, .expenses-print-area td { padding: 4px 6px !important; }
         }
     </style>
 </x-app-layout>

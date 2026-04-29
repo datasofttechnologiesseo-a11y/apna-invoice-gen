@@ -295,7 +295,7 @@
                         <br><strong>Place of supply:</strong> {{ $invoice->placeOfSupply->name }}@if ($invoice->placeOfSupply->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif
                     @endif
                     @if ($invoice->reverse_charge)
-                        <br><strong class="accent">Reverse charge applicable</strong>
+                        <br><strong class="accent">Reverse charge applicable — Section 9(3)/9(4)</strong>
                     @endif
                 </div>
             </td>
@@ -451,6 +451,20 @@
                 <div class="label">Amount in words (INR)</div>
                 <div class="aiw-text">{{ $amountInWords }}</div>
 
+                @if ($invoice->reverse_charge)
+                    {{-- Section 9(3)/9(4) CGST + Rule 46(p): mandatory declaration
+                         that the recipient is liable for tax on RCM supply. --}}
+                    <div style="margin-top: 8px; padding: 8px 10px; border: 1.5px solid #b45309; background: #fef3c7; border-radius: 3px;">
+                        <div style="font-size: 9px; font-weight: bold; color: #78350f; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">Tax payable on reverse charge basis</div>
+                        <div style="font-size: 9.5px; color: #78350f;">
+                            GST on this supply is to be paid by the recipient (you) directly to the
+                            government under <strong>Section 9(3)/9(4) of the CGST Act 2017</strong>.
+                            The supplier is not collecting tax on this invoice. The applicable
+                            GST rate is shown in the line items for your reference.
+                        </div>
+                    </div>
+                @endif
+
                 @if ($c->declaration)
                     <div class="note-card" style="margin-top: 8px;">
                         <div class="note-lbl">Declaration</div>
@@ -465,7 +479,16 @@
                             <td class="muted">Taxable value</td>
                             <td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->subtotal, 2) }}</td>
                         </tr>
-                        @if ($invoice->is_interstate)
+                        @if ($invoice->reverse_charge)
+                            {{-- RCM: tax shown as "0.00 (RCM)" so recipient sees the line was
+                                 considered but not collected. --}}
+                            @if ($invoice->is_interstate)
+                                <tr><td class="muted">IGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
+                            @else
+                                <tr><td class="muted">CGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
+                                <tr><td class="muted">SGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
+                            @endif
+                        @elseif ($invoice->is_interstate)
                             <tr><td class="muted">IGST</td><td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->total_igst, 2) }}</td></tr>
                         @else
                             <tr><td class="muted">CGST</td><td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->total_cgst, 2) }}</td></tr>

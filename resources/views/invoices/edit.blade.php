@@ -145,10 +145,13 @@
                                 <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
                                 <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
                             </div>
-                            <label class="mt-3 flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" name="reverse_charge" value="1" @checked(old('reverse_charge', $invoice->reverse_charge ?? false)) class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
-                                <span>Reverse charge applicable</span>
-                                <span class="text-xs text-gray-400" title="Tax paid by recipient under Section 9(3)/(4) of CGST Act">(?)</span>
+                            <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="reverse_charge" value="1" x-model="reverseCharge" @change="recompute()"
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                <span>
+                                    <span class="font-medium">Reverse charge applicable</span>
+                                    <span class="block text-xs text-gray-500">Section 9(3)/9(4) — recipient pays GST. CGST/SGST/IGST will be set to ₹0 on the invoice; the recipient self-assesses.</span>
+                                </span>
                             </label>
                         </div>
                     </div>
@@ -474,6 +477,9 @@
 
                         <div class="md:pl-6 space-y-2 text-sm">
                             <div class="flex justify-between"><span>Subtotal</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
+                            <div x-show="reverseCharge" class="p-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                                🛈 <strong>Reverse charge:</strong> CGST/SGST/IGST set to ₹0 on this invoice — recipient pays GST directly (Section 9(3)/9(4)).
+                            </div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>SGST</span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
                             <div class="flex justify-between" x-show="isInterstate"><span>IGST</span><span class="font-mono" x-text="fmt(totals.igst)"></span></div>
@@ -526,6 +532,7 @@
                 customerHasGstin: customerHasGstin || {},
                 companyStateId,
                 productMap,
+                reverseCharge: @json((bool) old('reverse_charge', $invoice->reverse_charge ?? false)),
                 totals: {subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
                 balance: 0,
                 get isInterstate() {
@@ -565,6 +572,7 @@
                 },
                 recompute() {
                     const inter = this.isInterstate;
+                    const rcm = this.reverseCharge;
                     let sub = 0, cgst = 0, sgst = 0, igst = 0;
                     this.items.forEach(item => {
                         const qty = parseFloat(item.quantity) || 0;
@@ -575,7 +583,8 @@
                         const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
                         const amount = +(gross - disc).toFixed(2);
                         let c = 0, s = 0, ig = 0;
-                        if (gst > 0) {
+                        // Section 9(3)/9(4) RCM: supplier collects no tax; recipient self-assesses.
+                        if (gst > 0 && !rcm) {
                             const tax = +(amount * gst / 100).toFixed(2);
                             if (inter) {
                                 ig = tax;

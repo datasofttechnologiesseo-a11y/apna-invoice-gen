@@ -150,7 +150,7 @@
                         </div>
                     </div>
                     {{-- TDS section: collapsed by default. Indian B2B service providers
-                         frequently have TDS deducted by corporate customers (Section 194-C/J/I/Q). --}}
+                         frequently have TDS deducted by corporate customers under Sections 194-x. --}}
                     <details x-data="{ open: false }" :open="open" @toggle="open = $event.target.open" class="border border-amber-200 bg-amber-50/30 rounded p-3">
                         <summary class="cursor-pointer text-sm font-semibold text-amber-900 select-none">
                             🧾 Customer deducted TDS? <span class="text-xs font-normal text-gray-500">(click to expand)</span>
@@ -159,31 +159,85 @@
                             amt: {{ old('tds_amount', 0) }},
                             rate: {{ old('tds_rate', 0) }},
                             section: '{{ old('tds_section', '') }}',
-                            recalcFromRate() { const grossAmt = parseFloat(document.querySelector('input[name=amount]')?.value || 0); this.amt = +(grossAmt * (parseFloat(this.rate) || 0) / 100).toFixed(2); },
+                            // Section → standard rate map (Indian Income Tax Act, AY 2024-25 onwards).
+                            // Source: Income Tax Department TDS rate chart.
+                            sectionRates: {
+                                '194A': 10, '194B': 30, '194C_indiv': 1, '194C_other': 2,
+                                '194D': 5, '194H': 5, '194I_land': 10, '194I_plant': 2,
+                                '194-IA': 1, '194-IB': 5, '194J_prof': 10, '194J_tech': 2,
+                                '194O': 1, '194Q': 0.1, '51': 2,
+                            },
+                            sectionThresholds: {
+                                '194A': 'Threshold ₹5,000/yr (₹40,000 for banks)',
+                                '194B': 'Threshold ₹10,000',
+                                '194C_indiv': 'Threshold ₹30,000 single / ₹1,00,000 aggregate',
+                                '194C_other': 'Threshold ₹30,000 single / ₹1,00,000 aggregate',
+                                '194D': 'Threshold ₹15,000/yr',
+                                '194H': 'Threshold ₹15,000/yr',
+                                '194I_land': 'Threshold ₹2,40,000/yr',
+                                '194I_plant': 'Threshold ₹2,40,000/yr',
+                                '194-IA': 'Property value > ₹50 lakh',
+                                '194-IB': 'Rent > ₹50,000/month (individual/HUF)',
+                                '194J_prof': 'Threshold ₹30,000/yr',
+                                '194J_tech': 'Threshold ₹30,000/yr',
+                                '194O': 'E-commerce participants',
+                                '194Q': 'Aggregate purchases > ₹50 lakh/yr',
+                                '51': 'GST TDS by govt / PSU on contracts > ₹2.5 lakh',
+                            },
+                            recalcFromRate() {
+                                const grossAmt = parseFloat(document.querySelector('input[name=amount]')?.value || 0);
+                                this.amt = +(grossAmt * (parseFloat(this.rate) || 0) / 100).toFixed(2);
+                            },
+                            applySection() {
+                                if (this.sectionRates[this.section] !== undefined) {
+                                    this.rate = this.sectionRates[this.section];
+                                    this.recalcFromRate();
+                                }
+                            },
                         }">
                             <div>
                                 <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Section</label>
-                                <select name="tds_section" x-model="section" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
+                                <select name="tds_section" x-model="section" @change="applySection()"
+                                        class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
                                     <option value="">— None —</option>
-                                    <option value="194C">194C — Contractor (1% / 2%)</option>
-                                    <option value="194J">194J — Professional / technical (10%)</option>
-                                    <option value="194I">194I — Rent (10%)</option>
-                                    <option value="194Q">194Q — Purchase of goods (0.1%)</option>
-                                    <option value="194H">194H — Commission / brokerage (5%)</option>
-                                    <option value="51">Section 51 — GST TDS (2%)</option>
-                                    <option value="other">Other</option>
+                                    <optgroup label="Common (services / contracts)">
+                                        <option value="194C_indiv">194C — Contractor (Indiv/HUF) — 1%</option>
+                                        <option value="194C_other">194C — Contractor (Co/Firm) — 2%</option>
+                                        <option value="194J_prof">194J — Professional fees — 10%</option>
+                                        <option value="194J_tech">194J — Technical services — 2%</option>
+                                        <option value="194H">194H — Commission / brokerage — 5%</option>
+                                    </optgroup>
+                                    <optgroup label="Rent &amp; property">
+                                        <option value="194I_plant">194I — Rent (plant/machinery) — 2%</option>
+                                        <option value="194I_land">194I — Rent (land/building) — 10%</option>
+                                        <option value="194-IB">194-IB — Rent by Indiv/HUF (&gt;₹50k/mo) — 5%</option>
+                                        <option value="194-IA">194-IA — Sale of property (&gt;₹50L) — 1%</option>
+                                    </optgroup>
+                                    <optgroup label="Goods &amp; e-commerce">
+                                        <option value="194Q">194Q — Purchase of goods (&gt;₹50L) — 0.1%</option>
+                                        <option value="194O">194O — E-commerce participants — 1%</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="194A">194A — Interest (other than securities) — 10%</option>
+                                        <option value="194D">194D — Insurance commission — 5%</option>
+                                        <option value="194B">194B — Lottery / games — 30%</option>
+                                        <option value="51">Section 51 — GST TDS (govt) — 2%</option>
+                                        <option value="other">Other</option>
+                                    </optgroup>
                                 </select>
+                                <p class="text-[10px] text-gray-500 mt-1" x-show="section && section !== 'other' && sectionThresholds[section]" x-text="sectionThresholds[section]"></p>
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Rate (%)</label>
                                 <input type="number" name="tds_rate" step="0.01" min="0" max="30" x-model="rate" @input="recalcFromRate()"
                                        placeholder="e.g. 10" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
+                                <p class="text-[10px] text-gray-500 mt-1">206AA penalty: 20% if recipient has no PAN.</p>
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Amount (₹)</label>
                                 <input type="number" name="tds_amount" step="0.01" min="0" x-model="amt"
                                        placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
-                                <p class="text-[10px] text-gray-500 mt-1">Will be tracked separately for Form 26AS reconciliation. Invoice balance still reduces by gross amount.</p>
+                                <p class="text-[10px] text-gray-500 mt-1">Tracked for Form 26AS reconciliation. Invoice balance reduces by gross.</p>
                             </div>
                         </div>
                     </details>
@@ -200,9 +254,15 @@
 
             @if ($payments->isNotEmpty())
                 <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-                    <div class="px-5 py-3 border-b flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-900">Payment history</h3>
-                        <div class="text-xs text-gray-500">{{ $payments->count() }} receipt{{ $payments->count() > 1 ? 's' : '' }} issued</div>
+                    <div class="px-5 py-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        <div>
+                            <h3 class="font-display font-bold text-gray-900 text-base flex items-center gap-2">
+                                <svg class="w-5 h-5 text-money-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Payment Receipts
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Click <strong>PDF</strong> on any row to download the official receipt issued for that payment.</p>
+                        </div>
+                        <div class="text-xs text-gray-500 sm:text-right">{{ $payments->count() }} receipt{{ $payments->count() > 1 ? 's' : '' }} issued</div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">

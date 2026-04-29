@@ -1,6 +1,8 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 shadow-sm">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {{-- Full-width container so the user dropdown pins flush to the right edge
+         of the viewport on wide screens (was capped at max-w-7xl before). --}}
+    <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
@@ -37,56 +39,58 @@
                             {{ $item['label'] }}
                         </a>
                     @endforeach
+
+                    {{-- Active-company switcher pill — moved here so it sits next to the
+                         Finance link rather than floating on the far right of the nav. --}}
+                    @auth
+                        @php
+                            $activeCompany = Auth::user()->ensureCompany();
+                            $myCompanies = Auth::user()->companies()->orderBy('name')->get();
+                        @endphp
+                        @if ($myCompanies->count() > 1 || ! request()->routeIs('onboarding.*'))
+                            <div class="ms-2 flex items-center flex-shrink min-w-0">
+                                <x-dropdown align="left" width="64">
+                                    <x-slot name="trigger">
+                                        <button class="inline-flex items-center gap-2 px-2.5 py-1.5 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-brand-300 focus:outline-none transition w-44">
+                                            <svg class="w-4 h-4 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                            <div class="text-left min-w-0 flex-1">
+                                                <div class="text-[9px] text-gray-400 leading-tight uppercase tracking-wider">Active</div>
+                                                <div class="leading-tight truncate text-xs font-semibold">{{ $activeCompany->name }}</div>
+                                            </div>
+                                            <svg class="fill-current h-3.5 w-3.5 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </x-slot>
+                                    <x-slot name="content">
+                                        <div class="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-bold border-b">Switch company</div>
+                                        @foreach ($myCompanies as $c)
+                                            @if ($c->id === $activeCompany->id)
+                                                <div class="block w-full px-4 py-2 text-left text-sm leading-5 text-brand-700 font-semibold bg-brand-50">
+                                                    ✓ {{ $c->name }}
+                                                </div>
+                                            @else
+                                                <form method="POST" action="{{ route('companies.switch', $c) }}">
+                                                    @csrf
+                                                    <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 transition">
+                                                        {{ $c->name }}
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endforeach
+                                        <div class="border-t">
+                                            <a href="{{ route('companies.index') }}" class="block px-4 py-2 text-sm leading-5 text-gray-600 hover:bg-gray-100 transition">Manage companies</a>
+                                            <a href="{{ route('companies.create') }}" class="block px-4 py-2 text-sm leading-5 text-brand-700 font-semibold hover:bg-brand-50 transition">+ Add new company</a>
+                                        </div>
+                                    </x-slot>
+                                </x-dropdown>
+                            </div>
+                        @endif
+                    @endauth
                 </div>
             </div>
 
             <div class="flex items-center">
-            <!-- Company switcher -->
-            @auth
-                @php
-                    $activeCompany = Auth::user()->ensureCompany();
-                    $myCompanies = Auth::user()->companies()->orderBy('name')->get();
-                @endphp
-                @if ($myCompanies->count() > 1 || ! request()->routeIs('onboarding.*'))
-                    <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink min-w-0">
-                        <x-dropdown align="right" width="64">
-                            <x-slot name="trigger">
-                                <button class="inline-flex items-center gap-2 px-2.5 py-1.5 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-brand-300 focus:outline-none transition w-44">
-                                    <svg class="w-4 h-4 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                    <div class="text-left min-w-0 flex-1">
-                                        <div class="text-[9px] text-gray-400 leading-tight uppercase tracking-wider">Active</div>
-                                        <div class="leading-tight truncate text-xs font-semibold">{{ $activeCompany->name }}</div>
-                                    </div>
-                                    <svg class="fill-current h-3.5 w-3.5 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </x-slot>
-                            <x-slot name="content">
-                                <div class="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-bold border-b">Switch company</div>
-                                @foreach ($myCompanies as $c)
-                                    @if ($c->id === $activeCompany->id)
-                                        <div class="block w-full px-4 py-2 text-left text-sm leading-5 text-brand-700 font-semibold bg-brand-50">
-                                            ✓ {{ $c->name }}
-                                        </div>
-                                    @else
-                                        <form method="POST" action="{{ route('companies.switch', $c) }}">
-                                            @csrf
-                                            <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 transition">
-                                                {{ $c->name }}
-                                            </button>
-                                        </form>
-                                    @endif
-                                @endforeach
-                                <div class="border-t">
-                                    <a href="{{ route('companies.index') }}" class="block px-4 py-2 text-sm leading-5 text-gray-600 hover:bg-gray-100 transition">Manage companies</a>
-                                    <a href="{{ route('companies.create') }}" class="block px-4 py-2 text-sm leading-5 text-brand-700 font-semibold hover:bg-brand-50 transition">+ Add new company</a>
-                                </div>
-                            </x-slot>
-                        </x-dropdown>
-                    </div>
-                @endif
-            @endauth
 
             <!-- Settings Dropdown (hidden on sm/md; shown on lg+ where the primary nav is visible) -->
             <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink-0">

@@ -10,8 +10,14 @@ class InvoiceCalculator
      * Calculate totals for an invoice from its line items.
      * Mutates item fields (amount, cgst_amount, sgst_amount, igst_amount, total)
      * and invoice aggregates.
+     *
+     * @param  bool  $reverseCharge  Section 9(3)/9(4) CGST: when true, the
+     *         supplier does NOT collect GST — the recipient self-assesses and
+     *         pays it in their GSTR-3B. We force CGST/SGST/IGST to zero on
+     *         every line, but keep gst_rate on the line so the recipient knows
+     *         what they need to remit.
      */
-    public function recalculate(Invoice $invoice, array $items, bool $isInterstate): array
+    public function recalculate(Invoice $invoice, array $items, bool $isInterstate, bool $reverseCharge = false): array
     {
         $subtotal = 0.0;
         $totalCgst = 0.0;
@@ -34,7 +40,8 @@ class InvoiceCalculator
             $sgst = 0.0;
             $igst = 0.0;
 
-            if ($gstRate > 0) {
+            // RCM: supplier collects nothing; recipient pays the tax.
+            if ($gstRate > 0 && ! $reverseCharge) {
                 $tax = round($amount * ($gstRate / 100), 2);
                 if ($isInterstate) {
                     $igst = $tax;

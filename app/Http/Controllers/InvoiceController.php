@@ -222,7 +222,8 @@ class InvoiceController extends Controller
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate);
+        $reverseCharge = (bool) ($data['reverse_charge'] ?? false);
+        $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $reverseCharge);
 
         $invoice = DB::transaction(function () use ($user, $company, $customer, $data, $calc, $isInterstate) {
             $invoice = $user->invoices()->create([
@@ -338,7 +339,8 @@ class InvoiceController extends Controller
         $user = $request->user();
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate);
+        $reverseCharge = (bool) ($data['reverse_charge'] ?? false);
+        $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $reverseCharge);
 
         DB::transaction(function () use ($invoice, $customer, $data, $calc, $isInterstate) {
             $paid = (float) ($data['paid_amount'] ?? 0);
@@ -458,9 +460,10 @@ class InvoiceController extends Controller
             'reference_number' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string', 'max:500'],
             // Section 51 / 194-x of Income Tax Act: TDS deducted at source by the
-            // customer. Stored alongside the payment for Form 26AS reconciliation.
+            // customer. Stored for Form 26AS reconciliation. 30% cap is the
+            // maximum legal TDS rate in India (lottery 194B + 206AA penalty).
             'tds_amount' => ['nullable', 'numeric', 'min:0', 'lt:amount'],
-            'tds_section' => ['nullable', 'string', 'max:12'],
+            'tds_section' => ['nullable', 'string', 'max:16'],
             'tds_rate' => ['nullable', 'numeric', 'min:0', 'max:30'],
         ]);
 
