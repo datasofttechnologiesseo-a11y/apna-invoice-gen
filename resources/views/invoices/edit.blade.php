@@ -17,11 +17,12 @@
             'quantity' => (float) $i->quantity,
             'unit' => $i->unit,
             'rate' => (float) $i->rate,
+            'discount' => (float) $i->discount,
             'gst_rate' => (float) $i->gst_rate,
         ])->toArray();
         $oldItems = old('items', $existingItems);
         if (empty($oldItems)) {
-            $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'gst_rate' => 18]];
+            $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
         }
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
@@ -195,9 +196,30 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
+                                            <a href="https://services.gst.gov.in/services/searchhsnsac"
+                                               target="_blank" rel="noopener"
+                                               onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
+                                               style="font-size:11px; font-weight:500; display:inline-flex; align-items:center; gap:4px;"
+                                               class="text-brand-600 hover:text-brand-700 hover:underline whitespace-nowrap"
+                                               title="Search HSN/SAC code on the official GST portal">
+                                                <svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                                                <span>[Search HSN/SAC]</span>
+                                            </a>
+                                        </div>
                                         <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" required>
-                                        <p class="mt-1 text-[10px] text-gray-400">4–8 digits. <a href="https://services.gst.gov.in/services/searchhsnsac" target="_blank" rel="noopener" class="inline-block py-1 text-brand-600 hover:underline font-semibold">Find code ↗</a></p>
+                                        <p class="mt-1 text-[10px]" :class="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4 ? 'text-amber-700 font-semibold' : 'text-gray-400'">
+                                            <template x-if="!item.hsn_sac || item.hsn_sac.length === 0">
+                                                <span>Required. 4 digits if turnover &lt; ₹5 Cr · 6 digits if &gt; ₹5 Cr · 8 digits for exports.</span>
+                                            </template>
+                                            <template x-if="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4">
+                                                <span>⚠ HSN should be at least 4 digits per Rule 46(g).</span>
+                                            </template>
+                                            <template x-if="item.hsn_sac && item.hsn_sac.length >= 4">
+                                                <span class="text-emerald-700">✓ <span x-text="item.hsn_sac.length"></span>-digit HSN — valid format.</span>
+                                            </template>
+                                        </p>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Unit</label>
@@ -205,11 +227,16 @@
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
-                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="1" min="1" inputmode="numeric" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
                                         <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
+                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
+                                        <p class="mt-0.5 text-[10px] text-gray-400">Section 15(3) — pre-tax</p>
                                     </div>
                                 </div>
                                 <div>
@@ -237,9 +264,23 @@
                                         <th class="px-3 py-2 text-left">Product</th>
                                     @endif
                                     <th class="px-3 py-2 text-left">Description</th>
-                                    <th class="px-3 py-2 text-left">HSN/SAC</th>
+                                    <th class="px-3 py-2 text-left">
+                                        <span class="inline-flex items-center gap-2">
+                                            <span>HSN/SAC</span>
+                                            <a href="https://services.gst.gov.in/services/searchhsnsac"
+                                               target="_blank" rel="noopener"
+                                               onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
+                                               style="text-transform:none; letter-spacing:0; font-weight:500; font-size:11px; display:inline-flex; align-items:center; gap:4px;"
+                                               class="text-brand-600 hover:text-brand-700 hover:underline whitespace-nowrap"
+                                               title="Search HSN/SAC code on the official GST portal">
+                                                <svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                                                <span>[Search HSN/SAC]</span>
+                                            </a>
+                                        </span>
+                                    </th>
                                     <th class="px-3 py-2 text-left">Quantity</th>
                                     <th class="px-3 py-2 text-right">Rate (₹)</th>
+                                    <th class="px-3 py-2 text-right" title="Pre-tax discount per Section 15(3) CGST">Disc (₹)</th>
                                     <th class="px-3 py-2 text-right">GST%</th>
                                     <th class="px-3 py-2 text-right">Amount</th>
                                     <th class="px-3 py-2"></th>
@@ -263,11 +304,12 @@
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono" required></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="1" min="1" inputmode="numeric" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-36 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
@@ -498,7 +540,7 @@
                 },
                 init() { this.recompute(); },
                 addRow() {
-                    this.items.push({product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
+                    this.items.push({product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, discount: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
                 },
                 removeRow(i) {
                     if (this.items.length > 1) this.items.splice(i, 1);
@@ -528,7 +570,10 @@
                         const qty = parseFloat(item.quantity) || 0;
                         const rate = parseFloat(item.rate) || 0;
                         const gst = parseFloat(item.gst_rate) || 0;
-                        const amount = +(qty * rate).toFixed(2);
+                        const gross = +(qty * rate).toFixed(2);
+                        // Pre-tax discount per Section 15(3) — clamp to gross
+                        const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
+                        const amount = +(gross - disc).toFixed(2);
                         let c = 0, s = 0, ig = 0;
                         if (gst > 0) {
                             const tax = +(amount * gst / 100).toFixed(2);

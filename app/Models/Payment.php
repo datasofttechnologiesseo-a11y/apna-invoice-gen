@@ -13,13 +13,22 @@ class Payment extends Model
     protected $fillable = [
         'user_id', 'company_id', 'invoice_id',
         'receipt_number', 'received_at',
-        'amount', 'method', 'reference_number', 'notes',
+        'amount', 'tds_amount', 'tds_section', 'tds_rate',
+        'method', 'reference_number', 'notes',
     ];
 
     protected $casts = [
         'received_at' => 'date',
         'amount' => 'decimal:2',
+        'tds_amount' => 'decimal:2',
+        'tds_rate' => 'decimal:2',
     ];
+
+    /** Net cash actually received in your bank = gross applied minus TDS deducted at source. */
+    public function netReceived(): float
+    {
+        return (float) $this->amount - (float) $this->tds_amount;
+    }
 
     public function user(): BelongsTo
     {

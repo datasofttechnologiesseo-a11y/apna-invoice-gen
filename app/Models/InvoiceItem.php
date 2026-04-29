@@ -13,7 +13,7 @@ class InvoiceItem extends Model
     protected $fillable = [
         'invoice_id', 'product_id',
         'description', 'hsn_sac',
-        'quantity', 'unit', 'rate', 'amount',
+        'quantity', 'unit', 'rate', 'discount', 'amount',
         'gst_rate', 'cgst_amount', 'sgst_amount', 'igst_amount',
         'total', 'sort_order',
     ];
@@ -21,6 +21,7 @@ class InvoiceItem extends Model
     protected $casts = [
         'quantity' => 'decimal:3',
         'rate' => 'decimal:2',
+        'discount' => 'decimal:2',
         'amount' => 'decimal:2',
         'gst_rate' => 'decimal:2',
         'cgst_amount' => 'decimal:2',

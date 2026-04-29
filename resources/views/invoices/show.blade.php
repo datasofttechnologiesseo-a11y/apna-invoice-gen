@@ -149,6 +149,45 @@
                             <input type="text" name="reference_number" value="{{ old('reference_number') }}" maxlength="80" placeholder="UPI txn / cheque no." class="mt-1 block w-full border-gray-300 rounded shadow-sm font-mono text-sm">
                         </div>
                     </div>
+                    {{-- TDS section: collapsed by default. Indian B2B service providers
+                         frequently have TDS deducted by corporate customers (Section 194-C/J/I/Q). --}}
+                    <details x-data="{ open: false }" :open="open" @toggle="open = $event.target.open" class="border border-amber-200 bg-amber-50/30 rounded p-3">
+                        <summary class="cursor-pointer text-sm font-semibold text-amber-900 select-none">
+                            🧾 Customer deducted TDS? <span class="text-xs font-normal text-gray-500">(click to expand)</span>
+                        </summary>
+                        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3" x-data="{
+                            amt: {{ old('tds_amount', 0) }},
+                            rate: {{ old('tds_rate', 0) }},
+                            section: '{{ old('tds_section', '') }}',
+                            recalcFromRate() { const grossAmt = parseFloat(document.querySelector('input[name=amount]')?.value || 0); this.amt = +(grossAmt * (parseFloat(this.rate) || 0) / 100).toFixed(2); },
+                        }">
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Section</label>
+                                <select name="tds_section" x-model="section" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
+                                    <option value="">— None —</option>
+                                    <option value="194C">194C — Contractor (1% / 2%)</option>
+                                    <option value="194J">194J — Professional / technical (10%)</option>
+                                    <option value="194I">194I — Rent (10%)</option>
+                                    <option value="194Q">194Q — Purchase of goods (0.1%)</option>
+                                    <option value="194H">194H — Commission / brokerage (5%)</option>
+                                    <option value="51">Section 51 — GST TDS (2%)</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Rate (%)</label>
+                                <input type="number" name="tds_rate" step="0.01" min="0" max="30" x-model="rate" @input="recalcFromRate()"
+                                       placeholder="e.g. 10" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Amount (₹)</label>
+                                <input type="number" name="tds_amount" step="0.01" min="0" x-model="amt"
+                                       placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
+                                <p class="text-[10px] text-gray-500 mt-1">Will be tracked separately for Form 26AS reconciliation. Invoice balance still reduces by gross amount.</p>
+                            </div>
+                        </div>
+                    </details>
+
                     <div>
                         <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Notes (optional)</label>
                         <input type="text" name="notes" maxlength="500" value="{{ old('notes') }}" class="mt-1 block w-full border-gray-300 rounded shadow-sm">
@@ -184,7 +223,15 @@
                                         <td class="px-4 py-2">{{ $p->received_at?->format('d M Y') }}</td>
                                         <td class="px-4 py-2">{{ $p->methodLabel() }}</td>
                                         <td class="px-4 py-2 text-xs font-mono text-gray-600">{{ $p->reference_number ?: '—' }}</td>
-                                        <td class="px-4 py-2 text-right font-mono font-semibold">₹{{ number_format((float) $p->amount, 2) }}</td>
+                                        <td class="px-4 py-2 text-right font-mono font-semibold">
+                                            ₹{{ number_format((float) $p->amount, 2) }}
+                                            @if ((float) $p->tds_amount > 0)
+                                                <div class="text-[10px] font-normal text-amber-700 mt-0.5" title="TDS deducted at source">
+                                                    incl. TDS {{ $p->tds_section }} ₹{{ number_format((float) $p->tds_amount, 2) }}<br>
+                                                    <span class="text-gray-500">Net to bank: ₹{{ number_format($p->netReceived(), 2) }}</span>
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-2 text-right whitespace-nowrap">
                                             <a href="{{ route('payments.receipt', $p) }}" class="text-brand-600 hover:underline text-sm">PDF</a>
                                             <span class="text-gray-300 mx-1">·</span>

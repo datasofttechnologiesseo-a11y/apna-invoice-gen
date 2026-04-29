@@ -117,6 +117,28 @@
     <div class="small muted" style="margin-top: 4px;">{{ $amountInWords }}</div>
 </div>
 
+@if ((float) $payment->tds_amount > 0)
+    @php $netReceived = $payment->netReceived(); @endphp
+    <div style="margin-top: 14px; padding: 10px 12px; border: 1px solid #fbbf24; background: #fffbeb; border-radius: 4px;">
+        <div class="xs" style="text-transform: uppercase; letter-spacing: 1px; font-weight: bold; color: #78350f; margin-bottom: 4px;">TDS deducted at source</div>
+        <table class="kv" style="margin: 0;">
+            <tr>
+                <th>Gross amount applied to invoice</th>
+                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right;">&#8377; {{ number_format((float) $payment->amount, 2) }}</td>
+            </tr>
+            <tr>
+                <th>Less: TDS @if ($payment->tds_section) under Section {{ $payment->tds_section }}@endif @if ($payment->tds_rate) ({{ rtrim(rtrim(number_format((float) $payment->tds_rate, 2), '0'), '.') }}%)@endif</th>
+                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; color: #b45309;">- &#8377; {{ number_format((float) $payment->tds_amount, 2) }}</td>
+            </tr>
+            <tr style="border-top: 1px solid #d97706;">
+                <th style="font-weight: bold; color: #78350f;">Net cash received in bank</th>
+                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; font-weight: bold; color: #78350f;">&#8377; {{ number_format($netReceived, 2) }}</td>
+            </tr>
+        </table>
+        <div class="xs muted" style="margin-top: 6px; font-style: italic;">TDS to be reconciled against Form 26AS / Form 16A issued by the customer.</div>
+    </div>
+@endif
+
 <table class="kv">
     <tr>
         <th>Payment method</th>

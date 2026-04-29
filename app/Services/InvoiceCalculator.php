@@ -24,8 +24,11 @@ class InvoiceCalculator
             $qty = (float) ($item['quantity'] ?? 0);
             $rate = (float) ($item['rate'] ?? 0);
             $gstRate = (float) ($item['gst_rate'] ?? 0);
-
-            $amount = round($qty * $rate, 2);
+            // Section 15(3) CGST: pre-tax discount reduces the *taxable value*.
+            // Clamped to the line subtotal so a discount can't go negative.
+            $gross = round($qty * $rate, 2);
+            $discount = max(0.0, min((float) ($item['discount'] ?? 0), $gross));
+            $amount = round($gross - $discount, 2);
 
             $cgst = 0.0;
             $sgst = 0.0;
@@ -55,6 +58,7 @@ class InvoiceCalculator
                 'quantity' => $qty,
                 'unit' => $item['unit'] ?? null,
                 'rate' => $rate,
+                'discount' => $discount,
                 'amount' => $amount,
                 'gst_rate' => $gstRate,
                 'cgst_amount' => $cgst,
