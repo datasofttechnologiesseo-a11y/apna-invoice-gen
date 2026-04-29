@@ -113,9 +113,11 @@
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
-                        <x-dropdown-link :href="route('profile.activity')">
-                            {{ __('Activity log') }}
-                        </x-dropdown-link>
+                        @if (Route::has('profile.activity'))
+                            <x-dropdown-link :href="route('profile.activity')">
+                                {{ __('Activity log') }}
+                            </x-dropdown-link>
+                        @endif
 
                         <x-dropdown-link :href="route('help')">
                             {{ __('How to use') }}
@@ -210,9 +212,11 @@
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('profile.activity')">
-                    {{ __('Activity log') }}
-                </x-responsive-nav-link>
+                @if (Route::has('profile.activity'))
+                    <x-responsive-nav-link :href="route('profile.activity')">
+                        {{ __('Activity log') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <x-responsive-nav-link :href="route('help')">
                     {{ __('How to use') }}

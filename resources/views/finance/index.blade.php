@@ -17,7 +17,7 @@
                 <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-sm">{{ session('status') }}</div>
             @endif
 
-            @include('finance.partials.tabs')
+            @includeIf('finance.partials.tabs')
 
             {{-- Period + view controls --}}
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 bg-white rounded-xl border border-gray-200 p-4">
