@@ -246,15 +246,11 @@
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>GSTR-1 / GSTR-3B auto-filing.</strong> We don't file returns directly. You'll need to transcribe figures into GSTN or a separate filing tool (Cleartax, TaxCloud, etc.).</span>
+                                        <span><strong>GSTR-1 / GSTR-3B auto-filing.</strong> We don't directly file returns to GSTN. We do export a <strong>GSTR-1-ready CSV</strong> (B2B/B2C split + HSN summary, Table 12 format) — your CA imports it or transcribes it; no auto-submission.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>Exports, SEZ supplies, multi-currency.</strong> Invoices meant for export under LUT / Bond, SEZ unit supplies, or billing in USD/EUR/AED etc. We hard-code INR and the standard domestic tax-invoice format.</span>
-                                    </li>
-                                    <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>Composition scheme / Bill of Supply.</strong> If you're registered under the Composition Scheme or supply exempt goods, you must issue a "Bill of Supply" (not a Tax Invoice). We only print "Tax Invoice".</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -266,16 +262,17 @@
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>TDS / TCS on invoices.</strong> No fields for TDS under Section 51 (government contracts) or TCS under Section 52 (e-commerce operators).</span>
+                                        <span><strong>TCS under Section 52 (e-commerce operators).</strong> We support <strong>TDS deducted by your customers</strong> (Section 194-x &amp; 51) on incoming payments, but not TCS that you'd collect as an e-commerce platform.</span>
                                     </li>
                                 </ul>
                                 <div class="mt-5 p-4 bg-white/60 rounded-lg border border-amber-200">
                                     <div class="text-xs uppercase tracking-wider font-bold text-amber-800">What we DO cover</div>
                                     <p class="mt-2 text-sm text-amber-900 leading-relaxed">
                                         Domestic tax invoices with CGST+SGST / IGST auto-split · HSN/SAC with UQC units ·
-                                        FY-reset invoice numbering · Credit notes (Section 34) · Reverse charge ·
-                                        Place of supply &amp; separate ship-to · Partial payments with receipt numbering ·
-                                        Invoice cancellation with audit trail · Transporter / e-way bill number capture ·
+                                        FY-reset invoice numbering · <strong>Composition scheme + auto Bill of Supply</strong> · <strong>Per-line discount (Section 15(3))</strong> · <strong>TDS deduction tracking (Section 194-x &amp; 51)</strong> ·
+                                        Credit notes (Section 34) · Reverse charge ·
+                                        Place of supply &amp; separate ship-to · Partial payments with receipt numbering · <strong>Cash memo / purchase voucher</strong> · <strong>Customer ledger (Dr/Cr running balance)</strong> ·
+                                        Invoice cancellation with audit trail · Transporter / e-way bill number capture · <strong>Books period lock (FY close protection)</strong> · <strong>Activity log (who-did-what)</strong> · <strong>GSTR-1 CSV export</strong> ·
                                         Multi-company / multi-GSTIN · UPI QR on invoice · Amount in words (Indian lakhs/crores).
                                     </p>
                                 </div>
