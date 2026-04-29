@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\CashMemoController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookieConsentController;
@@ -147,10 +148,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('company.update');
 
     Route::resource('customers', CustomerController::class)->except(['show']);
+    Route::get('customers/{customer}/ledger', [CustomerController::class, 'ledger'])->name('customers.ledger');
 
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::resource('products', ProductController::class)->except(['show']);
 
+    Route::get('invoices/export/gstr1', [InvoiceController::class, 'gstr1Csv'])->name('invoices.gstr1');
     Route::get('invoices/templates', [InvoiceController::class, 'templates'])->name('invoices.templates');
     Route::get('invoices/templates/{template}/preview', [InvoiceController::class, 'templatePreview'])->name('invoices.templates.preview');
     Route::resource('invoices', InvoiceController::class);
@@ -183,11 +186,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Finance — P&L analytics + expense tracking
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
     Route::get('/finance/expenses', [FinanceController::class, 'expenses'])->name('finance.expenses');
+    Route::get('/finance/expenses/export/pdf', [FinanceController::class, 'expensesPdf'])->name('finance.expenses.export.pdf');
+    Route::get('/finance/expenses/export/csv', [FinanceController::class, 'expensesCsv'])->name('finance.expenses.export.csv');
     Route::get('/finance/expenses/create', [FinanceController::class, 'createExpense'])->name('finance.expenses.create');
     Route::post('/finance/expenses', [FinanceController::class, 'storeExpense'])->name('finance.expenses.store');
+    Route::get('/finance/expenses/{expense}/pdf', [FinanceController::class, 'expensePdf'])->name('finance.expenses.pdf');
     Route::get('/finance/expenses/{expense}/edit', [FinanceController::class, 'editExpense'])->name('finance.expenses.edit');
     Route::patch('/finance/expenses/{expense}', [FinanceController::class, 'updateExpense'])->name('finance.expenses.update');
     Route::delete('/finance/expenses/{expense}', [FinanceController::class, 'destroyExpense'])->name('finance.expenses.destroy');
+
+    // Cash Memos — self-prepared purchase vouchers for cash purchases
+    Route::get('/finance/cash-memos', [CashMemoController::class, 'index'])->name('finance.cash-memos.index');
+    Route::get('/finance/cash-memos/create', [CashMemoController::class, 'create'])->name('finance.cash-memos.create');
+    Route::post('/finance/cash-memos', [CashMemoController::class, 'store'])->name('finance.cash-memos.store');
+    Route::get('/finance/cash-memos/{cashMemo}', [CashMemoController::class, 'show'])->name('finance.cash-memos.show');
+    Route::get('/finance/cash-memos/{cashMemo}/pdf', [CashMemoController::class, 'pdf'])->name('finance.cash-memos.pdf');
+    Route::delete('/finance/cash-memos/{cashMemo}', [CashMemoController::class, 'destroy'])->name('finance.cash-memos.destroy');
 
     // Stop impersonation — must be reachable by the CURRENTLY logged-in user
     // (who isn't a super admin during impersonation), so it sits outside the
@@ -211,6 +225,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
 });
 
 require __DIR__.'/auth.php';

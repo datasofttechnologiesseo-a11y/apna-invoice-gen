@@ -46,6 +46,7 @@
                                     <td class="px-4 py-3 text-gray-600">{{ $c->state?->name ?? '—' }}</td>
                                     <td class="px-4 py-3 text-gray-600 text-sm">{{ $c->email }}<br><span class="text-gray-400">{{ $c->phone }}</span></td>
                                     <td class="px-4 py-3 text-right space-x-2">
+                                        <a href="{{ route('customers.ledger', $c) }}" class="text-emerald-700 hover:underline text-sm" title="View ledger / outstanding">Ledger</a>
                                         <a href="{{ route('customers.edit', $c) }}" class="text-brand-600 hover:underline text-sm">Edit</a>
                                         <x-confirm-form
                                             :action="route('customers.destroy', $c)"

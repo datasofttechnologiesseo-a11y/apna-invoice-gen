@@ -34,6 +34,75 @@ class CustomerController extends Controller
         return view('customers.edit', compact('customer', 'states'));
     }
 
+    /**
+     * Customer ledger — every invoice + payment + balance for one customer.
+     * What a CA opens first when reconciling a customer's account.
+     */
+    public function ledger(Request $request, Customer $customer): View
+    {
+        $company = $request->user()->ensureCompany();
+        abort_unless($customer->company_id === $company->id, 403);
+
+        $customer->load('state');
+
+        $invoices = $customer->invoices()
+            ->whereIn('status', ['final', 'partially_paid', 'paid'])
+            ->orderBy('invoice_date')
+            ->orderBy('id')
+            ->get();
+
+        $totals = [
+            'invoiced' => (float) $invoices->sum('grand_total'),
+            'received' => (float) $invoices->sum('paid_amount'),
+            'credited' => (float) $invoices->sum('credited_amount'),
+        ];
+        $totals['outstanding'] = $totals['invoiced'] - $totals['received'] - $totals['credited'];
+
+        // Build a chronological ledger of debits (invoices) and credits (payments + credit notes)
+        $entries = collect();
+        foreach ($invoices as $inv) {
+            $entries->push([
+                'date' => $inv->invoice_date,
+                'type' => 'invoice',
+                'ref' => $inv->invoice_number,
+                'particulars' => 'Invoice raised',
+                'debit' => (float) $inv->grand_total,
+                'credit' => 0.0,
+                'invoice' => $inv,
+            ]);
+            foreach ($inv->payments as $p) {
+                $entries->push([
+                    'date' => $p->received_at ?? $p->created_at,
+                    'type' => 'payment',
+                    'ref' => $p->reference_number ?: 'Payment',
+                    'particulars' => 'Payment received · ' . strtoupper($p->method ?? 'received'),
+                    'debit' => 0.0,
+                    'credit' => (float) $p->amount,
+                ]);
+            }
+            foreach ($inv->creditNotes as $cn) {
+                $entries->push([
+                    'date' => $cn->credit_note_date,
+                    'type' => 'credit_note',
+                    'ref' => $cn->credit_note_number,
+                    'particulars' => 'Credit note · ' . ($cn->reason ?? ''),
+                    'debit' => 0.0,
+                    'credit' => (float) $cn->amount,
+                ]);
+            }
+        }
+        $entries = $entries->sortBy(['date', 'type'])->values();
+
+        // Running balance
+        $running = 0.0;
+        foreach ($entries as $i => $e) {
+            $running += ($e['debit'] - $e['credit']);
+            $entries[$i] = array_merge($e, ['balance' => $running]);
+        }
+
+        return view('customers.ledger', compact('customer', 'company', 'entries', 'totals'));
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
