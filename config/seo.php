@@ -66,11 +66,11 @@ return [
         'Apna Invoice',
     ]),
 
-    'og_image' => '/brand/apna-invoice-logo.png',
+    'og_image' => '/brand/apna-invoice-logo.jpg',
 
-    'og_image_width' => 1200,
+    'og_image_width' => 1939,
 
-    'og_image_height' => 630,
+    'og_image_height' => 454,
 
     'locale' => 'en_IN',
 
