@@ -12,7 +12,7 @@
         </div>
 
         <div class="p-6 md:p-10">
-            <div class="grid md:grid-cols-3 gap-4 text-left">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
                 <div class="p-4 rounded-xl bg-brand-50 ring-1 ring-brand-100">
                     <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/></svg>
@@ -35,6 +35,14 @@
                     </div>
                     <h3 class="mt-3 font-semibold text-gray-900">Ready to invoice</h3>
                     <p class="text-sm text-gray-600 mt-0.5">Bill customers in seconds</p>
+                </div>
+                <div class="p-4 rounded-xl bg-amber-50 ring-1 ring-amber-100">
+                    <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 16l4-4 3 3 5-7"/></svg>
+                    </div>
+                    <h3 class="mt-3 font-semibold text-gray-900">Track P&amp;L</h3>
+                    <p class="text-sm text-gray-600 mt-0.5">Log expenses &amp; cash memos to see profit</p>
+                    <a href="{{ route('finance.index') }}" class="mt-2 inline-block text-xs text-amber-700 hover:underline font-semibold">Open Finance →</a>
                 </div>
             </div>
 

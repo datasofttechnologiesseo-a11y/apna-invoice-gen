@@ -17,12 +17,23 @@
                 <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-sm">{{ session('status') }}</div>
             @endif
 
+            @include('finance.partials.tabs')
+
             {{-- Period + view controls --}}
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 bg-white rounded-xl border border-gray-200 p-4">
                 <form method="GET" class="flex items-center gap-2 flex-wrap">
                     <label class="text-xs uppercase tracking-wider font-bold text-gray-500">Period</label>
                     <select name="period" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
-                        @foreach (['this_month' => 'This month','last_month' => 'Last month','this_quarter' => 'This quarter','this_fy' => 'This FY','last_fy' => 'Last FY','ytd' => 'Year to date'] as $key => $label)
+                        @foreach ([
+                            'today' => 'Today',
+                            'yesterday' => 'Yesterday',
+                            'this_month' => 'Current Month',
+                            'this_quarter' => 'Current Quarter',
+                            'this_half' => 'Current Half-Year',
+                            'this_fy' => 'Current Financial Year',
+                            'last_fy' => 'Previous Financial Year',
+                            'ytd' => 'Financial Year to Date',
+                        ] as $key => $label)
                             <option value="{{ $key }}" @selected($periodKey === $key)>{{ $label }}</option>
                         @endforeach
                     </select>

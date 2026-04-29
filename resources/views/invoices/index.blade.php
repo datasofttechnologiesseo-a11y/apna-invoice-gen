@@ -2,7 +2,15 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Invoices') }}</h2>
-            <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
+                   class="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
+                   title="Download invoices in GSTR-1 friendly CSV format for your CA">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
+                    GSTR-1 (this month)
+                </a>
+                <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
+            </div>
         </div>
     </x-slot>
 
@@ -115,7 +123,14 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ $inv->invoice_date?->format('d M Y') }}</td>
                                     <td class="px-4 py-3">
-                                        {{ $inv->customer?->name }}
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span>{{ $inv->customer?->name }}</span>
+                                            @if ($inv->customer?->gstin)
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" title="Customer has GSTIN — B2B reportable in GSTR-1">B2B</span>
+                                            @else
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer — B2C">B2C</span>
+                                            @endif
+                                        </div>
                                         @if ($inv->customer?->phone)
                                             <div class="text-xs text-gray-500 font-mono">{{ $inv->customer->phone }}</div>
                                         @endif

@@ -128,7 +128,7 @@
         type="website"
         :json-ld="$jsonLd" />
     {{-- Preload the brand logo — it's the LCP element on the landing header. --}}
-    <link rel="preload" href="{{ asset('brand/apna-invoice-logo.png') }}" as="image" type="image/png">
+    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" as="image" type="image/jpeg">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -223,9 +223,11 @@
                  H1's keyword relevance for "best GST invoice generator India" /
                  "top bill generator" search queries without disrupting visual flow. --}}
             <h2 class="sr-only">Best free GST invoice generator and online bill maker for India — make GST-compliant tax invoices, credit notes and receipts with auto CGST, SGST and IGST.</h2>
-            {{-- Hindi tagline — deep navy for sophistication, not decoration --}}
-            <p class="mt-3 text-base md:text-lg font-medium text-brand-800/90" lang="hi">
-                आपका अपना GST बिलिंग साथी — हर चालान सिर्फ़ 60 सेकंड में।
+            {{-- Hindi tagline — bold, India-flag-inspired solid colours
+                 (gradients via bg-clip-text don't render Devanagari reliably) --}}
+            <p class="mt-4 text-xl md:text-2xl lg:text-3xl font-extrabold text-brand-900 leading-snug tracking-tight" lang="hi">
+                आपका अपना <span class="text-saffron-600">GST बिलिंग साथी</span> — हर invoice
+                <span class="px-1.5 rounded text-money-800 bg-money-100">सिर्फ़&nbsp;60 सेकंड</span> में।
             </p>
             <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-xl leading-relaxed">
                 Professional tax invoices with auto <strong class="text-gray-900">CGST/SGST/IGST</strong>,
