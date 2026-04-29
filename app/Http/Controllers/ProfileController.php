@@ -22,6 +22,20 @@ class ProfileController extends Controller
     }
 
     /**
+     * Audit-trail viewer for the current user's company. Shows who did what, when.
+     */
+    public function activity(Request $request): View
+    {
+        $company = $request->user()->ensureCompany();
+        $logs = \App\Models\AuditLog::where('company_id', $company->id)
+            ->with('user:id,name')
+            ->orderByDesc('created_at')
+            ->paginate(50);
+
+        return view('profile.activity', compact('logs', 'company'));
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse

@@ -383,6 +383,17 @@ class InvoiceController extends Controller
         $this->authorizeInvoice($request, $invoice);
         abort_unless($invoice->isEditable(), 403, 'Finalized invoices cannot be deleted.');
 
+        // Books-period lock: even drafts dated inside a closed FY shouldn't be silently dropped.
+        if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
+            return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This draft cannot be deleted.");
+        }
+
+        \App\Models\AuditLog::record('invoice.deleted',
+            "Draft #{$invoice->id} deleted",
+            $invoice,
+            $invoice->only(['invoice_number', 'invoice_date', 'grand_total', 'status'])
+        );
+
         $invoice->delete();
 
         return redirect()->route('invoices.index')->with('status', 'Draft deleted.');
@@ -400,6 +411,11 @@ class InvoiceController extends Controller
             return back()->withErrors(['finalize' => 'Cannot finalize a zero-amount invoice.']);
         }
 
+        // Books-period lock: cannot finalize an invoice into a closed FY.
+        if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
+            return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot finalize an invoice dated on or before that.");
+        }
+
         DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
             // Atomic: resets counter on FY boundary, increments, stamps format.
@@ -411,6 +427,11 @@ class InvoiceController extends Controller
                 'finalized_at' => now(),
             ]);
         });
+
+        \App\Models\AuditLog::record('invoice.finalized',
+            "Invoice {$invoice->fresh()->invoice_number} finalized · ₹" . number_format($invoice->grand_total, 2),
+            $invoice
+        );
 
         return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice finalized. Number: ' . $invoice->fresh()->invoice_number);
     }
@@ -436,6 +457,11 @@ class InvoiceController extends Controller
             'received_at' => ['required', 'date', 'before_or_equal:today'],
             'reference_number' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string', 'max:500'],
+            // Section 51 / 194-x of Income Tax Act: TDS deducted at source by the
+            // customer. Stored alongside the payment for Form 26AS reconciliation.
+            'tds_amount' => ['nullable', 'numeric', 'min:0', 'lt:amount'],
+            'tds_section' => ['nullable', 'string', 'max:12'],
+            'tds_rate' => ['nullable', 'numeric', 'min:0', 'max:30'],
         ]);
 
         $payment = DB::transaction(function () use ($invoice, $data, $request) {
@@ -454,6 +480,9 @@ class InvoiceController extends Controller
                 'receipt_number' => $receiptNumber,
                 'received_at' => $data['received_at'],
                 'amount' => $data['amount'],
+                'tds_amount' => (float) ($data['tds_amount'] ?? 0),
+                'tds_section' => ! empty($data['tds_amount']) ? ($data['tds_section'] ?? null) : null,
+                'tds_rate' => ! empty($data['tds_amount']) ? ($data['tds_rate'] ?? null) : null,
                 'method' => $data['method'],
                 'reference_number' => $data['reference_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
@@ -478,6 +507,11 @@ class InvoiceController extends Controller
             return $payment;
         });
 
+        \App\Models\AuditLog::record('payment.recorded',
+            "₹" . number_format($payment->amount, 2) . " · " . strtoupper($payment->method) . " · Receipt {$payment->receipt_number} · Invoice {$invoice->invoice_number}",
+            $payment
+        );
+
         return back()->with('status', "Payment recorded. Receipt {$payment->receipt_number} issued.");
     }
 
@@ -499,6 +533,19 @@ class InvoiceController extends Controller
         $this->authorizePayment($request, $payment);
         $invoice = $payment->invoice;
 
+        // Books-lock: cannot reverse a payment whose date or whose underlying
+        // invoice is in a closed FY — would silently re-open a settled balance.
+        $company = $invoice->company;
+        if ($company->isBooksLockedOn($payment->received_at) || $company->isBooksLockedOn($invoice->invoice_date)) {
+            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This payment cannot be reversed.");
+        }
+
+        // Capture snapshot BEFORE delete for the audit log.
+        $snapshot = $payment->only([
+            'receipt_number', 'amount', 'tds_amount', 'tds_section',
+            'method', 'reference_number', 'received_at',
+        ]);
+
         DB::transaction(function () use ($payment, $invoice) {
             $payment->delete();
 
@@ -514,6 +561,12 @@ class InvoiceController extends Controller
                 'status' => $status,
             ]);
         });
+
+        \App\Models\AuditLog::record('payment.reversed',
+            "Receipt {$snapshot['receipt_number']} reversed · ₹" . number_format($snapshot['amount'], 2) . " · Invoice {$invoice->invoice_number}",
+            $invoice,
+            $snapshot
+        );
 
         return redirect()->route('invoices.show', $invoice)
             ->with('status', 'Payment reversed.');
@@ -539,6 +592,146 @@ class InvoiceController extends Controller
             return back()->with('status', "Reminder sent via {$data['channel']} to {$record->recipient}.");
         }
         return back()->withErrors(['reminder' => $record->error ?: 'Failed to send reminder.']);
+    }
+
+    /**
+     * Export invoices as a GSTR-1-friendly CSV for the user's CA.
+     *
+     * Format columns map directly to the GSTR-1 B2B / B2C(L) sections:
+     *   Invoice No, Date, Customer GSTIN, Customer Name, State, B2B/B2C,
+     *   Reverse Charge, Place of Supply, Invoice Type, Taxable Value,
+     *   CGST, SGST, IGST, Cess, Total, HSN/SAC summary
+     *
+     * Period accepted via ?from=YYYY-MM-DD&to=YYYY-MM-DD (defaults to current month).
+     */
+    public function gstr1Csv(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $company = $request->user()->ensureCompany();
+        $from = $request->date('from') ?? now()->startOfMonth();
+        $to = $request->date('to') ?? now()->endOfMonth();
+
+        $invoices = $company->invoices()
+            ->whereIn('status', ['final', 'partially_paid', 'paid'])
+            ->whereBetween('invoice_date', [$from->toDateString(), $to->toDateString()])
+            ->with(['customer.state', 'placeOfSupply', 'items'])
+            ->orderBy('invoice_date')
+            ->orderBy('id')
+            ->get();
+
+        $filename = 'gstr1-' . $from->format('Y-m') . '-to-' . $to->format('Y-m') . '.csv';
+
+        return response()->streamDownload(function () use ($invoices, $company, $from, $to) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+
+            // Context block
+            fputcsv($out, ["GSTR-1 Outward Supplies"]);
+            fputcsv($out, ["Supplier", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            fputcsv($out, ["Period", $from->format('d-M-Y') . ' to ' . $to->format('d-M-Y')]);
+            fputcsv($out, ["Generated", now()->format('d-M-Y H:i')]);
+            fputcsv($out, []);
+
+            // Detailed B2B + B2C
+            fputcsv($out, [
+                'Invoice No', 'Date', 'Customer Name', 'Customer GSTIN', 'Customer State',
+                'Type', 'Reverse Charge', 'Place of Supply', 'Invoice Type',
+                'Taxable Value (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)', 'Cess (Rs.)', 'Round-off', 'Total (Rs.)',
+            ]);
+
+            $totalTaxable = $totalCgst = $totalSgst = $totalIgst = $totalGrand = 0;
+            $b2bCount = $b2cCount = 0;
+
+            foreach ($invoices as $inv) {
+                $customer = $inv->customer;
+                $isB2B = ! empty($customer?->gstin);
+                $isB2B ? $b2bCount++ : $b2cCount++;
+
+                $cgst = (float) $inv->total_cgst;
+                $sgst = (float) $inv->total_sgst;
+                $igst = (float) $inv->total_igst;
+                $taxable = (float) $inv->subtotal;
+                $grand = (float) $inv->grand_total;
+
+                $totalTaxable += $taxable;
+                $totalCgst += $cgst;
+                $totalSgst += $sgst;
+                $totalIgst += $igst;
+                $totalGrand += $grand;
+
+                $invoiceType = ($company->composition_dealer || ($inv->total_tax ?? 0) == 0) ? 'Bill of Supply' : 'Tax Invoice';
+
+                fputcsv($out, [
+                    $inv->invoice_number,
+                    $inv->invoice_date?->format('d-M-Y'),
+                    $customer?->name,
+                    $customer?->gstin ?: '',
+                    $customer?->state?->name ?: '',
+                    $isB2B ? 'B2B' : 'B2C',
+                    $inv->reverse_charge ? 'Yes' : 'No',
+                    $inv->placeOfSupply?->name ?: '',
+                    $invoiceType,
+                    number_format($taxable, 2, '.', ''),
+                    number_format($cgst, 2, '.', ''),
+                    number_format($sgst, 2, '.', ''),
+                    number_format($igst, 2, '.', ''),
+                    '0.00',
+                    number_format((float) ($inv->round_off ?? 0), 2, '.', ''),
+                    number_format($grand, 2, '.', ''),
+                ]);
+            }
+
+            // Totals row
+            fputcsv($out, []);
+            fputcsv($out, [
+                '', '', '', '', '', 'TOTAL', '', '', '',
+                number_format($totalTaxable, 2, '.', ''),
+                number_format($totalCgst, 2, '.', ''),
+                number_format($totalSgst, 2, '.', ''),
+                number_format($totalIgst, 2, '.', ''),
+                '0.00',
+                '',
+                number_format($totalGrand, 2, '.', ''),
+            ]);
+            fputcsv($out, []);
+            fputcsv($out, ["Summary"]);
+            fputcsv($out, ["B2B Invoices (with GSTIN)", $b2bCount]);
+            fputcsv($out, ["B2C Invoices (without GSTIN)", $b2cCount]);
+            fputcsv($out, ["Total Invoices", $b2bCount + $b2cCount]);
+
+            // HSN-wise summary (Table 12 in GSTR-1)
+            $hsnMap = [];
+            foreach ($invoices as $inv) {
+                foreach ($inv->items as $item) {
+                    $key = $item->hsn_sac ?: '—';
+                    if (! isset($hsnMap[$key])) {
+                        $hsnMap[$key] = ['qty' => 0, 'taxable' => 0, 'cgst' => 0, 'sgst' => 0, 'igst' => 0];
+                    }
+                    $hsnMap[$key]['qty'] += (float) $item->quantity;
+                    $hsnMap[$key]['taxable'] += (float) $item->amount;
+                    $hsnMap[$key]['cgst'] += (float) ($item->cgst_amount ?? 0);
+                    $hsnMap[$key]['sgst'] += (float) ($item->sgst_amount ?? 0);
+                    $hsnMap[$key]['igst'] += (float) ($item->igst_amount ?? 0);
+                }
+            }
+
+            fputcsv($out, []);
+            fputcsv($out, ["HSN/SAC Summary (GSTR-1 Table 12)"]);
+            fputcsv($out, ['HSN/SAC', 'Total Quantity', 'Taxable Value (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)']);
+            foreach ($hsnMap as $hsn => $totals) {
+                fputcsv($out, [
+                    $hsn,
+                    number_format($totals['qty'], 2, '.', ''),
+                    number_format($totals['taxable'], 2, '.', ''),
+                    number_format($totals['cgst'], 2, '.', ''),
+                    number_format($totals['sgst'], 2, '.', ''),
+                    number_format($totals['igst'], 2, '.', ''),
+                ]);
+            }
+
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function pdf(Request $request, Invoice $invoice): Response
@@ -612,9 +805,10 @@ class InvoiceController extends Controller
             // below the column size prevents a DB 1406 leaking a 500 page.
             'items.*.description' => ['required', 'string', 'max:150'],
             'items.*.hsn_sac' => ['required', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
         ]);
     }

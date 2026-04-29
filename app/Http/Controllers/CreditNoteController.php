@@ -53,6 +53,13 @@ class CreditNoteController extends Controller
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        // Books-lock: cannot issue a credit note dated inside a closed FY.
+        $company = $invoice->company;
+        if ($company->isBooksLockedOn($data['credit_note_date'])) {
+            return redirect()->back()->withInput()
+                ->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Credit note date must be after that.");
+        }
+
         $creditNote = DB::transaction(function () use ($invoice, $data) {
             // Lock company row + allocate next CRN number atomically.
             $company = $invoice->company()->lockForUpdate()->first();
@@ -98,6 +105,11 @@ class CreditNoteController extends Controller
             return $cn;
         });
 
+        \App\Models\AuditLog::record('credit_note.created',
+            "Credit note {$creditNote->credit_note_number} issued · ₹" . number_format((float) $creditNote->amount, 2) . " · " . ($creditNote->reason ?? '') . " · against Invoice {$invoice->invoice_number}",
+            $creditNote
+        );
+
         return redirect()->route('invoices.show', $invoice)
             ->with('status', "Credit note {$creditNote->credit_note_number} issued for ₹" . number_format((float) $creditNote->amount, 2));
     }
@@ -108,6 +120,14 @@ class CreditNoteController extends Controller
         $this->authorizeCreditNote($request, $creditNote);
 
         $invoice = $creditNote->invoice;
+        $company = $invoice->company;
+
+        // Books-lock: a credit note dated inside a closed FY cannot be reversed.
+        if ($company->isBooksLockedOn($creditNote->credit_note_date)) {
+            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This credit note cannot be reversed.");
+        }
+
+        $snapshot = $creditNote->only(['credit_note_number', 'credit_note_date', 'amount', 'reason']);
 
         DB::transaction(function () use ($creditNote, $invoice) {
             $creditNote->delete();
@@ -125,6 +145,12 @@ class CreditNoteController extends Controller
                 'status' => $status,
             ]);
         });
+
+        \App\Models\AuditLog::record('credit_note.deleted',
+            "Credit note {$snapshot['credit_note_number']} reversed · ₹" . number_format((float) $snapshot['amount'], 2) . " · against Invoice {$invoice->invoice_number}",
+            $invoice,
+            $snapshot
+        );
 
         return redirect()->route('invoices.show', $invoice)
             ->with('status', 'Credit note reversed. Invoice balance restored.');

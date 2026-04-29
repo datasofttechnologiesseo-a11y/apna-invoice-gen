@@ -64,6 +64,12 @@ class InvoiceShareController extends Controller
         $this->authorizeOwner($request, $invoice);
         abort_unless($invoice->canBeCancelled(), 422, 'This invoice cannot be cancelled.');
 
+        // Books-lock: cannot cancel an invoice in a closed FY.
+        $company = $invoice->company;
+        if ($company->isBooksLockedOn($invoice->invoice_date)) {
+            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This invoice cannot be cancelled. Issue a credit note instead.");
+        }
+
         $data = $request->validate([
             'cancellation_reason' => ['required', 'string', 'min:5', 'max:500'],
         ]);
@@ -75,6 +81,12 @@ class InvoiceShareController extends Controller
                 'cancellation_reason' => $data['cancellation_reason'],
             ]);
         });
+
+        \App\Models\AuditLog::record('invoice.cancelled',
+            "Invoice {$invoice->invoice_number} cancelled · ₹" . number_format($invoice->grand_total, 2) . " · Reason: " . $data['cancellation_reason'],
+            $invoice,
+            ['reason' => $data['cancellation_reason'], 'grand_total' => $invoice->grand_total]
+        );
 
         return redirect()->route('invoices.show', $invoice)
             ->with('status', 'Invoice cancelled. A record is kept for GST audit.');

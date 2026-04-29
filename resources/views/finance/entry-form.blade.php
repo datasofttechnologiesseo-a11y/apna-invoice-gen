@@ -9,7 +9,79 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @include('finance.partials.tabs')
+
+            @if (session('error'))
+                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">🔒 {{ session('error') }}</div>
+            @endif
+
+            @unless ($expense->exists)
+                {{-- ─── Chooser: which kind of expense are you recording? ─── --}}
+                <div>
+                    <div class="mb-3">
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">How was this paid?</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Choose the option that matches the bill you have. Both update your P&amp;L the same way.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        {{-- Card 1: Standard Expense (selected/default) --}}
+                        <div class="relative bg-white border-2 border-brand-600 rounded-xl p-5 shadow-sm">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-brand-50 text-brand-700 flex items-center justify-center">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h2m3 0h5m-1-9h2a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h2"/>
+                                        <rect x="8" y="4" width="8" height="4" rx="1" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-900">Standard Expense</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Bank · UPI · Card · Cheque</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-700 mt-3">
+                                Use this when you have a <strong>proper bill or tax invoice</strong> from the vendor — paid via bank transfer, UPI, card, or cheque.
+                            </p>
+                            <ul class="mt-3 space-y-1 text-xs text-gray-600">
+                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>GST input credit (ITC) claimable if vendor is GST-registered</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Just fill amount, date &amp; category — fast entry</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Best for office rent, salaries, SaaS, utilities</span></li>
+                            </ul>
+                            <div class="mt-4 text-xs text-brand-700 font-semibold inline-flex items-center gap-1">
+                                ↓ Continue with the form below
+                            </div>
+                        </div>
+
+                        {{-- Card 2: Cash Memo --}}
+                        <a href="{{ route('finance.cash-memos.create') }}" class="group relative bg-white border-2 border-gray-200 hover:border-amber-500 hover:shadow-md transition-all rounded-xl p-5 shadow-sm block">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-900 group-hover:text-amber-700">Cash Memo <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Cash purchase without proper bill</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-700 mt-3">
+                                Use this when paying <strong>cash to a small or unregistered vendor</strong> who doesn't issue a tax invoice. Common for petty cash, repairs, stationery, food, etc.
+                            </p>
+                            <ul class="mt-3 space-y-1 text-xs text-gray-600">
+                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Generates a printable A4 Cash Memo as your purchase voucher</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Auto-creates the matching expense entry — no double work</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>FY-based memo number (e.g. CM/26-27/0001) for proper records</span></li>
+                            </ul>
+                            <div class="mt-4 text-xs text-amber-700 font-semibold inline-flex items-center gap-1 group-hover:underline">
+                                Create Cash Memo →
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+            @endunless
+
             <div class="p-6 sm:p-8 bg-white shadow sm:rounded-lg">
                 <form method="POST" action="{{ $expense->exists ? route('finance.expenses.update', $expense) : route('finance.expenses.store') }}" class="space-y-6">
                     @csrf

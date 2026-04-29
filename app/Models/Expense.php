@@ -14,6 +14,7 @@ class Expense extends Model
         'user_id', 'entry_date', 'category', 'vendor_name', 'description',
         'amount', 'gst_amount',
         'payment_method', 'reference_number', 'notes',
+        'cash_memo_id',
     ];
 
     protected $casts = [
@@ -30,6 +31,11 @@ class Expense extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function cashMemo(): BelongsTo
+    {
+        return $this->belongsTo(CashMemo::class);
     }
 
     public function categoryLabel(): string
