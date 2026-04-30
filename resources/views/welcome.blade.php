@@ -1,5 +1,10 @@
 @php
     $faqs = [
+        ['q' => 'How can I create a GST invoice online for free in India?', 'a' => "Sign up on Apna Invoice (no card required), add your business GSTIN and state once, then create your first GST invoice in about 60 seconds. The tool auto-calculates CGST + SGST for intra-state and IGST for inter-state supplies, supports HSN/SAC codes, and exports a GST-compliant tax invoice as PDF — completely free for unlimited invoices during beta."],
+        ['q' => 'Is Apna Invoice the best free GST invoice generator for freelancers and small businesses in India?', 'a' => "We're built specifically for Indian freelancers, MSMEs, SMEs, startups, small shops and CAs. Compared to Tally, Zoho Books or Vyapar, Apna Invoice is fully online (no installation), zero-cost, has India-first defaults — Indian numbering (lakhs/crores), GST slabs pre-loaded, FY-reset invoice numbers, UPI QR on every invoice, and one-click WhatsApp share — and there is no per-invoice or per-user limit."],
+        ['q' => 'Does the invoice generator include HSN/SAC code and auto GST calculation?', 'a' => "Yes — every line item has an HSN/SAC field with a built-in search link to the official GST portal, and you pick the GST rate (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%) per item. We auto-split CGST/SGST or IGST based on customer state, round to the paisa, and print the rate on every line as Rule 46 requires."],
+        ['q' => 'Can I use this as free billing software for a small shop or MSME?', 'a' => "Yes. Small shops, retail stores, MSMEs and SMEs across India use Apna Invoice as a simple GST billing tool — issue tax invoices, cash memos for over-the-counter sales, credit notes, and track payment status. It runs in any browser on any device, so you don't need to install Tally or buy a billing machine. Free during beta with unlimited invoices."],
+        ['q' => 'Can I download a GST invoice format for free?', 'a' => "Every invoice you create on Apna Invoice exports to a CBIC-compliant GST tax invoice PDF — five professional template styles (Classic Navy, Executive Maroon, Minimal Slate, Mercantile Forest, Heritage Burgundy). The PDF includes GSTIN, HSN/SAC, CGST/SGST/IGST split, place of supply, amount in words, signature block and your bank/UPI details. No template downloads to fiddle with — just create and download."],
         ['q' => 'Are these invoices GST-compliant?', 'a' => "Yes. We include GSTIN, HSN/SAC codes, place of supply, CGST/SGST or IGST split, invoice number, and amount in words (Indian format — lakhs and crores). The format aligns with CBIC's prescribed tax invoice requirements."],
         ['q' => 'Do I need to know the GST rate for each item?', 'a' => 'Yes, but we pre-load the standard slabs (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%). You pick one per line item; the system handles CGST/SGST or IGST math based on customer state.'],
         ['q' => "What's the difference between draft and final?", 'a' => 'Drafts are editable and have no invoice number yet. Once you finalize, the invoice gets a permanent number (e.g. INV-0001), becomes read-only, and is considered legally issued. You can still mark payments against finalized invoices.'],
@@ -123,8 +128,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="Best Free GST Invoice & Bill Generator for India — Make GST-compliant invoices in 60 seconds"
-        description="Best free GST invoice & bill generator online. Make GST-compliant tax invoices with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR & WhatsApp share in 60 seconds. Made in India for MSMEs, SMEs, startups, freelancers & CAs — a Tally, Zoho Books & Vyapar alternative."
+        title="Free GST Invoice Generator India — Create GST Invoice Online Free in 60 seconds"
+        description="Free GST invoice generator online for India. Create a GST-compliant tax invoice with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Simple GST billing software for freelancers, small shops, MSMEs, SMEs, startups and CAs. No card, unlimited invoices."
         type="website"
         :json-ld="$jsonLd" />
     {{-- Preload the brand logo — it's the LCP element on the landing header. --}}

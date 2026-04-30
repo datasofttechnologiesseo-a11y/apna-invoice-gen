@@ -109,11 +109,14 @@
                     <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['drafts'] }}</div>
                     <div class="mt-3 text-xs text-gray-400">ready to finalize</div>
                 </div>
-                <div class="relative p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 overflow-hidden">
-                    <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
+                <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="group relative block p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 hover:ring-accent-300 hover:shadow-lg transition overflow-hidden" title="View invoices awaiting payment">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
+                        <svg class="w-4 h-4 text-accent-700 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
                     <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
-                    <div class="mt-3 text-xs text-accent-700">awaiting payment</div>
-                </div>
+                    <div class="mt-3 text-xs text-accent-700 group-hover:text-accent-900 transition">{{ $stats['outstanding'] > 0 ? 'click to chase →' : 'awaiting payment' }}</div>
+                </a>
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
                     <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums">₹{{ number_format((float) $stats['paid_this_month'], 0) }}</div>
@@ -214,6 +217,61 @@
                                     <div class="text-xs text-gray-500">Filter by status & date</div>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Reports & exports — surfaced on the dashboard so CAs landing here at month-end can grab the GSTR-1 CSV without hunting --}}
+                    <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="font-display font-bold text-gray-900">Reports & exports</h3>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 ring-1 ring-brand-200">For your CA</span>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">CSV exports ready for the GST portal or Excel.</p>
+                        <div class="mt-4 space-y-2">
+                            <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">GSTR-1 · this month</div>
+                                    <div class="text-xs text-gray-500 truncate">{{ now()->format('F Y') }} · B2B + B2C split, place of supply</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                            </a>
+                            <a href="{{ route('invoices.gstr1', ['from' => now()->subMonthNoOverflow()->startOfMonth()->toDateString(), 'to' => now()->subMonthNoOverflow()->endOfMonth()->toDateString()]) }}"
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">GSTR-1 · last month</div>
+                                    <div class="text-xs text-gray-500 truncate">{{ now()->subMonthNoOverflow()->format('F Y') }} · for the {{ now()->day < 11 ? '11th' : 'next' }} filing window</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                            </a>
+                            <a href="{{ route('finance.expenses.export.csv') }}"
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center group-hover:bg-gray-700 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">Expenses CSV</div>
+                                    <div class="text-xs text-gray-500 truncate">All categories · vendor · GST input</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                            </a>
+                            <a href="{{ route('backup.index') }}"
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center group-hover:bg-gray-700 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">Full data backup</div>
+                                    <div class="text-xs text-gray-500 truncate">ZIP of all CSVs · invoices, customers, payments</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
                         </div>
                     </div>

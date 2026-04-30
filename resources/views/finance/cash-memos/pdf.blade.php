@@ -7,21 +7,20 @@
         @page { margin: 14mm 12mm; }
         * { box-sizing: border-box; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #111; margin: 0; }
-        .doc-title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 2px; padding-bottom: 6px; border-bottom: 2px solid #111; margin-bottom: 14px; }
-        .gstin-line { text-align: center; font-size: 10px; color: #555; margin-top: 2px; }
+        .seller-header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #111; margin-bottom: 8px; }
+        .seller-header .name { font-size: 20px; font-weight: bold; letter-spacing: 1px; color: #111; margin-bottom: 3px; }
+        .seller-header .addr { font-size: 10.5px; color: #444; line-height: 1.4; white-space: pre-line; }
+        .seller-header .contact { font-size: 10px; color: #555; margin-top: 3px; }
+        .seller-header .contact span { margin: 0 6px; }
+        .doc-title { text-align: center; font-size: 16px; font-weight: bold; letter-spacing: 4px; padding-bottom: 8px; border-bottom: 1px solid #bbb; margin-bottom: 14px; color: #111; }
         .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
         .meta-table td { vertical-align: top; padding: 0; }
-        .label { font-size: 9px; color: #777; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .label { font-size: 9px; color: #777; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 3px; }
         .value-strong { font-weight: bold; font-size: 13px; color: #111; }
         .meta-grid { width: 100%; }
         .meta-grid td { padding: 1px 0; font-size: 10.5px; }
         .meta-grid td.k { color: #777; text-align: right; padding-right: 8px; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
         .meta-grid td.v { font-weight: bold; }
-        .seller-box { border: 1px solid #ccc; background: #fafafa; padding: 10px 12px; margin-bottom: 14px; }
-        .seller-box .name { font-size: 13px; font-weight: bold; margin-bottom: 2px; }
-        .seller-box .addr { color: #444; font-size: 10.5px; }
-        .seller-box .meta { font-size: 9.5px; color: #555; margin-top: 4px; }
-        .seller-box .meta span { margin-right: 14px; }
         .items { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
         .items thead th { background: #111; color: #fff; padding: 6px 6px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .items thead th.r { text-align: right; }
@@ -49,16 +48,29 @@
 </head>
 <body>
 
-    <div class="doc-title">CASH MEMO</div>
-    @if ($memo->company->gstin)
-        <div class="gstin-line">GST Reg. No. {{ $memo->company->gstin }}</div>
-    @endif
+    {{-- Seller letterhead (issuer of the memo) --}}
+    <div class="seller-header">
+        <div class="name">{{ $memo->seller_name }}</div>
+        @if ($memo->seller_address)
+            <div class="addr">{{ $memo->seller_address }}</div>
+        @endif
+        @if ($memo->seller_state || $memo->seller_phone || $memo->seller_gstin)
+            <div class="contact">
+                @if ($memo->seller_state)<span><strong>State:</strong> {{ $memo->seller_state }}</span>@endif
+                @if ($memo->seller_phone)<span><strong>Phone:</strong> {{ $memo->seller_phone }}</span>@endif
+                @if ($memo->seller_gstin)<span><strong>GSTIN:</strong> {{ $memo->seller_gstin }}</span>@endif
+            </div>
+        @endif
+    </div>
 
-    {{-- Top: Buyer (left) + Memo metadata (right) --}}
+    {{-- Document title --}}
+    <div class="doc-title">CASH MEMO</div>
+
+    {{-- Bill To (buyer) on the left + Memo metadata on the right --}}
     <table class="meta-table">
         <tr>
             <td style="width: 60%;">
-                <div class="label">Issued by</div>
+                <div class="label">Bill To</div>
                 <div class="value-strong">{{ $memo->company->name }}</div>
                 @if ($memo->company->address_line1)
                     <div>{{ $memo->company->address_line1 }}</div>
@@ -91,22 +103,6 @@
             </td>
         </tr>
     </table>
-
-    {{-- Purchased From --}}
-    <div class="seller-box">
-        <div class="label">Purchased From</div>
-        <div class="name">{{ $memo->seller_name }}</div>
-        @if ($memo->seller_address)
-            <div class="addr">{{ $memo->seller_address }}</div>
-        @endif
-        @if ($memo->seller_state || $memo->seller_gstin || $memo->seller_phone)
-            <div class="meta">
-                @if ($memo->seller_state)<span>State: <strong>{{ $memo->seller_state }}</strong></span>@endif
-                @if ($memo->seller_gstin)<span>GSTIN: <strong>{{ $memo->seller_gstin }}</strong></span>@endif
-                @if ($memo->seller_phone)<span>Phone: {{ $memo->seller_phone }}</span>@endif
-            </div>
-        @endif
-    </div>
 
     {{-- Line items --}}
     <table class="items">
@@ -180,7 +176,7 @@
             </td>
             <td style="width: 40%; text-align: right;">
                 <div class="signature-block">
-                    <div class="for-line">For <strong>{{ $memo->company->name }}</strong></div>
+                    <div class="for-line">For <strong>{{ $memo->seller_name }}</strong></div>
                     <div class="auth-line">Authorised Signatory</div>
                 </div>
             </td>

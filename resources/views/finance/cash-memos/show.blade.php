@@ -9,9 +9,9 @@
                 $waMsg = "*Cash Memo " . $memo->memo_number . "*\n"
                     . "Date: " . $memo->memo_date->format('d M Y') . "\n"
                     . "From: " . $memo->seller_name . "\n"
+                    . "Bill To: " . $memo->company->name . "\n"
                     . "Amount: ₹" . number_format((float) $memo->grand_total, 2) . "\n"
-                    . "Payment: " . strtoupper($memo->payment_mode) . "\n"
-                    . "Issued by: " . $memo->company->name;
+                    . "Payment: " . strtoupper($memo->payment_mode);
                 $waUrl = 'https://wa.me/?text=' . rawurlencode($waMsg);
             @endphp
             <div class="flex flex-wrap items-center gap-2">
@@ -46,18 +46,30 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 print:px-0 print:max-w-none">
             <div class="bg-white shadow-lg sm:rounded-lg p-8 sm:p-10 print:shadow-none print:rounded-none print:p-6 cash-memo-doc">
 
-                {{-- ─── Document title ─── --}}
-                <div class="text-center border-b-2 border-gray-900 pb-3 mb-5">
-                    <div class="text-2xl font-bold tracking-wide text-gray-900">CASH MEMO</div>
-                    @if ($memo->company->gstin)
-                        <div class="text-[11px] text-gray-500 mt-1">GST Reg. No. {{ $memo->company->gstin }}</div>
+                {{-- ─── Seller letterhead (issuer) ─── --}}
+                <div class="text-center border-b-2 border-gray-900 pb-3 mb-3">
+                    <div class="text-xl font-bold tracking-wide text-gray-900">{{ $memo->seller_name }}</div>
+                    @if ($memo->seller_address)
+                        <div class="text-sm text-gray-700 whitespace-pre-line mt-1">{{ $memo->seller_address }}</div>
+                    @endif
+                    @if ($memo->seller_state || $memo->seller_phone || $memo->seller_gstin)
+                        <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-600 mt-1">
+                            @if ($memo->seller_state)<span><strong>State:</strong> {{ $memo->seller_state }}</span>@endif
+                            @if ($memo->seller_phone)<span><strong>Phone:</strong> {{ $memo->seller_phone }}</span>@endif
+                            @if ($memo->seller_gstin)<span><strong>GSTIN:</strong> <span class="font-mono">{{ $memo->seller_gstin }}</span></span>@endif
+                        </div>
                     @endif
                 </div>
 
-                {{-- ─── Buyer (your company) ─── --}}
+                {{-- ─── Document title ─── --}}
+                <div class="text-center border-b border-gray-300 pb-2 mb-5">
+                    <div class="text-base font-bold tracking-[0.3em] text-gray-900 uppercase">Cash Memo</div>
+                </div>
+
+                {{-- ─── Bill To (buyer) + Memo metadata ─── --}}
                 <div class="grid grid-cols-2 gap-6 mb-6 text-sm">
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 tracking-wider font-bold mb-1">Issued by</div>
+                        <div class="text-[10px] uppercase text-gray-500 tracking-wider font-bold mb-1">Bill To</div>
                         <div class="font-semibold text-gray-900 text-base">{{ $memo->company->name }}</div>
                         @if ($memo->company->address_line1)
                             <div class="text-gray-700">{{ $memo->company->address_line1 }}</div>
@@ -91,26 +103,6 @@
                                 <div class="font-mono text-gray-900">{{ $memo->reference_number }}</div>
                             @endif
                         </div>
-                    </div>
-                </div>
-
-                {{-- ─── Purchased From ─── --}}
-                <div class="border border-gray-300 rounded p-4 mb-5 bg-gray-50">
-                    <div class="text-[10px] uppercase text-gray-500 tracking-wider font-bold mb-2">Purchased From</div>
-                    <div class="font-semibold text-gray-900 text-base">{{ $memo->seller_name }}</div>
-                    @if ($memo->seller_address)
-                        <div class="text-gray-700 text-sm whitespace-pre-line">{{ $memo->seller_address }}</div>
-                    @endif
-                    <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-700 mt-1">
-                        @if ($memo->seller_state)
-                            <span>State: <strong>{{ $memo->seller_state }}</strong></span>
-                        @endif
-                        @if ($memo->seller_gstin)
-                            <span>GSTIN: <span class="font-mono">{{ $memo->seller_gstin }}</span></span>
-                        @endif
-                        @if ($memo->seller_phone)
-                            <span>Phone: {{ $memo->seller_phone }}</span>
-                        @endif
                     </div>
                 </div>
 
@@ -186,7 +178,7 @@
                     </div>
                     <div class="text-right">
                         <div class="border-t border-gray-400 pt-2 inline-block min-w-[180px]">
-                            <div class="text-xs text-gray-600">For <strong>{{ $memo->company->name }}</strong></div>
+                            <div class="text-xs text-gray-600">For <strong>{{ $memo->seller_name }}</strong></div>
                             <div class="text-[10px] text-gray-400 mt-6">Authorised Signatory</div>
                         </div>
                     </div>

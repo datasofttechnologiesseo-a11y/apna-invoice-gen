@@ -45,19 +45,26 @@
                                     <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $c->gstin ?? '—' }}</td>
                                     <td class="px-4 py-3 text-gray-600">{{ $c->state?->name ?? '—' }}</td>
                                     <td class="px-4 py-3 text-gray-600 text-sm">{{ $c->email }}<br><span class="text-gray-400">{{ $c->phone }}</span></td>
-                                    <td class="px-4 py-3 text-right space-x-2">
-                                        <a href="{{ route('customers.ledger', $c) }}" class="text-emerald-700 hover:underline text-sm" title="View ledger / outstanding">Ledger</a>
-                                        <a href="{{ route('customers.edit', $c) }}" class="text-brand-600 hover:underline text-sm">Edit</a>
-                                        <x-confirm-form
-                                            :action="route('customers.destroy', $c)"
-                                            method="DELETE"
-                                            title="Delete {{ $c->name }}?"
-                                            message="Customers with issued invoices can't be deleted for GST audit reasons — we'll show a friendly error if that happens."
-                                            confirm-label="Delete customer"
-                                            confirm-class="bg-red-600 hover:bg-red-700"
-                                            tone="danger">
-                                            <button type="button" class="text-red-600 hover:underline text-sm">Delete</button>
-                                        </x-confirm-form>
+                                    <td class="px-4 py-3 text-right">
+                                        <div class="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <a href="{{ route('customers.ledger', $c) }}"
+                                               class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-money-50 hover:bg-money-100 text-money-800 text-xs font-semibold ring-1 ring-money-200 transition"
+                                               title="View ledger — Dr/Cr running balance for this customer">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h6m0 0l-3-3m3 3l-3 3M3 7h6a4 4 0 014 4v6"/></svg>
+                                                Ledger
+                                            </a>
+                                            <a href="{{ route('customers.edit', $c) }}" class="text-brand-600 hover:underline text-sm px-2 py-1.5">Edit</a>
+                                            <x-confirm-form
+                                                :action="route('customers.destroy', $c)"
+                                                method="DELETE"
+                                                title="Delete {{ $c->name }}?"
+                                                message="Customers with issued invoices can't be deleted for GST audit reasons — we'll show a friendly error if that happens."
+                                                confirm-label="Delete customer"
+                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                tone="danger">
+                                                <button type="button" class="text-red-600 hover:underline text-sm px-2 py-1.5">Delete</button>
+                                            </x-confirm-form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

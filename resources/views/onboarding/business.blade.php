@@ -110,11 +110,19 @@
             <div class="border-t pt-6">
                 <h3 class="font-display font-bold text-gray-900 text-lg">Invoice numbering</h3>
                 <p class="text-sm text-gray-500 mt-0.5">How your invoice numbers will be formatted</p>
+                @php
+                    [$fyStart, $fyEnd] = \App\Models\Company::financialYearFor(now());
+                    $fyLabel = sprintf('%04d-%02d', $fyStart, $fyEnd % 100);
+                    $previewPrefix = old('invoice_prefix', $company->invoice_prefix ?? 'INV');
+                @endphp
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <x-input-label for="invoice_prefix" value="Prefix *" />
-                        <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="old('invoice_prefix', $company->invoice_prefix ?? 'INV')" required maxlength="10" />
-                        <p class="mt-1 text-xs text-gray-500">First invoice will be {{ old('invoice_prefix', $company->invoice_prefix ?? 'INV') }}-0001</p>
+                        <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="$previewPrefix" required maxlength="10" />
+                        <p class="mt-1 text-xs text-gray-500">
+                            Your first invoice will be <strong class="font-mono text-brand-700">{{ $previewPrefix }}/{{ $fyLabel }}/0001</strong>
+                            <span class="text-gray-400">— sequence auto-resets on 1&nbsp;April (GST best practice). You can change the format later in Company settings.</span>
+                        </p>
                     </div>
                 </div>
             </div>

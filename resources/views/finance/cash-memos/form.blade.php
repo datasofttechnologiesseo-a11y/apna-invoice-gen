@@ -125,16 +125,15 @@
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <div class="flex items-center justify-between gap-2">
+                                            <div class="inline-flex items-center gap-1.5">
                                                 <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
                                                 <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                    target="_blank" rel="noopener"
                                                    onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   style="font-size:11px; font-weight:500; display:inline-flex; align-items:center; gap:4px;"
-                                                   class="text-brand-600 hover:text-brand-700 hover:underline whitespace-nowrap"
+                                                   class="text-brand-600 hover:text-brand-700"
+                                                   aria-label="Search HSN/SAC code on the official GST portal"
                                                    title="Search HSN/SAC code on the official GST portal">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-                                                    <span>[Search HSN/SAC]</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                                                 </a>
                                             </div>
                                             <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="10" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono">
@@ -168,16 +167,15 @@
                                         <th class="px-3 py-2 text-left w-10">#</th>
                                         <th class="px-3 py-2 text-left">Description</th>
                                         <th class="px-3 py-2 text-left">
-                                            <span class="inline-flex items-center gap-2">
+                                            <span class="inline-flex items-center gap-1.5">
                                                 <span>HSN/SAC</span>
                                                 <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                    target="_blank" rel="noopener"
                                                    onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   style="text-transform:none; letter-spacing:0; font-weight:500; font-size:11px; display:inline-flex; align-items:center; gap:4px;"
-                                                   class="text-brand-600 hover:text-brand-700 hover:underline whitespace-nowrap"
+                                                   class="text-brand-600 hover:text-brand-700"
+                                                   aria-label="Search HSN/SAC code on the official GST portal"
                                                    title="Search HSN/SAC code on the official GST portal">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-                                                    <span>[Search HSN/SAC]</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                                                 </a>
                                             </span>
                                         </th>

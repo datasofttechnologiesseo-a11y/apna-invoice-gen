@@ -178,10 +178,16 @@
                         <a href="{{ route('finance.expenses') }}" class="text-sm text-gray-500 hover:underline">← Cancel</a>
                         <div class="flex items-center gap-3">
                             @if ($expense->exists)
-                                <form method="POST" action="{{ route('finance.expenses.destroy', $expense) }}" onsubmit="return confirm('Delete this expense?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="px-3 py-2 text-red-600 hover:bg-red-50 rounded text-sm font-semibold">Delete</button>
-                                </form>
+                                <x-confirm-form
+                                    :action="route('finance.expenses.destroy', $expense)"
+                                    method="DELETE"
+                                    title="Delete this expense?"
+                                    message="This expense entry will be permanently removed. This cannot be undone."
+                                    confirmLabel="Delete expense"
+                                    confirmClass="bg-red-600 hover:bg-red-700"
+                                    tone="danger">
+                                    <button type="button" class="px-3 py-2 text-red-600 hover:bg-red-50 rounded text-sm font-semibold">Delete</button>
+                                </x-confirm-form>
                             @endif
                             <x-primary-button>{{ $expense->exists ? 'Save changes' : 'Add expense' }}</x-primary-button>
                         </div>

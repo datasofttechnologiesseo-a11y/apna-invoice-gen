@@ -23,6 +23,7 @@
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
                     <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
+                        <option value="outstanding" @selected(request('status') === 'outstanding')>⚠ Outstanding (unpaid)</option>
                         @foreach (['draft','final','partially_paid','paid','cancelled'] as $s)
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                         @endforeach

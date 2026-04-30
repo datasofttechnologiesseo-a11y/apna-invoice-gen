@@ -42,9 +42,10 @@
                     <a href="#invoice" class="block py-1.5 text-gray-700 hover:text-brand-700">4. Create an invoice</a>
                     <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">5. Finalize &amp; share</a>
                     <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Record payments</a>
-                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Track progress</a>
-                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">8. FAQ</a>
-                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">9. What we don't cover</a>
+                    <a href="#purchases" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Purchases &amp; expenses</a>
+                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">8. Track progress</a>
+                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">9. FAQ</a>
+                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">10. What we don't cover</a>
                 </nav>
             </details>
 
@@ -59,9 +60,10 @@
                         <a href="#invoice" class="block text-gray-700 hover:text-brand-700">4. Create an invoice</a>
                         <a href="#finalize" class="block text-gray-700 hover:text-brand-700">5. Finalize &amp; share</a>
                         <a href="#payments" class="block text-gray-700 hover:text-brand-700">6. Record payments</a>
-                        <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">7. Track progress</a>
-                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">8. FAQ</a>
-                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">9. What we don't cover</a>
+                        <a href="#purchases" class="block text-gray-700 hover:text-brand-700">7. Purchases &amp; expenses</a>
+                        <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">8. Track progress</a>
+                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">9. FAQ</a>
+                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">10. What we don't cover</a>
                     </nav>
                 </div>
             </aside>
@@ -78,8 +80,9 @@
                             'cta' => ['label' => 'Open Company settings', 'href' => route('company.edit')],
                             'tips' => [
                                 '<strong>State matters.</strong> Your company state decides whether an invoice is intrastate (CGST + SGST) or interstate (IGST). Always set it.',
-                                '<strong>Invoice prefix</strong> (e.g. <code>INV-2026</code>) and <strong>receipt prefix</strong> (e.g. <code>RCPT</code>) are sequential per company — reset when the financial year changes if you need clean series.',
+                                '<strong>Invoice prefix.</strong> Use <code>{FY}</code> in your prefix — e.g. <code>INV/{FY}/</code> renders as <code>INV/26-27/0001</code> and auto-resets on 1 April. The receipt-number series is separate and runs continuously per company.',
                                 '<strong>Bank details &amp; UPI</strong> in settings auto-render a QR on every invoice, so customers can pay with one tap.',
+                                '<strong>Composition dealer?</strong> Tick that box in settings — every document automatically prints "Bill of Supply" instead of "Tax Invoice" and includes the Section 31(3)(c) declaration.',
                             ],
                         ],
                         [
@@ -117,8 +120,10 @@
                             'cta' => ['label' => 'Start a new invoice', 'href' => route('invoices.templates')],
                             'tips' => [
                                 '<strong>Draft vs Final.</strong> Everything starts as a draft — you can edit freely. Finalizing assigns the legal invoice number and locks the amounts.',
+                                '<strong>Five template styles.</strong> Classic Navy, Executive Maroon, Minimal Slate, Mercantile Forest, and Heritage Burgundy — pick whichever matches your brand. The GST format is identical; only the colour and rule weight differ.',
+                                '<strong>Per-line discount (Section 15(3)).</strong> Discount is captured pre-tax — the discount column only renders on the PDF when at least one line has one, so service-only invoices stay clean.',
                                 '<strong>Transporter &amp; e-way bill</strong> details are optional — only fill them if you\'re shipping goods.',
-                                '<strong>Reverse charge</strong> tick-box is for RCM supplies under Section 9(3)/9(4) of the CGST Act.',
+                                '<strong>Reverse charge</strong> tick-box is for RCM supplies under Section 9(3)/9(4) of the CGST Act. We zero out the tax and print the Rule 46(p) declaration automatically.',
                             ],
                         ],
                         [
@@ -142,32 +147,51 @@
                             'desc' => 'On a finalized invoice, fill the <em>Record a payment</em> form — amount, method (UPI / NEFT / Cash / Cheque…), date, reference. We generate a sequential receipt number, update the balance, and give you a printable receipt PDF.',
                             'tips' => [
                                 '<strong>Part payments.</strong> Enter ₹1,000 today, ₹2,000 next week — the balance recomputes automatically.',
+                                '<strong>TDS deducted by your customer?</strong> Use the TDS fields on the payment form — section (e.g. 194C, 194J, 194Q) and rate. The deducted amount is stored against the receipt so your CA can match it to Form 26AS.',
                                 '<strong>Reverse a payment</strong> if you entered it wrong. The receipt number stays in the log (auditable) but the balance is restored.',
                                 '<strong>UPI / cheque ref</strong> goes on the receipt PDF — customers love seeing their own txn ID on the proof of payment.',
                             ],
                         ],
                         [
-                            'id' => 'dashboard',
+                            'id' => 'purchases',
                             'n' => 7,
+                            'title' => 'Track purchases & expenses',
+                            'time' => 'as bills come in',
+                            'desc' => 'Sales aren\'t the whole story — to get a real P&amp;L, capture money going out too. Apna Invoice gives you two purpose-built tools: <strong>Cash memos</strong> for documented cash purchases (the vendor doesn\'t issue you a tax invoice, so you generate one in your own books) and <strong>Expenses</strong> for everything else — rent, salaries, utilities, marketing, software.',
+                            'cta' => ['label' => 'Open Finance', 'href' => route('finance.index')],
+                            'tips' => [
+                                '<strong>Cash memo (purchase voucher).</strong> Records a purchase from a vendor with name, GSTIN, line items and HSN/SAC. The PDF is laid out as a professional Indian cash memo — seller letterhead at the top, "Bill To" with your details below, signature block. Same module shows your purchase history.',
+                                '<strong>Expenses.</strong> Logged with date, vendor, amount, GST input, and category (Rent, Salaries, Utilities, Marketing, etc.). Category colours flow into the dashboard P&amp;L so you can see where money goes at a glance.',
+                                '<strong>Both feed the P&amp;L.</strong> Cash memos and expenses both subtract from revenue in the Finance dashboard — accrual, cash and GST views all stay in sync.',
+                                '<strong>GST input captured.</strong> The GST portion is stored separately on each expense for ITC reconciliation when your CA files GSTR-3B.',
+                            ],
+                        ],
+                        [
+                            'id' => 'dashboard',
+                            'n' => 8,
                             'title' => 'Track progress on the dashboard',
                             'time' => 'glance',
                             'desc' => 'The dashboard shows two numbers that actually matter: <strong>Bills issued</strong> (lifetime + this month) and <strong>Payments received</strong> (lifetime + this month). Plus outstanding, drafts, and monthly P&amp;L.',
                             'cta' => ['label' => 'Go to Dashboard', 'href' => route('dashboard')],
                             'tips' => [
                                 '<strong>Outstanding</strong> = everything finalized but not yet fully paid. It\'s your money-to-collect number.',
-                                '<strong>P&amp;L</strong> uses income (accrual) minus expenses logged in Finance — a 30-second health check.',
+                                '<strong>P&amp;L (3 views).</strong> Accrual (invoice-date), cash (when money actually moved), and GST (collected vs paid) — switch with one click. A 30-second health check.',
+                                '<strong>Customer ledger.</strong> On any customer, click <em>Ledger</em> to see a Dr/Cr running balance — every invoice, payment and credit note in date order. Useful for monthly statements.',
                                 'Click any card to drill into the underlying list.',
                             ],
                         ],
                         [
                             'id' => 'faq',
-                            'n' => 8,
+                            'n' => 9,
                             'title' => 'Frequently asked',
                             'desc' => null,
                             'faq' => [
                                 ['q' => 'Is my data secure?', 'a' => 'Yes — all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user &amp; company, and we never share it. Deletion of data you own is permanent.'],
                                 ['q' => 'Can I run multiple businesses?', 'a' => 'Yes. Use the <em>Companies</em> section to add more than one, each with its own GSTIN, invoice series and customers. Switch between them using the dropdown at the top of the page.'],
                                 ['q' => 'What if I need to cancel a finalized invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason — this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],
+                                ['q' => 'How do I export data for my CA / GSTR-1 filing?', 'a' => 'Go to <strong>Invoices → Export → GSTR-1 CSV</strong>. The file includes B2B/B2C split, place of supply, taxable value, and CGST/SGST/IGST/cess columns — UTF-8 with BOM so it opens cleanly in Excel. Your CA imports it into the GST portal\'s offline tool, or transcribes the totals into GSTR-1.'],
+                                ['q' => 'How do I close books at year-end so old invoices can\'t be edited?', 'a' => 'In <strong>Company settings → Books locked until</strong>, set a date (e.g. 31 March). After that date is locked, the app blocks editing/deleting any invoice, payment, expense, cash memo or credit note dated on or before it. The audit trail logs the lock — auditors love this.'],
+                                ['q' => 'Can I see a running statement for a single customer?', 'a' => 'Yes. Open <strong>Customers</strong>, click any name, then <em>Ledger</em>. You\'ll see every invoice, payment and credit note for that customer in date order with a running Dr/Cr balance — perfect for sending a monthly statement or chasing dues.'],
                                 ['q' => 'Can customers pay via UPI directly?', 'a' => 'If you\'ve added your UPI ID in Company settings, every invoice PDF carries a UPI QR — customer scans, pays, done.'],
                                 ['q' => 'How do I back up my data?', 'a' => 'Go to <strong>Backups</strong> (in your profile menu) and either download a ZIP right now or enable weekly auto-backup — every Sunday morning we\'ll email a ZIP of all your invoices, customers, products, payments and expenses as CSVs.'],
                                 ['q' => 'How do referrals work?', 'a' => 'Every account gets a unique referral code (like <span class="font-mono">AI-K4X9</span>). Open <strong>Refer a friend</strong> to copy your code, share via WhatsApp or email, and track who signed up using it. Pending / Rewarded status is tracked so you always know where your referrals stand.'],
@@ -231,7 +255,7 @@
                 <section id="scope" class="scroll-mt-24">
                     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">9</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">10</div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="font-display text-xl sm:text-2xl font-extrabold text-amber-900">What Apna Invoice doesn't (yet) cover</h3>
                                 <p class="mt-2 text-amber-800 leading-relaxed">

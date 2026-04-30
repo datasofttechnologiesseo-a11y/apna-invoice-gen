@@ -227,10 +227,18 @@
                             <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">View</a>
                             <a href="{{ route('finance.expenses.pdf', $e) }}" class="text-emerald-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
                             <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
-                            <form method="POST" action="{{ route('finance.expenses.destroy', $e) }}" class="inline ml-auto" onsubmit="return confirm('Delete this expense?')">
-                                @csrf @method('DELETE')
-                                <button class="text-red-600 hover:underline">Delete</button>
-                            </form>
+                            <span class="ml-auto">
+                                <x-confirm-form
+                                    :action="route('finance.expenses.destroy', $e)"
+                                    method="DELETE"
+                                    title="Delete this expense?"
+                                    message="This expense entry will be permanently removed. This cannot be undone."
+                                    confirmLabel="Delete expense"
+                                    confirmClass="bg-red-600 hover:bg-red-700"
+                                    tone="danger">
+                                    <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                </x-confirm-form>
+                            </span>
                         </div>
                     </div>
                 @empty
@@ -285,10 +293,16 @@
                                         <span class="text-gray-300 mx-1">·</span>
                                         <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
                                         <span class="text-gray-300 mx-1">·</span>
-                                        <form method="POST" action="{{ route('finance.expenses.destroy', $e) }}" class="inline" onsubmit="return confirm('Delete this expense?')">
-                                            @csrf @method('DELETE')
-                                            <button class="text-red-600 hover:underline">Delete</button>
-                                        </form>
+                                        <x-confirm-form
+                                            :action="route('finance.expenses.destroy', $e)"
+                                            method="DELETE"
+                                            title="Delete this expense?"
+                                            message="This expense entry will be permanently removed. This cannot be undone."
+                                            confirmLabel="Delete expense"
+                                            confirmClass="bg-red-600 hover:bg-red-700"
+                                            tone="danger">
+                                            <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                        </x-confirm-form>
                                     </td>
                                 </tr>
                             @empty

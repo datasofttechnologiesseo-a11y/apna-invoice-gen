@@ -197,6 +197,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Cash Memos — self-prepared purchase vouchers for cash purchases
     Route::get('/finance/cash-memos', [CashMemoController::class, 'index'])->name('finance.cash-memos.index');
+    // Bulk export routes — placed BEFORE the {cashMemo} routes so "export"
+    // isn't captured as a memo id by Laravel's route binding.
+    Route::get('/finance/cash-memos/export/pdf', [CashMemoController::class, 'exportPdf'])->name('finance.cash-memos.export.pdf');
+    Route::get('/finance/cash-memos/export/csv', [CashMemoController::class, 'exportCsv'])->name('finance.cash-memos.export.csv');
     Route::get('/finance/cash-memos/create', [CashMemoController::class, 'create'])->name('finance.cash-memos.create');
     Route::post('/finance/cash-memos', [CashMemoController::class, 'store'])->name('finance.cash-memos.store');
     Route::get('/finance/cash-memos/{cashMemo}', [CashMemoController::class, 'show'])->name('finance.cash-memos.show');

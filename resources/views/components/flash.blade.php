@@ -1,7 +1,7 @@
 @props([
     'message' => null,
     'type' => 'success', // success, error, info, warning
-    'auto' => true,       // auto-dismiss after a few seconds
+    'auto' => true,       // auto-dismiss after a few seconds (success/info only)
     'timeout' => 6000,    // ms
 ])
 
@@ -15,14 +15,23 @@
         'info'    => 'bg-brand-50 border-brand-200 text-brand-800',
         'warning' => 'bg-amber-50 border-amber-200 text-amber-800',
     ][$type] ?? 'bg-gray-50 border-gray-200 text-gray-800';
+
+    // Errors and warnings stay visible until manually dismissed — they often
+    // describe something the user needs to act on, and a 6-second auto-dismiss
+    // means a distracted reader misses the message entirely.
+    $shouldAutoDismiss = $auto && in_array($type, ['success', 'info'], true);
+
+    // Errors/warnings get role="alert" for assertive screen-reader announcement.
+    $role = in_array($type, ['error', 'warning'], true) ? 'alert' : 'status';
+    $aria = in_array($type, ['error', 'warning'], true) ? 'assertive' : 'polite';
 @endphp
 
 <div x-data="{ show: true }"
      x-show="show"
-     x-init="{{ $auto ? "setTimeout(() => show = false, {$timeout})" : '' }}"
+     x-init="{{ $shouldAutoDismiss ? "setTimeout(() => show = false, {$timeout})" : '' }}"
      class="p-4 border rounded flex items-start gap-3 {{ $palette }}"
-     role="status"
-     aria-live="polite">
+     role="{{ $role }}"
+     aria-live="{{ $aria }}">
     <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-9.3a1 1 0 00-1.4-1.4L9 10.58l-1.3-1.3a1 1 0 10-1.4 1.42l2 2a1 1 0 001.4 0l4-4z" clip-rule="evenodd"/>
     </svg>

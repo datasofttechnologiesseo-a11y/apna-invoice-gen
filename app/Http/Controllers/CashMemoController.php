@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CashMemoController extends Controller
 {
@@ -33,6 +34,161 @@ class CashMemoController extends Controller
             ->withQueryString();
 
         return view('finance.cash-memos.index', compact('company', 'memos'));
+    }
+
+    /**
+     * Bulk PDF — every cash memo in the filtered range as one CA-ready
+     * statement (period summary + a single line per memo). Use this when
+     * the user wants to send a month / quarter to their accountant.
+     */
+    public function exportPdf(Request $request): Response
+    {
+        $company = $request->user()->ensureCompany();
+        [$from, $to, $label] = $this->resolveRange($request);
+
+        $rows = $this->filteredQuery($company, $request, $from, $to)
+            ->with('items')
+            ->orderBy('memo_date')->orderBy('id')->get();
+
+        $summary = [
+            'count' => $rows->count(),
+            'taxable' => (float) $rows->sum('taxable_value'),
+            'cgst' => (float) $rows->sum('total_cgst'),
+            'sgst' => (float) $rows->sum('total_sgst'),
+            'igst' => (float) $rows->sum('total_igst'),
+            'grand_total' => (float) $rows->sum('grand_total'),
+        ];
+        $summary['total_tax'] = $summary['cgst'] + $summary['sgst'] + $summary['igst'];
+        $summaryWords = NumberToWords::indianRupees($summary['grand_total']);
+
+        $byMode = $rows->groupBy('payment_mode')->map(fn ($g) => [
+            'count' => $g->count(),
+            'total' => (float) $g->sum('grand_total'),
+        ]);
+
+        $pdf = Pdf::loadView('finance.cash-memos.report', compact(
+            'company', 'rows', 'summary', 'summaryWords', 'byMode', 'from', 'to', 'label'
+        ))->setPaper('a4', 'portrait');
+
+        $filename = 'cash-memos-' . $from->format('Ymd') . '-' . $to->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Bulk CSV — same data as the PDF, but flat for Excel / Tally import.
+     * UTF-8 BOM so ₹ renders correctly on Indian Excel installs.
+     */
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        $company = $request->user()->ensureCompany();
+        [$from, $to, $label] = $this->resolveRange($request);
+
+        $rows = $this->filteredQuery($company, $request, $from, $to)
+            ->orderBy('memo_date')->orderBy('id')->get();
+
+        $filename = 'cash-memos-' . $from->format('Ymd') . '-' . $to->format('Ymd') . '.csv';
+
+        return response()->streamDownload(function () use ($rows, $company, $label, $from, $to) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+
+            // Context block
+            fputcsv($out, ["Cash Memo Statement (Purchase Vouchers)"]);
+            fputcsv($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            fputcsv($out, ["Period", $label . ' [' . $from->format('d-M-Y') . ' to ' . $to->format('d-M-Y') . ']']);
+            fputcsv($out, ["Generated on", now()->format('d-M-Y H:i')]);
+            fputcsv($out, []);
+
+            // Header row
+            fputcsv($out, [
+                'S.No.', 'Date', 'Memo No.', 'Seller Name', 'Seller GSTIN', 'Seller State',
+                'Items', 'Taxable (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)',
+                'Round Off', 'Grand Total (Rs.)', 'Payment Mode', 'Reference', 'Notes',
+            ]);
+
+            $i = 0;
+            $totals = ['taxable' => 0, 'cgst' => 0, 'sgst' => 0, 'igst' => 0, 'grand' => 0];
+
+            foreach ($rows as $m) {
+                $i++;
+                $totals['taxable'] += (float) $m->taxable_value;
+                $totals['cgst']    += (float) $m->total_cgst;
+                $totals['sgst']    += (float) $m->total_sgst;
+                $totals['igst']    += (float) $m->total_igst;
+                $totals['grand']   += (float) $m->grand_total;
+
+                fputcsv($out, [
+                    $i,
+                    $m->memo_date->format('d-M-Y'),
+                    $m->memo_number,
+                    $m->seller_name,
+                    $m->seller_gstin,
+                    $m->seller_state,
+                    $m->items()->count(),
+                    number_format((float) $m->taxable_value, 2, '.', ''),
+                    number_format((float) $m->total_cgst, 2, '.', ''),
+                    number_format((float) $m->total_sgst, 2, '.', ''),
+                    number_format((float) $m->total_igst, 2, '.', ''),
+                    number_format((float) $m->round_off, 2, '.', ''),
+                    number_format((float) $m->grand_total, 2, '.', ''),
+                    strtoupper((string) $m->payment_mode),
+                    $m->reference_number,
+                    str_replace(["\r", "\n"], ' ', (string) $m->notes),
+                ]);
+            }
+
+            // Totals row
+            fputcsv($out, []);
+            fputcsv($out, [
+                '', '', '', '', '', '', 'TOTAL',
+                number_format($totals['taxable'], 2, '.', ''),
+                number_format($totals['cgst'], 2, '.', ''),
+                number_format($totals['sgst'], 2, '.', ''),
+                number_format($totals['igst'], 2, '.', ''),
+                '',
+                number_format($totals['grand'], 2, '.', ''),
+                '', '', '',
+            ]);
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=utf-8']);
+    }
+
+    /**
+     * Apply the same search + date filters used by index() so a CA who
+     * filtered on screen exports exactly what they were looking at.
+     */
+    private function filteredQuery($company, Request $request, $from, $to)
+    {
+        return $company->cashMemos()
+            ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
+                $w->where('memo_number', 'like', "%{$s}%")
+                    ->orWhere('seller_name', 'like', "%{$s}%");
+            }))
+            ->whereBetween('memo_date', [$from->toDateString(), $to->toDateString()]);
+    }
+
+    /**
+     * Resolve the period to export. If the user filtered by from/to on the
+     * index page, those win. Otherwise default to the current month — the
+     * most common "send last month to my CA" case.
+     */
+    private function resolveRange(Request $request): array
+    {
+        $from = $request->date('from');
+        $to = $request->date('to');
+
+        if ($from && $to) {
+            return [$from->startOfDay(), $to->endOfDay(), $from->format('d M Y') . ' – ' . $to->format('d M Y')];
+        }
+        if ($from) {
+            $to = now();
+            return [$from->startOfDay(), $to->endOfDay(), 'From ' . $from->format('d M Y')];
+        }
+        // Default: current month
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+        return [$start, $end, $start->format('F Y')];
     }
 
     public function create(Request $request): View

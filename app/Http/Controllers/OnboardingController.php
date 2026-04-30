@@ -78,6 +78,18 @@ class OnboardingController extends Controller
 
         $company->update($data);
 
+        // Promote new users to FY-reset numbering by default (Rule 46(a) best
+        // practice — series reset on 1 April). The user keeps their chosen
+        // prefix; we just expand it into a {FY}-aware format so they don't
+        // have to know about the format string. They can edit it later in
+        // Company settings if they want a different layout. We only set this
+        // when format is empty so we never trample a returning user.
+        if (empty($company->invoice_number_format)) {
+            $company->update([
+                'invoice_number_format' => trim($data['invoice_prefix']) . '/{FY}/{N}',
+            ]);
+        }
+
         return redirect()->route('onboarding.customer')->with('status', 'Business details saved.');
     }
 

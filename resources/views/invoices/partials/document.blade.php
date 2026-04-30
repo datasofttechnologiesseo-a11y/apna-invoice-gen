@@ -2,6 +2,15 @@
     $c = $invoice->company;
     $cust = $invoice->customer;
     $currencySymbol = '₹';
+
+    // Section 31(3)(c) + Rule 49: a Bill of Supply (not a Tax Invoice) must be
+    // issued when the supplier is a composition dealer or makes only exempt
+    // supplies. Mirrors the same logic used in the PDF view.
+    $isBillOfSupply = $c->composition_dealer || (float) ($invoice->total_tax ?? 0) === 0.0;
+    $documentTitle = $isBillOfSupply ? 'Bill of Supply' : 'Tax Invoice';
+
+    // Only render the discount column when at least one line carries one.
+    $hasDiscount = $invoice->items->sum(fn ($i) => (float) ($i->discount ?? 0)) > 0;
 @endphp
 
 <div class="p-8 text-gray-900 invoice-doc">
@@ -28,7 +37,14 @@
             @endif
         </div>
         <div class="text-right">
-            <h2 class="text-2xl font-bold tracking-wide">TAX INVOICE</h2>
+            <h2 class="text-2xl font-bold tracking-wide uppercase">{{ $documentTitle }}</h2>
+            @if ($c->composition_dealer)
+                <div class="mt-2 inline-block text-left px-2.5 py-1.5 bg-amber-50 border border-amber-300 rounded text-[11px] leading-snug text-amber-900 max-w-xs">
+                    <strong>Composition taxable person, not eligible to collect tax on supplies.</strong>
+                </div>
+            @elseif ($isBillOfSupply)
+                <div class="mt-2 text-[11px] italic text-gray-500">Issued under Section 31(3)(c) — exempt supply</div>
+            @endif
             <div class="text-sm mt-2">
                 <div><strong>Invoice #:</strong> {{ $invoice->isDraft() ? 'Not yet issued (preview: ' . $invoice->company->nextInvoiceNumber() . ')' : $invoice->invoice_number }}</div>
                 <div><strong>Date:</strong> {{ $invoice->invoice_date?->format('d M Y') }}</div>
@@ -36,7 +52,9 @@
                     <div><strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}</div>
                 @endif
                 <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '—' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
-                <div><strong>Reverse charge:</strong> {{ $invoice->reverse_charge ? 'Yes' : 'No' }}</div>
+                @if ($invoice->reverse_charge)
+                    <div class="text-amber-700"><strong>Reverse charge applicable</strong> — Section 9(3)/9(4)</div>
+                @endif
             </div>
         </div>
     </div>
@@ -111,6 +129,9 @@
                 <th class="px-2 py-2">HSN/SAC</th>
                 <th class="px-2 py-2 text-right">Qty</th>
                 <th class="px-2 py-2 text-right">Rate</th>
+                @if ($hasDiscount)
+                    <th class="px-2 py-2 text-right">Discount</th>
+                @endif
                 <th class="px-2 py-2 text-right">GST%</th>
                 <th class="px-2 py-2 text-right">Amount</th>
             </tr>
@@ -123,6 +144,9 @@
                     <td class="px-2 py-2 font-mono">{{ $item->hsn_sac }}</td>
                     <td class="px-2 py-2 text-right font-mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="px-2 py-2 text-right font-mono">{{ number_format((float) $item->rate, 2) }}</td>
+                    @if ($hasDiscount)
+                        <td class="px-2 py-2 text-right font-mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . number_format((float) $item->discount, 2) : '—' }}</td>
+                    @endif
                     <td class="px-2 py-2 text-right">{{ rtrim(rtrim(number_format((float) $item->gst_rate, 2), '0'), '.') }}%</td>
                     <td class="px-2 py-2 text-right font-mono font-medium">{{ number_format((float) $item->amount, 2) }}</td>
                 </tr>
@@ -134,12 +158,37 @@
         <div class="text-sm">
             <strong>Amount in words:</strong><br>
             <em>{{ $amountInWords }}</em>
+
+            @if ($invoice->reverse_charge)
+                {{-- Section 9(3)/9(4) CGST + Rule 46(p): mandatory declaration that
+                     the recipient is liable for tax on RCM supply. --}}
+                <div class="mt-3 p-3 bg-amber-50 border border-amber-300 rounded text-xs leading-relaxed text-amber-900">
+                    <div class="font-bold uppercase tracking-wide mb-1">Tax payable on reverse charge basis</div>
+                    GST on this supply is to be paid by the recipient directly to the government under
+                    <strong>Section 9(3)/9(4) of the CGST Act 2017</strong>. The supplier is not collecting
+                    tax on this invoice. The applicable GST rate is shown in the line items for reference.
+                </div>
+            @endif
+
+            @if ($c->declaration)
+                <div class="mt-3 pl-3 border-l-2 border-gray-300 text-xs text-gray-700">
+                    <div class="font-semibold uppercase text-[10px] tracking-wider text-gray-500 mb-1">Declaration</div>
+                    <em>{{ $c->declaration }}</em>
+                </div>
+            @endif
         </div>
 
         <div class="text-sm">
             <table class="w-full">
                 <tr><td class="py-1">Subtotal</td><td class="py-1 text-right font-mono">{{ number_format((float) $invoice->subtotal, 2) }}</td></tr>
-                @if ($invoice->is_interstate)
+                @if ($invoice->reverse_charge)
+                    @if ($invoice->is_interstate)
+                        <tr><td class="py-1 text-gray-600 text-xs">IGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0.00</td></tr>
+                    @else
+                        <tr><td class="py-1 text-gray-600 text-xs">CGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0.00</td></tr>
+                        <tr><td class="py-1 text-gray-600 text-xs">SGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0.00</td></tr>
+                    @endif
+                @elseif ($invoice->is_interstate)
                     <tr><td class="py-1">IGST</td><td class="py-1 text-right font-mono">{{ number_format((float) $invoice->total_igst, 2) }}</td></tr>
                 @else
                     <tr><td class="py-1">CGST</td><td class="py-1 text-right font-mono">{{ number_format((float) $invoice->total_cgst, 2) }}</td></tr>

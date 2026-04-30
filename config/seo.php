@@ -8,7 +8,7 @@ return [
 
     'title_suffix' => ' — Best Free GST Invoice & Bill Generator for India | Apna Invoice',
 
-    'description' => 'Best free GST invoice generator & online bill maker for India. Create GST-compliant tax invoices with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR & WhatsApp share — your first invoice in 60 seconds. Made in India for MSMEs, SMEs, startups, freelancers & CAs.',
+    'description' => 'Free GST invoice generator online for India — create GST-compliant tax invoices with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Simple GST billing software for MSMEs, SMEs, small shops, startups, freelancers and CAs. No card, unlimited invoices.',
 
     'keywords' => implode(', ', [
         // Primary head terms — what users search for to find a tool
@@ -18,6 +18,7 @@ return [
         'best GST invoice generator',
         'top GST bill generator',
         'best billing software India',
+        'free GST invoice generator India',
         'free invoice generator India',
         'free bill generator online',
         'online bill generator',
@@ -28,6 +29,21 @@ return [
         'invoice maker online free',
         'invoice generator online India',
         'bill maker app',
+        // Exact long-tail queries
+        'create GST invoice online free India',
+        'how to create GST invoice online free India',
+        'online invoice generator with GST free',
+        'invoice generator with GST calculation India free',
+        'invoice generator with GST and HSN code',
+        'GST compliant invoice generator India',
+        'GST invoice generator for small business India',
+        'free invoice maker for small business India',
+        'simple GST billing software free India',
+        'free billing software for small shop India GST',
+        'billing software for SME India free',
+        'invoice generator for MSME India',
+        'GST invoice format download for MSME',
+        'best free GST invoice generator for freelancers India',
         'tax invoice generator India',
         // Compliance / format keywords
         'GST compliant invoice',

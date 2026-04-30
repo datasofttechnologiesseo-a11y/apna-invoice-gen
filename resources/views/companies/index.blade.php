@@ -65,11 +65,16 @@
                                     @endif
                                     <a href="{{ route('companies.edit', $company) }}" class="px-3 py-1.5 bg-white ring-1 ring-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded">Edit</a>
                                     @if ($company->invoices_count === 0)
-                                        <form method="POST" action="{{ route('companies.destroy', $company) }}" class="inline" onsubmit="return confirm('Delete {{ $company->name }}? Its customers will also be removed. This cannot be undone.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded">Delete</button>
-                                        </form>
+                                        <x-confirm-form
+                                            :action="route('companies.destroy', $company)"
+                                            method="DELETE"
+                                            title="Delete {{ $company->name }}?"
+                                            message="Its customers will also be removed. This cannot be undone."
+                                            confirmLabel="Delete company"
+                                            confirmClass="bg-red-600 hover:bg-red-700"
+                                            tone="danger">
+                                            <button type="button" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded">Delete</button>
+                                        </x-confirm-form>
                                     @endif
                                 </div>
                             </li>

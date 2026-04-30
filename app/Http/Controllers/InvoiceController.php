@@ -29,7 +29,16 @@ class InvoiceController extends Controller
 
         $invoices = $company->invoices()
             ->with(['customer', 'company'])
-            ->when($request->status, fn ($q, $s) => $q->where('status', $s))
+            ->when($request->status, function ($q, $s) {
+                // "outstanding" is a virtual filter — final/partially-paid invoices
+                // that still have a balance. The collections workflow lands here
+                // from the Outstanding KPI card on the dashboard.
+                if ($s === 'outstanding') {
+                    return $q->whereIn('status', ['final', 'partially_paid'])
+                             ->where('balance', '>', 0);
+                }
+                return $q->where('status', $s);
+            })
             ->when($request->search, function ($q, $s) {
                 $term = trim($s);
                 // Normalize phone: strip spaces, dashes, + and parentheses so that
@@ -86,10 +95,16 @@ class InvoiceController extends Controller
         $result = $calc->recalculate(new Invoice(), $previewItems, $isInterstate);
 
         $fakeState = $company->state ?? State::first();
+        // Build a sample GSTIN whose first two digits match the customer's state
+        // code, so the rendered preview is internally consistent (a careful
+        // reader noticing a 27-prefix GSTIN on a Haryana customer would think
+        // the template is buggy).
+        $sampleStateCode = str_pad((string) ($fakeState?->gst_code ?? '27'), 2, '0', STR_PAD_LEFT);
+        $sampleGstin = $sampleStateCode . 'ABCDE1234F1Z5';
 
         $fakeCustomer = new Customer([
             'name' => 'Sample Customer Pvt. Ltd.',
-            'gstin' => '27ABCDE1234F1Z5',
+            'gstin' => $sampleGstin,
             'address_line1' => '123 Demo Street',
             'address_line2' => 'Sample Area',
             'city' => $fakeState?->name ? explode(' ', $fakeState->name)[0] : 'Sample City',
