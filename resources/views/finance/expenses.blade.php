@@ -36,7 +36,10 @@
                 <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-sm print:hidden">{{ session('status') }}</div>
             @endif
             @if (session('error'))
-                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm print:hidden">🔒 {{ session('error') }}</div>
+                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm flex items-start gap-2 print:hidden" role="alert">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
+                    <span>{{ session('error') }}</span>
+                </div>
             @endif
 
             @include('finance.partials.tabs')

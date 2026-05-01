@@ -13,7 +13,10 @@
             @include('finance.partials.tabs')
 
             @if (session('error'))
-                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">🔒 {{ session('error') }}</div>
+                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm flex items-start gap-2" role="alert">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
+                    <span>{{ session('error') }}</span>
+                </div>
             @endif
 
             @unless ($expense->exists)
@@ -157,6 +160,20 @@
                             </div>
                             <p class="mt-1 text-xs text-gray-500">Enter only if you have a valid tax invoice from the vendor. You can claim this back on GSTR-3B.</p>
                             <x-input-error :messages="$errors->get('gst_amount')" class="mt-2" />
+
+                            {{-- Interstate flag — appears only if GST has been entered. Default unchecked
+                                 (intra-state) since that's the most common case for a sub-₹5cr business
+                                 buying from local vendors. Tick when the supplier billed IGST instead
+                                 of CGST+SGST (e.g. SaaS billed from a different state). --}}
+                            <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="is_interstate" value="1"
+                                       @checked(old('is_interstate', $expense->is_interstate ?? false))
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                <span>
+                                    <span class="font-medium">Inter-state purchase (IGST)</span>
+                                    <span class="block text-xs text-gray-500">Tick if the vendor's GSTIN is from a different state and they charged you IGST. Leave unchecked for normal local purchases (CGST + SGST).</span>
+                                </span>
+                            </label>
                         </div>
 
                         <div>

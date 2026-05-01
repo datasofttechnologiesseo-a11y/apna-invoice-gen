@@ -57,7 +57,7 @@
 
                         <div>
                             <x-input-label for="pan" value="PAN" />
-                            <x-text-input id="pan" name="pan" type="text" class="mt-1 block w-full uppercase" :value="old('pan', $company->pan)" maxlength="10" />
+                            <x-text-input id="pan" name="pan" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('pan', $company->pan)" maxlength="10" placeholder="AABCU9603R" />
                             <x-input-error :messages="$errors->get('pan')" class="mt-2" />
                         </div>
 
@@ -92,7 +92,7 @@
 
                         <div>
                             <x-input-label for="phone" value="Phone" />
-                            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $company->phone)" />
+                            <x-text-input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" class="mt-1 block w-full" :value="old('phone', $company->phone)" placeholder="+91 98200 00000" />
                             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
                         </div>
 

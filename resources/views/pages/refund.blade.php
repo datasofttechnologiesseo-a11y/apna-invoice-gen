@@ -40,7 +40,10 @@
 
     <h2>GST</h2>
     <p>
-        Refunds are issued exclusive of GST where applicable. A credit note will be issued as per GST law.
+        Refunds are processed exclusive of GST where applicable. A
+        <strong>GST credit note will be issued under Section&nbsp;34(1) of the CGST Act, 2017</strong>,
+        and reported in the relevant month's GSTR-1. The credit note will reference the original tax
+        invoice number and quote the reason for the refund.
     </p>
 
     <h2>Processing time</h2>

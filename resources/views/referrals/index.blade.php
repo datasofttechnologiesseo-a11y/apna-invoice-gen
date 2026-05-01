@@ -17,8 +17,8 @@
                 </div>
                 <div class="mt-3 font-display font-extrabold text-4xl sm:text-5xl tracking-tight tabular-nums">{{ $code }}</div>
                 <p class="mt-3 text-brand-100 max-w-xl">
-                    Share this code with other business owners you know. They get an easy on-ramp to GST-compliant invoicing,
-                    and you get a shout-out for spreading the word.
+                    Share this code with other business owners you know. They get a smoother start to GST-compliant invoicing,
+                    and your referral helps the platform grow — both of you benefit.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-2">
                     <a href="{{ $waShare }}" target="_blank" rel="noopener"

@@ -24,10 +24,11 @@
                     @csrf
                     <input type="hidden" name="auto_backup_enabled" value="{{ $user->auto_backup_enabled ? '0' : '1' }}">
                     <button type="submit"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold
-                                {{ $user->auto_backup_enabled ? 'bg-money-100 text-money-800 hover:bg-money-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition
+                                {{ $user->auto_backup_enabled ? 'bg-money-100 text-money-800 hover:bg-money-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                            title="{{ $user->auto_backup_enabled ? 'Click to turn off weekly auto-backup' : 'Click to turn on weekly auto-backup' }}">
                         <span class="w-2.5 h-2.5 rounded-full {{ $user->auto_backup_enabled ? 'bg-money-500' : 'bg-gray-400' }}"></span>
-                        {{ $user->auto_backup_enabled ? 'ON — click to disable' : 'OFF — click to enable' }}
+                        {{ $user->auto_backup_enabled ? 'Enabled' : 'Disabled' }}
                     </button>
 
                     @if ($user->last_backup_sent_at)
@@ -62,6 +63,16 @@
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900">
                 <div class="font-semibold">Keep your backup ZIPs secure.</div>
                 <p class="mt-1">They contain customer GSTINs and payment history. Store them on an encrypted drive or password-protected cloud folder, and never share them publicly.</p>
+            </div>
+
+            <div class="bg-white rounded-xl ring-1 ring-gray-100 p-5 text-sm text-gray-600">
+                <h4 class="font-semibold text-gray-900 mb-2">How long do we keep your data?</h4>
+                <ul class="space-y-1.5 list-disc pl-5">
+                    <li><strong>Your invoices, customers, payments and ledger</strong> stay in your account for as long as it's active — you control the data.</li>
+                    <li><strong>Emailed backup ZIPs</strong> sit in your own inbox; we don't keep a server-side copy after sending.</li>
+                    <li><strong>If you delete your account</strong>, all your data is permanently removed from our servers within 30 days, including any cached backups.</li>
+                    <li><strong>We never sell or share</strong> your data. All data is hosted in Indian jurisdiction.</li>
+                </ul>
             </div>
         </div>
     </div>

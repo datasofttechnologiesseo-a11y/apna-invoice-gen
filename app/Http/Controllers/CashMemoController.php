@@ -318,7 +318,7 @@ class CashMemoController extends Controller
 
         $company = $cashMemo->company;
         if ($company->isBooksLockedOn($cashMemo->memo_date)) {
-            return redirect()->back()->with('error', "Books are locked. This cash memo cannot be deleted.");
+            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This cash memo cannot be deleted because it falls inside the closed period.");
         }
 
         $auditSnapshot = $cashMemo->only(['memo_number', 'memo_date', 'seller_name', 'grand_total', 'expense_id']);

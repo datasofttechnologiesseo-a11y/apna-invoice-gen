@@ -1,10 +1,10 @@
 @php $effective = 'April 18, 2026'; @endphp
 <x-layouts.marketing
-    title="Privacy Policy"
+    title="Privacy Policy — DPDP Act 2023 Compliant"
     eyebrow="Legal"
-    lead="What data we collect, why we collect it, and the controls you have over it. Your records stay in India."
-    description="Apna Invoice Privacy Policy — DPDP Act 2023 compliant. Data residency in India, your rights, retention, security, subprocessors, and grievance contact."
-    keywords="Apna Invoice privacy policy, DPDP Act compliance, invoice software privacy India, GST data residency India, SaaS privacy India"
+    lead="What data we collect, why we collect it, and the controls you have over it. Your records stay in India under the Digital Personal Data Protection Act, 2023."
+    description="DPDP Act 2023 compliant privacy policy for Apna Invoice — data residency in India, your rights as a Data Principal, retention rules, security, subprocessors and grievance contact."
+    keywords="Apna Invoice privacy policy, DPDP Act 2023 compliance, Data Principal rights India, invoice software privacy India, GST data residency, SaaS privacy India, grievance officer DPDP"
     type="article">
 
     <p class="text-sm text-gray-500">Effective: {{ $effective }}</p>

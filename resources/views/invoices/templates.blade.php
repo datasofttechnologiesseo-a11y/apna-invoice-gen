@@ -94,7 +94,7 @@
                                 {{-- mini "TAX INVOICE" header (styled per template style) --}}
                                 <div class="px-3 py-2 {{ $styleTheme['bg'] }} {{ $styleTheme['border'] }} flex items-center justify-between">
                                     <div class="min-w-0">
-                                        <div class="text-[10px] font-bold uppercase tracking-widest {{ $styleTheme['accent'] }}">Tax invoice · {{ $styleMeta['label'] }} style</div>
+                                        <div class="text-[10px] font-bold uppercase tracking-widest {{ $styleTheme['accent'] }}">Tax Invoice · {{ $styleMeta['label'] }} style</div>
                                         <div class="text-xs font-semibold {{ $styleTheme['text'] }} truncate">{{ $company->name }}</div>
                                     </div>
                                     <div class="text-[9px] {{ $styleTheme['accent'] }} whitespace-nowrap">INV-XXXX</div>

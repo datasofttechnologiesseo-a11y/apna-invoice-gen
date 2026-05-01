@@ -41,7 +41,9 @@
                 @endif
                 <span class="inline-flex rounded overflow-hidden shadow-sm">
                     <a href="{{ route('invoices.pdf', $invoice) }}" class="px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900" title="Ink-saver download — black on white for printing">Download PDF</a>
-                    <a href="{{ route('invoices.pdf', $invoice, false) . '?color=1' }}" class="px-2 py-1.5 bg-gray-700 text-white text-xs hover:bg-gray-800 border-l border-gray-600" title="Download full colour version (uses more ink)" aria-label="Download full colour PDF (uses more ink)">🎨</a>
+                    <a href="{{ route('invoices.pdf', $invoice, false) . '?color=1' }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-gray-700 text-white hover:bg-gray-800 border-l border-gray-600" title="Download full-colour PDF (uses more ink)" aria-label="Download full-colour PDF (uses more ink)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    </a>
                 </span>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
                 @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)

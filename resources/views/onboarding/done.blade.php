@@ -63,7 +63,9 @@
             </div>
 
             <div class="mt-8 pt-6 border-t text-sm text-gray-500">
-                Need help? Visit <a href="/" class="text-brand-700 hover:underline">the FAQ</a> or contact <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="text-brand-700 hover:underline font-medium">Datasoft Technologies</a> support.
+                Need help? Read the <a href="{{ route('help') }}" class="text-brand-700 hover:underline font-medium">how-to guide</a>,
+                WhatsApp/call us on <a href="{{ config('seo.contact.whatsapp_url') }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline font-medium font-mono">{{ config('seo.contact.phone_display') }}</a>,
+                or <a href="{{ route('pages.contact') }}" class="text-brand-700 hover:underline font-medium">drop us a line</a>.
             </div>
         </div>
     </div>

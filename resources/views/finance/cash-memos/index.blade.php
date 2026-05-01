@@ -75,7 +75,7 @@
                         </a>
                         <a href="{{ route('finance.cash-memos.export.csv', $exportQuery) }}"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded"
-                           title="Excel-friendly CSV for Tally / books-of-accounts import">
+                           title="Excel-friendly CSV for your books-of-accounts software">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                             Excel / CSV
                         </a>

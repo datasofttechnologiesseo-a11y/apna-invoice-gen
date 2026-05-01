@@ -229,6 +229,28 @@
                         </div>
                         <p class="mt-1 text-xs text-gray-500">CSV exports ready for the GST portal or Excel.</p>
                         <div class="mt-4 space-y-2">
+                            <a href="{{ route('finance.aging') }}"
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-accent-100 text-accent-700 flex items-center justify-center group-hover:bg-accent-600 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">Receivables aging</div>
+                                    <div class="text-xs text-gray-500 truncate">Who owes you what · 0-30 / 30-60 / 60-90 / 90+ days</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-accent-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                            <a href="{{ route('finance.gstr3b') }}"
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-money-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-money-100 text-money-700 flex items-center justify-center group-hover:bg-money-600 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-medium text-gray-900">GSTR-3B · last month</div>
+                                    <div class="text-xs text-gray-500 truncate">Outward, ITC, net cash payable — return-form layout</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-money-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            </a>
                             <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">

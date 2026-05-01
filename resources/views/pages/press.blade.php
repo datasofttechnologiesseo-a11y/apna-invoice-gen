@@ -7,9 +7,11 @@
 
     <h2>Boilerplate</h2>
     <p>
-        <strong>Apna Invoice</strong> is a GST-compliant invoicing product for Indian SMEs and startups, built by
-        Datasoft Technologies It offers unlimited invoices and customers free during beta, with a focus
-        on GST 2.0 readiness, speed, and Indian-first UX.
+        <strong>Apna Invoice</strong> is a free GST-compliant invoicing product built in India for MSMEs, SMEs, startups,
+        freelancers and CAs operating below ₹5 crore turnover. Made by <strong>Datasoft Technologies</strong>, the product
+        offers unlimited invoices and customers free during beta — with auto CGST/SGST/IGST split,
+        HSN/SAC codes, FY-reset numbering, UPI QR on every invoice, WhatsApp share, and Section&nbsp;34 credit notes.
+        Built India-first: Indian number formatting (lakhs/crores), state-driven place of supply, and CBIC Rule 46-aligned tax invoices.
     </p>
 
     <h2>Quick facts</h2>
@@ -40,6 +42,8 @@
     <h2>Press contact</h2>
     <p>
         For interviews, review units, or comment on Indian SaaS/GST news, email
-        <a href="mailto:press@datasofttechnologies.com">press@datasofttechnologies.com</a>. We typically reply within 24 hours.
+        <a href="mailto:press@datasofttechnologies.com">press@datasofttechnologies.com</a>
+        or call / WhatsApp <a href="tel:{{ config('seo.contact.phone_e164') }}" class="font-mono">{{ config('seo.contact.phone_display') }}</a>.
+        We typically reply within 24 hours.
     </p>
 </x-layouts.marketing>

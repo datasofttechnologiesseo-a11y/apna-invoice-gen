@@ -87,7 +87,7 @@
                     </div>
                     <div>
                         <x-input-label for="phone" value="Phone" />
-                        <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $company->phone)" placeholder="+91 98200 00000" />
+                        <x-text-input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" class="mt-1 block w-full" :value="old('phone', $company->phone)" placeholder="+91 98200 00000" />
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="website" value="Website" />

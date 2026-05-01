@@ -68,10 +68,13 @@
         were paid.
     </p>
 
-    <h2>10. Governing law</h2>
+    <h2>10. Governing law &amp; jurisdiction</h2>
     <p>
-        These Terms are governed by the laws of India. Disputes are subject to the exclusive jurisdiction of the
-        courts of India.
+        These Terms are governed by and construed in accordance with the laws of India. Any dispute arising out of or
+        in connection with these Terms — including the existence, validity, interpretation, performance, breach or
+        termination — is subject to the <strong>exclusive jurisdiction of the courts of Delhi NCR, India</strong>.
+        For matters falling under consumer-protection legislation, the User may also approach the consumer forum
+        having jurisdiction over their place of residence.
     </p>
 
     <h2>11. Changes</h2>

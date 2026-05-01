@@ -44,7 +44,11 @@
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ $c->name }}</td>
                                     <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $c->gstin ?? '—' }}</td>
                                     <td class="px-4 py-3 text-gray-600">{{ $c->state?->name ?? '—' }}</td>
-                                    <td class="px-4 py-3 text-gray-600 text-sm">{{ $c->email }}<br><span class="text-gray-400">{{ $c->phone }}</span></td>
+                                    <td class="px-4 py-3 text-gray-600 text-sm">
+                                        @if ($c->email)<div class="truncate max-w-[200px]" title="{{ $c->email }}">{{ $c->email }}</div>@endif
+                                        @if ($c->phone)<div class="text-gray-500 font-mono text-xs">{{ $c->phone }}</div>@endif
+                                        @if (! $c->email && ! $c->phone)<span class="text-gray-300">—</span>@endif
+                                    </td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="inline-flex items-center gap-1.5 whitespace-nowrap">
                                             <a href="{{ route('customers.ledger', $c) }}"

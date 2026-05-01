@@ -185,6 +185,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Finance — P&L analytics + expense tracking
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+    Route::get('/finance/aging', [FinanceController::class, 'aging'])->name('finance.aging');
+    Route::get('/finance/aging/export/pdf', [FinanceController::class, 'agingPdf'])->name('finance.aging.export.pdf');
+    Route::get('/finance/aging/export/csv', [FinanceController::class, 'agingCsv'])->name('finance.aging.export.csv');
+    Route::get('/finance/gstr3b', [FinanceController::class, 'gstr3b'])->name('finance.gstr3b');
+    Route::get('/finance/gstr3b/export/pdf', [FinanceController::class, 'gstr3bPdf'])->name('finance.gstr3b.export.pdf');
+    Route::get('/finance/gstr3b/export/csv', [FinanceController::class, 'gstr3bCsv'])->name('finance.gstr3b.export.csv');
     Route::get('/finance/expenses', [FinanceController::class, 'expenses'])->name('finance.expenses');
     Route::get('/finance/expenses/export/pdf', [FinanceController::class, 'expensesPdf'])->name('finance.expenses.export.pdf');
     Route::get('/finance/expenses/export/csv', [FinanceController::class, 'expensesCsv'])->name('finance.expenses.export.csv');

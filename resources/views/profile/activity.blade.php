@@ -13,8 +13,8 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-4">
 
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
-                <div class="font-semibold mb-1">Audit trail</div>
-                <p>Every meaningful change to your books — expenses, cash memos, invoice payments, etc. — is recorded here with the user, timestamp, and IP address. This is your defensibility record for any tax assessment or audit.</p>
+                <div class="font-semibold mb-1">Audit trail (Section 128, Companies Act 2013)</div>
+                <p>Every meaningful change to your books — invoices, payments, credit notes, expenses, cash memos — is recorded here with the user, timestamp, and IP address. This is your defensibility record for GST audit, income-tax assessment, or any inquiry by a Chartered Accountant.</p>
             </div>
 
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">

@@ -67,7 +67,10 @@
 
     <h2>Status &amp; incidents</h2>
     <p>
-        In the event of a material security incident affecting your data, we will notify affected users within
-        72 hours, consistent with the DPDP Act.
+        In the event of a material security incident affecting your data, we will notify affected users
+        without unreasonable delay and in any case within <strong>72 hours of becoming aware</strong>,
+        as required under the <strong>Digital Personal Data Protection Act, 2023</strong>. Where applicable,
+        we also follow CERT-In's <strong>6-hour reporting</strong> directive (Direction 20(3)(a)/2022) for
+        in-scope cyber incidents.
     </p>
 </x-layouts.marketing>

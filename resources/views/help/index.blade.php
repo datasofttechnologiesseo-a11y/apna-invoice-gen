@@ -44,8 +44,9 @@
                     <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Record payments</a>
                     <a href="#purchases" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Purchases &amp; expenses</a>
                     <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">8. Track progress</a>
-                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">9. FAQ</a>
-                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">10. What we don't cover</a>
+                    <a href="#reports" class="block py-1.5 text-gray-700 hover:text-brand-700">9. Reports for your CA</a>
+                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">10. FAQ</a>
+                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">11. What we don't cover</a>
                 </nav>
             </details>
 
@@ -62,8 +63,9 @@
                         <a href="#payments" class="block text-gray-700 hover:text-brand-700">6. Record payments</a>
                         <a href="#purchases" class="block text-gray-700 hover:text-brand-700">7. Purchases &amp; expenses</a>
                         <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">8. Track progress</a>
-                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">9. FAQ</a>
-                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">10. What we don't cover</a>
+                        <a href="#reports" class="block text-gray-700 hover:text-brand-700">9. Reports for your CA</a>
+                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">10. FAQ</a>
+                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">11. What we don't cover</a>
                     </nav>
                 </div>
             </aside>
@@ -148,6 +150,7 @@
                             'tips' => [
                                 '<strong>Part payments.</strong> Enter ₹1,000 today, ₹2,000 next week — the balance recomputes automatically.',
                                 '<strong>TDS deducted by your customer?</strong> Use the TDS fields on the payment form — section (e.g. 194C, 194J, 194Q) and rate. The deducted amount is stored against the receipt so your CA can match it to Form 26AS.',
+                                '<strong>Chasing dues?</strong> Open <em>Finance → Aging</em> for a bucketed view of who owes what (current / 31–60 / 61–90 / 91+ days), sorted biggest-first. Or click the <em>Outstanding</em> card on the dashboard for the full unpaid-invoices list.',
                                 '<strong>Reverse a payment</strong> if you entered it wrong. The receipt number stays in the log (auditable) but the balance is restored.',
                                 '<strong>UPI / cheque ref</strong> goes on the receipt PDF — customers love seeing their own txn ID on the proof of payment.',
                             ],
@@ -181,15 +184,33 @@
                             ],
                         ],
                         [
-                            'id' => 'faq',
+                            'id' => 'reports',
                             'n' => 9,
+                            'title' => 'Reports for your CA (and yourself)',
+                            'time' => 'monthly · sometimes weekly',
+                            'desc' => 'Apna Invoice generates four reports your CA actually asks for at month-end — all one click from the Dashboard\'s <em>Reports &amp; exports</em> panel, or the <em>Finance</em> tabs. Every report exports as both PDF (for review) and CSV (for Excel / Tally / GST portal upload).',
+                            'cta' => ['label' => 'Open Reports panel', 'href' => route('dashboard')],
+                            'tips' => [
+                                '<strong>Receivables Aging</strong> (<em>Finance → Aging</em>). Bucketed view of every unpaid invoice — Current (≤30 days) / 31–60 / 61–90 / 91+ — aggregated per customer and sorted biggest-first. The single most-asked weekly question for any business owner: "who owes me what?". Send the PDF to a recovery agent, or the CSV to a CA.',
+                                '<strong>GSTR-3B Summary</strong> (<em>Finance → GSTR-3B</em>). Computed from your books for the selected month — Section 3.1 (outward + RCM), Section 4 (eligible ITC from purchases &amp; expenses), Section 6.1 (net cash payable). The big "Total cash to deposit" headline is the figure you pay via PMT-06. We don\'t auto-file; the PDF mirrors the GST portal form so transposing is easy.',
+                                '<strong>GSTR-1 CSV</strong> (<em>Invoices → Export → GSTR-1</em>). UTF-8 BOM, B2B + B2C split, place of supply, taxable value, CGST/SGST/IGST/cess columns. Drop into the GST portal\'s offline tool, or your CA imports it.',
+                                '<strong>Cash memo bulk export</strong> (<em>Finance → Cash Memos → Download PDF/CSV</em>). One CA-ready statement covering every cash purchase in the period — totals, payment-mode breakdown, amount in words. Email it instead of forwarding 30 individual memos.',
+                                '<strong>Expenses CSV</strong> &amp; <strong>Full data backup</strong> are also one click away from the Dashboard\'s <em>Reports</em> panel — the backup is a ZIP of every invoice, customer, payment and expense as CSVs, ready for any other tool.',
+                                '<strong>Books locked = audit-defensible.</strong> Once you set <em>Books locked until</em> in Company settings (e.g. 31 Mar after FY close), all the reports above stay accurate — no one can backdate edits into the locked period.',
+                            ],
+                        ],
+                        [
+                            'id' => 'faq',
+                            'n' => 10,
                             'title' => 'Frequently asked',
                             'desc' => null,
                             'faq' => [
                                 ['q' => 'Is my data secure?', 'a' => 'Yes — all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user &amp; company, and we never share it. Deletion of data you own is permanent.'],
                                 ['q' => 'Can I run multiple businesses?', 'a' => 'Yes. Use the <em>Companies</em> section to add more than one, each with its own GSTIN, invoice series and customers. Switch between them using the dropdown at the top of the page.'],
                                 ['q' => 'What if I need to cancel a finalized invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason — this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],
-                                ['q' => 'How do I export data for my CA / GSTR-1 filing?', 'a' => 'Go to <strong>Invoices → Export → GSTR-1 CSV</strong>. The file includes B2B/B2C split, place of supply, taxable value, and CGST/SGST/IGST/cess columns — UTF-8 with BOM so it opens cleanly in Excel. Your CA imports it into the GST portal\'s offline tool, or transcribes the totals into GSTR-1.'],
+                                ['q' => 'How do I export data for my CA / GSTR-1 / GSTR-3B filing?', 'a' => 'See <strong>Section 9 — Reports for your CA</strong>. Quick links: <em>Invoices → Export → GSTR-1 CSV</em> for outward supplies (B2B/B2C, place of supply, CGST/SGST/IGST split), and <em>Finance → GSTR-3B</em> for the monthly summary computed from your books (sections 3.1, 4, 6.1 with PDF + CSV). All exports are UTF-8 with BOM so Excel opens them cleanly.'],
+                                ['q' => 'How do I see who owes me money — and how old the dues are?', 'a' => 'Open <strong>Finance → Aging</strong>. You\'ll get four buckets — Current (≤30 days) / 31–60 / 61–90 / 91+ — with a per-customer breakdown sorted by largest outstanding first. Click any customer to drill into their ledger. Anything in the 91+ bucket is highlighted as urgent (recovery probability drops sharply beyond 90 days). Export the whole report as PDF or CSV to send to a recovery agent or your CA.'],
+                                ['q' => 'Do I have to file GSTR-3B from Apna Invoice?', 'a' => 'No — Apna Invoice <strong>computes</strong> the GSTR-3B summary from your invoices, expenses and cash memos, but doesn\'t auto-submit to the GSTN portal. Open <em>Finance → GSTR-3B</em>, pick the month, verify against your GSTR-1 filings and ITC ledger, then either you or your CA submits on the GST portal. The PDF is laid out to mirror the GSTR-3B form so transposing is straightforward.'],
                                 ['q' => 'How do I close books at year-end so old invoices can\'t be edited?', 'a' => 'In <strong>Company settings → Books locked until</strong>, set a date (e.g. 31 March). After that date is locked, the app blocks editing/deleting any invoice, payment, expense, cash memo or credit note dated on or before it. The audit trail logs the lock — auditors love this.'],
                                 ['q' => 'Can I see a running statement for a single customer?', 'a' => 'Yes. Open <strong>Customers</strong>, click any name, then <em>Ledger</em>. You\'ll see every invoice, payment and credit note for that customer in date order with a running Dr/Cr balance — perfect for sending a monthly statement or chasing dues.'],
                                 ['q' => 'Can customers pay via UPI directly?', 'a' => 'If you\'ve added your UPI ID in Company settings, every invoice PDF carries a UPI QR — customer scans, pays, done.'],
@@ -255,7 +276,7 @@
                 <section id="scope" class="scroll-mt-24">
                     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">10</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">11</div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="font-display text-xl sm:text-2xl font-extrabold text-amber-900">What Apna Invoice doesn't (yet) cover</h3>
                                 <p class="mt-2 text-amber-800 leading-relaxed">
@@ -270,7 +291,7 @@
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>GSTR-1 / GSTR-3B auto-filing.</strong> We don't directly file returns to GSTN. We do export a <strong>GSTR-1-ready CSV</strong> (B2B/B2C split + HSN summary, Table 12 format) — your CA imports it or transcribes it; no auto-submission.</span>
+                                        <span><strong>Auto-filing to the GSTN portal.</strong> We don't submit returns directly. We <em>do</em> compute and export both <strong>GSTR-1</strong> (B2B/B2C CSV with HSN summary, Table 12 format) and <strong>GSTR-3B</strong> (sections 3.1 / 4 / 6.1 as PDF + CSV) — your CA imports / transcribes the figures and submits on the GST portal. No GSP/ASP integration.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -308,9 +329,24 @@
                 <div class="bg-gradient-to-br from-brand-900 to-accent-900 text-white rounded-2xl p-6 sm:p-8 shadow-brand">
                     <h3 class="font-display text-xl font-extrabold">Still stuck?</h3>
                     <p class="mt-2 text-brand-100 text-sm leading-relaxed">
-                        Drop us a line via the <a href="{{ route('pages.contact') }}" class="underline text-accent-300 font-semibold hover:text-accent-200">Contact</a> page.
-                        We reply to every support email — usually within a business day.
+                        WhatsApp or call us — fastest way to get unstuck during business hours (9.30 am – 7 pm IST, Mon–Sat).
+                        We reply to every support email too, usually within a business day.
                     </p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <a href="{{ config('seo.contact.whatsapp_url') }}?text={{ urlencode('Hi Apna Invoice team — I need help with…') }}" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5b] text-white text-sm font-semibold rounded-lg shadow-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                            WhatsApp · {{ config('seo.contact.phone_display') }}
+                        </a>
+                        <a href="tel:{{ config('seo.contact.phone_e164') }}"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-semibold rounded-lg ring-1 ring-white/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            Call
+                        </a>
+                        <a href="{{ route('pages.contact') }}" class="inline-flex items-center gap-2 px-4 py-2 text-accent-300 hover:text-accent-200 text-sm font-semibold underline">
+                            Email / contact form →
+                        </a>
+                    </div>
                 </div>
             </div>
             </div>

@@ -8,7 +8,7 @@ return [
 
     'title_suffix' => ' — Best Free GST Invoice & Bill Generator for India | Apna Invoice',
 
-    'description' => 'Free GST invoice generator online for India — create GST-compliant tax invoices with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Simple GST billing software for MSMEs, SMEs, small shops, startups, freelancers and CAs. No card, unlimited invoices.',
+    'description' => 'Free GST invoice generator for India — auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Made for MSMEs, SMEs, startups, freelancers and CAs operating below ₹5 cr turnover. No card, unlimited invoices during beta.',
 
     'keywords' => implode(', ', [
         // Primary head terms — what users search for to find a tool
@@ -67,11 +67,12 @@ return [
         'WhatsApp invoice India',
         'UPI QR invoice',
         'UPI invoice generator',
-        // Competitor intent
-        'Tally alternative free',
-        'Zoho Books alternative India',
-        'Vyapar alternative',
-        'Excel invoice replacement',
+        // Migration intent (category-based, no competitor names)
+        'switch from Excel invoicing',
+        'replace spreadsheet invoicing India',
+        'cloud GST invoicing software',
+        'online billing software no installation',
+        'free desktop billing alternative',
         // Geography long-tail
         'Delhi NCR invoice software',
         'Mumbai invoice software',
@@ -100,6 +101,24 @@ return [
         'country' => 'IN',
         'locality' => 'Delhi NCR',
         'region' => 'Delhi',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Contact phone (single source of truth)
+    |--------------------------------------------------------------------------
+    | Used by:
+    |   - Contact, About, Help, Press pages (visible)
+    |   - JSON-LD schemas (Organization, ContactPoint)
+    |   - WhatsApp click-to-chat links (digits-only)
+    |   - Footer if shown
+    */
+
+    'contact' => [
+        'phone_display'   => '+91 74286 93901',     // human-readable
+        'phone_e164'      => '+917428693901',       // for tel: links + schema.org
+        'whatsapp_digits' => '917428693901',        // wa.me only takes digits, no '+'
+        'whatsapp_url'    => 'https://wa.me/917428693901',
     ],
 
 ];
