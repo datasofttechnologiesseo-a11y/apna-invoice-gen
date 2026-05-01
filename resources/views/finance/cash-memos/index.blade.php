@@ -134,8 +134,37 @@
                 @endforelse
             </div>
 
+            {{-- Print-only header (period + company context). Hidden on screen, visible only on print. --}}
+            @php
+                $printRangeLabel = (request('from') && request('to'))
+                    ? \Carbon\Carbon::parse(request('from'))->format('d M Y') . ' to ' . \Carbon\Carbon::parse(request('to'))->format('d M Y')
+                    : (request('from')
+                        ? 'From ' . \Carbon\Carbon::parse(request('from'))->format('d M Y')
+                        : (request('to')
+                            ? 'Up to ' . \Carbon\Carbon::parse(request('to'))->format('d M Y')
+                            : 'All cash memos'));
+                // Sum totals for the in-page rows (current page only — full-period totals come from the PDF).
+                $pageTaxable = $memos->sum('taxable_value');
+                $pageTax     = $memos->sum(fn ($m) => (float) $m->total_cgst + (float) $m->total_sgst + (float) $m->total_igst);
+                $pageGrand   = $memos->sum('grand_total');
+            @endphp
+            <div class="print-only print-header" aria-hidden="true">
+                <div class="print-title">CASH MEMO STATEMENT</div>
+                <div class="print-meta">
+                    <div><strong>{{ $company->name }}</strong>@if ($company->gstin) · GSTIN {{ $company->gstin }}@endif</div>
+                    <div>Period: <strong>{{ $printRangeLabel }}</strong> · Generated {{ now()->format('d M Y · H:i') }}</div>
+                    <div>{{ $memos->total() }} memo{{ $memos->total() === 1 ? '' : 's' }} total ({{ $memos->count() }} on this page)</div>
+                </div>
+                @if ($memos->lastPage() > 1)
+                    <div class="print-warning">
+                        Note: Only the {{ $memos->count() }} memo{{ $memos->count() === 1 ? '' : 's' }} on this page will print.
+                        Use <strong>Download PDF</strong> for a complete statement covering all {{ $memos->total() }} memos in this period.
+                    </div>
+                @endif
+            </div>
+
             {{-- Desktop table --}}
-            <div class="hidden md:block bg-white shadow sm:rounded-lg overflow-hidden print:shadow-none print:rounded-none print:block">
+            <div class="printable hidden md:block bg-white shadow sm:rounded-lg overflow-hidden print:shadow-none print:rounded-none print:block">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[700px]">
                         <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
@@ -162,7 +191,14 @@
                                     <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ number_format((float) $m->grand_total, 2) }}</td>
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $m->payment_mode }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
-                                        <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium">View / Print</a>
+                                        <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open the memo on screen">View / Print</a>
+                                        <span class="text-gray-300 mx-1">·</span>
+                                        <a href="{{ route('finance.cash-memos.pdf', $m) }}"
+                                           class="inline-flex items-center gap-1 text-emerald-700 hover:underline font-medium"
+                                           title="Download this cash memo as a PDF">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            PDF
+                                        </a>
                                         <span class="text-gray-300 mx-1">·</span>
                                         <x-confirm-form
                                             :action="route('finance.cash-memos.destroy', $m)"
@@ -182,6 +218,15 @@
                                 </td></tr>
                             @endforelse
                         </tbody>
+                        @if ($memos->count() > 0)
+                            <tfoot class="hidden print:table-footer-group bg-gray-50 border-t-2 border-gray-900">
+                                <tr>
+                                    <td class="px-5 py-3 font-bold uppercase text-gray-700 text-xs" colspan="3">Page total ({{ $memos->count() }} {{ Str::plural('memo', $memos->count()) }})</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums">₹{{ number_format((float) $pageGrand, 2) }}</td>
+                                    <td class="px-5 py-3" colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        @endif
                     </table>
                 </div>
             </div>
@@ -190,18 +235,92 @@
         </div>
     </div>
 
-    {{-- Print: clean, minimal layout — drop colored backgrounds, hide chrome --}}
+    {{-- Print-only header content (hidden on screen). --}}
     <style>
+        .print-only { display: none; }
+
         @media print {
             @page { size: A4 portrait; margin: 12mm; }
-            body { background: white !important; }
-            /* Strip Tailwind shadows / rings for ink-saver */
-            .shadow, .shadow-sm, [class*="ring-"] { box-shadow: none !important; }
-            /* Drop colored cells from the desktop table — black text on white */
-            * { color: #000 !important; background: #fff !important; }
-            /* Force-show the desktop table even on small simulated print widths */
-            .md\:block { display: block !important; }
+            html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+
+            /* 1. Hide every element on the page by default — kills navbar, footer,
+                  cookie banner, sidebar, page header, filter bar, mobile cards,
+                  pagination, etc. all in one stroke. */
+            body * { visibility: hidden !important; }
+
+            /* 2. Re-show only the print header and the desktop list table. */
+            .print-only, .print-only *,
+            .printable, .printable * { visibility: visible !important; }
+            .print-only { display: block !important; }
+
+            /* 3. Pull the printable region to the top-left of the page so it
+                  doesn't sit pushed-down by the now-invisible navbar/header. */
+            .print-only.print-header {
+                position: absolute !important;
+                top: 0 !important; left: 0 !important; right: 0 !important;
+                width: 100% !important;
+                padding: 0 !important; margin: 0 0 8px 0 !important;
+            }
+            .printable {
+                position: absolute !important;
+                top: 80px !important; left: 0 !important; right: 0 !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 4. Print-header typography — black ink only, compact. */
+            .print-header { color: #000 !important; }
+            .print-title {
+                font-size: 18px; font-weight: bold;
+                letter-spacing: 2px; text-align: center;
+                padding-bottom: 4px; border-bottom: 2px solid #000;
+                margin-bottom: 6px;
+            }
+            .print-meta { font-size: 10px; line-height: 1.5; color: #000; }
+            .print-meta div { margin-bottom: 1px; }
+            .print-warning {
+                margin-top: 6px; padding: 6px 8px;
+                border-left: 3px solid #888; background: #f5f5f5;
+                font-size: 9.5px; font-style: italic;
+            }
+
+            /* 5. Force the desktop table visible even at narrow print widths
+                  (md:block normally activates ≥768px, but print viewports vary). */
             .md\:hidden { display: none !important; }
+            .md\:block  { display: block !important; }
+
+            /* 6. Print-table styling — strip Tailwind colors/shadows, force B&W. */
+            .printable table { width: 100% !important; border-collapse: collapse !important; }
+            .printable thead th {
+                background: #000 !important; color: #fff !important;
+                padding: 5px 6px !important; font-size: 9px !important;
+                text-align: left !important; text-transform: uppercase;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .printable thead th.print\:hidden,
+            .printable td.print\:hidden { display: none !important; }
+            .printable tbody td {
+                padding: 5px 6px !important;
+                border-bottom: 1px solid #ddd !important;
+                font-size: 10px !important;
+                color: #000 !important; background: #fff !important;
+                white-space: normal !important;
+            }
+            .printable tfoot td {
+                padding: 6px !important;
+                border-top: 2px solid #000 !important;
+                background: #f0f0f0 !important;
+                color: #000 !important;
+                font-weight: bold;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .printable tbody tr:nth-child(even) td {
+                background: #fafafa !important;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
         }
     </style>
 </x-app-layout>
