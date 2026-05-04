@@ -107,7 +107,10 @@
                 </div>
 
                 {{-- ─── Particulars ─── --}}
-                <table class="w-full text-sm border-collapse mb-4">
+                {{-- 6 fixed-width columns add up to ~600px; wrap in scroll
+                     container so the table doesn't break the page on phones. --}}
+                <div class="overflow-x-auto -mx-2 sm:mx-0 mb-4">
+                <table class="w-full text-sm border-collapse min-w-[600px]">
                     <thead>
                         <tr class="bg-gray-900 text-white">
                             <th class="px-2 py-2 text-left text-xs uppercase font-semibold w-10">#</th>
@@ -134,6 +137,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
 
                 {{-- ─── Totals + Amount in words ─── --}}
                 <div class="grid grid-cols-2 gap-6 mb-6">

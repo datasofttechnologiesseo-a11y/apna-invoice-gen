@@ -29,13 +29,13 @@
             <div class="flex flex-wrap items-center gap-2">
                 {{-- Utility group: edit/PDF — neutral grays, lowest visual priority --}}
                 @if ($quotation->isEditable())
-                    <a href="{{ route('quotations.edit', $quotation) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 rounded text-sm font-medium transition">
+                    <a href="{{ route('quotations.edit', $quotation) }}" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 rounded text-sm font-medium transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         Edit
                     </a>
                 @endif
 
-                <a href="{{ route('quotations.pdf', $quotation) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium rounded shadow-sm transition">
+                <a href="{{ route('quotations.pdf', $quotation) }}" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium rounded shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                     Download PDF
                 </a>
@@ -55,7 +55,7 @@
                         confirm-label="Mark as sent"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default">
-                        <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             Mark as sent
                         </button>
@@ -71,14 +71,14 @@
                         confirm-label="Mark as accepted"
                         confirm-class="bg-emerald-700 hover:bg-emerald-800"
                         tone="default">
-                        <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-sm font-semibold shadow-sm transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-sm font-semibold shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Mark as accepted
                         </button>
                     </x-confirm-form>
 
                     <button type="button" onclick="document.getElementById('decline-quote-modal').showModal()"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white ring-1 ring-red-300 text-red-700 rounded text-sm font-medium hover:bg-red-50 transition">
+                            class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-red-300 text-red-700 rounded text-sm font-medium hover:bg-red-50 transition">
                         Decline
                     </button>
                 @endif
@@ -93,7 +93,7 @@
                         confirm-class="bg-purple-700 hover:bg-purple-800"
                         tone="default">
                         {{-- Convert is the most-valuable workflow action — saffron CTA --}}
-                        <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                             Convert to invoice
                         </button>
@@ -111,7 +111,7 @@
                         confirm-label="Delete draft"
                         confirm-class="bg-red-600 hover:bg-red-700"
                         tone="danger">
-                        <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white ring-1 ring-red-300 hover:bg-red-50 text-red-700 rounded text-sm font-medium transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-red-300 hover:bg-red-50 text-red-700 rounded text-sm font-medium transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             Delete
                         </button>
@@ -122,8 +122,8 @@
     </x-slot>
 
     @if ($quotation->isSent())
-        <dialog id="decline-quote-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg">
-            <form method="POST" action="{{ route('quotations.decline', $quotation) }}" class="p-6 space-y-4">
+        <dialog id="decline-quote-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100vh-3rem)]">
+            <form method="POST" action="{{ route('quotations.decline', $quotation) }}" class="p-5 sm:p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
                 <h3 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h3>
                 <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why — useful for follow-ups.</p>
@@ -131,9 +131,9 @@
                     <x-input-label for="decline_reason" value="Reason (optional)" />
                     <textarea id="decline_reason" name="decline_reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" maxlength="500" placeholder="e.g. Going with a different vendor"></textarea>
                 </div>
-                <div class="flex items-center justify-end gap-2">
-                    <button type="button" onclick="this.closest('dialog').close()" class="px-3 py-1.5 text-gray-600 hover:underline">Cancel</button>
-                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700">Mark as declined</button>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="this.closest('dialog').close()" class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded transition">Cancel</button>
+                    <button type="submit" class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-semibold shadow-sm transition">Mark as declined</button>
                 </div>
             </form>
         </dialog>

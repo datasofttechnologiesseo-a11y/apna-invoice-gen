@@ -18,7 +18,7 @@
 
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full md:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                 </form>
 
                 @if ($customers->isEmpty())

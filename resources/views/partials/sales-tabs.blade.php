@@ -43,24 +43,24 @@
             @endphp
             <a href="{{ $tab['href'] }}" role="tab" aria-selected="{{ $isActive ? 'true' : 'false' }}"
                @class([
-                   'group relative px-5 py-4 flex items-center gap-4 transition-all',
+                   'group relative min-h-[56px] px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-3 sm:gap-4 transition-all',
                    'bg-gradient-to-br from-brand-50 via-white to-saffron-50/40' => $isActive,
                    'hover:bg-gray-50' => ! $isActive,
                ])>
-                {{-- Icon tile — gradient on active, neutral on inactive with a
-                     hover transition so it visibly responds to focus. --}}
+                {{-- Icon tile — smaller on mobile (40px) to keep both tabs on
+                     one row; full-size on sm+ for visual presence. --}}
                 <span @class([
-                    'shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all',
+                    'shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm transition-all',
                     'bg-gradient-to-br from-brand-700 to-brand-900 text-white shadow-brand-900/20' => $isActive,
                     'bg-gray-100 text-gray-500 group-hover:bg-brand-100 group-hover:text-brand-700' => ! $isActive,
                 ])>
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tab['icon'] }}"/></svg>
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tab['icon'] }}"/></svg>
                 </span>
 
                 <span class="flex-1 min-w-0 text-left">
-                    <span class="flex items-center gap-2 flex-wrap">
+                    <span class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         <span @class([
-                            'block font-display font-bold text-base leading-tight',
+                            'block font-display font-bold text-sm sm:text-base leading-tight',
                             'text-brand-900' => $isActive,
                             'text-gray-700 group-hover:text-gray-900' => ! $isActive,
                         ])>{{ $tab['label'] }}</span>
@@ -72,22 +72,21 @@
                             ])>{{ $count }}</span>
                         @endif
                         @if ($isActive)
-                            <span class="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-saffron-700 bg-saffron-100 ring-1 ring-saffron-200 rounded-full px-1.5 py-0.5">
+                            <span class="hidden md:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-saffron-700 bg-saffron-100 ring-1 ring-saffron-200 rounded-full px-1.5 py-0.5">
                                 <span class="w-1 h-1 rounded-full bg-saffron-600 animate-pulse"></span>
                                 Open
                             </span>
                         @endif
                     </span>
+                    {{-- Description hidden below sm; takes too much horizontal
+                         room for two tabs to share at 320px. --}}
                     <span @class([
-                        'block text-[11px] mt-0.5 leading-snug',
+                        'hidden sm:block text-[11px] mt-0.5 leading-snug',
                         'text-gray-600' => $isActive,
                         'text-gray-500' => ! $isActive,
                     ])>{{ $tab['desc'] }}</span>
                 </span>
 
-                {{-- Bottom indicator stripe — only on the active tab. Drawn as
-                     an absolutely-positioned 3px bar so it sits flush with the
-                     ring outline without affecting layout. --}}
                 @if ($isActive)
                     <span class="absolute bottom-0 inset-x-0 h-[3px] bg-gradient-to-r from-saffron-400 via-saffron-500 to-brand-700"></span>
                 @endif
