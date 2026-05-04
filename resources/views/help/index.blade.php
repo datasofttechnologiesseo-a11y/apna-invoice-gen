@@ -39,14 +39,15 @@
                     <a href="#setup" class="block py-1.5 text-gray-700 hover:text-brand-700">1. Set up your business</a>
                     <a href="#customers" class="block py-1.5 text-gray-700 hover:text-brand-700">2. Add customers</a>
                     <a href="#products" class="block py-1.5 text-gray-700 hover:text-brand-700">3. Save products</a>
-                    <a href="#invoice" class="block py-1.5 text-gray-700 hover:text-brand-700">4. Create an invoice</a>
-                    <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">5. Finalize &amp; share</a>
-                    <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Record payments</a>
-                    <a href="#purchases" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Purchases &amp; expenses</a>
-                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">8. Track progress</a>
-                    <a href="#reports" class="block py-1.5 text-gray-700 hover:text-brand-700">9. Reports for your CA</a>
-                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">10. FAQ</a>
-                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">11. What we don't cover</a>
+                    <a href="#quotations" class="block py-1.5 text-gray-700 hover:text-brand-700">4. Send a quotation (optional)</a>
+                    <a href="#invoice" class="block py-1.5 text-gray-700 hover:text-brand-700">5. Create an invoice</a>
+                    <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Finalize &amp; share</a>
+                    <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Record payments</a>
+                    <a href="#purchases" class="block py-1.5 text-gray-700 hover:text-brand-700">8. Purchases &amp; expenses</a>
+                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">9. Track progress</a>
+                    <a href="#reports" class="block py-1.5 text-gray-700 hover:text-brand-700">10. Reports for your CA</a>
+                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">11. FAQ</a>
+                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">12. What we don't cover</a>
                 </nav>
             </details>
 
@@ -58,14 +59,15 @@
                         <a href="#setup" class="block text-gray-700 hover:text-brand-700">1. Set up your business</a>
                         <a href="#customers" class="block text-gray-700 hover:text-brand-700">2. Add customers</a>
                         <a href="#products" class="block text-gray-700 hover:text-brand-700">3. Save products</a>
-                        <a href="#invoice" class="block text-gray-700 hover:text-brand-700">4. Create an invoice</a>
-                        <a href="#finalize" class="block text-gray-700 hover:text-brand-700">5. Finalize &amp; share</a>
-                        <a href="#payments" class="block text-gray-700 hover:text-brand-700">6. Record payments</a>
-                        <a href="#purchases" class="block text-gray-700 hover:text-brand-700">7. Purchases &amp; expenses</a>
-                        <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">8. Track progress</a>
-                        <a href="#reports" class="block text-gray-700 hover:text-brand-700">9. Reports for your CA</a>
-                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">10. FAQ</a>
-                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">11. What we don't cover</a>
+                        <a href="#quotations" class="block text-gray-700 hover:text-brand-700">4. Send a quotation (optional)</a>
+                        <a href="#invoice" class="block text-gray-700 hover:text-brand-700">5. Create an invoice</a>
+                        <a href="#finalize" class="block text-gray-700 hover:text-brand-700">6. Finalize &amp; share</a>
+                        <a href="#payments" class="block text-gray-700 hover:text-brand-700">7. Record payments</a>
+                        <a href="#purchases" class="block text-gray-700 hover:text-brand-700">8. Purchases &amp; expenses</a>
+                        <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">9. Track progress</a>
+                        <a href="#reports" class="block text-gray-700 hover:text-brand-700">10. Reports for your CA</a>
+                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">11. FAQ</a>
+                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">12. What we don't cover</a>
                     </nav>
                 </div>
             </aside>
@@ -114,8 +116,22 @@
                             ],
                         ],
                         [
-                            'id' => 'invoice',
+                            'id' => 'quotations',
                             'n' => 4,
+                            'title' => 'Send a quotation first (optional)',
+                            'time' => '~30 seconds',
+                            'desc' => 'Not every sale starts with an invoice — sometimes the customer wants a price proposal first. <em>Quotations</em> let you share a formatted price quote (with GST shown for clarity), then convert it to a real tax invoice in one click once the customer confirms.',
+                            'cta' => ['label' => 'Create a quotation', 'href' => route('quotations.create')],
+                            'tips' => [
+                                '<strong>Quotation, not tax invoice.</strong> The PDF is titled "Quotation" with a clear "this is not a tax invoice" disclaimer. Quotes don\'t go on GSTR-1 / GSTR-3B and aren\'t affected by your books-locked period.',
+                                '<strong>Lifecycle.</strong> Draft → Sent → Accepted → Converted (or Declined / Expired). Default validity is 30 days; expiry is computed automatically — no cron needed.',
+                                '<strong>Convert with one click.</strong> Once accepted, hit <em>Convert to Invoice</em> — a draft invoice is created with the same line items, ready for you to review and finalize.',
+                                '<strong>Separate numbering.</strong> Quotes use their own series (default <span class="font-mono">QT-0001</span>) so they never collide with invoice numbers.',
+                            ],
+                        ],
+                        [
+                            'id' => 'invoice',
+                            'n' => 5,
                             'title' => 'Create an invoice',
                             'time' => '~30 seconds once set up',
                             'desc' => 'Click <em>New invoice</em>, pick a template (or start blank), choose the customer, add line items (or pick from your products), save. We auto-compute CGST/SGST vs IGST based on the customer\'s state.',
@@ -130,7 +146,7 @@
                         ],
                         [
                             'id' => 'finalize',
-                            'n' => 5,
+                            'n' => 6,
                             'title' => 'Finalize, download, share & amend',
                             'time' => 'instant',
                             'desc' => 'Open the invoice, click <em>Finalize</em> — we assign the next number in your series (auto-reset on 1 April when you use the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL. For returns / rate corrections / post-sale discounts, use <em>Issue credit note</em> — the adjustment is GSTR-1-compliant and auto-reduces the invoice balance.',
@@ -143,7 +159,7 @@
                         ],
                         [
                             'id' => 'payments',
-                            'n' => 6,
+                            'n' => 7,
                             'title' => 'Record payments & issue receipts',
                             'time' => '20 seconds per payment',
                             'desc' => 'On a finalized invoice, fill the <em>Record a payment</em> form — amount, method (UPI / NEFT / Cash / Cheque…), date, reference. We generate a sequential receipt number, update the balance, and give you a printable receipt PDF.',
@@ -157,7 +173,7 @@
                         ],
                         [
                             'id' => 'purchases',
-                            'n' => 7,
+                            'n' => 8,
                             'title' => 'Track purchases & expenses',
                             'time' => 'as bills come in',
                             'desc' => 'Sales aren\'t the whole story — to get a real P&amp;L, capture money going out too. Apna Invoice gives you two purpose-built tools: <strong>Cash memos</strong> for documented cash purchases (the vendor doesn\'t issue you a tax invoice, so you generate one in your own books) and <strong>Expenses</strong> for everything else — rent, salaries, utilities, marketing, software.',
@@ -171,7 +187,7 @@
                         ],
                         [
                             'id' => 'dashboard',
-                            'n' => 8,
+                            'n' => 9,
                             'title' => 'Track progress on the dashboard',
                             'time' => 'glance',
                             'desc' => 'The dashboard shows two numbers that actually matter: <strong>Bills issued</strong> (lifetime + this month) and <strong>Payments received</strong> (lifetime + this month). Plus outstanding, drafts, and monthly P&amp;L.',
@@ -185,7 +201,7 @@
                         ],
                         [
                             'id' => 'reports',
-                            'n' => 9,
+                            'n' => 10,
                             'title' => 'Reports for your CA (and yourself)',
                             'time' => 'monthly · sometimes weekly',
                             'desc' => 'Apna Invoice generates four reports your CA actually asks for at month-end — all one click from the Dashboard\'s <em>Reports &amp; exports</em> panel, or the <em>Finance</em> tabs. Every report exports as both PDF (for review) and CSV (for Excel / Tally / GST portal upload).',
@@ -201,14 +217,15 @@
                         ],
                         [
                             'id' => 'faq',
-                            'n' => 10,
+                            'n' => 11,
                             'title' => 'Frequently asked',
                             'desc' => null,
                             'faq' => [
                                 ['q' => 'Is my data secure?', 'a' => 'Yes — all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user &amp; company, and we never share it. Deletion of data you own is permanent.'],
                                 ['q' => 'Can I run multiple businesses?', 'a' => 'Yes. Use the <em>Companies</em> section to add more than one, each with its own GSTIN, invoice series and customers. Switch between them using the dropdown at the top of the page.'],
+                                ['q' => 'What\'s the difference between a Quotation and an Invoice?', 'a' => 'A <strong>Quotation</strong> is a price proposal you send <em>before</em> a sale — no GST is collected, nothing is reported to the GSTN, and the customer is just being told "this is what it would cost." A <strong>Tax Invoice</strong> is the legal sale document — GST is officially charged, the invoice number is locked, and it goes on GSTR-1 / GSTR-3B. In Apna Invoice, once the customer accepts a quote, click <em>Convert to Invoice</em> to turn it into a draft tax invoice in one click — same line items, ready for you to finalize.'],
                                 ['q' => 'What if I need to cancel a finalized invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason — this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],
-                                ['q' => 'How do I export data for my CA / GSTR-1 / GSTR-3B filing?', 'a' => 'See <strong>Section 9 — Reports for your CA</strong>. Quick links: <em>Invoices → Export → GSTR-1 CSV</em> for outward supplies (B2B/B2C, place of supply, CGST/SGST/IGST split), and <em>Finance → GSTR-3B</em> for the monthly summary computed from your books (sections 3.1, 4, 6.1 with PDF + CSV). All exports are UTF-8 with BOM so Excel opens them cleanly.'],
+                                ['q' => 'How do I export data for my CA / GSTR-1 / GSTR-3B filing?', 'a' => 'See <strong>Section 10 — Reports for your CA</strong>. Quick links: <em>Invoices → Export → GSTR-1 CSV</em> for outward supplies (B2B/B2C, place of supply, CGST/SGST/IGST split), and <em>Finance → GSTR-3B</em> for the monthly summary computed from your books (sections 3.1, 4, 6.1 with PDF + CSV). All exports are UTF-8 with BOM so Excel opens them cleanly.'],
                                 ['q' => 'How do I see who owes me money — and how old the dues are?', 'a' => 'Open <strong>Finance → Aging</strong>. You\'ll get four buckets — Current (≤30 days) / 31–60 / 61–90 / 91+ — with a per-customer breakdown sorted by largest outstanding first. Click any customer to drill into their ledger. Anything in the 91+ bucket is highlighted as urgent (recovery probability drops sharply beyond 90 days). Export the whole report as PDF or CSV to send to a recovery agent or your CA.'],
                                 ['q' => 'Do I have to file GSTR-3B from Apna Invoice?', 'a' => 'No — Apna Invoice <strong>computes</strong> the GSTR-3B summary from your invoices, expenses and cash memos, but doesn\'t auto-submit to the GSTN portal. Open <em>Finance → GSTR-3B</em>, pick the month, verify against your GSTR-1 filings and ITC ledger, then either you or your CA submits on the GST portal. The PDF is laid out to mirror the GSTR-3B form so transposing is straightforward.'],
                                 ['q' => 'How do I close books at year-end so old invoices can\'t be edited?', 'a' => 'In <strong>Company settings → Books locked until</strong>, set a date (e.g. 31 March). After that date is locked, the app blocks editing/deleting any invoice, payment, expense, cash memo or credit note dated on or before it. The audit trail logs the lock — auditors love this.'],
@@ -276,7 +293,7 @@
                 <section id="scope" class="scroll-mt-24">
                     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">11</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">12</div>
                             <div class="flex-1 min-w-0">
                                 <h3 class="font-display text-xl sm:text-2xl font-extrabold text-amber-900">What Apna Invoice doesn't (yet) cover</h3>
                                 <p class="mt-2 text-amber-800 leading-relaxed">

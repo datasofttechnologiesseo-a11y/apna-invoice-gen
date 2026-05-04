@@ -71,3 +71,139 @@ form[data-submitting] button[type="submit"]::after {
         scroll-behavior: auto !important;
     }
 }
+
+/* ----------------------------------------------------------------
+ * Global print stylesheet
+ *
+ * Goal: any "show" page in the app (invoice, quotation, cash memo,
+ * credit note, ledger, expense, aging) should produce a clean A4
+ * printout via the browser's native Ctrl+P, without needing a
+ * separate "Print view" route.
+ *
+ * Strategy:
+ *  - Strip app chrome: top nav, site footer, action buttons, share
+ *    panels, breadcrumbs, flash banners, dropdown menus.
+ *  - Anything tagged `.no-print` is hidden too — pages can opt
+ *    individual elements out without touching this stylesheet.
+ *  - Drop backgrounds, shadows and gradients to save toner.
+ *  - Make tables more compact and force black text on white.
+ *  - Set sensible A4 margins and avoid rows splitting across pages.
+ * -------------------------------------------------------------- */
+@media print {
+    @page { size: A4; margin: 12mm; }
+
+    html, body {
+        background: #fff !important;
+        color: #000 !important;
+        font-size: 10pt;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Hide app chrome that doesn't belong on a printed bill/quote/memo. */
+    nav,
+    header.app-header,
+    footer,
+    .skip-link,
+    .no-print,
+    [data-no-print],
+    [role="alert"],
+    .breadcrumbs,
+    /* Action bars typically live in <x-slot name="header"> with .gap-3 flex
+       and contain Edit/PDF/Print/Cancel/Convert buttons. We hide all
+       buttons + form-wrapped buttons but KEEP the heading so the page
+       still has a title. */
+    .print\\:hidden,
+    nav[role="navigation"],
+    [x-data*="open"] > [x-show],
+    /* Common share/email panels we built across invoice/quotation pages */
+    [data-share-panel],
+    /* Site footer added via x-site-footer */
+    [data-site-footer],
+    /* Cookie banner */
+    [data-cookie-banner] {
+        display: none !important;
+    }
+
+    /* Hide any standalone <button> and submit-buttons on the page —
+       on a printed receipt no one needs the buttons. We're conservative
+       here: only hide buttons not nested inside dialogs the user opted
+       to print. */
+    button:not(.print-keep),
+    a.btn:not(.print-keep),
+    a[href*="edit"]:not(.print-keep),
+    a[role="button"]:not(.print-keep) {
+        display: none !important;
+    }
+
+    /* Strip cards' visual chrome so they read as plain documents. */
+    .shadow,
+    .shadow-sm,
+    .shadow-md,
+    .shadow-lg,
+    .shadow-xl,
+    .shadow-card,
+    .shadow-brand,
+    .ring-1, .ring-2 {
+        box-shadow: none !important;
+    }
+
+    /* Convert cards/table containers to flat blocks. */
+    [class*="rounded"] { border-radius: 0 !important; }
+    [class*="bg-gray-50"], [class*="bg-gray-100"],
+    [class*="bg-white"], [class*="bg-brand-"],
+    [class*="bg-saffron-"], [class*="bg-amber-"],
+    [class*="bg-emerald-"], [class*="bg-blue-"],
+    [class*="bg-red-"], [class*="bg-purple-"] {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    /* Coloured text labels — drop to grey/black so colour ink isn't burnt.
+       Status badges still keep a thin border so they remain legible. */
+    [class*="text-brand-"], [class*="text-saffron-"],
+    [class*="text-amber-"], [class*="text-emerald-"],
+    [class*="text-blue-"], [class*="text-red-"],
+    [class*="text-purple-"], [class*="text-money-"] {
+        color: #000 !important;
+    }
+
+    /* Status badges — give them a 1px border so they're still legible
+       once their coloured backgrounds are stripped. */
+    .inline-block[class*="rounded"][class*="bg-"] {
+        border: 1px solid #999 !important;
+        padding: 1px 6px !important;
+    }
+
+    /* Tables: tighter, with visible borders since shadows are gone. */
+    table { border-collapse: collapse; width: 100%; }
+    table, th, td { border: 1px solid #bbb !important; }
+    th, td { padding: 4px 6px !important; }
+    thead { display: table-header-group; }   /* repeat header on each page */
+    tr, td { page-break-inside: avoid; }
+
+    /* Links: print URLs after external links so the printed copy is
+       useful for someone holding a paper sheet. Internal app links
+       (start with /) we leave alone — printing "/invoices/12" would
+       just be noise. */
+    a[href^="http"]:after,
+    a[href^="https"]:after {
+        content: " (" attr(href) ")";
+        font-size: 8pt;
+        color: #666;
+    }
+
+    /* Avoid page breaks inside key blocks. */
+    .invoice-card, .quote-card, .memo-card, [data-print-card] {
+        page-break-inside: avoid;
+    }
+
+    /* Force any container that's normally max-w-* to span the page. */
+    [class*="max-w-"] { max-width: 100% !important; }
+
+    /* Hide horizontal scrollbars added by overflow-x utility. */
+    [class*="overflow-x"] { overflow: visible !important; }
+
+    /* Ensure h1/h2/h3 stay with their following content. */
+    h1, h2, h3, h4 { page-break-after: avoid; }
+}

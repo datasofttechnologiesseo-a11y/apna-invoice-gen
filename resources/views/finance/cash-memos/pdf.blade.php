@@ -22,7 +22,10 @@
         .meta-grid td.k { color: #777; text-align: right; padding-right: 8px; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
         .meta-grid td.v { font-weight: bold; }
         .items { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-        .items thead th { background: #111; color: #fff; padding: 6px 6px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* Ink-saver header band: 5% gray fill + thin borders use ~95% less
+           toner than a full-bleed black fill, while still giving the table
+           a clear thead boundary on a printed page. */
+        .items thead th { background: #f0f0f0; color: #111; padding: 6px 6px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-top: 1px solid #555; border-bottom: 1px solid #555; font-weight: bold; }
         .items thead th.r { text-align: right; }
         .items tbody td { padding: 6px 6px; border-bottom: 1px solid #e0e0e0; font-size: 10.5px; vertical-align: top; }
         .items tbody td.r { text-align: right; font-family: DejaVu Sans Mono, monospace; }

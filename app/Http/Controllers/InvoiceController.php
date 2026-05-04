@@ -65,7 +65,14 @@ class InvoiceController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('invoices.index', compact('invoices', 'company'));
+        // Section-tab counts — let the Invoices/Quotations tab strip show
+        // a live count chip on each tab without an extra request.
+        $salesCounts = [
+            'invoices' => $company->invoices()->count(),
+            'quotations' => $company->quotations()->count(),
+        ];
+
+        return view('invoices.index', compact('invoices', 'company', 'salesCounts'));
     }
 
     public function templatePreview(Request $request, string $template): Response|RedirectResponse

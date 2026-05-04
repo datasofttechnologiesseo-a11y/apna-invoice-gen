@@ -168,6 +168,16 @@
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
+                            <a href="{{ route('quotations.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-purple-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-900">Send quotation</div>
+                                    <div class="text-xs text-gray-500">Price proposal · convert to invoice later</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </a>
                             <a href="{{ route('customers.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-saffron-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-saffron-100 text-saffron-700 flex items-center justify-center group-hover:bg-saffron-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>

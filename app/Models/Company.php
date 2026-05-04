@@ -23,6 +23,7 @@ class Company extends Model
         'receipt_prefix', 'receipt_counter', 'receipt_number_padding',
         'credit_note_prefix', 'credit_note_counter', 'credit_note_number_padding', 'credit_note_counter_fy',
         'cash_memo_prefix', 'cash_memo_counter', 'cash_memo_number_padding', 'cash_memo_counter_fy',
+        'quote_prefix', 'quote_counter', 'quote_number_format', 'quote_counter_fy',
         'books_locked_until',
         'onboarded_at',
     ];
@@ -100,6 +101,75 @@ class Company extends Model
     public function cashMemos(): HasMany
     {
         return $this->hasMany(CashMemo::class);
+    }
+
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
+    /**
+     * Preview the NEXT quote number without mutating the counter.
+     * Mirrors invoice numbering — supports {FY} / {N} placeholders, defaults
+     * to QT-0001 if no format is configured yet. Quotes don't legally need
+     * an FY-aware sequence, but supporting {FY} keeps numbering visually
+     * consistent with invoices for owners who want it.
+     */
+    public function nextQuoteNumber(?string $referenceDate = null): string
+    {
+        $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();
+        [$fyStartYear, $fyEndYear] = self::financialYearFor($ref);
+
+        $counter = ($this->quote_counter_fy && $this->quote_counter_fy < $fyStartYear)
+            ? 0
+            : ($this->quote_counter ?? 0);
+
+        $next = $counter + 1;
+        $padded = str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+
+        $format = $this->quote_number_format;
+        if (! $format) {
+            return ($this->quote_prefix ?: 'QT') . '-' . $padded;
+        }
+
+        return strtr($format, [
+            '{FY}' => sprintf('%04d-%02d', $fyStartYear, $fyEndYear % 100),
+            '{FY_SHORT}' => sprintf('%02d-%02d', $fyStartYear % 100, $fyEndYear % 100),
+            '{YYYY}' => $ref->format('Y'),
+            '{N}' => $padded,
+        ]);
+    }
+
+    /**
+     * Atomically advance the quote counter when the user sends/accepts a
+     * quote. Caller should hold a DB lock on this row. Mirrors the invoice
+     * pattern (FY rollover handled).
+     */
+    public function bumpQuoteCounter(?string $referenceDate = null): string
+    {
+        $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();
+        [$fyStartYear] = self::financialYearFor($ref);
+
+        if ($this->quote_counter_fy !== null && $this->quote_counter_fy < $fyStartYear) {
+            $this->quote_counter = 0;
+        }
+        $this->quote_counter = ($this->quote_counter ?? 0) + 1;
+        $this->quote_counter_fy = $fyStartYear;
+        $this->save();
+
+        // Re-render the number using the now-incremented counter
+        $padded = str_pad((string) $this->quote_counter, 4, '0', STR_PAD_LEFT);
+        $format = $this->quote_number_format;
+        if (! $format) {
+            return ($this->quote_prefix ?: 'QT') . '-' . $padded;
+        }
+        [$fyS, $fyE] = self::financialYearFor($ref);
+        return strtr($format, [
+            '{FY}' => sprintf('%04d-%02d', $fyS, $fyE % 100),
+            '{FY_SHORT}' => sprintf('%02d-%02d', $fyS % 100, $fyE % 100),
+            '{YYYY}' => $ref->format('Y'),
+            '{N}' => $padded,
+        ]);
     }
 
     /**

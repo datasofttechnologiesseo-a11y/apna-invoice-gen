@@ -1,8 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Your companies</h2>
-            <a href="{{ route('companies.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm">+ Add company</a>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Your companies</h2>
+            <a href="{{ route('companies.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Add company
+            </a>
         </div>
     </x-slot>
 

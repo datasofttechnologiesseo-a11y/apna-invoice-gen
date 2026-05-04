@@ -14,6 +14,8 @@ use App\Http\Controllers\InvoiceShareController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\QuotationShareController;
 use App\Http\Controllers\ReferralController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +55,7 @@ Route::get('/robots.txt', function () {
         '',
         'Disallow: /dashboard',
         'Disallow: /invoices',
+        'Disallow: /quotations',
         'Disallow: /customers',
         'Disallow: /company',
         'Disallow: /profile',
@@ -82,6 +85,11 @@ Route::post('/cookie-consent', [CookieConsentController::class, 'store'])
 Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('invoices.public');
+
+// Public signed quotation link — same threat model as the invoice version.
+Route::get('q/{quotation}', [QuotationShareController::class, 'publicView'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('quotations.public');
 
 Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/about', 'pages.about')->name('about');
@@ -176,6 +184,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])
         ->middleware('throttle:5,1')
         ->name('invoices.remind');
+
+    // Quotations (Proforma) — pre-sale price proposals. Entirely separate from
+    // invoices and excluded from GST returns / books-locked enforcement. Once
+    // accepted, a quote can be converted ONCE to a draft tax invoice.
+    Route::get('quotations/{quotation}/pdf', [QuotationController::class, 'pdf'])->name('quotations.pdf');
+    Route::post('quotations/{quotation}/send', [QuotationController::class, 'send'])->name('quotations.send');
+    Route::post('quotations/{quotation}/accept', [QuotationController::class, 'accept'])->name('quotations.accept');
+    Route::post('quotations/{quotation}/decline', [QuotationController::class, 'decline'])->name('quotations.decline');
+    Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convertToInvoice'])->name('quotations.convert');
+    Route::post('quotations/{quotation}/share/email', [QuotationShareController::class, 'email'])
+        ->middleware('throttle:10,1')
+        ->name('quotations.share.email');
+    Route::get('quotations/{quotation}/share/link', [QuotationShareController::class, 'publicLink'])->name('quotations.share.link');
+    Route::resource('quotations', QuotationController::class);
 
     // Credit notes (Section 34 CGST). Always linked to a parent invoice.
     Route::get('invoices/{invoice}/credit-notes/create', [CreditNoteController::class, 'create'])->name('credit-notes.create');

@@ -1,15 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Invoices') }}</h2>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Invoices') }}</h2>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
-                   class="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md"
+                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 text-sm font-medium rounded-md transition"
                    title="Download invoices in GSTR-1 friendly CSV format for your CA">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                     GSTR-1 (this month)
                 </a>
-                <a href="{{ route('invoices.templates') }}" class="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-md">+ New invoice</a>
+                <a href="{{ route('invoices.templates') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    New invoice
+                </a>
             </div>
         </div>
     </x-slot>
@@ -17,6 +20,8 @@
     <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
+
+            @include('partials.sales-tabs', ['active' => 'invoices', 'counts' => $salesCounts ?? []])
 
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
