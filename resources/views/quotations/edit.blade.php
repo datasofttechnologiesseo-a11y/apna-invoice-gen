@@ -163,7 +163,11 @@
                             <div class="p-4 space-y-3">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
-                                    <button type="button" @click="removeRow(idx)" class="text-red-600 text-sm" x-show="items.length > 1" aria-label="Remove row">Remove</button>
+                                    <button type="button" @click="removeRow(idx)"
+                                            :disabled="items.length <= 1"
+                                            :class="items.length <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'"
+                                            class="text-sm font-medium transition"
+                                            aria-label="Remove row">Remove</button>
                                 </div>
                                 @if ($productIndex->isNotEmpty())
                                     <div>
@@ -183,7 +187,10 @@
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
+                                        <div class="flex items-center justify-between gap-1">
+                                            <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
+                                            @include('partials.hsn-search-link')
+                                        </div>
                                         <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono">
                                     </div>
                                     <div>
@@ -228,7 +235,12 @@
                                         <th class="px-3 py-2 text-left">Product</th>
                                     @endif
                                     <th class="px-3 py-2 text-left">Description</th>
-                                    <th class="px-3 py-2 text-left">HSN/SAC</th>
+                                    <th class="px-3 py-2 text-left">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span>HSN/SAC</span>
+                                            @include('partials.hsn-search-link')
+                                        </span>
+                                    </th>
                                     <th class="px-3 py-2 text-left">Quantity</th>
                                     <th class="px-3 py-2 text-right">Rate (₹)</th>
                                     <th class="px-3 py-2 text-right">Disc (₹)</th>
@@ -269,7 +281,18 @@
                                             </select>
                                         </td>
                                         <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
-                                        <td class="px-2 py-2 text-right"><button type="button" @click="removeRow(idx)" class="inline-flex items-center justify-center w-8 h-8 text-red-500 hover:text-white hover:bg-red-500 rounded-md text-lg leading-none" x-show="items.length > 1" aria-label="Remove row">×</button></td>
+                                        <td class="px-2 py-2 text-right w-12">
+                                            {{-- Always render so the column doesn't collapse; disable when
+                                                 it's the last row so the form keeps at least one item. --}}
+                                            <button type="button" @click="removeRow(idx)"
+                                                    :disabled="items.length <= 1"
+                                                    :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-md text-lg leading-none transition"
+                                                    :class="items.length <= 1
+                                                        ? 'text-gray-300 cursor-not-allowed'
+                                                        : 'text-red-500 hover:text-white hover:bg-red-500'"
+                                                    aria-label="Remove row">×</button>
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>

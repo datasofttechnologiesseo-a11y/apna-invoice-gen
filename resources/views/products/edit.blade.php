@@ -44,7 +44,10 @@
                         </div>
 
                         <div>
-                            <x-input-label for="hsn_sac" value="HSN / SAC code *" />
+                            <div class="flex items-center justify-between gap-2">
+                                <x-input-label for="hsn_sac" value="HSN / SAC code *" />
+                                @include('partials.hsn-search-link', ['label' => 'Search on GST portal'])
+                            </div>
                             <x-text-input id="hsn_sac" name="hsn_sac" type="text" class="mt-1 block w-full font-mono" :value="old('hsn_sac', $product->hsn_sac)" required pattern="[0-9]{4,8}" inputmode="numeric" placeholder="e.g. 25232910" />
                             <p class="text-xs text-gray-500 mt-1">4 digits (turnover &lt; ₹5 Cr) · 6 digits (&gt; ₹5 Cr) · 8 digits for exports.</p>
                         </div>

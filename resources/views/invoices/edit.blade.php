@@ -180,7 +180,11 @@
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
                                     @if (! $restricted)
-                                        <button type="button" @click="removeRow(idx)" class="text-red-600 text-sm" x-show="items.length > 1" aria-label="Remove row">Remove</button>
+                                        <button type="button" @click="removeRow(idx)"
+                                                :disabled="items.length <= 1"
+                                                :class="items.length <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'"
+                                                class="text-sm font-medium transition"
+                                                aria-label="Remove row">Remove</button>
                                     @endif
                                 </div>
                                 @if ($productIndex->isNotEmpty())
@@ -321,7 +325,20 @@
                                             </select>
                                         </td>
                                         <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
-                                        <td class="px-2 py-2 text-right">@if (! $restricted)<button type="button" @click="removeRow(idx)" class="inline-flex items-center justify-center w-8 h-8 text-red-500 hover:text-white hover:bg-red-500 rounded-md text-lg leading-none" x-show="items.length > 1" aria-label="Remove row">×</button>@endif</td>
+                                        <td class="px-2 py-2 text-right w-12">
+                                            @if (! $restricted)
+                                                {{-- Always render so the column doesn't collapse; disabled
+                                                     when removing it would leave zero line items. --}}
+                                                <button type="button" @click="removeRow(idx)"
+                                                        :disabled="items.length <= 1"
+                                                        :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-md text-lg leading-none transition"
+                                                        :class="items.length <= 1
+                                                            ? 'text-gray-300 cursor-not-allowed'
+                                                            : 'text-red-500 hover:text-white hover:bg-red-500'"
+                                                        aria-label="Remove row">×</button>
+                                            @endif
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>

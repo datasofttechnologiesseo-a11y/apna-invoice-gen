@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CashMemoController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
@@ -41,7 +42,19 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/refund',             'priority' => '0.4', 'changefreq' => 'yearly'],
         ['loc' => $base . '/cookies',            'priority' => '0.3', 'changefreq' => 'yearly'],
         ['loc' => $base . '/security',           'priority' => '0.5', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/blog',               'priority' => '0.8', 'changefreq' => 'weekly'],
     ];
+
+    // Append every published blog post to the sitemap so search engines can
+    // discover and index them as soon as they're live.
+    foreach (\App\Models\Post::published()->orderByDesc('published_at')->get() as $post) {
+        $urls[] = [
+            'loc' => $base . '/blog/' . $post->slug,
+            'priority' => '0.7',
+            'changefreq' => 'monthly',
+            'lastmod' => $post->updated_at?->toDateString() ?: $today,
+        ];
+    }
 
     return response()->view('sitemap', compact('urls', 'today'))
         ->header('Content-Type', 'application/xml; charset=utf-8');
@@ -90,6 +103,15 @@ Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
 Route::get('q/{quotation}', [QuotationShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('quotations.public');
+
+// Public blog — drives SEO traffic. Open to everyone, no auth.
+// Throttle each show route to 60/min so a scraper or bot can't hammer the
+// per-post view counter.
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])
+    ->where('slug', '[a-z0-9-]+')
+    ->middleware('throttle:60,1')
+    ->name('blog.show');
 
 Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/about', 'pages.about')->name('about');
@@ -250,6 +272,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/invoices', [\App\Http\Controllers\Admin\DashboardController::class, 'invoices'])->name('invoices');
         Route::get('/companies', [\App\Http\Controllers\Admin\DashboardController::class, 'companies'])->name('companies');
         Route::get('/customers', [\App\Http\Controllers\Admin\DashboardController::class, 'customers'])->name('customers');
+
+        // Blog authoring — full CRUD + quick publish toggle.
+        Route::post('/blog/{post}/toggle', [\App\Http\Controllers\Admin\BlogAdminController::class, 'togglePublish'])->name('blog.toggle');
+        Route::resource('/blog', \App\Http\Controllers\Admin\BlogAdminController::class)->parameters(['blog' => 'post'])->except(['show']);
     });
 });
 

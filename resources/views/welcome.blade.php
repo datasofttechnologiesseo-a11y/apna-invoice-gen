@@ -163,6 +163,7 @@
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
             <a href="#features" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
             <a href="#pricing" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
+            <a href="{{ route('blog.index') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
             <a href="#faq" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
@@ -810,6 +811,70 @@
         </div>
     </div>
 </section>
+
+{{-- ─── From the blog — drives discovery of /blog content + builds topical
+     authority for SEO. Section is hidden when no posts are published yet,
+     so the landing page degrades gracefully on a fresh install. --}}
+@php
+    $featuredPosts = \App\Models\Post::published()
+        ->orderByDesc('published_at')
+        ->limit(3)
+        ->get();
+@endphp
+@if ($featuredPosts->isNotEmpty())
+<section id="blog" class="py-20 sm:py-24 bg-white border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+            <div>
+                <span class="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold uppercase tracking-wider">Blogs</span>
+                <h2 class="mt-3 font-display text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">GST tips & invoicing how-tos</h2>
+                <p class="mt-2 text-gray-600 max-w-2xl">Practical guides for Indian freelancers, MSMEs and CAs — written by the team behind Apna Invoice.</p>
+            </div>
+            <a href="{{ route('blog.index') }}" class="inline-flex items-center gap-1 text-sm font-bold text-brand-700 hover:text-brand-800 self-start sm:self-end whitespace-nowrap">
+                Browse all blogs
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            @foreach ($featuredPosts as $fp)
+                <article class="group flex flex-col bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden hover:ring-brand-300 hover:shadow-md transition">
+                    @if ($fp->featured_image_path)
+                        <a href="{{ route('blog.show', $fp->slug) }}" class="block aspect-[16/9] bg-gray-100 overflow-hidden">
+                            <img src="{{ asset('storage/' . $fp->featured_image_path) }}"
+                                 alt="{{ $fp->featured_image_alt ?: $fp->title }}"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                 loading="lazy" width="800" height="450">
+                        </a>
+                    @else
+                        <a href="{{ route('blog.show', $fp->slug) }}" class="block aspect-[16/9] bg-gradient-to-br from-brand-100 via-brand-50 to-saffron-50 flex items-center justify-center p-6">
+                            <span class="font-display font-extrabold text-2xl text-brand-700/30 text-center">{{ \Illuminate\Support\Str::limit($fp->title, 28) }}</span>
+                        </a>
+                    @endif
+                    <div class="flex-1 p-5 flex flex-col gap-3">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
+                            <time datetime="{{ $fp->published_at?->toIso8601String() }}">{{ $fp->published_at?->format('d M Y') }}</time>
+                            @if ($fp->reading_minutes)
+                                <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                                <span>{{ $fp->reading_minutes }} min read</span>
+                            @endif
+                        </div>
+                        <h3 class="font-display text-lg font-bold text-gray-900 leading-snug group-hover:text-brand-700 transition">
+                            <a href="{{ route('blog.show', $fp->slug) }}">{{ $fp->title }}</a>
+                        </h3>
+                        @if ($fp->excerpt || $fp->effectiveMetaDescription())
+                            <p class="text-sm text-gray-600 leading-relaxed">{{ \Illuminate\Support\Str::limit($fp->excerpt ?: $fp->effectiveMetaDescription(), 130) }}</p>
+                        @endif
+                        <a href="{{ route('blog.show', $fp->slug) }}" class="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-800">
+                            Read article
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
 
 <!-- FAQ -->
 <section id="faq" class="py-24 bg-gray-50">

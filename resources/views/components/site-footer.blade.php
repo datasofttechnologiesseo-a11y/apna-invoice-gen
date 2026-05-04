@@ -84,6 +84,7 @@
                     ]],
                     ['title' => 'Resources', 'color' => 'accent', 'links' => [
                         ['href' => route('help'), 'label' => 'Help Center'],
+                        ['href' => route('blog.index'), 'label' => 'Blogs'],
                         ['href' => route('invoices.templates'), 'label' => 'Invoice templates'],
                         // Official CBIC HSN/SAC search — authoritative and always up to date.
                         ['href' => 'https://services.gst.gov.in/services/searchhsnsac', 'label' => 'HSN/SAC finder', 'external' => true],
@@ -166,7 +167,7 @@
 
                 {{-- Center links --}}
                 <div class="flex items-center justify-center gap-1 text-sm">
-                    @foreach ([['/','Home'], ['/#faq','Help'], [route('pages.privacy'),'Privacy'], [route('pages.terms'),'Terms']] as $item)
+                    @foreach ([['/','Home'], [route('blog.index'),'Blogs'], ['/#faq','Help'], [route('pages.privacy'),'Privacy'], [route('pages.terms'),'Terms']] as $item)
                         <a href="{{ $item[0] }}" class="px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition font-medium">{{ $item[1] }}</a>
                     @endforeach
                 </div>
