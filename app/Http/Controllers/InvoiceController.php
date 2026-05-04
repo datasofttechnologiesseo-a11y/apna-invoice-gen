@@ -65,14 +65,28 @@ class InvoiceController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Section-tab counts — let the Invoices/Quotations tab strip show
-        // a live count chip on each tab without an extra request.
-        $salesCounts = [
-            'invoices' => $company->invoices()->count(),
-            'quotations' => $company->quotations()->count(),
+        // Section-tab stats — total + a "needs attention" sub-stat per doc
+        // type. Two extra count() queries; cheap and lets the tab strip show
+        // useful info ("3 outstanding", "2 awaiting reply") without nav.
+        $salesStats = [
+            'invoices' => [
+                'total' => $company->invoices()->count(),
+                // Outstanding = finalised but unpaid (or partially paid)
+                'open' => $company->invoices()
+                    ->whereIn('status', ['final', 'partially_paid'])
+                    ->where('balance', '>', 0)
+                    ->count(),
+            ],
+            'quotations' => [
+                'total' => $company->quotations()->count(),
+                // Awaiting reply = sent but not yet accepted/declined/converted
+                'awaiting' => $company->quotations()
+                    ->where('status', 'sent')
+                    ->count(),
+            ],
         ];
 
-        return view('invoices.index', compact('invoices', 'company', 'salesCounts'));
+        return view('invoices.index', compact('invoices', 'company', 'salesStats'));
     }
 
     public function templatePreview(Request $request, string $template): Response|RedirectResponse

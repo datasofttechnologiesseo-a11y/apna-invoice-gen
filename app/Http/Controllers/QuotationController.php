@@ -55,12 +55,22 @@ class QuotationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $salesCounts = [
-            'invoices' => $company->invoices()->count(),
-            'quotations' => $company->quotations()->count(),
+        // Section-tab stats — see InvoiceController for the full schema.
+        $salesStats = [
+            'invoices' => [
+                'total' => $company->invoices()->count(),
+                'open' => $company->invoices()
+                    ->whereIn('status', ['final', 'partially_paid'])
+                    ->where('balance', '>', 0)
+                    ->count(),
+            ],
+            'quotations' => [
+                'total' => $company->quotations()->count(),
+                'awaiting' => $company->quotations()->where('status', 'sent')->count(),
+            ],
         ];
 
-        return view('quotations.index', compact('company', 'quotations', 'salesCounts'));
+        return view('quotations.index', compact('company', 'quotations', 'salesStats'));
     }
 
     public function create(Request $request): View|RedirectResponse

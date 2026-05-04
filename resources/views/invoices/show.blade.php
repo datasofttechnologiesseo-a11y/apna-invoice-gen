@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-breadcrumbs :items="[
             ['label' => 'Invoices', 'href' => route('invoices.index')],
-            ['label' => $invoice->isDraft() ? 'Draft #' . $invoice->id : $invoice->invoice_number],
+            ['label' => $invoice->displayNumber()],
         ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
@@ -10,10 +10,10 @@
                     <span class="text-gray-500">Draft #{{ $invoice->id }}</span>
                     <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
                 @elseif ($invoice->isCancelled())
-                    <span>Invoice {{ $invoice->invoice_number }}</span>
+                    <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
                     <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 uppercase font-bold tracking-wider">Cancelled</span>
                 @else
-                    <span>Invoice {{ $invoice->invoice_number }}</span>
+                    <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
                     @if ((float) $invoice->balance <= 0)
                         <span class="text-xs px-2 py-0.5 rounded bg-money-100 text-money-800 uppercase font-bold tracking-wider">Paid</span>
                     @elseif ((float) $invoice->paid_amount > 0)
@@ -28,16 +28,19 @@
                     <a href="{{ route('invoices.edit', $invoice) }}" class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300" title="{{ $invoice->isEditable() ? 'Edit draft' : 'Edit notes, terms, due date, transporter (amounts are locked)' }}">Edit</a>
                 @endif
                 @if ($invoice->isEditable())
-                    <x-confirm-form
-                        :action="route('invoices.finalize', $invoice)"
-                        method="POST"
-                        title="Finalize this invoice?"
-                        message="Finalising assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable."
-                        confirm-label="Finalize"
-                        confirm-class="bg-brand-700 hover:bg-brand-800"
-                        tone="default">
-                        <button type="button" class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800 shadow-sm">Finalize</button>
-                    </x-confirm-form>
+                    {{-- Direct form + native browser confirm. Avoids the Alpine
+                         teleport modal entirely so this always works regardless
+                         of viewport quirks, browser extensions, or stale
+                         frontend state. Clicking the button → native confirm
+                         dialog → form POSTs to /invoices/{id}/finalize. --}}
+                    <form method="POST" action="{{ route('invoices.finalize', $invoice) }}" class="inline"
+                          onsubmit="return confirm('Finalize this invoice?\n\nFinalising assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable.\n\nClick OK to finalize.');">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded text-sm font-semibold shadow-sm transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            Finalize
+                        </button>
+                    </form>
                 @endif
                 <span class="inline-flex rounded overflow-hidden shadow-sm">
                     <a href="{{ route('invoices.pdf', $invoice) }}" class="px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900" title="Ink-saver download — black on white for printing">Download PDF</a>
@@ -47,7 +50,20 @@
                 </span>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
                 @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)
-                    <a href="{{ route('credit-notes.create', $invoice) }}" class="px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-sm hover:bg-amber-200" title="Issue a credit note — for returns, post-sale discounts, rate corrections">Issue credit note</a>
+                    @if ($invoice->isCreditNoteWindowClosed())
+                        {{-- Section 34(2) window closed — disable the action with a tooltip
+                             explaining the legal cut-off so the operator knows why. --}}
+                        <span class="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded text-sm cursor-not-allowed"
+                              title="Section 34(2) credit-note window closed on {{ $invoice->creditNoteDeadline()->format('d M Y') }}. Issue a commercial refund instead.">
+                            Issue credit note
+                        </span>
+                    @else
+                        <a href="{{ route('credit-notes.create', $invoice) }}"
+                           class="px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-sm hover:bg-amber-200"
+                           title="Issue a credit note — for returns, post-sale discounts, rate corrections. Section 34(2) deadline: {{ $invoice->creditNoteDeadline()->format('d M Y') }}">
+                            Issue credit note
+                        </a>
+                    @endif
                 @endif
                 @if ($invoice->isEditable())
                     <x-confirm-form

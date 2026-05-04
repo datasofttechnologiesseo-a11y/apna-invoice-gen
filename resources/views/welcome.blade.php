@@ -130,8 +130,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="Free GST Invoice Generator India — Create GST Invoice Online Free in 60 seconds"
-        description="Free GST invoice generator for India — auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Made for MSMEs, SMEs, startups, freelancers and CAs below ₹5 cr turnover. No card, unlimited invoices during beta."
+        title="Free GST Billing Software India · Online GST Invoice Generator — Apna Invoice"
+        description="Free GST billing software & online invoice generator for Indian SMEs, MSMEs, freelancers and shops. Auto CGST/SGST/IGST, HSN/SAC search, UPI QR, WhatsApp invoice share, GSTR-1 CSV export. CGST Rule 46/49 compliant. Quotation → Invoice in one click. GST 2.0 ready (40% slab). No card, unlimited invoices during beta."
+        keywords="free GST billing software India, online GST invoice generator, GST bill maker, GSTR-1 export, HSN SAC search, GST invoice format India, free invoicing app for SMEs, MSME billing software, freelancer invoice India, shop billing software, composition dealer Bill of Supply, audit defensible invoicing, GSTR-3B summary, UPI QR invoice, WhatsApp invoice share"
         type="website"
         :json-ld="$jsonLd" />
     {{-- Preload the brand logo — it's the LCP element on the landing header. --}}
@@ -402,6 +403,145 @@
     </div>
 </section>
 
+{{-- ─── Marketing slider — 4 hero posters that rotate every 5 s with prev/next
+     controls, dot indicators, keyboard arrow nav, touch swipe, and the
+     standard pause-on-hover behaviour. Uses the existing brand palette
+     (navy gradient backing, saffron accent on active dot, tricolor blur
+     orbs). HD source images live at /brand/slider/. --}}
+<section class="relative py-12 sm:py-16 bg-gradient-to-br from-brand-50/40 via-white to-saffron-50/40 border-y border-gray-100 overflow-hidden"
+         x-data='{
+            slides: [
+                {
+                    src: "/brand/slider/slide-1-gst-software.png",
+                    alt: "Apna Invoice — Free GST Software for Indian SMEs, MSMEs and Freelancers — 100% verified by CAs",
+                    eyebrow: "Free for everyone",
+                    title: "Free GST Software for Indian SMEs &amp; MSMEs",
+                    sub: "Auto CGST · SGST · IGST · HSN/SAC. Unlimited invoices. Verified by CAs.",
+                },
+                {
+                    src: "/brand/slider/slide-2-tablet-modern.png",
+                    alt: "Modern entrepreneur using Apna Invoice on a tablet to send GST-compliant invoices in seconds",
+                    eyebrow: "60-second invoice",
+                    title: "GST invoicing made easy in seconds",
+                    sub: "From phone, tablet or laptop. Send via WhatsApp, email or signed link. 100% free.",
+                },
+                {
+                    src: "/brand/slider/slide-3-freelancer.png",
+                    alt: "Freelancer using Apna Invoice — testimonial from एक फ्रीलांसर",
+                    eyebrow: "Loved by freelancers",
+                    title: "एक फ्रीलांसर के रूप में, मैं बिल बनाने के लिए Apna Invoice का उपयोग करती हूं",
+                    sub: "Bahut आसान है इसका उपयोग करना. Trusted by Indian freelancers across 36 states &amp; UTs.",
+                },
+            ],
+            current: 0,
+            timer: null,
+            init() {
+                this.start();
+            },
+            start() {
+                this.stop();
+                this.timer = setInterval(() => this.next(), 5500);
+            },
+            stop() {
+                if (this.timer) { clearInterval(this.timer); this.timer = null; }
+            },
+            next() { this.current = (this.current + 1) % this.slides.length; },
+            prev() { this.current = (this.current - 1 + this.slides.length) % this.slides.length; },
+            goTo(i) { this.current = i; this.start(); },
+         }'
+         @mouseenter="stop()"
+         @mouseleave="start()"
+         @keydown.window.arrow-left="prev(); start()"
+         @keydown.window.arrow-right="next(); start()">
+
+    {{-- Decorative tricolor blur orbs — keep section visually anchored to brand. --}}
+    <div class="absolute -top-32 -left-24 w-[420px] h-[420px] bg-saffron-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
+    <div class="absolute -bottom-32 -right-24 w-[420px] h-[420px] bg-money-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {{-- Section eyebrow --}}
+        <div class="text-center mb-8 sm:mb-10">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 ring-1 ring-brand-200 text-brand-800 text-xs font-bold uppercase tracking-widest">
+                <span class="w-1.5 h-1.5 rounded-full bg-saffron-500 animate-pulse"></span>
+                See Apna Invoice in action
+            </span>
+            <h2 class="mt-3 font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+                Loved by <span class="text-brand-700">freelancers</span>, <span class="text-saffron-700">shopkeepers</span>, <span class="text-money-700">consultants</span> &amp; CAs across India
+            </h2>
+        </div>
+
+        {{-- Slider stage — square posters look best in a tall responsive viewport.
+             We constrain max-width and let the image be the hero, with a small
+             caption pill overlay (eyebrow + title + sub-text). Swipe via Alpine
+             touch events on mobile; arrow buttons on desktop. --}}
+        <div class="relative max-w-3xl mx-auto"
+             @touchstart="touchStart = $event.changedTouches[0].screenX" x-data="{ touchStart: 0 }"
+             @touchend="
+                let dx = $event.changedTouches[0].screenX - touchStart;
+                if (Math.abs(dx) > 50) { dx > 0 ? prev() : next(); start(); }
+             ">
+
+            {{-- Stage with rounded gradient border. All 3 remaining slides
+                 are landscape (~1.5–1.79). We pin the stage at 3:2 (1.5)
+                 and use object-cover with object-center — slides 2 + 3
+                 (16:9) crop a few px from the sides; their key content
+                 (faces + dashboards) is centered so nothing important is lost.
+                 Fixed aspect = zero layout shift on slide change. --}}
+            <div class="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-300/40 via-saffron-300/40 to-money-300/40 p-[2px] shadow-xl sm:shadow-2xl">
+                <div class="relative rounded-[calc(1rem-2px)] sm:rounded-[calc(1.5rem-2px)] overflow-hidden aspect-[3/2] bg-gradient-to-br from-brand-50 via-white to-saffron-50">
+
+                    <template x-for="(slide, i) in slides" :key="i">
+                        <div class="absolute inset-0 transition-opacity duration-700 ease-in-out"
+                             :class="current === i ? 'opacity-100 z-10' : 'opacity-0 z-0'"
+                             :aria-hidden="current === i ? 'false' : 'true'">
+                            <img :src="slide.src"
+                                 :alt="slide.alt"
+                                 class="w-full h-full object-cover object-center"
+                                 loading="lazy"
+                                 width="1536" height="1024">
+                        </div>
+                    </template>
+
+                    {{-- Prev / next buttons — smaller, less intrusive on mobile;
+                         full-size on sm+. Larger tap target via padding-box. --}}
+                    <button type="button" @click="prev(); start()"
+                            class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-saffron-400 transition"
+                            aria-label="Previous slide">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <button type="button" @click="next(); start()"
+                            class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-saffron-400 transition"
+                            aria-label="Next slide">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Active slide caption — sits BELOW the image so it doesn't fight
+                 with the poster's own text. Updates reactively as slides change. --}}
+            <div class="mt-5 text-center min-h-[80px]" x-show="slides[current]" x-cloak>
+                <span class="inline-block px-2.5 py-0.5 rounded-full bg-saffron-100 text-saffron-800 ring-1 ring-saffron-200 text-[10px] font-bold uppercase tracking-widest" x-text="slides[current].eyebrow"></span>
+                <p class="mt-2 font-display text-lg sm:text-xl font-bold text-gray-900 leading-snug max-w-2xl mx-auto" x-html="slides[current].title"></p>
+                <p class="mt-1 text-sm text-gray-600 max-w-2xl mx-auto" x-html="slides[current].sub"></p>
+            </div>
+
+            {{-- Dot indicators --}}
+            <div class="mt-5 flex items-center justify-center gap-2.5">
+                <template x-for="(slide, i) in slides" :key="`dot-${i}`">
+                    <button type="button" @click="goTo(i)"
+                            :class="current === i
+                                ? 'w-8 h-2.5 bg-gradient-to-r from-saffron-500 to-brand-700 ring-2 ring-saffron-200'
+                                : 'w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400'"
+                            class="rounded-full transition-all"
+                            :aria-label="'Go to slide ' + (i + 1)"
+                            :aria-current="current === i ? 'true' : 'false'"></button>
+                </template>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Trust bar -->
 <section class="relative bg-gray-50 py-10 border-y border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -480,6 +620,123 @@
                 Start free — no card needed
                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
             </a>
+        </div>
+    </div>
+</section>
+
+{{-- ─── Why Apna Invoice — competitive differentiator.
+     Most free Indian billing tools are pretty PDF generators. We're
+     positioned as the rule-aware alternative — actual CGST sections cited,
+     audit-defensible by design. This section is the strongest reason a
+     CA-using SME picks us over "easy and free" alternatives. --}}
+<section class="relative py-24 bg-gradient-to-br from-white via-brand-50/30 to-saffron-50/40 border-y border-gray-100 overflow-hidden">
+    {{-- Subtle decorative orbs in tricolour --}}
+    <div class="absolute -top-40 -left-32 w-[400px] h-[400px] bg-saffron-200 rounded-full blur-3xl opacity-25" aria-hidden="true"></div>
+    <div class="absolute -bottom-40 -right-32 w-[400px] h-[400px] bg-money-200 rounded-full blur-3xl opacity-25" aria-hidden="true"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 ring-1 ring-brand-200 text-brand-800 text-xs font-bold uppercase tracking-widest">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1L3 4v6c0 4.5 3 8.3 7 9 4-.7 7-4.5 7-9V4l-7-3zm-.7 12.3L6 10l1.4-1.4 1.9 1.9 4.4-4.4L15 7.5l-5.7 5.8z" clip-rule="evenodd"/></svg>
+                Built like the law · not just like an app
+            </span>
+            <h2 class="mt-4 font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-[1.05] tracking-tight">
+                Your CA will <span class="text-brand-700">never bounce an invoice back</span>.
+            </h2>
+            <p class="mt-4 text-base sm:text-lg text-gray-700 leading-relaxed max-w-2xl">
+                Other free billing apps make pretty PDFs. <strong class="text-gray-900">Apna Invoice is engineered around 12+ specific CGST Rules</strong> — so the document you issue today still passes muster when your CA opens GSTR-1 next month. No silent edge cases. No "we don't support that case." Audit-defensible by design.
+            </p>
+        </div>
+
+        {{-- 6-card grid of regulation-backed differentiators. Each card cites
+             the actual section / rule so the credibility is verifiable, not
+             marketing fluff. Saffron / brand / money tones rotate so the row
+             keeps the tricolour identity. --}}
+        <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+            @foreach ([
+                [
+                    'tone'  => 'brand',
+                    'icon'  => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                    'title' => 'Tax Invoice · Bill of Supply · Invoice',
+                    'rule'  => 'CGST Rule 46 + 49',
+                    'body'  => 'Title is decided by your data, not a dropdown. No GSTIN → "Invoice". Composition dealer → "Bill of Supply" + Rule 49 footer note. Regular registered → "Tax Invoice". Always legally correct.',
+                ],
+                [
+                    'tone'  => 'saffron',
+                    'icon'  => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                    'title' => 'Auto CGST · SGST · IGST split',
+                    'rule'  => 'IGST Act §5 · CGST §9',
+                    'body'  => 'Place of supply is computed from your state vs. the customer\'s state. Inter-state? IGST. Intra-state? CGST + SGST split to the paisa, with proper round-off. No manual math.',
+                ],
+                [
+                    'tone'  => 'money',
+                    'icon'  => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
+                    'title' => 'Books-locked period close',
+                    'rule'  => 'Audit best practice',
+                    'body'  => 'Set "books locked until 31 Mar" once your CA signs off. After that, the system blocks editing or backdating any invoice, payment, expense, credit note, or cash memo into the closed FY. Audit trail logs every lock.',
+                ],
+                [
+                    'tone'  => 'brand',
+                    'icon'  => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+                    'title' => 'Section 34(2) credit-note window',
+                    'rule'  => 'CGST §34(2)',
+                    'body'  => 'Credit notes can only reduce GST liability if issued by 30 Nov of the FY following the supply. We compute the deadline per invoice and block late issuance — politely — so you never file a worthless CN.',
+                ],
+                [
+                    'tone'  => 'saffron',
+                    'icon'  => 'M13 10V3L4 14h7v7l9-11h-7z',
+                    'title' => 'Reverse-charge ready',
+                    'rule'  => 'CGST §9(3)/(4) · Rule 46(p)',
+                    'body'  => 'Tick "RCM applicable" — tax is zeroed out, the recipient declaration "Tax payable on reverse charge basis" prints automatically per Rule 46(p), GSTR-1 marks it correctly. Done.',
+                ],
+                [
+                    'tone'  => 'money',
+                    'icon'  => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                    'title' => 'GST 2.0 ready (Sep 2025)',
+                    'rule'  => '56th GST Council',
+                    'body'  => 'New 40% sin/luxury slab. New 1.5% / 7.5% under-construction housing rates. Merchant export 0.10%. All loaded — pick the right slab from the dropdown, the system does the rest.',
+                ],
+            ] as $card)
+                @php
+                    $tone = $card['tone'];
+                    $palette = [
+                        'brand'   => ['ring' => 'ring-brand-200', 'icon_bg' => 'from-brand-600 to-brand-800', 'badge_bg' => 'bg-brand-50', 'badge_text' => 'text-brand-700', 'hover' => 'hover:ring-brand-400'],
+                        'saffron' => ['ring' => 'ring-saffron-200', 'icon_bg' => 'from-saffron-500 to-accent-600', 'badge_bg' => 'bg-saffron-50', 'badge_text' => 'text-saffron-800', 'hover' => 'hover:ring-saffron-400'],
+                        'money'   => ['ring' => 'ring-money-200', 'icon_bg' => 'from-money-500 to-money-700', 'badge_bg' => 'bg-money-50', 'badge_text' => 'text-money-800', 'hover' => 'hover:ring-money-400'],
+                    ][$tone];
+                @endphp
+                <article class="group relative bg-white rounded-2xl ring-1 {{ $palette['ring'] }} {{ $palette['hover'] }} hover:ring-2 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 p-6 md:p-7 flex flex-col">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br {{ $palette['icon_bg'] }} text-white flex items-center justify-center shadow-sm">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $card['icon'] }}"/></svg>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md {{ $palette['badge_bg'] }} {{ $palette['badge_text'] }} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap font-mono">{{ $card['rule'] }}</span>
+                    </div>
+                    <h3 class="font-display text-lg md:text-xl font-bold text-gray-900 leading-tight">{{ $card['title'] }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $card['body'] }}</p>
+                </article>
+            @endforeach
+        </div>
+
+        {{-- Closing reassurance — generic framing, no named competitors.
+             Keeps the message ("CA-friendly · GSTR-1-ready · free") without
+             the legal exposure of trademark parity claims. --}}
+        <div class="mt-14 max-w-4xl mx-auto p-6 md:p-8 rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-900 text-white text-center shadow-xl">
+            <p class="font-display text-lg md:text-xl font-bold leading-snug">
+                Your CA loves the <span class="text-saffron-300">established billing tools</span>?
+            </p>
+            <p class="mt-2 text-sm md:text-base text-brand-100 leading-relaxed">
+                They'll love this too — same audit defensibility, same CGST-Rule-46 compliance, for <span class="text-saffron-300 font-bold">₹0 during beta</span>. Export GSTR-1 CSV, hand over the books, file in minutes.
+            </p>
+            <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-saffron-500 hover:bg-saffron-600 text-brand-900 font-bold shadow-md transition">
+                    Try the free GST invoicing app
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                </a>
+                <a href="#features" class="inline-flex items-center gap-1 text-sm font-semibold text-brand-100 hover:text-white">
+                    See every feature ↓
+                </a>
+            </div>
         </div>
     </div>
 </section>

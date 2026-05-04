@@ -45,7 +45,20 @@
                         ][$styleKey] ?? null;
                         $styleTheme ??= ['bg' => 'bg-white', 'border' => 'border-b border-gray-200', 'text' => 'text-gray-900', 'accent' => 'text-brand-700'];
                     @endphp
-                    <div class="group relative bg-white rounded-2xl ring-1 ring-gray-100 hover:ring-brand-300 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col">
+                    {{-- Whole-card clickable using the stretched-link pattern: an
+                         absolutely-positioned <a> overlays the entire card and
+                         points at "Use this template". Inner interactive
+                         elements (Preview PDF) sit at a higher z-index so they
+                         remain independently clickable. The card has hover-lift
+                         + ring transitions to communicate it's a single big
+                         clickable target. --}}
+                    <div class="group relative bg-white rounded-2xl ring-1 ring-gray-100 hover:ring-brand-400 hover:ring-2 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col cursor-pointer focus-within:ring-2 focus-within:ring-brand-400">
+
+                        {{-- The stretched link — invisible but covers the entire card.
+                             Carries the keyboard focus + screen-reader label. --}}
+                        <a href="{{ route('invoices.create', ['template' => $key]) }}"
+                           class="absolute inset-0 z-10 rounded-2xl"
+                           aria-label="Use {{ $tpl['label'] }} template"></a>
 
                         {{-- Card header with gradient --}}
                         <div class="p-5 bg-gradient-to-br {{ $tpl['gradient'] }} text-white relative">
@@ -154,20 +167,22 @@
                                 </div>
                             @endif
 
-                            {{-- Action buttons --}}
-                            <div class="mt-5 grid grid-cols-2 gap-2">
+                            {{-- Footer row: Preview PDF (separate action via z-20)
+                                 + "Click to use →" hint that highlights on hover
+                                 since the entire card IS the click target now. --}}
+                            <div class="mt-5 flex items-center justify-between gap-3">
                                 <a href="{{ route('invoices.templates.preview', $key) }}"
                                    target="_blank" rel="noopener"
-                                   class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-white hover:bg-gray-50 text-gray-800 text-sm font-semibold ring-1 ring-gray-300 transition"
-                                   title="Opens the full PDF in a new tab with your company branding">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                   class="relative z-20 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium ring-1 ring-gray-300 hover:ring-gray-400 transition"
+                                   title="Opens the full PDF in a new tab with your company branding"
+                                   onclick="event.stopPropagation();">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     Preview PDF
                                 </a>
-                                <a href="{{ route('invoices.create', ['template' => $key]) }}"
-                                   class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold shadow-sm transition group-hover:shadow-brand">
-                                    Use this
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
-                                </a>
+                                <span class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-700 group-hover:text-brand-900 transition">
+                                    <span>Click to use</span>
+                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                                </span>
                             </div>
                         </div>
                     </div>

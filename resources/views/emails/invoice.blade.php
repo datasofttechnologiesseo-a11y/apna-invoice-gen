@@ -1,12 +1,13 @@
 @php
     $c = $invoice->company;
     $balance = (float) $invoice->balance;
+    $docTitle = $invoice->documentTitle();
 @endphp
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Invoice {{ $invoice->invoice_number ?? 'Draft' }}</title>
+<title>{{ $docTitle }} {{ $invoice->displayNumber() }}</title>
 </head>
 <body style="margin: 0; padding: 0; background: #f4f4f5; font-family: Helvetica, Arial, sans-serif; color: #111;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f4f5; padding: 24px 12px;">
@@ -17,7 +18,7 @@
                     <td style="padding: 24px 32px; background: #1e3a8a; color: #fff;">
                         <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ $c->name }}</div>
                         <div style="font-size: 22px; font-weight: 700; margin-top: 4px;">
-                            Invoice {{ $invoice->invoice_number ?? 'Draft #' . $invoice->id }}
+                            {{ $docTitle }} {{ $invoice->displayNumber() }}
                         </div>
                     </td>
                 </tr>
@@ -27,12 +28,12 @@
 
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 24px; border: 1px solid #e5e7eb; border-radius: 6px;">
                             <tr>
-                                <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Invoice summary</td>
+                                <td style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">{{ $docTitle }} summary</td>
                             </tr>
                             <tr>
                                 <td style="padding: 12px 16px;">
                                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
-                                        <tr><td style="padding: 4px 0; color: #6b7280;">Invoice no.</td><td style="padding: 4px 0; text-align: right; font-weight: 600;">{{ $invoice->invoice_number ?? 'Draft #' . $invoice->id }}</td></tr>
+                                        <tr><td style="padding: 4px 0; color: #6b7280;">{{ $docTitle }} no.</td><td style="padding: 4px 0; text-align: right; font-weight: 600;">{{ $invoice->displayNumber() }}</td></tr>
                                         <tr><td style="padding: 4px 0; color: #6b7280;">Date</td><td style="padding: 4px 0; text-align: right;">{{ $invoice->invoice_date?->format('d M Y') }}</td></tr>
                                         @if ($invoice->due_date)
                                             <tr><td style="padding: 4px 0; color: #6b7280;">Due</td><td style="padding: 4px 0; text-align: right; font-weight: 600; color: #b91c1c;">{{ $invoice->due_date->format('d M Y') }}</td></tr>

@@ -21,7 +21,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
-            @include('partials.sales-tabs', ['active' => 'invoices', 'counts' => $salesCounts ?? []])
+            @include('partials.sales-tabs', ['active' => 'invoices', 'stats' => $salesStats ?? []])
 
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">

@@ -3,11 +3,13 @@
     $cust = $invoice->customer;
     $currencySymbol = '₹';
 
-    // Section 31(3)(c) + Rule 49: a Bill of Supply (not a Tax Invoice) must be
-    // issued when the supplier is a composition dealer or makes only exempt
-    // supplies. Mirrors the same logic used in the PDF view.
-    $isBillOfSupply = $c->composition_dealer || (float) ($invoice->total_tax ?? 0) === 0.0;
-    $documentTitle = $isBillOfSupply ? 'Bill of Supply' : 'Tax Invoice';
+    // Document title is decided by Invoice::documentTitle() — keeps the
+    // print view, the PDF, the show page heading and the email subject all
+    // showing the same string. Three-way: "Invoice" (no GSTIN),
+    // "Bill of Supply" (composition dealer, Rule 49) or "Tax Invoice"
+    // (registered + regular scheme, Rule 46).
+    $documentTitle = $invoice->documentTitle();
+    $isBillOfSupply = $documentTitle === 'Bill of Supply';
 
     // Only render the discount column when at least one line carries one.
     $hasDiscount = $invoice->items->sum(fn ($i) => (float) ($i->discount ?? 0)) > 0;
@@ -46,7 +48,7 @@
                 <div class="mt-2 text-[11px] italic text-gray-500">Issued under Section 31(3)(c) — exempt supply</div>
             @endif
             <div class="text-sm mt-2">
-                <div><strong>Invoice #:</strong> {{ $invoice->isDraft() ? 'Not yet issued (preview: ' . $invoice->company->nextInvoiceNumber() . ')' : $invoice->invoice_number }}</div>
+                <div><strong>{{ $documentTitle }} #:</strong> {{ $invoice->isDraft() ? 'Not yet issued (preview: ' . $invoice->company->nextInvoiceNumber() . ')' : $invoice->invoice_number }}</div>
                 <div><strong>Date:</strong> {{ $invoice->invoice_date?->format('d M Y') }}</div>
                 @if ($invoice->due_date)
                     <div><strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}</div>

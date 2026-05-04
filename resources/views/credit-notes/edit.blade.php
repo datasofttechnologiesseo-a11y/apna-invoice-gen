@@ -2,7 +2,7 @@
     <x-slot name="header">
         <x-breadcrumbs :items="[
             ['label' => 'Invoices', 'href' => route('invoices.index')],
-            ['label' => $invoice->invoice_number ?? 'Draft #' . $invoice->id, 'href' => route('invoices.show', $invoice)],
+            ['label' => $invoice->displayNumber(), 'href' => route('invoices.show', $invoice)],
             ['label' => 'Issue credit note'],
         ]" />
         <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">

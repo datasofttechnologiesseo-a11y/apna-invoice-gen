@@ -6,7 +6,25 @@
 ])
 
 @php
-    $message = $message ?? session('status');
+    // Auto-detect from session if no explicit message passed:
+    //   session('status')  → success
+    //   session('error')   → error (controllers use redirect()->with('error', ...) for things like "books locked")
+    //   session('warning') → warning
+    //   session('info')    → info
+    if ($message === null) {
+        if (session('error')) {
+            $message = session('error');
+            $type = 'error';
+        } elseif (session('warning')) {
+            $message = session('warning');
+            $type = 'warning';
+        } elseif (session('info')) {
+            $message = session('info');
+            $type = 'info';
+        } else {
+            $message = session('status');
+        }
+    }
     if (empty($message)) return;
 
     $palette = [

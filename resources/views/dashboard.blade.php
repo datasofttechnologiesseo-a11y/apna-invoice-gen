@@ -372,7 +372,7 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="font-medium text-gray-900 truncate">{{ $inv->customer?->name }}</div>
                                             <div class="text-xs text-gray-500 font-mono">
-                                                {{ $inv->isDraft() ? 'Draft #' . $inv->id : $inv->invoice_number }}
+                                                {{ $inv->displayNumber() }}
                                                 · {{ $inv->invoice_date?->format('d M Y') }}
                                             </div>
                                         </div>

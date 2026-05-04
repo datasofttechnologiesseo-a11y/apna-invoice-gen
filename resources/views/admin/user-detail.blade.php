@@ -92,7 +92,7 @@
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($recentInvoices as $inv)
                             <tr class="hover:bg-slate-50">
-                                <td class="px-5 py-2 font-mono text-xs">{{ $inv->invoice_number ?? 'Draft #' . $inv->id }}</td>
+                                <td class="px-5 py-2 font-mono text-xs">{{ $inv->displayNumber() }}</td>
                                 <td class="px-5 py-2">{{ $inv->customer?->name ?? '—' }}</td>
                                 <td class="px-5 py-2 text-xs text-slate-600">{{ $inv->company?->name ?? '—' }}</td>
                                 <td class="px-5 py-2"><span class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>

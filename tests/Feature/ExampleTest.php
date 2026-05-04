@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    // Welcome page now reads from `posts` (for the "From the blog" section),
+    // so the test needs the migrated schema.
+    use RefreshDatabase;
+
     /**
      * A basic test example.
      */

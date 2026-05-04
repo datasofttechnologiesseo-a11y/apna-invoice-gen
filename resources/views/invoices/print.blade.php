@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <title>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</title>
     @vite(['resources/css/app.css'])
     <style>
         @media print {

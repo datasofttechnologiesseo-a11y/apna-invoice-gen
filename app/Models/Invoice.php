@@ -153,12 +153,25 @@ class Invoice extends Model
         return in_array($this->status, ['draft', 'final', 'partially_paid', 'paid'], true);
     }
 
+    /**
+     * Single source of truth for "what name do we show for this invoice?".
+     *
+     * Logic is driven by status — NOT by inspecting the invoice_number string —
+     * so the answer stays correct even if the operator chose an unusual prefix
+     * (e.g. starting with "DRAFT-" by accident in Company settings).
+     *
+     *   • status === 'draft'           → "Draft #{id}"     (no number assigned yet)
+     *   • status === 'cancelled' + no number → "Draft #{id}" (cancelled before finalize)
+     *   • Anything else with a number  → the assigned invoice_number
+     *   • Defensive: if status is non-draft but the number is empty for any
+     *     reason, fall back to "Draft #{id}" so the UI never renders a blank.
+     */
     public function displayNumber(): string
     {
-        if ($this->invoice_number && ! str_starts_with($this->invoice_number, 'DRAFT-')) {
-            return $this->invoice_number;
+        if ($this->isDraft() || ! $this->invoice_number) {
+            return 'Draft #' . $this->id;
         }
-        return 'Draft #' . $this->id;
+        return $this->invoice_number;
     }
 
     /**
@@ -171,5 +184,74 @@ class Invoice extends Model
         $raw = $this->isDraft() ? 'draft-' . $this->id : ($this->invoice_number ?: 'draft-' . $this->id);
         // Forbidden in Content-Disposition + most file systems
         return preg_replace('~[\\\\/\\:\\*\\?"<>\\|\\s]+~', '-', $raw);
+    }
+
+    /**
+     * Last legally-permitted date to issue a credit note against this invoice.
+     *
+     * CGST Section 34(2): a credit note must be declared in the return for
+     * the month of issue, but NO LATER THAN the 30th day of November
+     * following the end of the financial year in which the original supply
+     * was made. After this date the supplier loses the right to reduce their
+     * GST liability via a credit note (commercial credit notes without GST
+     * impact are still possible, but those are out of scope for our tool).
+     *
+     * Indian FY runs Apr 1 → Mar 31. So:
+     *   • Supply on 15-Aug-2024 (FY 2024-25) → CN deadline 30-Nov-2025
+     *   • Supply on 02-Apr-2024 (FY 2024-25) → CN deadline 30-Nov-2025
+     *   • Supply on 31-Mar-2025 (FY 2024-25) → CN deadline 30-Nov-2025
+     */
+    public function creditNoteDeadline(): ?\Carbon\Carbon
+    {
+        if (! $this->invoice_date) {
+            return null;
+        }
+        $invoiceMonth = (int) $this->invoice_date->format('n');
+        $invoiceYear = (int) $this->invoice_date->format('Y');
+        // FY end year: if month >= April, FY ends in (year + 1); else (year)
+        $fyEndYear = $invoiceMonth >= 4 ? $invoiceYear + 1 : $invoiceYear;
+        return \Carbon\Carbon::create($fyEndYear, 11, 30)->endOfDay();
+    }
+
+    /**
+     * Whether the Section 34(2) window for this invoice has closed.
+     * Driven by today's date vs creditNoteDeadline().
+     */
+    public function isCreditNoteWindowClosed(?\Carbon\Carbon $on = null): bool
+    {
+        $deadline = $this->creditNoteDeadline();
+        if (! $deadline) {
+            return false;
+        }
+        return ($on ?? now())->gt($deadline);
+    }
+
+    /**
+     * Decide what title goes on the invoice (heading + PDF + print + email).
+     *
+     * Three-way logic, driven entirely by the company's GST profile + tax
+     * actually charged. No operator action required.
+     *
+     *   • Company has no GSTIN
+     *       → "Invoice"  (unregistered seller, outside CGST Rules 46/49)
+     *   • Company is a composition dealer
+     *       → "Bill of Supply"  (CGST Rule 49 + Section 31(3)(c) — composition
+     *         dealers cannot collect tax on supplies, must NOT issue Tax Invoice)
+     *   • Otherwise (registered, regular scheme)
+     *       → "Tax Invoice"  (CGST Rule 46 — registered person, taxable supply)
+     *
+     * The composition branch is paired with a mandatory footer note on the
+     * PDF — see invoices/pdf.blade.php — which the regulation also requires.
+     */
+    public function documentTitle(): string
+    {
+        $company = $this->company;
+        if (! $company || ! $company->gstin) {
+            return 'Invoice';
+        }
+        if ($company->composition_dealer ?? false) {
+            return 'Bill of Supply';
+        }
+        return 'Tax Invoice';
     }
 }

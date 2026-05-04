@@ -6,10 +6,11 @@
     // WhatsApp deep link — uses wa.me (works from phone tap or desktop WhatsApp Web).
     // Strip non-digit chars from the phone so "+91 98765 43210" becomes "919876543210".
     $waDigits = $cust?->phone ? preg_replace('/[^0-9]/', '', $cust->phone) : '';
-    $defaultSubject = ($c->name ?? 'Invoice') . ' · Invoice ' . ($invoice->invoice_number ?? '#' . $invoice->id);
+    $docTitle = $invoice->documentTitle();
+    $defaultSubject = ($c->name ?? 'Invoice') . ' · ' . $docTitle . ' ' . ($invoice->invoice_number ?? '#' . $invoice->id);
 
     $defaultBody = "Hi " . ($cust->name ?? 'there') . ",\n\n"
-        . "Please find attached invoice " . ($invoice->invoice_number ?? '') . " "
+        . "Please find attached " . strtolower($docTitle) . " " . ($invoice->invoice_number ?? '') . " "
         . "dated " . $invoice->invoice_date?->format('d M Y') . " for ₹" . number_format((float) $invoice->grand_total, 2) . ".\n\n"
         . ((float) $invoice->balance > 0
             ? "Balance due: ₹" . number_format((float) $invoice->balance, 2) . (
@@ -22,7 +23,7 @@
         . "Warm regards,\n"
         . $c->name;
 
-    $waText = "Invoice " . ($invoice->invoice_number ?? '') . " from " . ($c->name ?? '')
+    $waText = $docTitle . " " . ($invoice->invoice_number ?? '') . " from " . ($c->name ?? '')
         . "\nAmount: ₹" . number_format((float) $invoice->grand_total, 2)
         . ((float) $invoice->balance > 0 ? "\nBalance due: ₹" . number_format((float) $invoice->balance, 2) : "")
         . "\n\nView & download: " . $publicUrl;

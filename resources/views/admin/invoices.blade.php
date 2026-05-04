@@ -41,7 +41,7 @@
                 @endphp
                 @forelse ($invoices as $inv)
                     <tr class="hover:bg-slate-50">
-                        <td class="px-5 py-3 font-mono text-xs">{{ $inv->invoice_number ?? 'Draft #' . $inv->id }}</td>
+                        <td class="px-5 py-3 font-mono text-xs">{{ $inv->displayNumber() }}</td>
                         <td class="px-5 py-3">
                             <a href="{{ route('admin.users.show', $inv->user) }}" class="text-indigo-700 hover:underline text-sm">{{ $inv->user?->name }}</a>
                         </td>

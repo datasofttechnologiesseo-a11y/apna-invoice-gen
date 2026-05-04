@@ -13,7 +13,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
-            @include('partials.sales-tabs', ['active' => 'quotations', 'counts' => $salesCounts ?? []])
+            @include('partials.sales-tabs', ['active' => 'quotations', 'stats' => $salesStats ?? []])
 
             {{-- Slim, dismissible explainer — only shown on first visit. The
                  tab strip already states "Pre-sale proposals · convert to

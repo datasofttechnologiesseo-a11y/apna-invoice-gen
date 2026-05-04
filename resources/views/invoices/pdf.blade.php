@@ -72,7 +72,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <title>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</title>
     <style>
         @page { size: A4; margin: 0; }
         * { box-sizing: border-box; }
@@ -268,19 +268,22 @@
                 </div>
             </td>
             @php
-                // Section 31(3)(c) + Rule 49: Bill of Supply when supplier is a
-                // composition dealer OR when no GST is charged (exempt supply).
-                $isBillOfSupply = $c->composition_dealer || (float) ($invoice->total_tax ?? 0) === 0.0;
-                $documentTitle = $isBillOfSupply ? 'Bill of Supply' : 'Tax Invoice';
+                // 3-way title resolved by the model — consistent across show
+                // page, PDF, print view and email subject. Rules:
+                //   • No GSTIN → "Invoice" (unregistered, no GST law applies)
+                //   • Composition dealer → "Bill of Supply" (CGST Rule 49)
+                //   • Otherwise → "Tax Invoice" (CGST Rule 46)
+                $documentTitle = $invoice->documentTitle();
             @endphp
             <td style="vertical-align: top; text-align: right; width: 42%;">
                 <div class="title">{{ $documentTitle }}</div>
                 @if ($c->composition_dealer)
+                    {{-- Mandatory under Section 31(3)(c) + Rule 49 — must
+                         appear on every Bill of Supply issued by a composition
+                         dealer, alongside the title. --}}
                     <div style="margin-top: 4px; padding: 4px 6px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 3px; font-size: 8.5px; color: #78350f; line-height: 1.3;">
                         <strong>Composition taxable person, not eligible to collect tax on supplies.</strong>
                     </div>
-                @elseif ($isBillOfSupply)
-                    <div style="margin-top: 4px; font-size: 8.5px; color: #555;"><em>Issued under Section 31(3)(c) — exempt supply</em></div>
                 @endif
                 <div style="margin-top: 4px;">
                     <span class="copy-label">Original for Recipient</span>

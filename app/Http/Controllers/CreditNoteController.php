@@ -21,6 +21,17 @@ class CreditNoteController extends Controller
         abort_if($invoice->isDraft(), 422, 'Finalize the invoice before issuing a credit note.');
         abort_if($invoice->isCancelled(), 422, 'Cancelled invoices cannot be credited.');
 
+        // CGST Section 34(2): credit notes for a given supply must be issued
+        // by the 30th of November following the end of the FY in which the
+        // supply was made. Past that date, the supplier can't claim back the
+        // GST via a CN. Block politely and tell the operator the deadline.
+        if ($invoice->isCreditNoteWindowClosed()) {
+            return redirect()->route('invoices.show', $invoice)
+                ->with('error', 'The Section 34(2) window for this invoice closed on '
+                    . $invoice->creditNoteDeadline()->format('d M Y')
+                    . '. Credit notes issued after this date cannot reduce GST liability — issue a commercial refund/note outside the GST system instead.');
+        }
+
         // Max creditable = grand_total - already credited (we don't subtract
         // paid_amount, because a credit note can apply even on a paid invoice
         // to trigger a refund).
@@ -42,6 +53,13 @@ class CreditNoteController extends Controller
         $this->authorizeInvoice($request, $invoice);
         abort_if($invoice->isDraft(), 422, 'Finalize the invoice before issuing a credit note.');
         abort_if($invoice->isCancelled(), 422, 'Cancelled invoices cannot be credited.');
+
+        // CGST Section 34(2) — see CreditNoteController::create() for context.
+        if ($invoice->isCreditNoteWindowClosed()) {
+            return redirect()->route('invoices.show', $invoice)
+                ->with('error', 'The Section 34(2) window for this invoice closed on '
+                    . $invoice->creditNoteDeadline()->format('d M Y') . '. Credit notes issued after this date cannot reduce GST liability.');
+        }
 
         $creditable = max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount);
         $reasons = array_keys(config('credit_note_reasons'));
