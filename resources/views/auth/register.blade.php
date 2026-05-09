@@ -18,14 +18,16 @@
         <!-- Name -->
         <div>
             <x-input-label for="name" :value="__('Your name *')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="e.g. Priya Sharma" />
+            <p class="mt-1 text-xs text-gray-500">Shown on invoices unless you set a separate company name later.</p>
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email *')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="you@example.com" />
+            <p class="mt-1 text-xs text-gray-500">We'll send invoice copies and password resets here.</p>
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
@@ -33,6 +35,7 @@
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password *')" />
             <x-password-input id="password" name="password" autocomplete="new-password" />
+            <p class="mt-1 text-xs text-gray-500">Use at least 8 characters. Mix letters, numbers and a symbol if you can.</p>
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
@@ -77,7 +80,7 @@
             </a>
 
             <x-primary-button class="ms-4">
-                {{ __('Register') }}
+                {{ __('Create my free account') }}
             </x-primary-button>
         </div>
     </form>

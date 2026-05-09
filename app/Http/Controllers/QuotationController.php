@@ -375,7 +375,7 @@ class QuotationController extends Controller
         );
 
         return redirect()->route('invoices.edit', $invoice)
-            ->with('status', "Quotation converted to a draft invoice. Review and click Finalize to issue the tax invoice.");
+            ->with('status', "Quotation converted to a draft invoice. Review and click Issue to send the tax invoice.");
     }
 
     public function pdf(Request $request, Quotation $quotation): Response

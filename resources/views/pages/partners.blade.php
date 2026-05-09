@@ -35,7 +35,7 @@
 
     <h2>Apply</h2>
     <p>
-        Tell us a bit about your practice and the clients you'd onboard. Email
+        Tell us a bit about your practice and the clients you'd bring onto Apna Invoice. Email
         <a href="mailto:partners@datasofttechnologies.com">partners@datasofttechnologies.com</a> with "Partner application" in the
         subject line.
     </p>

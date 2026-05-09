@@ -41,7 +41,7 @@
                     <a href="#products" class="block py-1.5 text-gray-700 hover:text-brand-700">3. Save products</a>
                     <a href="#quotations" class="block py-1.5 text-gray-700 hover:text-brand-700">4. Send a quotation (optional)</a>
                     <a href="#invoice" class="block py-1.5 text-gray-700 hover:text-brand-700">5. Create an invoice</a>
-                    <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Finalize &amp; share</a>
+                    <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Issue &amp; share</a>
                     <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Record payments</a>
                     <a href="#purchases" class="block py-1.5 text-gray-700 hover:text-brand-700">8. Purchases &amp; expenses</a>
                     <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">9. Track progress</a>
@@ -61,7 +61,7 @@
                         <a href="#products" class="block text-gray-700 hover:text-brand-700">3. Save products</a>
                         <a href="#quotations" class="block text-gray-700 hover:text-brand-700">4. Send a quotation (optional)</a>
                         <a href="#invoice" class="block text-gray-700 hover:text-brand-700">5. Create an invoice</a>
-                        <a href="#finalize" class="block text-gray-700 hover:text-brand-700">6. Finalize &amp; share</a>
+                        <a href="#finalize" class="block text-gray-700 hover:text-brand-700">6. Issue &amp; share</a>
                         <a href="#payments" class="block text-gray-700 hover:text-brand-700">7. Record payments</a>
                         <a href="#purchases" class="block text-gray-700 hover:text-brand-700">8. Purchases &amp; expenses</a>
                         <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">9. Track progress</a>
@@ -125,7 +125,7 @@
                             'tips' => [
                                 '<strong>Quotation, not tax invoice.</strong> The PDF is titled "Quotation" with a clear "this is not a tax invoice" disclaimer. Quotes don\'t go on GSTR-1 / GSTR-3B and aren\'t affected by your books-locked period.',
                                 '<strong>Lifecycle.</strong> Draft → Sent → Accepted → Converted (or Declined / Expired). Default validity is 30 days; expiry is computed automatically — no cron needed.',
-                                '<strong>Convert with one click.</strong> Once accepted, hit <em>Convert to Invoice</em> — a draft invoice is created with the same line items, ready for you to review and finalize.',
+                                '<strong>Convert with one click.</strong> Once accepted, hit <em>Convert to Invoice</em> — a draft invoice is created with the same line items, ready for you to review and issue.',
                                 '<strong>Separate numbering.</strong> Quotes use their own series (default <span class="font-mono">QT-0001</span>) so they never collide with invoice numbers.',
                             ],
                         ],
@@ -147,14 +147,14 @@
                         [
                             'id' => 'finalize',
                             'n' => 6,
-                            'title' => 'Finalize, download, share & amend',
+                            'title' => 'Issue, download, share & edit',
                             'time' => 'instant',
-                            'desc' => 'Open the invoice, click <em>Finalize</em> — we assign the next number in your series (auto-reset on 1 April when you use the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL. For returns / rate corrections / post-sale discounts, use <em>Issue credit note</em> — the adjustment is GSTR-1-compliant and auto-reduces the invoice balance.',
+                            'desc' => 'Open the invoice, click <em>Issue</em> — we assign the next number in your series (auto-reset on 1 April when you use the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL. For returns / rate corrections / post-sale discounts, use <em>Issue credit note</em> — the adjustment is GSTR-1-compliant and auto-reduces the invoice balance.',
                             'tips' => [
                                 '<strong>Why ink-saver by default?</strong> When you download for printing, you don\'t want coloured table headers burning toner. The on-screen version stays colourful, and the 🎨 button next to Download PDF gives you the full-colour file if you need it.',
                                 '<strong>WhatsApp share</strong> uses <span class="font-mono">wa.me</span> deep links — no extra setup, just works from any phone.',
-                                '<strong>Locked fields.</strong> After finalize, you can still edit notes, terms, due date and transporter — but not amounts, items, or customer. (GST best practice: issue a credit note instead of silently editing.)',
-                                '<strong>Cancel instead of delete.</strong> A wrong finalized invoice is cancelled with a short reason, preserving the audit trail. The public link stops working the moment you cancel.',
+                                '<strong>Locked fields.</strong> After issuing, you can still edit notes, terms, due date and transporter — but not amounts, items, or customer. (GST best practice: issue a credit note instead of silently editing.)',
+                                '<strong>Cancel instead of delete.</strong> A wrong issued invoice is cancelled with a short reason, preserving the audit trail. The public link stops working the moment you cancel.',
                             ],
                         ],
                         [
@@ -162,7 +162,7 @@
                             'n' => 7,
                             'title' => 'Record payments & issue receipts',
                             'time' => '20 seconds per payment',
-                            'desc' => 'On a finalized invoice, fill the <em>Record a payment</em> form — amount, method (UPI / NEFT / Cash / Cheque…), date, reference. We generate a sequential receipt number, update the balance, and give you a printable receipt PDF.',
+                            'desc' => 'On an issued invoice, fill the <em>Record a payment</em> form — amount, method (UPI / NEFT / Cash / Cheque…), date, reference. We generate a sequential receipt number, update the balance, and give you a printable receipt PDF.',
                             'tips' => [
                                 '<strong>Part payments.</strong> Enter ₹1,000 today, ₹2,000 next week — the balance recomputes automatically.',
                                 '<strong>TDS deducted by your customer?</strong> Use the TDS fields on the payment form — section (e.g. 194C, 194J, 194Q) and rate. The deducted amount is stored against the receipt so your CA can match it to Form 26AS.',
@@ -193,7 +193,7 @@
                             'desc' => 'The dashboard shows two numbers that actually matter: <strong>Bills issued</strong> (lifetime + this month) and <strong>Payments received</strong> (lifetime + this month). Plus outstanding, drafts, and monthly P&amp;L.',
                             'cta' => ['label' => 'Go to Dashboard', 'href' => route('dashboard')],
                             'tips' => [
-                                '<strong>Outstanding</strong> = everything finalized but not yet fully paid. It\'s your money-to-collect number.',
+                                '<strong>Outstanding</strong> = everything issued but not yet fully paid. It\'s your money-to-collect number.',
                                 '<strong>P&amp;L (3 views).</strong> Accrual (invoice-date), cash (when money actually moved), and GST (collected vs paid) — switch with one click. A 30-second health check.',
                                 '<strong>Customer ledger.</strong> On any customer, click <em>Ledger</em> to see a Dr/Cr running balance — every invoice, payment and credit note in date order. Useful for monthly statements.',
                                 'Click any card to drill into the underlying list.',
@@ -224,7 +224,7 @@
                                 ['q' => 'Is my data secure?', 'a' => 'Yes — all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user &amp; company, and we never share it. Deletion of data you own is permanent.'],
                                 ['q' => 'Can I run multiple businesses?', 'a' => 'Yes. Use the <em>Companies</em> section to add more than one, each with its own GSTIN, invoice series and customers. Switch between them using the dropdown at the top of the page.'],
                                 ['q' => 'What\'s the difference between a Quotation and an Invoice?', 'a' => 'A <strong>Quotation</strong> is a price proposal you send <em>before</em> a sale — no GST is collected, nothing is reported to the GSTN, and the customer is just being told "this is what it would cost." A <strong>Tax Invoice</strong> is the legal sale document — GST is officially charged, the invoice number is locked, and it goes on GSTR-1 / GSTR-3B. In Apna Invoice, once the customer accepts a quote, click <em>Convert to Invoice</em> to turn it into a draft tax invoice in one click — same line items, ready for you to finalize.'],
-                                ['q' => 'What if I need to cancel a finalized invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason — this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],
+                                ['q' => 'What if I need to cancel an issued invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason — this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],
                                 ['q' => 'How do I export data for my CA / GSTR-1 / GSTR-3B filing?', 'a' => 'See <strong>Section 10 — Reports for your CA</strong>. Quick links: <em>Invoices → Export → GSTR-1 CSV</em> for outward supplies (B2B/B2C, place of supply, CGST/SGST/IGST split), and <em>Finance → GSTR-3B</em> for the monthly summary computed from your books (sections 3.1, 4, 6.1 with PDF + CSV). All exports are UTF-8 with BOM so Excel opens them cleanly.'],
                                 ['q' => 'How do I see who owes me money — and how old the dues are?', 'a' => 'Open <strong>Finance → Aging</strong>. You\'ll get four buckets — Current (≤30 days) / 31–60 / 61–90 / 91+ — with a per-customer breakdown sorted by largest outstanding first. Click any customer to drill into their ledger. Anything in the 91+ bucket is highlighted as urgent (recovery probability drops sharply beyond 90 days). Export the whole report as PDF or CSV to send to a recovery agent or your CA.'],
                                 ['q' => 'Do I have to file GSTR-3B from Apna Invoice?', 'a' => 'No — Apna Invoice <strong>computes</strong> the GSTR-3B summary from your invoices, expenses and cash memos, but doesn\'t auto-submit to the GSTN portal. Open <em>Finance → GSTR-3B</em>, pick the month, verify against your GSTR-1 filings and ITC ledger, then either you or your CA submits on the GST portal. The PDF is laid out to mirror the GSTR-3B form so transposing is straightforward.'],

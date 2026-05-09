@@ -28,6 +28,13 @@
                     @csrf
                     @if ($company->exists) @method('PATCH') @endif
 
+                    {{-- Carry the calling page through the form so the controller
+                         can return the user to where they came from (e.g. /settings)
+                         instead of always dumping them on /companies. --}}
+                    @if (request('from'))
+                        <input type="hidden" name="from" value="{{ request('from') }}">
+                    @endif
+
                     {{-- Safety net: show every validation error at the top so the user
                          always sees something actionable, even for fields that don't
                          surface their own <x-input-error> slot yet (e.g. bank_*). --}}
@@ -79,7 +86,7 @@
                             <x-text-input id="books_locked_until" name="books_locked_until" type="date" class="mt-1 block w-full md:w-1/2"
                                           :value="old('books_locked_until', $company->books_locked_until?->toDateString())" />
                             <p class="text-xs text-gray-500 mt-1">
-                                After your CA finalises a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash memo dated on or before this date can be added, edited, or deleted — protecting your closed-FY books from accidental tampering. <span class="text-amber-700">Leave empty to keep all entries editable.</span>
+                                After your CA closes a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash memo dated on or before this date can be added, edited, or deleted — protecting your closed-FY books from accidental tampering. <span class="text-amber-700">Leave empty to keep all entries editable.</span>
                             </p>
                             <x-input-error :messages="$errors->get('books_locked_until')" class="mt-2" />
                         </div>

@@ -58,7 +58,7 @@
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-brand-600">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Revenue (taxable)</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($revenue['taxable'], 0) }}</div>
-                        <div class="mt-1 text-xs text-gray-500">Excl. GST · from finalized invoices</div>
+                        <div class="mt-1 text-xs text-gray-500">Excl. GST · from issued invoices</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-red-500">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Expenses (taxable)</div>
@@ -97,7 +97,7 @@
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-indigo-500">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">GST collected</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($revenue['gst_collected'], 2) }}</div>
-                        <div class="mt-1 text-xs text-gray-500">From customers on finalized invoices</div>
+                        <div class="mt-1 text-xs text-gray-500">From customers on issued invoices</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-sky-500">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Input Tax Credit (ITC)</div>

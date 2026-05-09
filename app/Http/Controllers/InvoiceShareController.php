@@ -26,7 +26,7 @@ class InvoiceShareController extends Controller
     public function email(Request $request, Invoice $invoice): RedirectResponse
     {
         $this->authorizeOwner($request, $invoice);
-        abort_if($invoice->isDraft(), 422, 'Finalize the invoice before emailing it.');
+        abort_if($invoice->isDraft(), 422, 'Issue the invoice before emailing it.');
 
         $data = $request->validate([
             'to' => ['required', 'email', 'max:255'],

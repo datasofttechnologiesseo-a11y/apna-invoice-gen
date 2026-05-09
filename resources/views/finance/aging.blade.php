@@ -40,7 +40,7 @@
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <h3 class="mt-4 font-display text-xl font-extrabold text-gray-900">All clear — nothing outstanding!</h3>
-                    <p class="mt-2 text-gray-500 max-w-md mx-auto">Every finalized invoice is fully paid. When customers fall behind, this page will show you who and by how much.</p>
+                    <p class="mt-2 text-gray-500 max-w-md mx-auto">Every issued invoice is fully paid. When customers fall behind, this page will show you who and by how much.</p>
                     <a href="{{ route('invoices.index') }}" class="mt-6 inline-flex items-center gap-1.5 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg">View all invoices →</a>
                 </div>
             @else

@@ -20,7 +20,7 @@
             <div class="p-5 bg-brand-50 border border-brand-200 rounded-lg text-sm text-brand-900">
                 <div class="font-semibold">Section 34 of the CGST Act</div>
                 <p class="mt-1 leading-relaxed">
-                    Credit notes adjust a finalised invoice when goods are returned, the rate was
+                    Credit notes adjust an issued invoice when goods are returned, the rate was
                     overcharged, or a post-sale discount is agreed. The credit note reduces the
                     effective receivable on the original invoice and must be reported in GSTR-1
                     for the month it's issued.

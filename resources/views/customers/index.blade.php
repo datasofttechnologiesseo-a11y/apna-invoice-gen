@@ -83,4 +83,6 @@
             </div>
         </div>
     </div>
+
+    <x-quick-action-fab :href="route('customers.create')" label="New customer" />
 </x-app-layout>

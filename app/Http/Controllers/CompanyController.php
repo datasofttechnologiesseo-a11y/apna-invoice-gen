@@ -90,7 +90,23 @@ class CompanyController extends Controller
 
         $company->update($data);
 
-        return redirect()->route('companies.index')->with('status', "'{$company->name}' saved.");
+        return $this->redirectAfterSave($request, $company, "'{$company->name}' saved.");
+    }
+
+    /**
+     * Send the user back to wherever they came from after a save. The form
+     * carries an optional `from` field; we whitelist a few safe values so a
+     * crafted hidden input can never bounce the user to an open redirect.
+     */
+    private function redirectAfterSave(Request $request, Company $company, string $status): RedirectResponse
+    {
+        $from = (string) $request->input('from');
+        $target = match ($from) {
+            'settings' => route('settings.index'),
+            'dashboard' => route('dashboard'),
+            default => route('companies.index'),
+        };
+        return redirect()->to($target)->with('status', $status);
     }
 
     public function destroy(Request $request, Company $company): RedirectResponse

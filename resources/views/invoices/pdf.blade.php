@@ -236,7 +236,17 @@
 </head>
 <body>
 
-<div class="page">
+@php
+    // CGST Rule 48(1): goods supplies require 3 copies (Original/Recipient,
+    // Duplicate/Transporter, Triplicate/Supplier); services need only 2.
+    // Resolved by the controller; fall back to a sensible default if any
+    // legacy caller doesn't pass it.
+    $copies = $copies ?? 1;
+    $copyLabels = $invoice->copyLabels($copies);
+@endphp
+
+@foreach ($copyLabels as $copyIndex => $copyLabel)
+<div class="page"@if ($copyIndex > 0) style="page-break-before: always;"@endif>
 
     {{-- ========== HEADER ========== --}}
     <table class="hero" style="width:100%;">
@@ -286,7 +296,7 @@
                     </div>
                 @endif
                 <div style="margin-top: 4px;">
-                    <span class="copy-label">Original for Recipient</span>
+                    <span class="copy-label">{{ $copyLabel }}</span>
                 </div>
                 <div style="margin-top: 6px;">
                     <span class="pill">#{{ $invoiceNumber }}</span>
@@ -615,6 +625,7 @@
 
     <div class="foot">This is a computer-generated invoice and does not require a physical signature.</div>
 </div>
+@endforeach
 
 </body>
 </html>

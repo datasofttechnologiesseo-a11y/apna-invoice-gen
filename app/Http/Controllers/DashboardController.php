@@ -60,6 +60,27 @@ class DashboardController extends Controller
         $setupComplete = ! in_array(false, $setup, true);
         $setupProgress = round((array_sum($setup) / count($setup)) * 100);
 
-        return view('dashboard', compact('stats', 'recent', 'currency', 'company', 'setup', 'setupComplete', 'setupProgress', 'pnl'));
+        // 30-day daily revenue trend — payments received per day. Drives the
+        // sparkline on the dashboard. One row per day so the chart shows real
+        // gaps (zero days) instead of misleadingly straight-lining over them.
+        $trendStart = now()->subDays(29)->startOfDay();
+        $trendEnd = now()->endOfDay();
+        $rows = (clone $payments)
+            ->selectRaw('DATE(received_at) as d, SUM(amount) as total')
+            ->whereBetween('received_at', [$trendStart, $trendEnd])
+            ->groupBy('d')
+            ->pluck('total', 'd');
+
+        $trend30 = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $day = now()->subDays($i)->toDateString();
+            $trend30[] = [
+                'date' => $day,
+                'label' => \Illuminate\Support\Carbon::parse($day)->format('d M'),
+                'amount' => (float) ($rows[$day] ?? 0),
+            ];
+        }
+
+        return view('dashboard', compact('stats', 'recent', 'currency', 'company', 'setup', 'setupComplete', 'setupProgress', 'pnl', 'trend30'));
     }
 }

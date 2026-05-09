@@ -254,4 +254,38 @@ class Invoice extends Model
         }
         return 'Tax Invoice';
     }
+
+    /**
+     * CGST Rule 48(1): when goods are supplied, three copies of the invoice
+     * are required (Original/Recipient, Duplicate/Transporter, Triplicate/
+     * Supplier). For services, only two copies (Original/Recipient,
+     * Duplicate/Supplier).
+     *
+     * Goods carry HSN codes; services use SAC codes which start with '99'.
+     * If any line item is goods (or HSN is missing — safer default), we
+     * treat the whole invoice as a goods supply.
+     */
+    public function defaultCopyCount(): int
+    {
+        $items = $this->items ?? collect();
+        if ($items->isEmpty()) {
+            return 3;
+        }
+        $allServices = $items->every(fn ($i) => is_string($i->hsn_sac) && str_starts_with(trim($i->hsn_sac), '99'));
+        return $allServices ? 2 : 3;
+    }
+
+    /**
+     * Labels for printed copies, ordered as required by Rule 48(1).
+     * Returns 1, 2 or 3 entries depending on $count.
+     */
+    public function copyLabels(int $count): array
+    {
+        $count = max(1, min(3, $count));
+        return match ($count) {
+            1 => ['Original for Recipient'],
+            2 => ['Original for Recipient', 'Duplicate for Supplier'],
+            3 => ['Original for Recipient', 'Duplicate for Transporter', 'Triplicate for Supplier'],
+        };
+    }
 }

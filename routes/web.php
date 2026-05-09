@@ -157,10 +157,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/backup/toggle', [BackupController::class, 'toggle'])->name('backup.toggle');
 
     // Multi-company routes. /company (singular) keeps the "active company edit"
-    // shortcut used by the dashboard and other inbound links.
+    // shortcut used by the dashboard and other inbound links. We forward any
+    // query string (e.g. ?from=settings) so the destination form can return
+    // the user to where they came from after save.
     Route::get('/company', function (Request $request) {
         $company = $request->user()->ensureCompany();
-        return redirect()->route('companies.edit', $company);
+        $query = $request->query();
+        return redirect()->route('companies.edit', array_merge(['company' => $company->id], $query));
     })->name('company.edit');
 
     Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
@@ -269,6 +272,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users', [\App\Http\Controllers\Admin\DashboardController::class, 'users'])->name('users');
         Route::get('/users/{user}', [\App\Http\Controllers\Admin\DashboardController::class, 'userDetail'])->name('users.show');
         Route::post('/users/{user}/impersonate', [\App\Http\Controllers\Admin\DashboardController::class, 'impersonate'])->name('users.impersonate');
+        Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Admin\DashboardController::class, 'resetPassword'])->name('users.reset-password');
         Route::get('/invoices', [\App\Http\Controllers\Admin\DashboardController::class, 'invoices'])->name('invoices');
         Route::get('/companies', [\App\Http\Controllers\Admin\DashboardController::class, 'companies'])->name('companies');
         Route::get('/customers', [\App\Http\Controllers\Admin\DashboardController::class, 'customers'])->name('customers');
@@ -284,6 +288,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
+
+    // Settings hub — single landing page that organises every existing
+    // settings route (company, profile, activity, etc.) under one roof.
+    // It does NOT replace those routes, only links to them, so existing
+    // bookmarks, forms and tests keep working.
+    Route::view('/settings', 'settings.index')->name('settings.index');
 });
 
 require __DIR__.'/auth.php';

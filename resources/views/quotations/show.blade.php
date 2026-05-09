@@ -88,7 +88,7 @@
                         :action="route('quotations.convert', $quotation)"
                         method="POST"
                         title="Convert to tax invoice?"
-                        message="A new draft invoice will be created with these line items. The quote is then locked. Review and click Finalize on the invoice to issue the tax invoice."
+                        message="A new draft invoice will be created with these line items. The quote is then locked. Review and click Issue to send the tax invoice."
                         confirm-label="Convert to invoice"
                         confirm-class="bg-purple-700 hover:bg-purple-800"
                         tone="default">

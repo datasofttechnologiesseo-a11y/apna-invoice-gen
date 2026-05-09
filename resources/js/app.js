@@ -48,6 +48,23 @@ window.addEventListener('pageshow', () => {
 });
 
 /* ------------------------------------------------------------------
+ * PWA — register service worker for offline asset caching + install prompt.
+ *
+ * The worker (public/service-worker.js) is conservative: it caches only
+ * /build/* (Vite-hashed) and /brand/* assets. HTML, POSTs, and dynamic
+ * routes always hit the network so CSRF/sessions can never go stale.
+ *
+ * Skipped on localhost without HTTPS would normally fail, but localhost
+ * is treated as a secure context by browsers, so SW registers there too.
+ * ---------------------------------------------------------------- */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+            .catch(() => { /* fail silently — SW is progressive enhancement */ });
+    });
+}
+
+/* ------------------------------------------------------------------
  * Count-up animation for marketing-page stats.
  *
  * Any element with [data-countup="N"] animates 0 → N when it scrolls

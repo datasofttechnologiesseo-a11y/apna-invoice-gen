@@ -41,6 +41,51 @@
             @endforeach
         </div>
 
+        @php
+            $phones = $user->companies->filter(fn ($c) => filled($c->phone));
+        @endphp
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200"><h3 class="font-display font-bold text-slate-900">Phone numbers</h3></div>
+            @if ($phones->isEmpty())
+                <div class="px-5 py-6 text-sm text-slate-400">No phone numbers on file.</div>
+            @else
+                <ul class="divide-y divide-slate-100">
+                    @foreach ($phones as $co)
+                        <li class="px-5 py-3 flex items-center justify-between gap-4 text-sm">
+                            <div class="text-slate-500">{{ $co->name }}</div>
+                            <a href="tel:{{ $co->phone }}" class="font-mono text-slate-900 hover:text-indigo-600">{{ $co->phone }}</a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
+        @if (! $user->isSuperAdmin() && $user->id !== auth()->id())
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200">
+                    <h3 class="font-display font-bold text-slate-900">Reset password</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Set a new password for this user. Share it securely — they should change it on next login.</p>
+                </div>
+                <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="p-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-start"
+                      onsubmit="return confirm('Reset password for {{ $user->name }}?')">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">New password</label>
+                        <input type="text" name="password" required minlength="8" autocomplete="new-password"
+                               class="w-full border-slate-300 rounded-md shadow-sm text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500"
+                               value="{{ old('password') }}">
+                        @error('password')<div class="text-xs text-rose-600 mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Confirm</label>
+                        <input type="text" name="password_confirmation" required minlength="8"
+                               class="w-full border-slate-300 rounded-md shadow-sm text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="sm:mt-6 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded shadow-sm">Reset</button>
+                </form>
+            </div>
+        @endif
+
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-200"><h3 class="font-display font-bold text-slate-900">Companies ({{ $user->companies->count() }})</h3></div>
             @if ($user->companies->isEmpty())

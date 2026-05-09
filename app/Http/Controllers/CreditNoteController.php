@@ -18,7 +18,7 @@ class CreditNoteController extends Controller
     public function create(Request $request, Invoice $invoice): View|RedirectResponse
     {
         $this->authorizeInvoice($request, $invoice);
-        abort_if($invoice->isDraft(), 422, 'Finalize the invoice before issuing a credit note.');
+        abort_if($invoice->isDraft(), 422, 'Issue the invoice before creating a credit note.');
         abort_if($invoice->isCancelled(), 422, 'Cancelled invoices cannot be credited.');
 
         // CGST Section 34(2): credit notes for a given supply must be issued
@@ -51,7 +51,7 @@ class CreditNoteController extends Controller
     public function store(Request $request, Invoice $invoice): RedirectResponse
     {
         $this->authorizeInvoice($request, $invoice);
-        abort_if($invoice->isDraft(), 422, 'Finalize the invoice before issuing a credit note.');
+        abort_if($invoice->isDraft(), 422, 'Issue the invoice before creating a credit note.');
         abort_if($invoice->isCancelled(), 422, 'Cancelled invoices cannot be credited.');
 
         // CGST Section 34(2) — see CreditNoteController::create() for context.

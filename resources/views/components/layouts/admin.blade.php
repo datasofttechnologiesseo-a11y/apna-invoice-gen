@@ -61,7 +61,7 @@
                 </div>
                 <div class="min-w-0">
                     <div class="font-display font-extrabold text-white leading-tight truncate">Apna Invoice</div>
-                    <div class="text-[10px] uppercase tracking-widest text-slate-500 leading-tight">Admin Console</div>
+                    <div class="text-[10px] uppercase tracking-widest text-slate-500 leading-tight">Admin Panel</div>
                 </div>
             </a>
             <button @click="sidebarOpen = false" class="lg:hidden p-1 text-slate-400 hover:text-white" aria-label="Close menu">
@@ -82,21 +82,21 @@
                     <span>{{ $item['label'] }}</span>
                 </a>
             @endforeach
-        </nav>
 
-        <div class="p-3 border-t border-slate-800 space-y-1">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to app
-            </a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    Log out
-                </button>
-            </form>
-        </div>
+            <div class="mt-2 pt-2 border-t border-slate-800 space-y-0.5">
+                <a href="{{ route('dashboard') }}" @click="sidebarOpen = false" class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <svg class="w-5 h-5 flex-shrink-0 text-slate-500 group-hover:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to app</span>
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                        <svg class="w-5 h-5 flex-shrink-0 text-slate-500 group-hover:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        <span>Log out</span>
+                    </button>
+                </form>
+            </div>
+        </nav>
     </aside>
 
     {{-- Main area --}}

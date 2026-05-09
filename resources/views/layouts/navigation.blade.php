@@ -98,6 +98,12 @@
 
             <div class="flex items-center">
 
+            @auth
+                <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink-0">
+                    <x-notification-bell />
+                </div>
+            @endauth
+
             <!-- Settings Dropdown (hidden on sm/md; shown on lg+ where the primary nav is visible) -->
             <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink-0">
                 <x-dropdown align="right" width="48">
@@ -115,6 +121,10 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        <x-dropdown-link :href="route('settings.index')">
+                            {{ __('Settings') }}
+                        </x-dropdown-link>
+
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
@@ -214,6 +224,10 @@
             </div>
 
             <div class="mt-3 space-y-1">
+                <x-responsive-nav-link :href="route('settings.index')">
+                    {{ __('Settings') }}
+                </x-responsive-nav-link>
+
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>

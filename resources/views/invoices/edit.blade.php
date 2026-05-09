@@ -50,7 +50,7 @@
                 <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded flex items-start gap-3">
                     <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                     <div class="text-sm">
-                        <div class="font-semibold">This invoice is finalised — limited editing only.</div>
+                        <div class="font-semibold">This invoice is issued — limited editing only.</div>
                         <div class="mt-0.5">You can update <strong>notes, terms, due date, and transporter details</strong>. Amounts, line items, customer, and invoice number are legally locked per GST rules. To change those, cancel this invoice and issue a credit note / revised invoice.</div>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
                         <ol class="mt-1 list-decimal pl-5 space-y-0.5">
                             <li>Pick a <strong>customer</strong> (or click <em>+ New</em> to add one).</li>
                             <li>Fill <strong>at least one line item</strong> — description, HSN/SAC, qty, rate, GST%.</li>
-                            <li>Click <strong>Create draft</strong> — it stays editable. <strong>Finalize</strong> locks the invoice number and makes the PDF.</li>
+                            <li>Click <strong>Create draft</strong> — it stays editable. <strong>Issue</strong> locks the invoice number and makes the PDF.</li>
                         </ol>
                         <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to fields are optional — open them only if needed.</div>
                     </div>
@@ -121,7 +121,7 @@
                                     <span class="text-gray-900 font-semibold">{{ $invoice->invoice_number }}</span>
                                 @else
                                     <span class="text-brand-700 font-semibold">{{ $previewNumber ?? $invoice->company?->nextInvoiceNumber() }}</span>
-                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned on finalize</span>
+                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned when issued</span>
                                 @endif
                             </div>
                         </div>
@@ -325,18 +325,20 @@
                                             </select>
                                         </td>
                                         <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
-                                        <td class="px-2 py-2 text-right w-12">
+                                        <td class="px-2 py-2 text-right w-14">
                                             @if (! $restricted)
                                                 {{-- Always render so the column doesn't collapse; disabled
                                                      when removing it would leave zero line items. --}}
                                                 <button type="button" @click="removeRow(idx)"
                                                         :disabled="items.length <= 1"
                                                         :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-md text-lg leading-none transition"
+                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-md ring-1 transition"
                                                         :class="items.length <= 1
-                                                            ? 'text-gray-300 cursor-not-allowed'
-                                                            : 'text-red-500 hover:text-white hover:bg-red-500'"
-                                                        aria-label="Remove row">×</button>
+                                                            ? 'text-gray-300 ring-gray-200 bg-gray-50 cursor-not-allowed'
+                                                            : 'text-red-600 ring-red-200 bg-red-50 hover:text-white hover:bg-red-600 hover:ring-red-600'"
+                                                        aria-label="Remove row">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
                                             @endif
                                         </td>
                                     </tr>

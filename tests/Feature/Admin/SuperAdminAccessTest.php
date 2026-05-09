@@ -35,7 +35,7 @@ class SuperAdminAccessTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin');
         $response->assertStatus(200);
-        $response->assertSee('Admin Console');
+        $response->assertSee('Admin Panel');
     }
 
     public function test_super_admin_can_view_users_list(): void

@@ -419,7 +419,7 @@ class InvoiceController extends Controller
     public function destroy(Request $request, Invoice $invoice): RedirectResponse
     {
         $this->authorizeInvoice($request, $invoice);
-        abort_unless($invoice->isEditable(), 403, 'Finalized invoices cannot be deleted.');
+        abort_unless($invoice->isEditable(), 403, 'Issued invoices cannot be deleted.');
 
         // Books-period lock: even drafts dated inside a closed FY shouldn't be silently dropped.
         if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
@@ -443,15 +443,15 @@ class InvoiceController extends Controller
         abort_unless($invoice->isDraft(), 403);
 
         if ($invoice->items()->count() === 0) {
-            return back()->withErrors(['finalize' => 'Cannot finalize an invoice with no line items.']);
+            return back()->withErrors(['finalize' => 'Cannot issue an invoice with no line items.']);
         }
         if ((float) $invoice->grand_total <= 0) {
-            return back()->withErrors(['finalize' => 'Cannot finalize a zero-amount invoice.']);
+            return back()->withErrors(['finalize' => 'Cannot issue a zero-amount invoice.']);
         }
 
-        // Books-period lock: cannot finalize an invoice into a closed FY.
+        // Books-period lock: cannot issue an invoice into a closed FY.
         if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
-            return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot finalize an invoice dated on or before that.");
+            return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot issue an invoice dated on or before that.");
         }
 
         DB::transaction(function () use ($invoice) {
@@ -471,7 +471,7 @@ class InvoiceController extends Controller
             $invoice
         );
 
-        return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice finalized. Number: ' . $invoice->fresh()->invoice_number);
+        return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice issued. Number: ' . $invoice->fresh()->invoice_number);
     }
 
     public function recordPayment(Request $request, Invoice $invoice): RedirectResponse
@@ -480,7 +480,7 @@ class InvoiceController extends Controller
 
         // Payments are only legally meaningful on issued invoices. Blocking
         // payment against drafts keeps the audit trail clean.
-        abort_if($invoice->isDraft(), 422, 'Finalize the invoice before recording payments.');
+        abort_if($invoice->isDraft(), 422, 'Issue the invoice before recording payments.');
         abort_if($invoice->status === 'cancelled', 422, 'Cancelled invoices cannot accept payments.');
 
         // Remaining also subtracts credited_amount — a credit note reduces how
@@ -784,7 +784,13 @@ class InvoiceController extends Controller
         // colourful version can append ?color=1 to the URL.
         $print = ! $request->boolean('color');
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print'))
+        // CGST Rule 48(1): goods → 3 copies, services → 2 copies. Auto-detected
+        // from line items, but caller can override with ?copies=1|2|3.
+        $copies = $request->has('copies')
+            ? max(1, min(3, (int) $request->input('copies')))
+            : $invoice->defaultCopyCount();
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print', 'copies'))
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 

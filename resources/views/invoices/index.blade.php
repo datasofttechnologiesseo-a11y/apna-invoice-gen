@@ -103,10 +103,11 @@
                         @endforeach
                     </ul>
 
-                    {{-- Desktop: full table (unchanged) --}}
+                    {{-- Desktop: full table with sticky header so headings stay visible
+                         while scrolling long invoice lists (Zoho/Vyapar pattern). --}}
                     <div class="hidden md:block overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
+                        <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase sticky top-0 z-[1] shadow-sm">
                             <tr>
                                 <th class="px-4 py-3">Number</th>
                                 <th class="px-4 py-3">Date</th>
@@ -183,4 +184,6 @@
             </div>
         </div>
     </div>
+
+    <x-quick-action-fab />
 </x-app-layout>

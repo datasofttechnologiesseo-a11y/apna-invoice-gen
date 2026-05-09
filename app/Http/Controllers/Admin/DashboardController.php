@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -201,6 +202,22 @@ class DashboardController extends Controller
 
         return redirect()->route('dashboard')
             ->with('status', "Now viewing the app as {$user->name}.");
+    }
+
+    public function resetPassword(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($request->user()->isSuperAdmin(), 403);
+        abort_if($user->id === $request->user()->id, 422, 'Use the normal account settings to change your own password.');
+        abort_if($user->isSuperAdmin(), 403, 'Cannot reset another super admin\'s password.');
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->forceFill(['password' => Hash::make($data['password'])])->save();
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('status', "Password reset for {$user->name}.");
     }
 
     public function stopImpersonate(Request $request): RedirectResponse

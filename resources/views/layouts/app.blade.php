@@ -9,6 +9,14 @@
             :title="$title ?? 'Dashboard'"
             :noindex="true" />
 
+        {{-- PWA — installable on mobile/desktop, offline-capable for assets --}}
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#1e3a8a">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="Apna Invoice">
+        <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

@@ -34,11 +34,11 @@
                          frontend state. Clicking the button → native confirm
                          dialog → form POSTs to /invoices/{id}/finalize. --}}
                     <form method="POST" action="{{ route('invoices.finalize', $invoice) }}" class="inline"
-                          onsubmit="return confirm('Finalize this invoice?\n\nFinalising assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable.\n\nClick OK to finalize.');">
+                          onsubmit="return confirm('Issue this invoice?\n\nIssuing assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable.\n\nClick OK to issue.');">
                         @csrf
                         <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded text-sm font-semibold shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            Finalize
+                            Issue
                         </button>
                     </form>
                 @endif
@@ -117,6 +117,8 @@
             @endif
 
             @php $payments = $invoice->payments; @endphp
+
+            @include('invoices.partials.activity-timeline', ['invoice' => $invoice])
 
             @if (! $invoice->isDraft() && ! $invoice->isCancelled())
                 @include('invoices.partials.share-panel', ['invoice' => $invoice])

@@ -70,7 +70,7 @@
                 @php
                     $statuses = [
                         'Drafts'    => ['count' => $stats['invoices']['drafts'],                                'color' => 'bg-slate-400'],
-                        'Finalized' => ['count' => $stats['invoices']['finalized'] - $stats['invoices']['paid'], 'color' => 'bg-indigo-500'],
+                        'Issued'    => ['count' => $stats['invoices']['finalized'] - $stats['invoices']['paid'], 'color' => 'bg-indigo-500'],
                         'Paid'      => ['count' => $stats['invoices']['paid'],                                   'color' => 'bg-emerald-500'],
                         'Cancelled' => ['count' => $stats['invoices']['cancelled'],                              'color' => 'bg-rose-500'],
                     ];

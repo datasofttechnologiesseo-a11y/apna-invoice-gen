@@ -63,7 +63,7 @@
     </table>
 
     @if ($summary['invoices'] === 0)
-        <div class="empty">No outstanding receivables. Every finalized invoice is fully paid.</div>
+        <div class="empty">No outstanding receivables. Every issued invoice is fully paid.</div>
     @else
         {{-- Bucket summary --}}
         <table class="summary-grid">

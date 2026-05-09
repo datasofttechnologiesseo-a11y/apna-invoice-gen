@@ -36,7 +36,7 @@
                             $checklist = [
                                 ['done' => $setup['business'], 'title' => 'Complete your business profile', 'sub' => 'Business name, GSTIN, address, state, logo', 'href' => route('company.edit'), 'cta' => $setup['business'] ? 'Edit' : 'Complete →'],
                                 ['done' => $setup['customer'], 'title' => 'Add your first customer', 'sub' => 'Save details once, reuse on every invoice', 'href' => route('customers.create'), 'cta' => $setup['customer'] ? 'Manage' : 'Add customer →'],
-                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, finalize, download PDF', 'href' => route('invoices.templates'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
+                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, issue, download PDF', 'href' => route('invoices.templates'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
                             ];
                         @endphp
                         @foreach ($checklist as $item)
@@ -107,22 +107,24 @@
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Drafts</div>
                     <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['drafts'] }}</div>
-                    <div class="mt-3 text-xs text-gray-400">ready to finalize</div>
+                    <div class="mt-3 text-xs text-gray-400">ready to issue</div>
                 </div>
                 <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="group relative block p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 hover:ring-accent-300 hover:shadow-lg transition overflow-hidden" title="View invoices awaiting payment">
                     <div class="flex items-start justify-between gap-2">
                         <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
                         <svg class="w-4 h-4 text-accent-700 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
-                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums">₹{{ number_format((float) $stats['outstanding'], 2) }}</div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums" title="₹{{ number_format((float) $stats['outstanding'], 2) }}"><x-inr-compact :amount="$stats['outstanding']" /></div>
                     <div class="mt-3 text-xs text-accent-700 group-hover:text-accent-900 transition">{{ $stats['outstanding'] > 0 ? 'click to chase →' : 'awaiting payment' }}</div>
                 </a>
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
-                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums">₹{{ number_format((float) $stats['paid_this_month'], 0) }}</div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums" title="₹{{ number_format((float) $stats['paid_this_month'], 2) }}"><x-inr-compact :amount="$stats['paid_this_month']" /></div>
                     <div class="mt-3 text-xs text-gray-400">paid on {{ now()->format('F') }} bills</div>
                 </div>
             </div>
+
+            <x-revenue-sparkline :series="$trend30" />
 
             {{-- This month's P&L snapshot --}}
             <a href="{{ route('finance.index') }}" class="block bg-white rounded-2xl shadow-card ring-1 ring-gray-100 hover:ring-brand-300 hover:shadow-brand transition p-6">
@@ -389,4 +391,6 @@
             </div>
         </div>
     </div>
+
+    <x-quick-action-fab />
 </x-app-layout>
