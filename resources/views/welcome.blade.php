@@ -122,6 +122,93 @@
                 ],
             ],
         ],
+        // WebApplication schema — declares the page hosts a free GST calculator
+        // tool. Targets rich-result eligibility for "free GST calculator",
+        // "GST calculator India", "CGST SGST IGST calculator" queries.
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebApplication',
+            'name' => 'Free GST Calculator',
+            'alternateName' => [
+                'GST Calculator India',
+                'Online GST Calculator',
+                'CGST SGST IGST Calculator',
+                'Reverse GST Calculator',
+                'Free GST Tax Calculator',
+            ],
+            'url' => $appUrl . '/#gst-calculator',
+            'applicationCategory' => 'FinanceApplication',
+            'operatingSystem' => 'Any (web-based)',
+            'browserRequirements' => 'Requires JavaScript',
+            'inLanguage' => 'en-IN',
+            'isAccessibleForFree' => true,
+            'description' => 'Free online GST calculator for India — compute CGST, SGST and IGST on any amount instantly. Supports intra-state and inter-state supplies, plus tax-inclusive and tax-exclusive modes (reverse GST). Works for all standard slabs: 0%, 5%, 12%, 18%, 28%. No login, no signup, runs in your browser.',
+            'featureList' => [
+                'Calculate CGST + SGST for intra-state supplies',
+                'Calculate IGST for inter-state supplies',
+                'Reverse-calculate GST from a tax-inclusive price',
+                'Quick presets: ₹1K / ₹10K / ₹50K / ₹1L / ₹5L',
+                'WhatsApp share of the calculation result',
+                'No login or signup required',
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'price' => '0',
+                'priceCurrency' => 'INR',
+            ],
+            'creator' => [
+                '@type' => 'Organization',
+                'name' => config('seo.organization.name'),
+                'url' => config('seo.organization.url'),
+            ],
+        ],
+        // SoftwareApplication schema — declares the invoicing/billing tool
+        // itself. Targets rich-result eligibility for "online invoice generator",
+        // "free bill generator", "GST bill generator", "invoice generator India".
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'SoftwareApplication',
+            'name' => 'Apna Invoice — Free GST Invoice & Bill Generator',
+            'alternateName' => [
+                'Online Invoice Generator',
+                'Free Bill Generator',
+                'GST Invoice Generator India',
+                'GST Bill Generator',
+                'Invoice Generator India',
+                'Online Bill Generator',
+                'Free Invoice Maker',
+            ],
+            'url' => $appUrl,
+            'applicationCategory' => 'BusinessApplication',
+            'applicationSubCategory' => 'BillingAndInvoicing',
+            'operatingSystem' => 'Any (web-based · PWA installable)',
+            'browserRequirements' => 'Requires JavaScript',
+            'inLanguage' => 'en-IN',
+            'isAccessibleForFree' => true,
+            'description' => 'Free online invoice generator and bill generator for Indian businesses. Issue GST-compliant tax invoices, bills, credit notes and receipts with auto CGST/SGST/IGST split, HSN/SAC, UPI QR and WhatsApp share. CGST Rule 46/49 compliant, GSTR-1 export, multi-copy printing per Rule 48 for goods. Built for SMEs, MSMEs, startups, freelancers, shops and CAs.',
+            'featureList' => [
+                'Free online GST invoice generator (no signup for the calculator)',
+                'Bill generator for goods and services with auto CGST/SGST/IGST',
+                'Quotation → Invoice in one click with separate FY-aware numbering',
+                'Credit notes per Section 34 of the CGST Act',
+                'Cash memos for over-the-counter sales',
+                'GSTR-1 + GSTR-3B export · Receivables aging report',
+                'WhatsApp + email + 30-day signed public-link sharing',
+                'Multi-copy invoice PDFs (Original / Duplicate / Triplicate) per CGST Rule 48',
+                'PWA — installable on any phone or desktop',
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'price' => '0',
+                'priceCurrency' => 'INR',
+                'description' => 'Free during beta · Unlimited invoices, customers and quotations',
+            ],
+            'creator' => [
+                '@type' => 'Organization',
+                'name' => config('seo.organization.name'),
+                'url' => config('seo.organization.url'),
+            ],
+        ],
     ];
 @endphp
 <!DOCTYPE html>
@@ -132,7 +219,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
         title="Free GST Invoice Generator + GST Calculator India"
-        description="Free GST invoice generator + GST calculator for India. Make CGST/SGST/IGST invoices in 60 seconds with HSN/SAC, UPI QR and WhatsApp share. Calculate GST on any amount — inclusive or exclusive — instantly, no login needed. For SMEs, MSMEs, freelancers, shops and CAs. GSTR-1 export. CGST Rule 46/49 compliant. GST 2.0 ready. No card, unlimited invoices during beta."
+        description="Free online invoice generator + GST calculator + bill generator for India. Make CGST/SGST/IGST invoices in 60 seconds with HSN/SAC, UPI QR and WhatsApp share. Calculate GST on any amount — inclusive or exclusive — instantly, no login needed. For SMEs, MSMEs, freelancers, shops and CAs. GSTR-1 export. CGST Rule 46/49 compliant. GST 2.0 ready. No card, unlimited invoices during beta."
         keywords="free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, free GST billing software India, online GST invoice generator, GST bill maker, GSTR-1 export, HSN SAC search, GST invoice format India, free invoicing app for SMEs, MSME billing software, freelancer invoice India, shop billing software, composition dealer Bill of Supply, audit defensible invoicing, GSTR-3B summary, UPI QR invoice, WhatsApp invoice share"
         type="website"
         :json-ld="$jsonLd" />
@@ -231,13 +318,23 @@
                 </span>
             </h1>
 
-            {{-- SR-only H2 — keeps SEO weight on the long-form ranking phrase --}}
-            <h2 class="sr-only">Best free GST invoice generator and online bill maker for India — make GST-compliant tax invoices, credit notes and receipts with auto CGST, SGST and IGST.</h2>
+            {{-- SR-only H2 — keeps SEO weight on the long-form ranking phrases.
+                 Combines the high-volume search variants without keyword-stuffing
+                 the visible UI: GST invoice generator, online invoice generator,
+                 free bill generator, GST bill generator, GST calculator. --}}
+            <h2 class="sr-only">Best free online invoice generator, GST invoice generator and bill generator for India — make GST-compliant tax invoices, bills, credit notes and receipts with auto CGST, SGST and IGST. Includes a free GST calculator (no login).</h2>
 
             {{-- Hindi tagline — small, restrained, signals India-first without dominating --}}
             <p class="mt-4 text-base sm:text-lg font-bold text-brand-900 leading-snug" lang="hi">
                 आपका अपना <span class="text-saffron-600">GST बिलिंग साथी</span> — हर invoice
                 <span class="px-1.5 rounded text-money-800 bg-money-100">सिर्फ़&nbsp;60 सेकंड</span> में।
+            </p>
+
+            {{-- English keyword-rich sub-line — visible to users AND indexed by Google.
+                 Uses the three-way phrase ("invoice generator · bill generator · GST
+                 calculator") that captures all primary search intents on one line. --}}
+            <p class="mt-2 text-sm text-gray-700 leading-snug">
+                The <strong>free online invoice generator</strong>, <strong>bill generator</strong> and <strong>GST calculator</strong> built for Indian SMEs, MSMEs, freelancers, shops &amp; CAs.
             </p>
 
             {{-- Four feature rows — clean icon + bold title + caption pattern from the brief --}}
@@ -331,8 +428,8 @@
 
         </div>
 
-        <!-- GST Calculator (no login needed) -->
-        <div class="relative lg:col-span-5 animate-fade-up bg-saffron-50/60 ring-1 ring-saffron-100 rounded-3xl p-6 sm:p-8"
+        <!-- Free GST Calculator (no login needed) — anchor target for deep links from blog/articles -->
+        <div id="free-gst-calculator" class="relative lg:col-span-5 animate-fade-up bg-saffron-50/60 ring-1 ring-saffron-100 rounded-3xl p-6 sm:p-8"
              x-data="{
                 amount: 10000,
                 rate: 18,
@@ -390,8 +487,8 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-accent-400 to-saffron-400 text-brand-900 font-black text-lg flex items-center justify-center shadow-lg ring-1 ring-white/20">₹</div>
                                 <div>
-                                    <div class="text-[10px] uppercase tracking-[0.2em] text-accent-300 font-bold">Free Tool · No Login</div>
-                                    <div class="font-display font-black text-xl md:text-2xl mt-0.5">GST Calculator</div>
+                                    <div class="text-[10px] uppercase tracking-[0.2em] text-accent-300 font-bold">Free GST Calculator · No Login</div>
+                                    <h2 id="gst-calculator" class="font-display font-black text-xl md:text-2xl mt-0.5 leading-tight">Free GST Calculator — CGST, SGST &amp; IGST</h2>
                                 </div>
                             </div>
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-money-400/20 text-money-200 ring-1 ring-money-300/40">
@@ -399,7 +496,7 @@
                                 Live
                             </span>
                         </div>
-                        <div class="relative mt-3 text-xs text-brand-200">CGST · SGST · IGST · intra &amp; inter-state · tax-inclusive or exclusive</div>
+                        <p class="relative mt-3 text-xs text-brand-200">India's free online GST calculator — CGST · SGST · IGST · intra &amp; inter-state · tax-inclusive or exclusive (reverse GST).</p>
                     </div>
 
                     {{-- Inputs + breakdown --}}
