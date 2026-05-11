@@ -103,13 +103,13 @@
 
     {{-- Totals --}}
     <table class="totals-table">
-        <tr><td class="k">Taxable amount</td><td class="v">Rs. {{ number_format((float) $expense->amount, 2) }}</td></tr>
+        <tr><td class="k">Taxable amount</td><td class="v">Rs. {{ inr($expense->amount) }}</td></tr>
         @if ((float) $expense->gst_amount > 0)
-            <tr><td class="k">GST / Input Tax Credit</td><td class="v">Rs. {{ number_format((float) $expense->gst_amount, 2) }}</td></tr>
+            <tr><td class="k">GST / Input Tax Credit</td><td class="v">Rs. {{ inr($expense->gst_amount) }}</td></tr>
         @endif
         <tr class="grand">
             <td class="k">Total Cash Out</td>
-            <td class="v">Rs. {{ number_format((float) $expense->amount + (float) $expense->gst_amount, 2) }}</td>
+            <td class="v">Rs. {{ inr($expense->amount + (float) $expense->gst_amount) }}</td>
         </tr>
     </table>
 

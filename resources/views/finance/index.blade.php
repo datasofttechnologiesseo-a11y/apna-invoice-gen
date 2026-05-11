@@ -90,23 +90,23 @@
                     </div>
                 </div>
                 <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded">
-                    <strong>Outstanding receivables:</strong> ₹{{ number_format($revenue['outstanding'], 2) }} yet to be collected from customers.
+                    <strong>Outstanding receivables:</strong> ₹{{ inr($revenue['outstanding']) }} yet to be collected from customers.
                 </div>
             @else {{-- gst --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-indigo-500">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">GST collected</div>
-                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($revenue['gst_collected'], 2) }}</div>
+                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ inr($revenue['gst_collected']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">From customers on issued invoices</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-sky-500">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Input Tax Credit (ITC)</div>
-                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($expense['gst_itc'], 2) }}</div>
+                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ inr($expense['gst_itc']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">From expense GST · claimable</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] {{ $gstPayable >= 0 ? 'border-l-rose-600' : 'border-l-emerald-600' }}">
                         <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Net GST payable</div>
-                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $gstPayable >= 0 ? 'text-rose-700' : 'text-emerald-700' }} tabular-nums">₹{{ number_format($gstPayable, 2) }}</div>
+                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $gstPayable >= 0 ? 'text-rose-700' : 'text-emerald-700' }} tabular-nums">₹{{ inr($gstPayable) }}</div>
                         <div class="mt-1 text-xs text-gray-500">To government on GSTR-3B</div>
                     </div>
                 </div>
@@ -204,7 +204,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right flex-shrink-0">
-                                        <div class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ number_format((float) $e->amount, 2) }}</div>
+                                        <div class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ inr($e->amount) }}</div>
                                         @if ((float) $e->gst_amount > 0)
                                             <div class="text-[10px] text-gray-500">+ ₹{{ number_format((float) $e->gst_amount, 0) }} GST</div>
                                         @endif

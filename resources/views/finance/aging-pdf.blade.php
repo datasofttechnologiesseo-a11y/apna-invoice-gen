@@ -75,11 +75,11 @@
                 <td class="h bucket-90">91+ days</td>
             </tr>
             <tr>
-                <td class="v bucket-total">Rs. {{ number_format($summary['total'], 2) }}<br><small>{{ $summary['invoices'] }} {{ \Illuminate\Support\Str::plural('invoice', $summary['invoices']) }}</small></td>
-                <td class="v bucket-current">Rs. {{ number_format($summary['current'], 2) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['current'] / $summary['total']) * 100) : 0 }}% of total</small></td>
-                <td class="v bucket-30">Rs. {{ number_format($summary['b30_60'], 2) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</small></td>
-                <td class="v bucket-60">Rs. {{ number_format($summary['b60_90'], 2) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</small></td>
-                <td class="v bucket-90">Rs. {{ number_format($summary['b90_plus'], 2) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% — chase</small></td>
+                <td class="v bucket-total">Rs. {{ inr($summary['total']) }}<br><small>{{ $summary['invoices'] }} {{ \Illuminate\Support\Str::plural('invoice', $summary['invoices']) }}</small></td>
+                <td class="v bucket-current">Rs. {{ inr($summary['current']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['current'] / $summary['total']) * 100) : 0 }}% of total</small></td>
+                <td class="v bucket-30">Rs. {{ inr($summary['b30_60']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</small></td>
+                <td class="v bucket-60">Rs. {{ inr($summary['b60_90']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</small></td>
+                <td class="v bucket-90">Rs. {{ inr($summary['b90_plus']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% — chase</small></td>
             </tr>
         </table>
 
@@ -107,22 +107,22 @@
                         <td style="font-family: DejaVu Sans Mono, monospace;">{{ $c['gstin'] ?? '—' }}</td>
                         <td class="r">{{ $c['invoice_count'] }}</td>
                         <td class="r">{{ $c['oldest_days'] }}d</td>
-                        <td class="r">{{ $c['current'] > 0 ? number_format($c['current'], 2) : '—' }}</td>
-                        <td class="r">{{ $c['b30_60'] > 0 ? number_format($c['b30_60'], 2) : '—' }}</td>
-                        <td class="r">{{ $c['b60_90'] > 0 ? number_format($c['b60_90'], 2) : '—' }}</td>
-                        <td class="r" style="color: #b91c1c;">{{ $c['b90_plus'] > 0 ? number_format($c['b90_plus'], 2) : '—' }}</td>
-                        <td class="r" style="font-weight: bold;">{{ number_format($c['total'], 2) }}</td>
+                        <td class="r">{{ $c['current'] > 0 ? inr($c['current']) : '—' }}</td>
+                        <td class="r">{{ $c['b30_60'] > 0 ? inr($c['b30_60']) : '—' }}</td>
+                        <td class="r">{{ $c['b60_90'] > 0 ? inr($c['b60_90']) : '—' }}</td>
+                        <td class="r" style="color: #b91c1c;">{{ $c['b90_plus'] > 0 ? inr($c['b90_plus']) : '—' }}</td>
+                        <td class="r" style="font-weight: bold;">{{ inr($c['total']) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="5" class="r">TOTAL</td>
-                    <td class="r">{{ number_format($summary['current'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['b30_60'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['b60_90'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['b90_plus'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['total'], 2) }}</td>
+                    <td class="r">{{ inr($summary['current']) }}</td>
+                    <td class="r">{{ inr($summary['b30_60']) }}</td>
+                    <td class="r">{{ inr($summary['b60_90']) }}</td>
+                    <td class="r">{{ inr($summary['b90_plus']) }}</td>
+                    <td class="r">{{ inr($summary['total']) }}</td>
                 </tr>
             </tfoot>
         </table>

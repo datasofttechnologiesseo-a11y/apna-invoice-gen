@@ -13,7 +13,7 @@
  * Bumping the CACHE_VERSION will invalidate every cache the next time a user
  * visits — increment when this file or the cached asset rules change.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `apna-static-${CACHE_VERSION}`;
 
 const SHOULD_CACHE = (url) =>

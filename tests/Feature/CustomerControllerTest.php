@@ -129,4 +129,69 @@ class CustomerControllerTest extends TestCase
         $this->get(route('customers.index'))->assertRedirect(route('login'));
         $this->post(route('customers.store'), [])->assertRedirect(route('login'));
     }
+
+    /* ──────────────────────────────────────────────────────────────────
+     * Inline "Quick add customer" modal — JSON endpoint used from the
+     * invoice / quotation forms so the user doesn't lose typed work.
+     * ────────────────────────────────────────────────────────────────── */
+
+    public function test_quick_create_returns_201_and_attaches_to_active_company(): void
+    {
+        $user = User::factory()->create();
+        $company = \App\Models\Company::factory()->recycle($user)->create();
+        $user->switchCompany($company);
+        $state = State::factory()->create();
+
+        $response = $this->actingAs($user)->postJson(route('customers.quick-create'), [
+            'name' => 'Acme Quick LLP',
+            'state_id' => $state->id,
+            'phone' => '+91 99999 88888',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'name' => 'Acme Quick LLP',
+                'state_id' => $state->id,
+                'state_name' => $state->name,
+                'has_gstin' => false,
+            ])
+            ->assertJsonStructure(['id', 'name', 'state_id', 'state_name', 'state_gst_code', 'phone', 'email', 'gstin', 'has_gstin', 'message']);
+
+        $this->assertDatabaseHas('customers', [
+            'name' => 'Acme Quick LLP',
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'state_id' => $state->id,
+            'country' => 'India',
+        ]);
+    }
+
+    public function test_quick_create_validates_required_name_and_state(): void
+    {
+        $user = User::factory()->create();
+        \App\Models\Company::factory()->recycle($user)->create();
+
+        $this->actingAs($user)->postJson(route('customers.quick-create'), [])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['name', 'state_id']);
+    }
+
+    public function test_quick_create_rejects_invalid_email(): void
+    {
+        $user = User::factory()->create();
+        \App\Models\Company::factory()->recycle($user)->create();
+        $state = State::factory()->create();
+
+        $this->actingAs($user)->postJson(route('customers.quick-create'), [
+            'name' => 'Test', 'state_id' => $state->id, 'email' => 'not-an-email',
+        ])->assertStatus(422)->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_quick_create_requires_authentication(): void
+    {
+        $state = State::factory()->create();
+        $this->postJson(route('customers.quick-create'), [
+            'name' => 'Anon', 'state_id' => $state->id,
+        ])->assertStatus(401);
+    }
 }

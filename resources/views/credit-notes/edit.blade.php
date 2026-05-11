@@ -34,19 +34,19 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                     <div>
                         <div class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Invoice total</div>
-                        <div class="font-mono font-semibold text-gray-900">₹{{ number_format((float) $invoice->grand_total, 2) }}</div>
+                        <div class="font-mono font-semibold text-gray-900">₹{{ inr($invoice->grand_total) }}</div>
                     </div>
                     <div>
                         <div class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Already credited</div>
-                        <div class="font-mono text-gray-900">₹{{ number_format((float) $invoice->credited_amount, 2) }}</div>
+                        <div class="font-mono text-gray-900">₹{{ inr($invoice->credited_amount) }}</div>
                     </div>
                     <div>
                         <div class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Paid</div>
-                        <div class="font-mono text-gray-900">₹{{ number_format((float) $invoice->paid_amount, 2) }}</div>
+                        <div class="font-mono text-gray-900">₹{{ inr($invoice->paid_amount) }}</div>
                     </div>
                     <div>
                         <div class="text-xs uppercase tracking-wider text-money-700 font-semibold">Max creditable</div>
-                        <div class="font-mono font-bold text-money-700">₹{{ number_format($creditable, 2) }}</div>
+                        <div class="font-mono font-bold text-money-700">₹{{ inr($creditable) }}</div>
                     </div>
                 </div>
 
@@ -59,7 +59,7 @@
 
                     <div>
                         <x-input-label for="amount" value="Credit amount (₹) *" />
-                        <x-text-input id="amount" name="amount" type="number" step="0.01" min="0.01" :max="$creditable" class="mt-1 block w-full text-right font-mono" :value="old('amount', $creditable)" required />
+                        <x-text-input id="amount" name="amount" type="number" step="any" min="0.01" :max="$creditable" class="mt-1 block w-full text-right font-mono" :value="old('amount', $creditable)" required />
                         <p class="text-xs text-gray-500 mt-1">Tax components are pro-rated automatically across CGST/SGST/IGST.</p>
                     </div>
 

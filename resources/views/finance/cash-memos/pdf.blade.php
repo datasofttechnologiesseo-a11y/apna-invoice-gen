@@ -126,8 +126,8 @@
                     <td>{{ $item->description }}</td>
                     <td class="mono">{{ $item->hsn_sac ?: '—' }}</td>
                     <td class="r">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }}@if ($item->unit) <span style="color:#888;">{{ $item->unit }}</span>@endif</td>
-                    <td class="r">{{ number_format((float) $item->rate, 2) }}</td>
-                    <td class="r" style="font-weight: bold;">{{ number_format((float) $item->amount, 2) }}</td>
+                    <td class="r">{{ inr($item->rate) }}</td>
+                    <td class="r" style="font-weight: bold;">{{ inr($item->amount) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -150,22 +150,22 @@
             </td>
             <td style="width: 45%; vertical-align: top;">
                 <table class="totals-table">
-                    <tr><td class="k">Subtotal</td><td class="v">Rs. {{ number_format((float) $memo->subtotal, 2) }}</td></tr>
+                    <tr><td class="k">Subtotal</td><td class="v">Rs. {{ inr($memo->subtotal) }}</td></tr>
                     @if ((float) $memo->discount > 0)
-                        <tr><td class="k">Discount</td><td class="v" style="color:#a00;">- Rs. {{ number_format((float) $memo->discount, 2) }}</td></tr>
+                        <tr><td class="k">Discount</td><td class="v" style="color:#a00;">- Rs. {{ inr($memo->discount) }}</td></tr>
                     @endif
-                    <tr class="sub"><td class="k" style="color:#111; font-weight: bold;">Taxable value</td><td class="v" style="font-weight: bold;">Rs. {{ number_format((float) $memo->taxable_value, 2) }}</td></tr>
+                    <tr class="sub"><td class="k" style="color:#111; font-weight: bold;">Taxable value</td><td class="v" style="font-weight: bold;">Rs. {{ inr($memo->taxable_value) }}</td></tr>
                     @if ((float) $memo->total_cgst > 0)
-                        <tr><td class="k">CGST</td><td class="v">Rs. {{ number_format((float) $memo->total_cgst, 2) }}</td></tr>
-                        <tr><td class="k">SGST</td><td class="v">Rs. {{ number_format((float) $memo->total_sgst, 2) }}</td></tr>
+                        <tr><td class="k">CGST</td><td class="v">Rs. {{ inr($memo->total_cgst) }}</td></tr>
+                        <tr><td class="k">SGST</td><td class="v">Rs. {{ inr($memo->total_sgst) }}</td></tr>
                     @endif
                     @if ((float) $memo->total_igst > 0)
-                        <tr><td class="k">IGST</td><td class="v">Rs. {{ number_format((float) $memo->total_igst, 2) }}</td></tr>
+                        <tr><td class="k">IGST</td><td class="v">Rs. {{ inr($memo->total_igst) }}</td></tr>
                     @endif
                     @if ((float) $memo->round_off != 0)
-                        <tr><td class="k" style="font-size: 9px; color: #888;">Round off</td><td class="v" style="font-size: 9px; color: #888;">{{ ((float) $memo->round_off >= 0 ? '+ ' : '- ') }}Rs. {{ number_format(abs((float) $memo->round_off), 2) }}</td></tr>
+                        <tr><td class="k" style="font-size: 9px; color: #888;">Round off</td><td class="v" style="font-size: 9px; color: #888;">{{ ((float) $memo->round_off >= 0 ? '+ ' : '- ') }}Rs. {{ inr(abs((float) $memo->round_off)) }}</td></tr>
                     @endif
-                    <tr class="grand"><td class="k">Grand Total</td><td class="v">Rs. {{ number_format((float) $memo->grand_total, 2) }}</td></tr>
+                    <tr class="grand"><td class="k">Grand Total</td><td class="v">Rs. {{ inr($memo->grand_total) }}</td></tr>
                 </table>
             </td>
         </tr>

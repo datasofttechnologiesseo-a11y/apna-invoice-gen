@@ -8,7 +8,7 @@
                 <div class="text-xs text-gray-500">Section 34 adjustments against this invoice</div>
             </div>
             <div class="text-xs text-gray-500">
-                Total credited: <span class="font-mono font-semibold text-gray-900">₹{{ number_format((float) $invoice->credited_amount, 2) }}</span>
+                Total credited: <span class="font-mono font-semibold text-gray-900">₹{{ inr($invoice->credited_amount) }}</span>
             </div>
         </div>
         <div class="overflow-x-auto">
@@ -28,7 +28,7 @@
                             <td class="px-4 py-2 font-mono text-sm font-semibold">{{ $cn->credit_note_number }}</td>
                             <td class="px-4 py-2">{{ $cn->credit_note_date?->format('d M Y') }}</td>
                             <td class="px-4 py-2 text-xs">{{ $cn->reasonLabel() }}</td>
-                            <td class="px-4 py-2 text-right font-mono font-semibold">₹{{ number_format((float) $cn->amount, 2) }}</td>
+                            <td class="px-4 py-2 text-right font-mono font-semibold">₹{{ inr($cn->amount) }}</td>
                             <td class="px-4 py-2 text-right whitespace-nowrap">
                                 <a href="{{ route('credit-notes.pdf', $cn) }}" class="text-brand-600 hover:underline text-sm">PDF</a>
                                 <span class="text-gray-300 mx-1">·</span>
@@ -36,7 +36,7 @@
                                     :action="route('credit-notes.destroy', $cn)"
                                     method="DELETE"
                                     title="Reverse {{ $cn->credit_note_number }}?"
-                                    :message="'The credit note is removed and the invoice balance is restored by ₹' . number_format((float) $cn->amount, 2) . '. The credit note number stays reserved in the audit log.'"
+                                    :message="'The credit note is removed and the invoice balance is restored by ₹' . inr($cn->amount) . '. The credit note number stays reserved in the audit log.'"
                                     confirm-label="Reverse credit note"
                                     confirm-class="bg-red-600 hover:bg-red-700"
                                     tone="warning">

@@ -63,7 +63,7 @@
 
                         <div>
                             <x-input-label for="rate" value="Default rate (₹, pre-tax) *" />
-                            <x-text-input id="rate" name="rate" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('rate', $product->rate ?? 0)" required />
+                            <x-text-input id="rate" name="rate" type="number" step="any" min="0" class="mt-1 block w-full" :value="old('rate', $product->rate ?? 0)" required />
                         </div>
 
                         <div>

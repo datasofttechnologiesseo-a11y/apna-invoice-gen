@@ -87,7 +87,7 @@
                             @if ($hasItems)
                                 <div class="mt-3 flex items-baseline gap-2">
                                     <span class="font-display text-3xl font-extrabold text-gray-900 tracking-tight tabular-nums">
-                                        ₹{{ number_format((float) $totals['grand_total']) }}
+                                        ₹{{ inr($totals['grand_total']) }}
                                     </span>
                                     <span class="text-xs text-gray-500">total (incl. GST)</span>
                                 </div>
@@ -95,9 +95,9 @@
                                     Subtotal ₹{{ number_format((float) $totals['subtotal']) }}
                                     · GST ₹{{ number_format((float) $totals['total_tax']) }}
                                     @if ($gstRates->count() === 1)
-                                        ({{ rtrim(rtrim(number_format($gstRates->first(), 2), '0'), '.') }}%)
+                                        ({{ rtrim(rtrim(number_format($gstRates->first()), '0'), '.') }}%)
                                     @elseif ($gstRates->count() > 1)
-                                        (mixed: {{ $gstRates->map(fn ($r) => rtrim(rtrim(number_format($r, 2), '0'), '.') . '%')->implode(', ') }})
+                                        (mixed: {{ $gstRates->map(fn ($r) => rtrim(rtrim(inr($r), '0'), '.') . '%')->implode(', ') }})
                                     @endif
                                 </div>
                             @endif
@@ -128,8 +128,8 @@
                                             @foreach ($items as $item)
                                                 <tr class="border-t border-gray-100">
                                                     <td class="px-3 py-1.5 text-gray-800 truncate max-w-[140px]" title="{{ $item['description'] }}">{{ $item['description'] }}</td>
-                                                    <td class="px-3 py-1.5 text-right font-mono text-gray-600 tabular-nums">{{ rtrim(rtrim(number_format((float) $item['quantity'], 2), '0'), '.') }}</td>
-                                                    <td class="px-3 py-1.5 text-right text-gray-600">{{ rtrim(rtrim(number_format((float) $item['gst_rate'], 2), '0'), '.') }}%</td>
+                                                    <td class="px-3 py-1.5 text-right font-mono text-gray-600 tabular-nums">{{ rtrim(rtrim(inr($item['quantity']), '0'), '.') }}</td>
+                                                    <td class="px-3 py-1.5 text-right text-gray-600">{{ rtrim(rtrim(inr($item['gst_rate']), '0'), '.') }}%</td>
                                                     <td class="px-3 py-1.5 text-right font-mono font-medium tabular-nums">₹{{ number_format((float) $item['amount']) }}</td>
                                                 </tr>
                                             @endforeach
@@ -154,7 +154,7 @@
                                         <div class="font-medium text-gray-700">{{ $styleMeta['label'] }} style preview</div>
                                         <div class="mt-1 italic text-gray-400">Your line items, totals and terms will appear here.</div>
                                         @if (! empty($tpl['items'][0]['gst_rate']))
-                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Default GST: {{ rtrim(rtrim(number_format((float) $tpl['items'][0]['gst_rate'], 2), '0'), '.') }}%</div>
+                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
                                         @endif
                                     </div>
                                 @endif

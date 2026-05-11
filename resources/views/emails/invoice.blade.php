@@ -38,12 +38,12 @@
                                         @if ($invoice->due_date)
                                             <tr><td style="padding: 4px 0; color: #6b7280;">Due</td><td style="padding: 4px 0; text-align: right; font-weight: 600; color: #b91c1c;">{{ $invoice->due_date->format('d M Y') }}</td></tr>
                                         @endif
-                                        <tr><td style="padding: 4px 0; color: #6b7280;">Grand total</td><td style="padding: 4px 0; text-align: right; font-weight: 700;">&#8377; {{ number_format((float) $invoice->grand_total, 2) }}</td></tr>
+                                        <tr><td style="padding: 4px 0; color: #6b7280;">Grand total</td><td style="padding: 4px 0; text-align: right; font-weight: 700;">&#8377; {{ inr($invoice->grand_total) }}</td></tr>
                                         @if ($balance > 0 && (float) $invoice->paid_amount > 0)
-                                            <tr><td style="padding: 4px 0; color: #6b7280;">Already paid</td><td style="padding: 4px 0; text-align: right; color: #047857;">&#8377; {{ number_format((float) $invoice->paid_amount, 2) }}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #6b7280;">Already paid</td><td style="padding: 4px 0; text-align: right; color: #047857;">&#8377; {{ inr($invoice->paid_amount) }}</td></tr>
                                         @endif
                                         @if ($balance > 0)
-                                            <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #b91c1c; font-weight: 600;">Balance due</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #b91c1c; font-size: 16px;">&#8377; {{ number_format($balance, 2) }}</td></tr>
+                                            <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #b91c1c; font-weight: 600;">Balance due</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #b91c1c; font-size: 16px;">&#8377; {{ inr($balance) }}</td></tr>
                                         @else
                                             <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #047857; font-weight: 600;">Status</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #047857; font-size: 14px;">PAID IN FULL</td></tr>
                                         @endif

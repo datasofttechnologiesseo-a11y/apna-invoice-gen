@@ -182,6 +182,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('customers', CustomerController::class)->except(['show']);
     Route::get('customers/{customer}/ledger', [CustomerController::class, 'ledger'])->name('customers.ledger');
+    // JSON endpoint for the inline "+ New customer" modal on invoice/quotation
+    // forms — keeps the user from losing their typed work to a page navigation.
+    Route::post('customers/quick-create', [CustomerController::class, 'quickStore'])->name('customers.quick-create');
 
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     Route::resource('products', ProductController::class)->except(['show']);

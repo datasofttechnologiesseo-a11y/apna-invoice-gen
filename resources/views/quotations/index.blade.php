@@ -101,11 +101,23 @@
                                     <span class="shrink-0 inline-block px-2 py-0.5 rounded text-[11px] font-medium {{ $colors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
                                 </div>
                                 <div class="flex items-baseline justify-between text-sm">
-                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ number_format((float) $q->grand_total, 2) }}</span></span>
+                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($q->grand_total) }}</span></span>
                                 </div>
                                 <div class="flex items-center gap-3 pt-1 text-sm">
                                     <a href="{{ route('quotations.show', $q) }}" class="inline-flex items-center min-h-[36px] text-brand-700 font-semibold">View</a>
                                     <a href="{{ route('quotations.pdf', $q) }}" class="inline-flex items-center min-h-[36px] text-gray-700">PDF</a>
+                                    @if ($q->isDraft())
+                                        <x-confirm-form
+                                            :action="route('quotations.destroy', $q)"
+                                            method="DELETE"
+                                            title="Delete draft quotation #{{ $q->id }}?"
+                                            message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable — they're kept for record."
+                                            confirm-label="Delete draft"
+                                            confirm-class="bg-red-600 hover:bg-red-700"
+                                            tone="danger">
+                                            <button type="button" class="inline-flex items-center min-h-[36px] text-red-600">Delete</button>
+                                        </x-confirm-form>
+                                    @endif
                                 </div>
                             </li>
                         @endforeach
@@ -158,7 +170,7 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">{{ $q->customer?->name }}</td>
-                                        <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $q->grand_total, 2) }}</td>
+                                        <td class="px-4 py-3 text-right font-mono">₹{{ inr($q->grand_total) }}</td>
                                         <td class="px-4 py-3">
                                             <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $colors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
                                         </td>
@@ -166,6 +178,19 @@
                                             <a href="{{ route('quotations.show', $q) }}" class="text-brand-600 hover:underline">View</a>
                                             <span class="text-gray-300 mx-1">·</span>
                                             <a href="{{ route('quotations.pdf', $q) }}" class="text-gray-600 hover:underline">PDF</a>
+                                            @if ($q->isDraft())
+                                                <span class="text-gray-300 mx-1">·</span>
+                                                <x-confirm-form
+                                                    :action="route('quotations.destroy', $q)"
+                                                    method="DELETE"
+                                                    title="Delete draft quotation #{{ $q->id }}?"
+                                                    message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable — they're kept for record."
+                                                    confirm-label="Delete draft"
+                                                    confirm-class="bg-red-600 hover:bg-red-700"
+                                                    tone="danger">
+                                                    <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                                </x-confirm-form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

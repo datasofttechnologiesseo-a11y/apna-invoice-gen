@@ -49,27 +49,27 @@
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
                     <div class="p-5 rounded-xl bg-gradient-to-br from-accent-50 to-saffron-50 ring-1 ring-accent-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">Total outstanding</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ number_format($summary['total'], 2) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['total']) }}</div>
                         <div class="mt-1 text-xs text-accent-700">{{ $summary['invoices'] }} {{ Str::plural('invoice', $summary['invoices']) }} · {{ $summary['customers'] }} {{ Str::plural('customer', $summary['customers']) }}</div>
                     </div>
                     <div class="p-5 rounded-xl bg-money-50 ring-1 ring-money-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-money-800">Current (≤ 30 days)</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-money-900 tabular-nums">₹{{ number_format($summary['current'], 2) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-money-900 tabular-nums">₹{{ inr($summary['current']) }}</div>
                         <div class="mt-1 text-xs text-money-700">{{ $summary['total'] > 0 ? round(($summary['current'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
                     <div class="p-5 rounded-xl bg-amber-50 ring-1 ring-amber-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-amber-800">31 – 60 days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-amber-900 tabular-nums">₹{{ number_format($summary['b30_60'], 2) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-amber-900 tabular-nums">₹{{ inr($summary['b30_60']) }}</div>
                         <div class="mt-1 text-xs text-amber-700">{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
                     <div class="p-5 rounded-xl bg-orange-50 ring-1 ring-orange-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-orange-800">61 – 90 days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-orange-900 tabular-nums">₹{{ number_format($summary['b60_90'], 2) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-orange-900 tabular-nums">₹{{ inr($summary['b60_90']) }}</div>
                         <div class="mt-1 text-xs text-orange-700">{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
                     <div class="p-5 rounded-xl bg-red-50 ring-1 ring-red-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-red-800">91+ days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-red-900 tabular-nums">₹{{ number_format($summary['b90_plus'], 2) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-red-900 tabular-nums">₹{{ inr($summary['b90_plus']) }}</div>
                         <div class="mt-1 text-xs text-red-700">{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% — chase / write-off</div>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 shrink-0 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
-                                <strong>You have ₹{{ number_format($summary['b90_plus'], 2) }} overdue by 90+ days.</strong>
+                                <strong>You have ₹{{ inr($summary['b90_plus']) }} overdue by 90+ days.</strong>
                                 These need urgent follow-up — beyond 90 days, recovery probability drops sharply. Consider sending payment reminders or an issuing-credit-note conversation.
                             </div>
                         </div>
@@ -124,11 +124,11 @@
                                         <td class="px-5 py-3 text-right font-mono tabular-nums {{ $c['oldest_days'] > 90 ? 'text-red-700 font-semibold' : ($c['oldest_days'] > 60 ? 'text-orange-700' : ($c['oldest_days'] > 30 ? 'text-amber-700' : 'text-gray-600')) }}">
                                             {{ $c['oldest_days'] }}d
                                         </td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ $c['current'] > 0 ? '₹' . number_format($c['current'], 2) : '—' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-amber-700">{{ $c['b30_60'] > 0 ? '₹' . number_format($c['b30_60'], 2) : '—' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-orange-700">{{ $c['b60_90'] > 0 ? '₹' . number_format($c['b60_90'], 2) : '—' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-red-700 font-semibold">{{ $c['b90_plus'] > 0 ? '₹' . number_format($c['b90_plus'], 2) : '—' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900">₹{{ number_format($c['total'], 2) }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ $c['current'] > 0 ? '₹' . inr($c['current']) : '—' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-amber-700">{{ $c['b30_60'] > 0 ? '₹' . inr($c['b30_60']) : '—' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-orange-700">{{ $c['b60_90'] > 0 ? '₹' . inr($c['b60_90']) : '—' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-red-700 font-semibold">{{ $c['b90_plus'] > 0 ? '₹' . inr($c['b90_plus']) : '—' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900">₹{{ inr($c['total']) }}</td>
                                         <td class="px-5 py-3 text-right whitespace-nowrap print:hidden">
                                             <a href="{{ route('customers.ledger', $c['customer_id']) }}" class="text-money-700 hover:underline text-xs font-semibold">Ledger →</a>
                                         </td>
@@ -138,11 +138,11 @@
                             <tfoot class="bg-gray-50 border-t-2 border-gray-900">
                                 <tr>
                                     <td class="px-5 py-3 font-bold uppercase text-xs text-gray-700" colspan="3">TOTAL</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-money-700">₹{{ number_format($summary['current'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-amber-700">₹{{ number_format($summary['b30_60'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-orange-700">₹{{ number_format($summary['b60_90'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-red-700">₹{{ number_format($summary['b90_plus'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900 text-base">₹{{ number_format($summary['total'], 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-money-700">₹{{ inr($summary['current']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-amber-700">₹{{ inr($summary['b30_60']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-orange-700">₹{{ inr($summary['b60_90']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-red-700">₹{{ inr($summary['b90_plus']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900 text-base">₹{{ inr($summary['total']) }}</td>
                                     <td class="px-5 py-3 print:hidden"></td>
                                 </tr>
                             </tfoot>
@@ -233,7 +233,7 @@
                                         <td class="px-5 py-3 text-xs text-gray-600">{{ $r['due_date']?->format('d M Y') ?? '—' }}</td>
                                         <td class="px-5 py-3 text-right font-mono tabular-nums">{{ $r['days_overdue'] }}d</td>
                                         <td class="px-5 py-3"><span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded {{ $bucketColor }}">{{ $bucketLabel }}</span></td>
-                                        <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ number_format($r['balance'], 2) }}</td>
+                                        <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($r['balance']) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

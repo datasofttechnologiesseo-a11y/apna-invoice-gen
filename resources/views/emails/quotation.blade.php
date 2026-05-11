@@ -38,7 +38,7 @@
                                         @if ($quotation->valid_until)
                                             <tr><td style="padding: 4px 0; color: #6b7280;">Valid until</td><td style="padding: 4px 0; text-align: right; font-weight: 600;">{{ $quotation->valid_until->format('d M Y') }}</td></tr>
                                         @endif
-                                        <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Grand total</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; font-size: 16px;">&#8377; {{ number_format((float) $quotation->grand_total, 2) }}</td></tr>
+                                        <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Grand total</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; font-size: 16px;">&#8377; {{ inr($quotation->grand_total) }}</td></tr>
                                     </table>
                                 </td>
                             </tr>

@@ -24,7 +24,8 @@
         $companyStateId = $company->state_id;
     @endphp
 
-    <div class="py-10" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex))'>
+    <div class="py-10" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex))'
+         @customer-added.window="addCustomer($event.detail)">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-breadcrumbs :items="[
                 ['label' => 'Quotations', 'href' => route('quotations.index')],
@@ -66,7 +67,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <a href="{{ route('customers.create') }}" target="_blank" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap">+ New</a>
+                                <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap" title="Add a new customer without leaving this page">+ New</button>
                             </div>
                         </div>
 
@@ -199,15 +200,15 @@
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
-                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
-                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
-                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
+                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">GST rate</label>
@@ -267,12 +268,12 @@
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="0.001" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-36 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
@@ -332,6 +333,10 @@
         </div>
     </div>
 
+    {{-- Inline "+ New customer" modal — adds without leaving the page so typed
+         line items stay intact. --}}
+    <x-quick-customer-modal :states="$states" />
+
     @push('scripts')
     <script>
         function quotationForm(initialItems, customerStates, companyStateId, productIndex) {
@@ -350,6 +355,24 @@
                     return cs && cs !== this.companyStateId;
                 },
                 init() { this.recompute(); },
+                /**
+                 * Wired to @customer-added.window — pushes the new customer
+                 * (saved by the inline modal) into the dropdown and selects it,
+                 * so the quotation's typed line items aren't lost.
+                 */
+                addCustomer(c) {
+                    if (!c || !c.id) return;
+                    const select = document.getElementById('customer_id');
+                    if (select) {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.name + (c.state_name ? ' — ' + c.state_name : '');
+                        select.appendChild(option);
+                    }
+                    this.customerStates[c.id] = c.state_id;
+                    this.customerId = String(c.id);
+                    this.recompute();
+                },
                 addRow() {
                     this.items.push({product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, discount: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
                 },

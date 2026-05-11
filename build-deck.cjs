@@ -126,7 +126,7 @@ let n = 0;
   const items = [
     "1. Sign up free", "2. Add your business", "3. Add your first customer",
     "4. Tour the dashboard", "5. Create an invoice", "6. Auto tax mode",
-    "7. Review & finalize", "8. Share with customer", "9. Record payments",
+    "7. Review & issue", "8. Share with customer", "9. Record payments",
     "10. Issue credit notes", "11. Track on dashboard", "12. Backups & data export",
   ];
 
@@ -258,10 +258,10 @@ function bulletSlide(stepNo, eyebrow, title, paragraph, bullets, footerLine) {
     "Your home base. The dashboard shows the two numbers that actually matter for an Indian MSME: bills issued and money received.",
     [
       "Bills issued (lifetime + this month + drafts pending)",
-      "Payments received (lifetime + this month + receipts issued)",
-      "Setup checklist with progress %",
-      "Outstanding amount to collect",
-      "Multi-company switcher in the top-right",
+      "Payments received + 30-day revenue sparkline below the KPIs",
+      "Notification bell — overdue invoices, recent payments, today's issued",
+      "Setup checklist · Settings hub · multi-company switcher",
+      "Outstanding amount to collect — click to chase",
     ],
     "One glance.\n\nIs the month on track?"
   );
@@ -275,7 +275,7 @@ function bulletSlide(stepNo, eyebrow, title, paragraph, bullets, footerLine) {
     5, "STEP 5 OF 12", "Create your first invoice",
     "Click 'New invoice'. The form is built so you can issue a clean GST invoice in under a minute.",
     [
-      "Pick a customer (or click + New to add one)",
+      "Pick a customer — or click + New for the inline modal (no page refresh, no lost work)",
       "Invoice date defaults to today; due date is optional",
       "Add line items — description, HSN/SAC, qty, rate, GST%",
       "Goods use HSN (4–8 digits); services use SAC (starts with 99)",
@@ -304,18 +304,18 @@ function bulletSlide(stepNo, eyebrow, title, paragraph, bullets, footerLine) {
   addFooter(s, n, TOTAL);
 }
 
-// ── 9. FINALIZE ─────────────────────────────────────────────────────
+// ── 9. ISSUE ────────────────────────────────────────────────────────
 {
   n = 9;
   const s = bulletSlide(
-    7, "STEP 7 OF 12", "Review & finalize",
-    "Drafts are editable; final invoices are legally locked. When you click Finalize, the invoice gets a permanent number and the PDF is generated.",
+    7, "STEP 7 OF 12", "Review & issue",
+    "Drafts are editable; issued invoices are legally locked. When you click Issue, the invoice gets a permanent number and the PDF is generated.",
     [
       "Sequential invoice number — INV-0001, INV-0002…",
       "Auto-resets every 1 April with the {FY} format",
-      "Amount in words: Lakhs and Crores (Indian number system)",
-      "PDF generated server-side, A4-sized, ink-saver by default",
-      "Edits to amounts/items are blocked after finalize",
+      "Migrating mid-FY? Set the next number from Settings — no broken series",
+      "Amount in words + lakh/crore format (₹12,34,567.89 Indian style)",
+      "Edits to amounts/items are blocked after issuing",
     ],
     "Numbering complies with\nCGST Rule 46(b)."
   );
@@ -327,13 +327,13 @@ function bulletSlide(stepNo, eyebrow, title, paragraph, bullets, footerLine) {
   n = 10;
   const s = bulletSlide(
     8, "STEP 8 OF 12", "Share with your customer",
-    "Once finalized, share the invoice the way Indian businesses actually share — WhatsApp first, email second.",
+    "Once issued, share the invoice the way Indian businesses actually share — WhatsApp first, email second.",
     [
       "WhatsApp — pre-filled message with invoice number + amount",
       "Email — attaches the PDF automatically",
       "Public link — secure 30-day signed URL for the customer",
-      "Download PDF — ink-saver mono or full-colour",
-      "UPI QR auto-attached if you've added a UPI ID",
+      "Goods PDFs auto-print 3 copies (Original/Recipient · Duplicate/Transporter · Triplicate/Supplier) per CGST Rule 48",
+      "UPI QR auto-attached on every PDF if you've added a UPI ID",
     ],
     "WhatsApp + UPI QR.\n\nGet paid faster."
   );
@@ -384,9 +384,9 @@ function bulletSlide(stepNo, eyebrow, title, paragraph, bullets, footerLine) {
     "Run the month. The dashboard plus the Finance section give you the whole picture without spreadsheets.",
     [
       "Bills issued / received this month — at a glance",
-      "Outstanding (receivables) drill-down by customer",
-      "P&L: income (accrual) minus expenses logged in Finance",
-      "Drafts pending — click to finish them",
+      "Per-invoice activity timeline (Created → Issued → Payment → Cancelled)",
+      "Outstanding receivables aging — 0-30 / 30-60 / 60-90 / 90+ days",
+      "P&L: income (accrual / cash / GST views) minus expenses",
       "Filter invoices by status, date range or customer",
     ],
     "Close the month\nin minutes,\nnot days."
@@ -441,8 +441,8 @@ function bulletSlide(stepNo, eyebrow, title, paragraph, bullets, footerLine) {
       bg: SAFFRON_50,
     },
     {
-      title: "Multi-GSTIN support",
-      body: "Run more than one business? Add each as a separate company with its own GSTIN, invoice series and customer book. Switch with the dropdown in the top-right.",
+      title: "Install as a phone app",
+      body: "Open apnainvoice.com in Chrome on your phone, tap the menu and pick 'Install app'. Works offline for static screens. Multi-GSTIN? Switch companies via the top-right dropdown.",
       accent: GREEN,
       bg: GREEN_50,
     },

@@ -96,9 +96,9 @@
     <table class="summary-cards">
         <tr>
             <td><div class="summary-card"><div class="lbl">Total Entries</div><div class="val">{{ number_format($summary['count']) }}</div></div></td>
-            <td><div class="summary-card"><div class="lbl">Taxable Value</div><div class="val">Rs. {{ number_format($summary['taxable'], 2) }}</div></div></td>
-            <td><div class="summary-card"><div class="lbl">GST / ITC</div><div class="val">Rs. {{ number_format($summary['gst'], 2) }}</div></div></td>
-            <td><div class="summary-card"><div class="lbl">Total Cash Out</div><div class="val">Rs. {{ number_format($summary['cash_out'], 2) }}</div></div></td>
+            <td><div class="summary-card"><div class="lbl">Taxable Value</div><div class="val">Rs. {{ inr($summary['taxable']) }}</div></div></td>
+            <td><div class="summary-card"><div class="lbl">GST / ITC</div><div class="val">Rs. {{ inr($summary['gst']) }}</div></div></td>
+            <td><div class="summary-card"><div class="lbl">Total Cash Out</div><div class="val">Rs. {{ inr($summary['cash_out']) }}</div></div></td>
         </tr>
     </table>
 
@@ -121,18 +121,18 @@
                     <tr>
                         <td>{{ $cat['label'] }}</td>
                         <td class="r">{{ $cat['count'] }}</td>
-                        <td class="r">{{ number_format($cat['taxable'], 2) }}</td>
-                        <td class="r">{{ $cat['gst'] > 0 ? number_format($cat['gst'], 2) : '—' }}</td>
-                        <td class="r">{{ number_format($cat['taxable'] + $cat['gst'], 2) }}</td>
+                        <td class="r">{{ inr($cat['taxable']) }}</td>
+                        <td class="r">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '—' }}</td>
+                        <td class="r">{{ inr($cat['taxable'] + $cat['gst']) }}</td>
                         <td class="r">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '—' }}</td>
                     </tr>
                 @endforeach
                 <tr class="tot">
                     <td>TOTAL</td>
                     <td class="r">{{ $summary['count'] }}</td>
-                    <td class="r">{{ number_format($summary['taxable'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['gst'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['cash_out'], 2) }}</td>
+                    <td class="r">{{ inr($summary['taxable']) }}</td>
+                    <td class="r">{{ inr($summary['gst']) }}</td>
+                    <td class="r">{{ inr($summary['cash_out']) }}</td>
                     <td class="r">100%</td>
                 </tr>
             </tbody>
@@ -168,17 +168,17 @@
                             @if ($e->vendor_name)<span class="vendor">Vendor: {{ $e->vendor_name }}</span>@endif
                             @if ($e->reference_number)<span class="ref">Ref: {{ $e->reference_number }}</span>@endif
                         </td>
-                        <td class="r">{{ number_format((float) $e->amount, 2) }}</td>
-                        <td class="r">{{ (float) $e->gst_amount > 0 ? number_format((float) $e->gst_amount, 2) : '—' }}</td>
-                        <td class="r" style="font-weight: bold;">{{ number_format((float) $e->amount + (float) $e->gst_amount, 2) }}</td>
+                        <td class="r">{{ inr($e->amount) }}</td>
+                        <td class="r">{{ (float) $e->gst_amount > 0 ? inr($e->gst_amount) : '—' }}</td>
+                        <td class="r" style="font-weight: bold;">{{ inr($e->amount + (float) $e->gst_amount) }}</td>
                         <td style="text-transform: uppercase; font-size: 8px;">{{ $e->payment_method ?: '—' }}</td>
                     </tr>
                 @endforeach
                 <tr class="tot">
                     <td colspan="4" style="text-align: right;">GRAND TOTAL</td>
-                    <td class="r">{{ number_format($summary['taxable'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['gst'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['cash_out'], 2) }}</td>
+                    <td class="r">{{ inr($summary['taxable']) }}</td>
+                    <td class="r">{{ inr($summary['gst']) }}</td>
+                    <td class="r">{{ inr($summary['cash_out']) }}</td>
                     <td></td>
                 </tr>
             </tbody>

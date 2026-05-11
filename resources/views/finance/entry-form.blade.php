@@ -145,7 +145,7 @@
                             <x-input-label for="amount" value="Amount (excl. GST) *" />
                             <div class="mt-1 relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                                <x-text-input id="amount" name="amount" type="number" step="0.01" min="0" class="block w-full pl-8"
+                                <x-text-input id="amount" name="amount" type="number" step="any" min="0" class="block w-full pl-8"
                                               :value="old('amount', $expense->amount)" required />
                             </div>
                             <p class="mt-1 text-xs text-gray-500">The taxable value — what it actually cost you, before GST.</p>
@@ -155,7 +155,7 @@
                             <x-input-label for="gst_amount" value="GST paid (Input Tax Credit)" />
                             <div class="mt-1 relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                                <x-text-input id="gst_amount" name="gst_amount" type="number" step="0.01" min="0" class="block w-full pl-8"
+                                <x-text-input id="gst_amount" name="gst_amount" type="number" step="any" min="0" class="block w-full pl-8"
                                               :value="old('gst_amount', $expense->gst_amount)" placeholder="0.00" />
                             </div>
                             <p class="mt-1 text-xs text-gray-500">Enter only if you have a valid tax invoice from the vendor. You can claim this back on GSTR-3B.</p>

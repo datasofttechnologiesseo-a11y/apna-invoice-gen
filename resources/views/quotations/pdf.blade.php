@@ -1,4 +1,7 @@
 @php
+    // Indian (lakh/crore) money formatter — $inr(1234567) → "12,34,567.00"
+    $inr = fn ($n, $d = 2) => \App\Support\IndianNumber::format($n, $d);
+
     $c = $quotation->company;
     $cust = $quotation->customer;
     $number = $quotation->quote_number ?: 'DRAFT · ' . ($c->nextQuoteNumber() ?? 'preview');
@@ -147,6 +150,9 @@
     <table class="header-table">
         <tr>
             <td style="width: 60%;">
+                @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
+                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
+                @endif
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted">
                     @if ($c->address_line1){{ $c->address_line1 }}@endif
@@ -255,10 +261,10 @@
                     <td>{{ $item->description }}</td>
                     <td class="mono">{{ $item->hsn_sac }}</td>
                     <td class="tr">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
-                    <td class="tr mono">{{ number_format((float) $item->rate, 2) }}</td>
-                    <td class="tr mono">{{ number_format((float) $item->discount, 2) }}</td>
-                    <td class="tr">{{ rtrim(rtrim(number_format((float) $item->gst_rate, 2), '0'), '.') }}%</td>
-                    <td class="tr mono">{{ number_format((float) $item->amount, 2) }}</td>
+                    <td class="tr mono">{{ $inr($item->rate) }}</td>
+                    <td class="tr mono">{{ $inr($item->discount) }}</td>
+                    <td class="tr">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
+                    <td class="tr mono">{{ $inr($item->amount) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -268,32 +274,32 @@
     <table class="totals">
         <tr>
             <td>Subtotal</td>
-            <td class="tr mono">₹ {{ number_format((float) $quotation->subtotal, 2) }}</td>
+            <td class="tr mono">₹ {{ $inr($quotation->subtotal) }}</td>
         </tr>
         @if (! $quotation->is_interstate)
             <tr>
                 <td>CGST</td>
-                <td class="tr mono">₹ {{ number_format((float) $quotation->total_cgst, 2) }}</td>
+                <td class="tr mono">₹ {{ $inr($quotation->total_cgst) }}</td>
             </tr>
             <tr>
                 <td>SGST</td>
-                <td class="tr mono">₹ {{ number_format((float) $quotation->total_sgst, 2) }}</td>
+                <td class="tr mono">₹ {{ $inr($quotation->total_sgst) }}</td>
             </tr>
         @else
             <tr>
                 <td>IGST</td>
-                <td class="tr mono">₹ {{ number_format((float) $quotation->total_igst, 2) }}</td>
+                <td class="tr mono">₹ {{ $inr($quotation->total_igst) }}</td>
             </tr>
         @endif
         @if ((float) $quotation->round_off !== 0.0)
             <tr>
                 <td class="muted">Round-off</td>
-                <td class="tr mono muted">₹ {{ number_format((float) $quotation->round_off, 2) }}</td>
+                <td class="tr mono muted">₹ {{ $inr($quotation->round_off) }}</td>
             </tr>
         @endif
         <tr class="grand">
             <td>Grand total</td>
-            <td class="tr mono">₹ {{ number_format((float) $quotation->grand_total, 2) }}</td>
+            <td class="tr mono">₹ {{ $inr($quotation->grand_total) }}</td>
         </tr>
     </table>
 

@@ -10,7 +10,7 @@
     $defaultBody = "Hi " . ($cust->name ?? 'there') . ",\n\n"
         . "Please find attached our quotation " . $number . " "
         . "dated " . $quotation->quote_date?->format('d M Y')
-        . " for ₹" . number_format((float) $quotation->grand_total, 2) . ".\n\n"
+        . " for ₹" . inr($quotation->grand_total) . ".\n\n"
         . ($quotation->valid_until
             ? "This quote is valid until " . $quotation->valid_until->format('d M Y') . ".\n\n"
             : "")
@@ -19,7 +19,7 @@
         . $c->name;
 
     $waText = "Quotation " . $number . " from " . ($c->name ?? '')
-        . "\nAmount: ₹" . number_format((float) $quotation->grand_total, 2)
+        . "\nAmount: ₹" . inr($quotation->grand_total)
         . ($quotation->valid_until ? "\nValid until: " . $quotation->valid_until->format('d M Y') : "")
         . "\n\nView & download: " . $publicUrl;
     $waLink = 'https://wa.me/' . $waDigits . '?text=' . rawurlencode($waText);

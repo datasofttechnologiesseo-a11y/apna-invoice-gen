@@ -88,10 +88,10 @@
                         <tbody class="divide-y divide-gray-100">
                             <tr class="bg-money-50/30">
                                 <td class="px-5 py-3"><strong>(a)</strong> Outward taxable supplies <span class="text-xs text-gray-500">(other than zero rated, nil rated and exempted)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ number_format($outward['taxable'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($outward['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($outward['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($outward['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ inr($outward['taxable']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
                             </tr>
                             <tr>
@@ -112,10 +112,10 @@
                             </tr>
                             <tr class="bg-amber-50/40">
                                 <td class="px-5 py-3"><strong>(d)</strong> Inward supplies <span class="text-xs text-gray-500">(liable to reverse charge)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ number_format($rcm_outward['taxable'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($rcm_outward['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($rcm_outward['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($rcm_outward['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ inr($rcm_outward['taxable']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
                             </tr>
                             <tr>
@@ -154,9 +154,9 @@
                         <tbody class="divide-y divide-gray-100">
                             <tr class="bg-money-50/30">
                                 <td class="px-5 py-3"><strong>(A)(5)</strong> All other ITC <span class="text-xs text-gray-500">(from your expenses + cash memos)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($itc['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($itc['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($itc['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($itc['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($itc['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($itc['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
                             </tr>
                             <tr>
@@ -168,9 +168,9 @@
                             </tr>
                             <tr class="bg-money-100/50 border-t-2 border-money-300">
                                 <td class="px-5 py-3 font-bold">(C) Net ITC available <span class="text-xs font-normal text-gray-500">(A − B)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ number_format($itc['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ number_format($itc['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ number_format($itc['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ inr($itc['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ inr($itc['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ inr($itc['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
                             </tr>
                         </tbody>
@@ -200,21 +200,21 @@
                         <tbody class="divide-y divide-gray-100">
                             <tr>
                                 <td class="px-5 py-3 text-gray-700">Total tax payable <span class="text-xs text-gray-500">(from outward supplies)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($outward['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($outward['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ number_format($outward['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['sgst']) }}</td>
                             </tr>
                             <tr>
                                 <td class="px-5 py-3 text-gray-700">Less: ITC available</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ number_format($itc['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ number_format($itc['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ number_format($itc['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ inr($itc['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ inr($itc['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ inr($itc['sgst']) }}</td>
                             </tr>
                             <tr class="bg-accent-50 border-t-2 border-accent-300">
                                 <td class="px-5 py-3 font-bold text-accent-900">Net cash payable</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ number_format($netCash['igst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ number_format($netCash['cgst'], 2) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ number_format($netCash['sgst'], 2) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ inr($netCash['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ inr($netCash['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ inr($netCash['sgst']) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -226,7 +226,7 @@
                         <div class="text-[11px] uppercase tracking-widest font-bold text-accent-800">Total cash to deposit</div>
                         <div class="text-xs text-accent-700 mt-0.5">Sum of IGST + CGST + SGST · Pay via PMT-06 challan on the GST portal</div>
                     </div>
-                    <div class="font-display text-2xl sm:text-3xl font-extrabold text-accent-900 tabular-nums">₹{{ number_format($netCash['total'], 2) }}</div>
+                    <div class="font-display text-2xl sm:text-3xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($netCash['total']) }}</div>
                 </div>
             </section>
 

@@ -11,9 +11,9 @@
 
     $defaultBody = "Hi " . ($cust->name ?? 'there') . ",\n\n"
         . "Please find attached " . strtolower($docTitle) . " " . ($invoice->invoice_number ?? '') . " "
-        . "dated " . $invoice->invoice_date?->format('d M Y') . " for ₹" . number_format((float) $invoice->grand_total, 2) . ".\n\n"
+        . "dated " . $invoice->invoice_date?->format('d M Y') . " for ₹" . inr($invoice->grand_total) . ".\n\n"
         . ((float) $invoice->balance > 0
-            ? "Balance due: ₹" . number_format((float) $invoice->balance, 2) . (
+            ? "Balance due: ₹" . inr($invoice->balance) . (
                 $invoice->due_date ? " (due by " . $invoice->due_date->format('d M Y') . ")" : ""
               ) . ".\n\n"
             : "Thank you for your prompt payment — balance is clear.\n\n"
@@ -24,8 +24,8 @@
         . $c->name;
 
     $waText = $docTitle . " " . ($invoice->invoice_number ?? '') . " from " . ($c->name ?? '')
-        . "\nAmount: ₹" . number_format((float) $invoice->grand_total, 2)
-        . ((float) $invoice->balance > 0 ? "\nBalance due: ₹" . number_format((float) $invoice->balance, 2) : "")
+        . "\nAmount: ₹" . inr($invoice->grand_total)
+        . ((float) $invoice->balance > 0 ? "\nBalance due: ₹" . inr($invoice->balance) : "")
         . "\n\nView & download: " . $publicUrl;
     $waLink = 'https://wa.me/' . $waDigits . '?text=' . rawurlencode($waText);
 @endphp

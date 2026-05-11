@@ -3,14 +3,14 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 print:hidden">
             <div>
                 <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ $memo->memo_number }}</h2>
-                <p class="text-sm text-gray-500 mt-1">{{ $memo->memo_date->format('d M Y') }} · ₹{{ number_format((float) $memo->grand_total, 2) }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ $memo->memo_date->format('d M Y') }} · ₹{{ inr($memo->grand_total) }}</p>
             </div>
             @php
                 $waMsg = "*Cash Memo " . $memo->memo_number . "*\n"
                     . "Date: " . $memo->memo_date->format('d M Y') . "\n"
                     . "From: " . $memo->seller_name . "\n"
                     . "Bill To: " . $memo->company->name . "\n"
-                    . "Amount: ₹" . number_format((float) $memo->grand_total, 2) . "\n"
+                    . "Amount: ₹" . inr($memo->grand_total) . "\n"
                     . "Payment: " . strtoupper($memo->payment_mode);
                 $waUrl = 'https://wa.me/?text=' . rawurlencode($waMsg);
             @endphp
@@ -131,8 +131,8 @@
                                     {{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }}
                                     @if ($item->unit)<span class="text-gray-500 text-xs">{{ $item->unit }}</span>@endif
                                 </td>
-                                <td class="px-2 py-2 text-right font-mono">{{ number_format((float) $item->rate, 2) }}</td>
-                                <td class="px-2 py-2 text-right font-mono font-semibold">{{ number_format((float) $item->amount, 2) }}</td>
+                                <td class="px-2 py-2 text-right font-mono">{{ inr($item->rate) }}</td>
+                                <td class="px-2 py-2 text-right font-mono font-semibold">{{ inr($item->amount) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -154,22 +154,22 @@
                     <div class="text-sm">
                         <table class="w-full">
                             <tbody>
-                                <tr><td class="py-1 text-gray-600">Subtotal</td><td class="py-1 text-right font-mono">₹ {{ number_format((float) $memo->subtotal, 2) }}</td></tr>
+                                <tr><td class="py-1 text-gray-600">Subtotal</td><td class="py-1 text-right font-mono">₹ {{ inr($memo->subtotal) }}</td></tr>
                                 @if ((float) $memo->discount > 0)
-                                    <tr><td class="py-1 text-gray-600">Discount</td><td class="py-1 text-right font-mono text-red-700">− ₹ {{ number_format((float) $memo->discount, 2) }}</td></tr>
+                                    <tr><td class="py-1 text-gray-600">Discount</td><td class="py-1 text-right font-mono text-red-700">− ₹ {{ inr($memo->discount) }}</td></tr>
                                 @endif
-                                <tr class="border-t border-gray-200"><td class="py-1 font-medium">Taxable value</td><td class="py-1 text-right font-mono font-medium">₹ {{ number_format((float) $memo->taxable_value, 2) }}</td></tr>
+                                <tr class="border-t border-gray-200"><td class="py-1 font-medium">Taxable value</td><td class="py-1 text-right font-mono font-medium">₹ {{ inr($memo->taxable_value) }}</td></tr>
                                 @if ((float) $memo->total_cgst > 0)
-                                    <tr><td class="py-1 text-gray-600">CGST</td><td class="py-1 text-right font-mono">₹ {{ number_format((float) $memo->total_cgst, 2) }}</td></tr>
-                                    <tr><td class="py-1 text-gray-600">SGST</td><td class="py-1 text-right font-mono">₹ {{ number_format((float) $memo->total_sgst, 2) }}</td></tr>
+                                    <tr><td class="py-1 text-gray-600">CGST</td><td class="py-1 text-right font-mono">₹ {{ inr($memo->total_cgst) }}</td></tr>
+                                    <tr><td class="py-1 text-gray-600">SGST</td><td class="py-1 text-right font-mono">₹ {{ inr($memo->total_sgst) }}</td></tr>
                                 @endif
                                 @if ((float) $memo->total_igst > 0)
-                                    <tr><td class="py-1 text-gray-600">IGST</td><td class="py-1 text-right font-mono">₹ {{ number_format((float) $memo->total_igst, 2) }}</td></tr>
+                                    <tr><td class="py-1 text-gray-600">IGST</td><td class="py-1 text-right font-mono">₹ {{ inr($memo->total_igst) }}</td></tr>
                                 @endif
                                 @if ((float) $memo->round_off != 0)
-                                    <tr><td class="py-1 text-gray-500 text-xs">Round off</td><td class="py-1 text-right font-mono text-xs text-gray-500">{{ ((float) $memo->round_off >= 0 ? '+ ' : '− ') }}₹ {{ number_format(abs((float) $memo->round_off), 2) }}</td></tr>
+                                    <tr><td class="py-1 text-gray-500 text-xs">Round off</td><td class="py-1 text-right font-mono text-xs text-gray-500">{{ ((float) $memo->round_off >= 0 ? '+ ' : '− ') }}₹ {{ inr(abs((float) $memo->round_off)) }}</td></tr>
                                 @endif
-                                <tr class="border-t-2 border-gray-900"><td class="py-2 font-bold text-base">Grand Total</td><td class="py-2 text-right font-mono font-bold text-base">₹ {{ number_format((float) $memo->grand_total, 2) }}</td></tr>
+                                <tr class="border-t-2 border-gray-900"><td class="py-2 font-bold text-base">Grand Total</td><td class="py-2 text-right font-mono font-bold text-base">₹ {{ inr($memo->grand_total) }}</td></tr>
                             </tbody>
                         </table>
                     </div>

@@ -100,7 +100,7 @@
                         <a href="{{ route('invoices.show', $inv) }}" class="block px-4 py-2.5 hover:bg-red-50/40 transition">
                             <div class="flex items-baseline justify-between gap-2">
                                 <div class="font-mono text-xs font-semibold text-gray-900 truncate">{{ $inv->invoice_number ?? '#' . $inv->id }}</div>
-                                <div class="font-mono text-xs font-bold text-red-700 tabular-nums whitespace-nowrap">₹{{ number_format((float) $inv->balance, 2) }}</div>
+                                <div class="font-mono text-xs font-bold text-red-700 tabular-nums whitespace-nowrap">₹{{ inr($inv->balance) }}</div>
                             </div>
                             <div class="flex items-baseline justify-between gap-2 mt-0.5">
                                 <div class="text-xs text-gray-500 truncate">{{ $inv->customer?->name ?? 'No customer' }}</div>
@@ -123,7 +123,7 @@
                         <a href="{{ $p->invoice ? route('invoices.show', $p->invoice) : '#' }}" class="block px-4 py-2.5 hover:bg-emerald-50/40 transition">
                             <div class="flex items-baseline justify-between gap-2">
                                 <div class="text-xs font-semibold text-gray-900 truncate">
-                                    ₹{{ number_format((float) $p->amount, 2) }}
+                                    ₹{{ inr($p->amount) }}
                                     <span class="font-normal text-gray-400 text-[11px]">on {{ $p->invoice?->invoice_number ?? 'invoice' }}</span>
                                 </div>
                                 <div class="text-[10px] text-gray-500 whitespace-nowrap">{{ $p->created_at?->diffForHumans() }}</div>
@@ -145,7 +145,7 @@
                         <a href="{{ route('invoices.show', $inv) }}" class="block px-4 py-2.5 hover:bg-brand-50/40 transition">
                             <div class="flex items-baseline justify-between gap-2">
                                 <div class="font-mono text-xs font-semibold text-gray-900 truncate">{{ $inv->invoice_number }}</div>
-                                <div class="font-mono text-xs text-gray-700 tabular-nums whitespace-nowrap">₹{{ number_format((float) $inv->grand_total, 2) }}</div>
+                                <div class="font-mono text-xs text-gray-700 tabular-nums whitespace-nowrap">₹{{ inr($inv->grand_total) }}</div>
                             </div>
                             <div class="flex items-baseline justify-between gap-2 mt-0.5">
                                 <div class="text-xs text-gray-500 truncate">{{ $inv->customer?->name ?? 'No customer' }}</div>

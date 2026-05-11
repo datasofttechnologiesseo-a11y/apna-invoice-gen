@@ -34,7 +34,8 @@
             ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
     @endphp
 
-    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }})'>
+    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }})'
+         @customer-added.window="addCustomer($event.detail)">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-breadcrumbs :items="[
                 ['label' => 'Invoices', 'href' => route('invoices.index')],
@@ -110,7 +111,9 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <a href="{{ route('customers.create') }}" target="_blank" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap">+ New</a>
+                                @unless ($restricted)
+                                    <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap" title="Add a new customer without leaving this page">+ New</button>
+                                @endunless
                             </div>
                         </div>
 
@@ -239,11 +242,11 @@
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
-                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
-                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
+                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
                                         <p class="mt-0.5 text-[10px] text-gray-400">Section 15(3) — pre-tax</p>
                                     </div>
                                 </div>
@@ -315,8 +318,8 @@
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-36 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
@@ -505,7 +508,7 @@
                             <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono" x-text="fmt(totals.grandTotal)"></span></div>
                             <div class="flex justify-between items-center">
                                 <label for="paid_amount">Paid amount</label>
-                                <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" value="{{ old('paid_amount', $invoice->paid_amount ?? 0) }}" x-ref="paidInput" @input="recompute()" class="w-32 border-gray-300 rounded text-sm text-right">
+                                <input id="paid_amount" name="paid_amount" type="number" step="any" min="0" value="{{ old('paid_amount', $invoice->paid_amount ?? 0) }}" x-ref="paidInput" @input="recompute()" class="w-32 border-gray-300 rounded text-sm text-right">
                             </div>
                             <div class="flex justify-between border-t pt-2"><span>Balance</span><span class="font-mono" x-text="fmt(balance)"></span></div>
                         </div>
@@ -539,6 +542,11 @@
         </div>
     </div>
 
+    {{-- Inline "+ New customer" modal — opens when the dropdown's "+ New" is clicked.
+         Self-contained: dispatches `customer-added` on success, the form listens
+         and updates the dropdown without losing typed data. --}}
+    <x-quick-customer-modal :states="$states" />
+
     @push('scripts')
     <script>
         function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin) {
@@ -565,6 +573,26 @@
                     return !this.customerHasGstin[this.customerId] && this.totals.grandTotal > 250000;
                 },
                 init() { this.recompute(); },
+                /**
+                 * Called by the @customer-added.window listener after the inline
+                 * "Quick add customer" modal saves a new customer. Injects the
+                 * customer into the dropdown, updates the place-of-supply maps,
+                 * and selects the new row — without losing any typed line items.
+                 */
+                addCustomer(c) {
+                    if (!c || !c.id) return;
+                    const select = document.getElementById('customer_id');
+                    if (select) {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.name + (c.state_name ? ' — ' + c.state_name : '');
+                        select.appendChild(option);
+                    }
+                    this.customerStates[c.id] = c.state_id;
+                    this.customerHasGstin[c.id] = !!c.has_gstin;
+                    this.customerId = String(c.id);
+                    this.recompute();
+                },
                 addRow() {
                     this.items.push({product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, discount: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
                 },

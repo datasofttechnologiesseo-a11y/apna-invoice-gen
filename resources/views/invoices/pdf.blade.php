@@ -1,4 +1,7 @@
 @php
+    // Tiny inline alias so the templates below stay readable: $inr(1234567) → "12,34,567.00"
+    $inr = fn ($n, $d = 2) => \App\Support\IndianNumber::format($n, $d);
+
     $styles = config('invoice_styles');
     $styleKey = $style ?? ($invoice->style ?? 'classic');
     $t = $styles[$styleKey] ?? $styles['classic'];
@@ -412,12 +415,12 @@
                     <td><div style="font-weight: 600;">{{ $item->description }}</div></td>
                     <td class="mono x-small">{{ $item->hsn_sac }}</td>
                     <td class="tr mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
-                    <td class="tr mono">{{ number_format((float) $item->rate, 2) }}</td>
+                    <td class="tr mono">{{ $inr($item->rate) }}</td>
                     @if ($hasDiscount)
-                        <td class="tr mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . number_format((float) $item->discount, 2) : '—' }}</td>
+                        <td class="tr mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . $inr($item->discount) : '—' }}</td>
                     @endif
-                    <td class="tr">{{ rtrim(rtrim(number_format((float) $item->gst_rate, 2), '0'), '.') }}%</td>
-                    <td class="tr mono bold">{{ number_format((float) $item->amount, 2) }}</td>
+                    <td class="tr">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
+                    <td class="tr mono bold">{{ $inr($item->amount) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -443,14 +446,14 @@
                 @foreach ($hsnSummary as $row)
                     <tr>
                         <td class="mono">{{ $row['hsn'] }}</td>
-                        <td class="tr mono">{{ number_format($row['taxable'], 2) }}</td>
+                        <td class="tr mono">{{ $inr($row['taxable']) }}</td>
                         @if ($invoice->is_interstate)
-                            <td class="tr mono">{{ number_format($row['igst'], 2) }}</td>
+                            <td class="tr mono">{{ $inr($row['igst']) }}</td>
                         @else
-                            <td class="tr mono">{{ number_format($row['cgst'], 2) }}</td>
-                            <td class="tr mono">{{ number_format($row['sgst'], 2) }}</td>
+                            <td class="tr mono">{{ $inr($row['cgst']) }}</td>
+                            <td class="tr mono">{{ $inr($row['sgst']) }}</td>
                         @endif
-                        <td class="tr mono bold">{{ number_format($row['total_tax'], 2) }}</td>
+                        <td class="tr mono bold">{{ $inr($row['total_tax']) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -490,7 +493,7 @@
                     <table class="totals">
                         <tr>
                             <td class="muted">Taxable value</td>
-                            <td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->subtotal, 2) }}</td>
+                            <td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->subtotal) }}</td>
                         </tr>
                         @if ($invoice->reverse_charge)
                             {{-- RCM: tax shown as "0.00 (RCM)" so recipient sees the line was
@@ -502,27 +505,27 @@
                                 <tr><td class="muted">SGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
                             @endif
                         @elseif ($invoice->is_interstate)
-                            <tr><td class="muted">IGST</td><td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->total_igst, 2) }}</td></tr>
+                            <tr><td class="muted">IGST</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_igst) }}</td></tr>
                         @else
-                            <tr><td class="muted">CGST</td><td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->total_cgst, 2) }}</td></tr>
-                            <tr><td class="muted">SGST</td><td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->total_sgst, 2) }}</td></tr>
+                            <tr><td class="muted">CGST</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_cgst) }}</td></tr>
+                            <tr><td class="muted">SGST</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_sgst) }}</td></tr>
                         @endif
                         @if ((float) $invoice->round_off != 0)
-                            <tr><td class="muted x-small">Round off</td><td class="tr mono x-small">{{ number_format((float) $invoice->round_off, 2) }}</td></tr>
+                            <tr><td class="muted x-small">Round off</td><td class="tr mono x-small">{{ $inr($invoice->round_off) }}</td></tr>
                         @endif
                         <tr class="total">
                             <td>Grand Total</td>
-                            <td class="tr mono">{{ $currencySymbol }}{{ number_format((float) $invoice->grand_total, 2) }}</td>
+                            <td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->grand_total) }}</td>
                         </tr>
                         @if ((float) $invoice->paid_amount > 0)
                             @php
                                 $balance = (float) $invoice->balance;
                                 $balanceLabel = $balance < 0 ? 'Advance (overpaid)' : 'Balance due';
-                                $balanceStr = ($balance < 0 ? '-' : '') . $currencySymbol . number_format(abs($balance), 2);
+                                $balanceStr = ($balance < 0 ? '-' : '') . $currencySymbol . $inr(abs($balance));
                             @endphp
                             <tr>
                                 <td class="muted" style="padding-top: 6px;">Paid</td>
-                                <td class="tr mono muted" style="padding-top: 6px;">{{ $currencySymbol }}{{ number_format((float) $invoice->paid_amount, 2) }}</td>
+                                <td class="tr mono muted" style="padding-top: 6px;">{{ $currencySymbol }}{{ $inr($invoice->paid_amount) }}</td>
                             </tr>
                             <tr>
                                 <td class="bold" style="padding-top: 4px; border-top: 1px solid {{ $t['divider'] }};">{{ $balanceLabel }}</td>
@@ -574,7 +577,7 @@
                             <div class="qr-box">
                                 <img src="{{ $qrDataUri }}" alt="UPI payment QR" style="width: 63px; height: 63px; display: block; margin: 0 auto;">
                             </div>
-                            <div class="x-small bold accent" style="margin-top: 3px;">Scan & pay {{ $currencySymbol }}{{ number_format($payableAmount, 2) }}</div>
+                            <div class="x-small bold accent" style="margin-top: 3px;">Scan & pay {{ $currencySymbol }}{{ $inr($payableAmount) }}</div>
                             <div class="x-small muted">Any UPI app</div>
                         </td>
                     @endif

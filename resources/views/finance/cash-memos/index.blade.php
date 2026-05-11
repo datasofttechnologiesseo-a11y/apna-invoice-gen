@@ -106,7 +106,7 @@
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ number_format((float) $m->grand_total, 2) }}</div>
+                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ inr($m->grand_total) }}</div>
                             </div>
                         </div>
                         <div class="mt-3 pt-2 border-t border-gray-100 flex items-center gap-3 text-xs print:hidden">
@@ -188,7 +188,7 @@
                                             <div class="text-xs text-gray-500 truncate max-w-xs">{{ $m->seller_address }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ number_format((float) $m->grand_total, 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($m->grand_total) }}</td>
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $m->payment_mode }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
                                         <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open the memo on screen">View / Print</a>
@@ -222,7 +222,7 @@
                             <tfoot class="hidden print:table-footer-group bg-gray-50 border-t-2 border-gray-900">
                                 <tr>
                                     <td class="px-5 py-3 font-bold uppercase text-gray-700 text-xs" colspan="3">Page total ({{ $memos->count() }} {{ Str::plural('memo', $memos->count()) }})</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums">₹{{ number_format((float) $pageGrand, 2) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums">₹{{ inr($pageGrand) }}</td>
                                     <td class="px-5 py-3" colspan="2"></td>
                                 </tr>
                             </tfoot>

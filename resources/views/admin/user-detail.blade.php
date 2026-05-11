@@ -141,7 +141,7 @@
                                 <td class="px-5 py-2">{{ $inv->customer?->name ?? '—' }}</td>
                                 <td class="px-5 py-2 text-xs text-slate-600">{{ $inv->company?->name ?? '—' }}</td>
                                 <td class="px-5 py-2"><span class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>
-                                <td class="px-5 py-2 text-right font-mono tabular-nums">₹{{ number_format((float) $inv->grand_total, 2) }}</td>
+                                <td class="px-5 py-2 text-right font-mono tabular-nums">₹{{ inr($inv->grand_total) }}</td>
                                 <td class="px-5 py-2 text-xs text-slate-500">{{ $inv->invoice_date?->format('d M Y') }}</td>
                             </tr>
                         @endforeach

@@ -89,10 +89,10 @@
             <tbody>
                 <tr class="highlight">
                     <td><strong>(a)</strong> Outward taxable supplies <span class="label-sub">(other than zero rated, nil rated and exempted)</span></td>
-                    <td class="r">{{ number_format($outward['taxable'], 2) }}</td>
-                    <td class="r">{{ number_format($outward['igst'], 2) }}</td>
-                    <td class="r">{{ number_format($outward['cgst'], 2) }}</td>
-                    <td class="r">{{ number_format($outward['sgst'], 2) }}</td>
+                    <td class="r">{{ inr($outward['taxable']) }}</td>
+                    <td class="r">{{ inr($outward['igst']) }}</td>
+                    <td class="r">{{ inr($outward['cgst']) }}</td>
+                    <td class="r">{{ inr($outward['sgst']) }}</td>
                     <td class="r muted">0.00</td>
                 </tr>
                 <tr>
@@ -113,10 +113,10 @@
                 </tr>
                 <tr class="highlight">
                     <td><strong>(d)</strong> Inward supplies <span class="label-sub">(liable to reverse charge)</span></td>
-                    <td class="r">{{ number_format($rcm_outward['taxable'], 2) }}</td>
-                    <td class="r">{{ number_format($rcm_outward['igst'], 2) }}</td>
-                    <td class="r">{{ number_format($rcm_outward['cgst'], 2) }}</td>
-                    <td class="r">{{ number_format($rcm_outward['sgst'], 2) }}</td>
+                    <td class="r">{{ inr($rcm_outward['taxable']) }}</td>
+                    <td class="r">{{ inr($rcm_outward['igst']) }}</td>
+                    <td class="r">{{ inr($rcm_outward['cgst']) }}</td>
+                    <td class="r">{{ inr($rcm_outward['sgst']) }}</td>
                     <td class="r muted">0.00</td>
                 </tr>
                 <tr>
@@ -153,9 +153,9 @@
             <tbody>
                 <tr class="highlight">
                     <td><strong>(A)(5)</strong> All other ITC <span class="label-sub">(from your expenses + cash memos)</span></td>
-                    <td class="r">{{ number_format($itc['igst'], 2) }}</td>
-                    <td class="r">{{ number_format($itc['cgst'], 2) }}</td>
-                    <td class="r">{{ number_format($itc['sgst'], 2) }}</td>
+                    <td class="r">{{ inr($itc['igst']) }}</td>
+                    <td class="r">{{ inr($itc['cgst']) }}</td>
+                    <td class="r">{{ inr($itc['sgst']) }}</td>
                     <td class="r muted">0.00</td>
                 </tr>
                 <tr>
@@ -167,9 +167,9 @@
                 </tr>
                 <tr class="total">
                     <td>(C) Net ITC available <span class="label-sub">(A − B)</span></td>
-                    <td class="r">{{ number_format($itc['igst'], 2) }}</td>
-                    <td class="r">{{ number_format($itc['cgst'], 2) }}</td>
-                    <td class="r">{{ number_format($itc['sgst'], 2) }}</td>
+                    <td class="r">{{ inr($itc['igst']) }}</td>
+                    <td class="r">{{ inr($itc['cgst']) }}</td>
+                    <td class="r">{{ inr($itc['sgst']) }}</td>
                     <td class="r muted">0.00</td>
                 </tr>
             </tbody>
@@ -194,21 +194,21 @@
             <tbody>
                 <tr>
                     <td>Total tax payable <span class="label-sub">(from outward supplies)</span></td>
-                    <td class="r">{{ number_format($outward['igst'], 2) }}</td>
-                    <td class="r">{{ number_format($outward['cgst'], 2) }}</td>
-                    <td class="r">{{ number_format($outward['sgst'], 2) }}</td>
+                    <td class="r">{{ inr($outward['igst']) }}</td>
+                    <td class="r">{{ inr($outward['cgst']) }}</td>
+                    <td class="r">{{ inr($outward['sgst']) }}</td>
                 </tr>
                 <tr>
                     <td>Less: ITC available</td>
-                    <td class="r">−{{ number_format($itc['igst'], 2) }}</td>
-                    <td class="r">−{{ number_format($itc['cgst'], 2) }}</td>
-                    <td class="r">−{{ number_format($itc['sgst'], 2) }}</td>
+                    <td class="r">−{{ inr($itc['igst']) }}</td>
+                    <td class="r">−{{ inr($itc['cgst']) }}</td>
+                    <td class="r">−{{ inr($itc['sgst']) }}</td>
                 </tr>
                 <tr class="total">
                     <td>Net cash payable</td>
-                    <td class="r">{{ number_format($netCash['igst'], 2) }}</td>
-                    <td class="r">{{ number_format($netCash['cgst'], 2) }}</td>
-                    <td class="r">{{ number_format($netCash['sgst'], 2) }}</td>
+                    <td class="r">{{ inr($netCash['igst']) }}</td>
+                    <td class="r">{{ inr($netCash['cgst']) }}</td>
+                    <td class="r">{{ inr($netCash['sgst']) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -220,7 +220,7 @@
                         <div class="lbl">Total cash to deposit (PMT-06)</div>
                         <div class="lbl-sub">IGST + CGST + SGST · pay on the GST portal</div>
                     </td>
-                    <td class="amt">Rs. {{ number_format($netCash['total'], 2) }}</td>
+                    <td class="amt">Rs. {{ inr($netCash['total']) }}</td>
                 </tr>
             </table>
         </div>

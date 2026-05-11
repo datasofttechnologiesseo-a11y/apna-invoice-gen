@@ -148,7 +148,7 @@
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
-                                            <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                            <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                         </div>
                                     </div>
                                     <div class="flex justify-between text-sm pt-2 border-t">
@@ -203,7 +203,7 @@
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" maxlength="20" class="w-20 border-gray-300 rounded text-sm" placeholder="NOS">
                                             </td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="0.01" min="0" class="w-24 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" class="w-24 border-gray-300 rounded text-sm text-right" required>
                                             </td>
                                             <td class="px-3 py-2 text-right font-mono tabular-nums" x-text="fmt(item.quantity * item.rate)"></td>
                                             <td class="px-2 py-2 text-right">
@@ -225,7 +225,7 @@
                                     <x-input-label for="discount" value="Discount (₹)" />
                                     <div class="mt-1 relative">
                                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                                        <input id="discount" name="discount" type="number" step="0.01" min="0"
+                                        <input id="discount" name="discount" type="number" step="any" min="0"
                                                x-model.number="discount" @input="recompute()"
                                                class="block w-full pl-8 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                     </div>

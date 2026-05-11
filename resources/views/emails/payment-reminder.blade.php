@@ -41,11 +41,11 @@
                             <tr>
                                 <td style="padding: 14px 18px;">
                                     <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280;">Balance due</div>
-                                    <div style="font-size: 28px; font-weight: 700; color: {{ $accent }}; margin-top: 4px;">&#8377; {{ number_format($balance, 2) }}</div>
+                                    <div style="font-size: 28px; font-weight: 700; color: {{ $accent }}; margin-top: 4px;">&#8377; {{ inr($balance) }}</div>
                                     <div style="font-size: 13px; color: #6b7280; margin-top: 8px;">
-                                        Invoice total: ₹{{ number_format((float) $invoice->grand_total, 2) }}
+                                        Invoice total: ₹{{ inr($invoice->grand_total) }}
                                         @if ((float) $invoice->paid_amount > 0)
-                                            · Already paid: ₹{{ number_format((float) $invoice->paid_amount, 2) }}
+                                            · Already paid: ₹{{ inr($invoice->paid_amount) }}
                                         @endif
                                     </div>
                                 </td>

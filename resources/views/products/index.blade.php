@@ -68,7 +68,7 @@
                                     <td class="px-4 py-3 text-sm">{{ ucfirst($p->kind) }}</td>
                                     <td class="px-4 py-3 font-mono text-sm">{{ $p->hsn_sac }}</td>
                                     <td class="px-4 py-3 text-sm">{{ $p->unit }}</td>
-                                    <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $p->rate, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ inr($p->rate) }}</td>
                                     <td class="px-4 py-3 text-right text-sm">{{ rtrim(rtrim(number_format((float) $p->gst_rate, 2, '.', ''), '0'), '.') }}%</td>
                                     <td class="px-4 py-3 text-right space-x-2">
                                         <a href="{{ route('products.edit', $p) }}" class="text-brand-600 hover:underline text-sm">Edit</a>

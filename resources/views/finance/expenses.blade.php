@@ -114,15 +114,15 @@
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Taxable value</div>
-                    <div class="mt-1 text-2xl font-bold text-gray-900 font-mono tabular-nums">₹{{ number_format($summary['taxable'], 2) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-gray-900 font-mono tabular-nums">₹{{ inr($summary['taxable']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">GST (Input Tax Credit)</div>
-                    <div class="mt-1 text-2xl font-bold text-emerald-700 font-mono tabular-nums">₹{{ number_format($summary['gst'], 2) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-emerald-700 font-mono tabular-nums">₹{{ inr($summary['gst']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Total cash out</div>
-                    <div class="mt-1 text-2xl font-bold text-red-700 font-mono tabular-nums">₹{{ number_format($summary['cash_out'], 2) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-red-700 font-mono tabular-nums">₹{{ inr($summary['cash_out']) }}</div>
                 </div>
             </div>
 
@@ -152,9 +152,9 @@
                                             <span class="inline-block text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider" style="background: {{ $cat['color'] }}20; color: {{ $cat['color'] }};">{{ $cat['label'] }}</span>
                                         </td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums">{{ $cat['count'] }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums">{{ number_format($cat['taxable'], 2) }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-emerald-700">{{ $cat['gst'] > 0 ? number_format($cat['gst'], 2) : '—' }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold">{{ number_format($cat['taxable'] + $cat['gst'], 2) }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums">{{ inr($cat['taxable']) }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-emerald-700">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '—' }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold">{{ inr($cat['taxable'] + $cat['gst']) }}</td>
                                         <td class="px-4 py-2 text-right text-xs text-gray-500">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '—' }}</td>
                                     </tr>
                                 @endforeach
@@ -220,9 +220,9 @@
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ number_format((float) $e->amount, 2) }}</div>
+                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ inr($e->amount) }}</div>
                                 @if ((float) $e->gst_amount > 0)
-                                    <div class="text-[10px] text-emerald-700 font-mono">+ ₹{{ number_format((float) $e->gst_amount, 2) }} GST</div>
+                                    <div class="text-[10px] text-emerald-700 font-mono">+ ₹{{ inr($e->gst_amount) }} GST</div>
                                 @endif
                             </div>
                         </div>
@@ -280,8 +280,8 @@
                                             <div class="text-xs text-gray-500">{{ $e->vendor_name }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ number_format((float) $e->amount, 2) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . number_format((float) $e->gst_amount, 2) : '—' }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($e->amount) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . inr($e->gst_amount) : '—' }}</td>
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $e->payment_method ?? '—' }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
                                         <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">
@@ -318,9 +318,9 @@
                             <tfoot class="bg-gray-50 print:bg-white">
                                 <tr class="font-bold border-t-2 border-gray-300">
                                     <td colspan="3" class="px-5 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Total ({{ number_format($summary['count']) }} entries)</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ number_format($summary['taxable'], 2) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-emerald-700">₹{{ number_format($summary['gst'], 2) }}</td>
-                                    <td class="px-5 py-3" colspan="2"><span class="text-xs text-gray-500 uppercase tracking-wider">Cash out:</span> <span class="font-mono tabular-nums text-red-700">₹{{ number_format($summary['cash_out'], 2) }}</span></td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ inr($summary['taxable']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-emerald-700">₹{{ inr($summary['gst']) }}</td>
+                                    <td class="px-5 py-3" colspan="2"><span class="text-xs text-gray-500 uppercase tracking-wider">Cash out:</span> <span class="font-mono tabular-nums text-red-700">₹{{ inr($summary['cash_out']) }}</span></td>
                                 </tr>
                             </tfoot>
                         @endif

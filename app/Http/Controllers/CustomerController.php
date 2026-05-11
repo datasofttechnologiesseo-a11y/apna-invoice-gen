@@ -114,6 +114,49 @@ class CustomerController extends Controller
         return redirect()->route('customers.index')->with('status', "Customer '{$customer->name}' added to {$company->name}.");
     }
 
+    /**
+     * JSON endpoint for the inline "+ New customer" modal on invoice/quotation
+     * forms. Lets the user add a customer without leaving the page (no refresh,
+     * no lost data). Returns the new customer payload so the frontend can
+     * inject it into the dropdown and select it immediately.
+     *
+     * The validation is intentionally a subset of `validated()` — the modal
+     * only collects the fields needed for a GST-compliant invoice (name,
+     * state, optional GSTIN/phone/email). The user can fill address etc.
+     * later via the full edit page if needed.
+     */
+    public function quickStore(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $company = $user->ensureCompany();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
+            'state_id' => ['required', 'exists:states,id'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'email' => ['nullable', 'email', 'max:255'],
+        ]);
+
+        $data['country'] = 'India';
+        $data['company_id'] = $company->id;
+        $customer = $user->customers()->create($data);
+        $customer->load('state');
+
+        return response()->json([
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'gstin' => $customer->gstin,
+            'state_id' => $customer->state_id,
+            'state_name' => $customer->state?->name,
+            'state_gst_code' => $customer->state?->gst_code,
+            'phone' => $customer->phone,
+            'email' => $customer->email,
+            'has_gstin' => ! empty($customer->gstin),
+            'message' => "Customer '{$customer->name}' added.",
+        ], 201);
+    }
+
     public function edit(Request $request, Customer $customer): View
     {
         abort_unless($customer->user_id === $request->user()->id, 403);

@@ -40,19 +40,19 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Total Invoiced</div>
-                    <div class="mt-1 text-xl font-bold text-gray-900 font-mono tabular-nums">₹{{ number_format($totals['invoiced'], 2) }}</div>
+                    <div class="mt-1 text-xl font-bold text-gray-900 font-mono tabular-nums">₹{{ inr($totals['invoiced']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Received</div>
-                    <div class="mt-1 text-xl font-bold text-emerald-700 font-mono tabular-nums">₹{{ number_format($totals['received'], 2) }}</div>
+                    <div class="mt-1 text-xl font-bold text-emerald-700 font-mono tabular-nums">₹{{ inr($totals['received']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Credit Notes</div>
-                    <div class="mt-1 text-xl font-bold text-blue-700 font-mono tabular-nums">₹{{ number_format($totals['credited'], 2) }}</div>
+                    <div class="mt-1 text-xl font-bold text-blue-700 font-mono tabular-nums">₹{{ inr($totals['credited']) }}</div>
                 </div>
                 <div class="bg-white border-2 border-amber-300 bg-amber-50 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-amber-800">Outstanding</div>
-                    <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-amber-800' : 'text-emerald-700' }} font-mono tabular-nums">₹{{ number_format($totals['outstanding'], 2) }}</div>
+                    <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-amber-800' : 'text-emerald-700' }} font-mono tabular-nums">₹{{ inr($totals['outstanding']) }}</div>
                 </div>
             </div>
 
@@ -112,13 +112,13 @@
                                         <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 ml-1">{{ str_replace('_', ' ', $e['type']) }}</span>
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['debit'] > 0 ? '' : 'text-gray-300' }}">
-                                        {{ $e['debit'] > 0 ? number_format($e['debit'], 2) : '—' }}
+                                        {{ $e['debit'] > 0 ? inr($e['debit']) : '—' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-emerald-700' : 'text-gray-300' }}">
-                                        {{ $e['credit'] > 0 ? number_format($e['credit'], 2) : '—' }}
+                                        {{ $e['credit'] > 0 ? inr($e['credit']) : '—' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold {{ $e['balance'] > 0 ? 'text-amber-800' : ($e['balance'] < 0 ? 'text-emerald-700' : 'text-gray-500') }}">
-                                        {{ number_format(abs($e['balance']), 2) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
+                                        {{ inr(abs($e['balance'])) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
                                     </td>
                                 </tr>
                             @empty
@@ -129,10 +129,10 @@
                             <tfoot class="bg-gray-50 print:bg-white">
                                 <tr class="font-bold border-t-2 border-gray-300">
                                     <td colspan="3" class="px-4 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Closing balance</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums">₹{{ number_format($totals['invoiced'], 2) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums text-emerald-700">₹{{ number_format($totals['received'] + $totals['credited'], 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums">₹{{ inr($totals['invoiced']) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums text-emerald-700">₹{{ inr($totals['received'] + $totals['credited']) }}</td>
                                     <td class="px-4 py-3 text-right font-mono tabular-nums {{ $totals['outstanding'] > 0 ? 'text-amber-800' : 'text-emerald-700' }}">
-                                        ₹{{ number_format($totals['outstanding'], 2) }} {{ $totals['outstanding'] > 0 ? 'Dr' : ($totals['outstanding'] < 0 ? 'Cr' : '') }}
+                                        ₹{{ inr($totals['outstanding']) }} {{ $totals['outstanding'] > 0 ? 'Dr' : ($totals['outstanding'] < 0 ? 'Cr' : '') }}
                                     </td>
                                 </tr>
                             </tfoot>

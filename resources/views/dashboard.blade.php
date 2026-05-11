@@ -87,7 +87,7 @@
                     <div class="absolute top-0 right-0 w-32 h-32 bg-money-300/30 rounded-full -mr-12 -mt-12"></div>
                     <div class="relative">
                         <div class="text-xs uppercase font-bold tracking-wider text-money-800">Payments received</div>
-                        <div class="text-3xl sm:text-4xl font-display font-extrabold mt-2 text-money-900 tabular-nums">₹{{ number_format((float) $stats['received_total'], 2) }}</div>
+                        <div class="text-3xl sm:text-4xl font-display font-extrabold mt-2 text-money-900 tabular-nums">₹{{ inr($stats['received_total']) }}</div>
                         <div class="mt-3 text-xs text-money-800">
                             <span class="font-semibold">₹{{ number_format((float) $stats['received_this_month'], 0) }}</span> in {{ now()->format('F') }}
                             <span class="text-money-600">·</span>
@@ -114,12 +114,12 @@
                         <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
                         <svg class="w-4 h-4 text-accent-700 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
-                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums" title="₹{{ number_format((float) $stats['outstanding'], 2) }}"><x-inr-compact :amount="$stats['outstanding']" /></div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums" title="₹{{ inr($stats['outstanding']) }}"><x-inr-compact :amount="$stats['outstanding']" /></div>
                     <div class="mt-3 text-xs text-accent-700 group-hover:text-accent-900 transition">{{ $stats['outstanding'] > 0 ? 'click to chase →' : 'awaiting payment' }}</div>
                 </a>
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
-                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums" title="₹{{ number_format((float) $stats['paid_this_month'], 2) }}"><x-inr-compact :amount="$stats['paid_this_month']" /></div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums" title="₹{{ inr($stats['paid_this_month']) }}"><x-inr-compact :amount="$stats['paid_this_month']" /></div>
                     <div class="mt-3 text-xs text-gray-400">paid on {{ now()->format('F') }} bills</div>
                 </div>
             </div>
@@ -379,7 +379,7 @@
                                             </div>
                                         </div>
                                         <div class="text-right">
-                                            <div class="font-mono font-semibold text-gray-900">₹{{ number_format((float) $inv->grand_total, 2) }}</div>
+                                            <div class="font-mono font-semibold text-gray-900">₹{{ inr($inv->grand_total) }}</div>
                                             <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $badge['bg'] }} {{ $badge['text'] }}">{{ $badge['label'] }}</span>
                                         </div>
                                     </a>

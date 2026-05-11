@@ -104,16 +104,16 @@
         <table class="kv" style="margin-top: 4px;">
             <tr><th>Invoice no.</th><td>{{ $inv->invoice_number ?? 'Draft' }}</td></tr>
             <tr><th>Invoice date</th><td>{{ $inv->invoice_date?->format('d M Y') }}</td></tr>
-            <tr><th>Invoice total</th><td>&#8377; {{ number_format((float) $inv->grand_total, 2) }}</td></tr>
-            <tr><th>Previously paid</th><td>&#8377; {{ number_format((float) $inv->paid_amount - (float) $payment->amount, 2) }}</td></tr>
-            <tr><th>Balance after this payment</th><td><strong>&#8377; {{ number_format((float) $inv->balance, 2) }}</strong></td></tr>
+            <tr><th>Invoice total</th><td>&#8377; {{ inr($inv->grand_total) }}</td></tr>
+            <tr><th>Previously paid</th><td>&#8377; {{ inr($inv->paid_amount - (float) $payment->amount) }}</td></tr>
+            <tr><th>Balance after this payment</th><td><strong>&#8377; {{ inr($inv->balance) }}</strong></td></tr>
         </table>
     </div>
 </div>
 
 <div class="amount-box">
     <div class="xs muted" style="text-transform: uppercase; letter-spacing: 1px;">Amount received</div>
-    <div class="amount-big">&#8377; {{ number_format((float) $payment->amount, 2) }}</div>
+    <div class="amount-big">&#8377; {{ inr($payment->amount) }}</div>
     <div class="small muted" style="margin-top: 4px;">{{ $amountInWords }}</div>
 </div>
 
@@ -124,15 +124,15 @@
         <table class="kv" style="margin: 0;">
             <tr>
                 <th>Gross amount applied to invoice</th>
-                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right;">&#8377; {{ number_format((float) $payment->amount, 2) }}</td>
+                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right;">&#8377; {{ inr($payment->amount) }}</td>
             </tr>
             <tr>
-                <th>Less: TDS @if ($payment->tds_section) under Section {{ $payment->tds_section }}@endif @if ($payment->tds_rate) ({{ rtrim(rtrim(number_format((float) $payment->tds_rate, 2), '0'), '.') }}%)@endif</th>
-                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; color: #b45309;">- &#8377; {{ number_format((float) $payment->tds_amount, 2) }}</td>
+                <th>Less: TDS @if ($payment->tds_section) under Section {{ $payment->tds_section }}@endif @if ($payment->tds_rate) ({{ rtrim(rtrim(inr($payment->tds_rate), '0'), '.') }}%)@endif</th>
+                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; color: #b45309;">- &#8377; {{ inr($payment->tds_amount) }}</td>
             </tr>
             <tr style="border-top: 1px solid #d97706;">
                 <th style="font-weight: bold; color: #78350f;">Net cash received in bank</th>
-                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; font-weight: bold; color: #78350f;">&#8377; {{ number_format($netReceived, 2) }}</td>
+                <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; font-weight: bold; color: #78350f;">&#8377; {{ inr($netReceived) }}</td>
             </tr>
         </table>
         <div class="xs muted" style="margin-top: 6px; font-style: italic;">TDS to be reconciled against Form 26AS / Form 16A issued by the customer.</div>

@@ -253,7 +253,7 @@
                         @endif
                     </div>
                     <div class="mt-3 text-xs text-gray-500 uppercase tracking-wider">Grand total</div>
-                    <div class="mt-1 text-2xl font-mono font-bold text-gray-900">₹{{ number_format((float) $quotation->grand_total, 2) }}</div>
+                    <div class="mt-1 text-2xl font-mono font-bold text-gray-900">₹{{ inr($quotation->grand_total) }}</div>
                     <div class="text-[10px] text-gray-500">{{ $amountInWords }}</div>
                 </div>
             </div>
@@ -290,10 +290,10 @@
                                     <td class="px-3 py-2">{{ $item->description }}</td>
                                     <td class="px-3 py-2 font-mono">{{ $item->hsn_sac }}</td>
                                     <td class="px-3 py-2 text-right">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ number_format((float) $item->rate, 2) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ number_format((float) $item->discount, 2) }}</td>
-                                    <td class="px-3 py-2 text-right">{{ rtrim(rtrim(number_format((float) $item->gst_rate, 2), '0'), '.') }}%</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ number_format((float) $item->amount, 2) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ inr($item->rate) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ inr($item->discount) }}</td>
+                                    <td class="px-3 py-2 text-right">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ inr($item->amount) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -317,17 +317,17 @@
                     </div>
 
                     <div class="md:pl-6 space-y-1 text-sm">
-                        <div class="flex justify-between"><span>Subtotal</span><span class="font-mono">{{ number_format((float) $quotation->subtotal, 2) }}</span></div>
+                        <div class="flex justify-between"><span>Subtotal</span><span class="font-mono">{{ inr($quotation->subtotal) }}</span></div>
                         @if (! $quotation->is_interstate)
-                            <div class="flex justify-between"><span>CGST</span><span class="font-mono">{{ number_format((float) $quotation->total_cgst, 2) }}</span></div>
-                            <div class="flex justify-between"><span>SGST</span><span class="font-mono">{{ number_format((float) $quotation->total_sgst, 2) }}</span></div>
+                            <div class="flex justify-between"><span>CGST</span><span class="font-mono">{{ inr($quotation->total_cgst) }}</span></div>
+                            <div class="flex justify-between"><span>SGST</span><span class="font-mono">{{ inr($quotation->total_sgst) }}</span></div>
                         @else
-                            <div class="flex justify-between"><span>IGST</span><span class="font-mono">{{ number_format((float) $quotation->total_igst, 2) }}</span></div>
+                            <div class="flex justify-between"><span>IGST</span><span class="font-mono">{{ inr($quotation->total_igst) }}</span></div>
                         @endif
                         @if ((float) $quotation->round_off !== 0.0)
-                            <div class="flex justify-between text-gray-500"><span>Round-off</span><span class="font-mono">{{ number_format((float) $quotation->round_off, 2) }}</span></div>
+                            <div class="flex justify-between text-gray-500"><span>Round-off</span><span class="font-mono">{{ inr($quotation->round_off) }}</span></div>
                         @endif
-                        <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono">₹{{ number_format((float) $quotation->grand_total, 2) }}</span></div>
+                        <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono">₹{{ inr($quotation->grand_total) }}</span></div>
                         <p class="pt-3 text-[11px] text-gray-500 italic">This is a quotation, not a tax invoice. No GST is collected or filed at this stage. Convert to a tax invoice once accepted.</p>
                     </div>
                 </div>

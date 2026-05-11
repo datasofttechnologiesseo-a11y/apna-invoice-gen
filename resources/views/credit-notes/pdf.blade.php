@@ -151,21 +151,21 @@
             </tr>
             <tr>
                 <td class="x-small muted">Taxable value (pro-rated)</td>
-                <td class="mono">₹ {{ number_format((float) $creditNote->taxable_value, 2) }}</td>
+                <td class="mono">₹ {{ inr($creditNote->taxable_value) }}</td>
             </tr>
             @if ($invoice->is_interstate)
                 <tr>
                     <td class="x-small muted">IGST reduced</td>
-                    <td class="mono">₹ {{ number_format((float) $creditNote->total_igst, 2) }}</td>
+                    <td class="mono">₹ {{ inr($creditNote->total_igst) }}</td>
                 </tr>
             @else
                 <tr>
                     <td class="x-small muted">CGST reduced</td>
-                    <td class="mono">₹ {{ number_format((float) $creditNote->total_cgst, 2) }}</td>
+                    <td class="mono">₹ {{ inr($creditNote->total_cgst) }}</td>
                 </tr>
                 <tr>
                     <td class="x-small muted">SGST reduced</td>
-                    <td class="mono">₹ {{ number_format((float) $creditNote->total_sgst, 2) }}</td>
+                    <td class="mono">₹ {{ inr($creditNote->total_sgst) }}</td>
                 </tr>
             @endif
         </table>
@@ -176,7 +176,7 @@
         <table class="totals">
             <tr class="total">
                 <td>Total credit</td>
-                <td class="tr mono">₹ {{ number_format((float) $creditNote->amount, 2) }}</td>
+                <td class="tr mono">₹ {{ inr($creditNote->amount) }}</td>
             </tr>
         </table>
         <div class="aiw-text muted"><strong>In words:</strong> {{ $amountInWords }}</div>

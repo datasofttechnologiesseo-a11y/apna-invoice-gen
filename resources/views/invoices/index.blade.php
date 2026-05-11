@@ -78,9 +78,9 @@
                                     <span class="shrink-0 inline-block px-2 py-0.5 rounded text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                 </div>
                                 <div class="flex items-baseline justify-between text-sm">
-                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ number_format((float) $inv->grand_total, 2) }}</span></span>
+                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($inv->grand_total) }}</span></span>
                                     @if ((float) $inv->balance > 0)
-                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-amber-700 ml-1">₹{{ number_format((float) $inv->balance, 2) }}</span></span>
+                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-amber-700 ml-1">₹{{ inr($inv->balance) }}</span></span>
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-3 pt-1 text-sm">
@@ -142,8 +142,8 @@
                                             <div class="text-xs text-gray-500 font-mono">{{ $inv->customer->phone }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $inv->grand_total, 2) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono">₹{{ number_format((float) $inv->balance, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ inr($inv->grand_total) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ inr($inv->balance) }}</td>
                                     <td class="px-4 py-3">
                                         @php
                                             $colors = [

@@ -97,7 +97,7 @@
             <table>
                 <tr>
                     <td><div class="lbl">Total purchases (this period)</div></td>
-                    <td class="amt">Rs. {{ number_format($summary['grand_total'], 2) }}</td>
+                    <td class="amt">Rs. {{ inr($summary['grand_total']) }}</td>
                 </tr>
             </table>
         </div>
@@ -112,9 +112,9 @@
             </tr>
             <tr>
                 <td class="v">{{ $summary['count'] }}</td>
-                <td class="v">Rs. {{ number_format($summary['taxable'], 2) }}<br><small>net of GST</small></td>
-                <td class="v">Rs. {{ number_format($summary['total_tax'], 2) }}<br><small>CGST {{ number_format($summary['cgst'], 0) }} · SGST {{ number_format($summary['sgst'], 0) }} · IGST {{ number_format($summary['igst'], 0) }}</small></td>
-                <td class="v">Rs. {{ number_format($summary['grand_total'], 2) }}<br><small>incl. GST</small></td>
+                <td class="v">Rs. {{ inr($summary['taxable']) }}<br><small>net of GST</small></td>
+                <td class="v">Rs. {{ inr($summary['total_tax']) }}<br><small>CGST {{ number_format($summary['cgst'], 0) }} · SGST {{ number_format($summary['sgst'], 0) }} · IGST {{ number_format($summary['igst'], 0) }}</small></td>
+                <td class="v">Rs. {{ inr($summary['grand_total']) }}<br><small>incl. GST</small></td>
             </tr>
         </table>
 
@@ -132,7 +132,7 @@
                     <tr>
                         <td class="lbl">{{ strtoupper($mode) }}</td>
                         <td class="cnt">{{ $b['count'] }} memo{{ $b['count'] === 1 ? '' : 's' }}</td>
-                        <td class="amt">Rs. {{ number_format($b['total'], 2) }}</td>
+                        <td class="amt">Rs. {{ inr($b['total']) }}</td>
                     </tr>
                 @endforeach
             </table>
@@ -165,18 +165,18 @@
                             @endif
                         </td>
                         <td style="text-transform: uppercase; font-size: 9px;">{{ $m->payment_mode }}</td>
-                        <td class="r">{{ number_format((float) $m->taxable_value, 2) }}</td>
-                        <td class="r">{{ number_format((float) $m->total_cgst + (float) $m->total_sgst + (float) $m->total_igst, 2) }}</td>
-                        <td class="r" style="font-weight: bold;">{{ number_format((float) $m->grand_total, 2) }}</td>
+                        <td class="r">{{ inr($m->taxable_value) }}</td>
+                        <td class="r">{{ inr($m->total_cgst + (float) $m->total_sgst + (float) $m->total_igst) }}</td>
+                        <td class="r" style="font-weight: bold;">{{ inr($m->grand_total) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="5" class="r">TOTAL</td>
-                    <td class="r">{{ number_format($summary['taxable'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['total_tax'], 2) }}</td>
-                    <td class="r">{{ number_format($summary['grand_total'], 2) }}</td>
+                    <td class="r">{{ inr($summary['taxable']) }}</td>
+                    <td class="r">{{ inr($summary['total_tax']) }}</td>
+                    <td class="r">{{ inr($summary['grand_total']) }}</td>
                 </tr>
             </tfoot>
         </table>

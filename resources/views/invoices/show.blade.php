@@ -159,12 +159,12 @@
                     @csrf
                     <div class="flex items-center justify-between">
                         <h3 class="font-semibold text-gray-900">Record a payment</h3>
-                        <div class="text-sm text-gray-500">Balance due: <span class="font-mono font-semibold text-gray-900">₹{{ number_format((float) $invoice->balance, 2) }}</span></div>
+                        <div class="text-sm text-gray-500">Balance due: <span class="font-mono font-semibold text-gray-900">₹{{ inr($invoice->balance) }}</span></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
                             <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Amount (₹) *</label>
-                            <input type="number" name="amount" step="0.01" min="0.01" max="{{ $invoice->balance }}" value="{{ old('amount', $invoice->balance) }}" required class="mt-1 block w-full border-gray-300 rounded shadow-sm">
+                            <input type="number" name="amount" step="any" min="0.01" max="{{ $invoice->balance }}" value="{{ old('amount', $invoice->balance) }}" required class="mt-1 block w-full border-gray-300 rounded shadow-sm">
                         </div>
                         <div>
                             <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Method *</label>
@@ -269,7 +269,7 @@
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Amount (₹)</label>
-                                <input type="number" name="tds_amount" step="0.01" min="0" x-model="amt"
+                                <input type="number" name="tds_amount" step="any" min="0" x-model="amt"
                                        placeholder="0.00" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
                                 <p class="text-[10px] text-gray-500 mt-1">Tracked for Form 26AS reconciliation. Invoice balance reduces by gross.</p>
                             </div>
@@ -318,11 +318,11 @@
                                         <td class="px-4 py-2">{{ $p->methodLabel() }}</td>
                                         <td class="px-4 py-2 text-xs font-mono text-gray-600">{{ $p->reference_number ?: '—' }}</td>
                                         <td class="px-4 py-2 text-right font-mono font-semibold">
-                                            ₹{{ number_format((float) $p->amount, 2) }}
+                                            ₹{{ inr($p->amount) }}
                                             @if ((float) $p->tds_amount > 0)
                                                 <div class="text-[10px] font-normal text-amber-700 mt-0.5" title="TDS deducted at source">
-                                                    incl. TDS {{ $p->tds_section }} ₹{{ number_format((float) $p->tds_amount, 2) }}<br>
-                                                    <span class="text-gray-500">Net to bank: ₹{{ number_format($p->netReceived(), 2) }}</span>
+                                                    incl. TDS {{ $p->tds_section }} ₹{{ inr($p->tds_amount) }}<br>
+                                                    <span class="text-gray-500">Net to bank: ₹{{ inr($p->netReceived()) }}</span>
                                                 </div>
                                             @endif
                                         </td>
@@ -333,7 +333,7 @@
                                                 :action="route('payments.destroy', $p)"
                                                 method="DELETE"
                                                 title="Reverse this payment?"
-                                                message="Receipt {{ $p->receipt_number }} (₹{{ number_format((float) $p->amount, 2) }}) will be removed. The receipt number stays reserved in the log for audit, but the invoice balance is restored."
+                                                message="Receipt {{ $p->receipt_number }} (₹{{ inr($p->amount) }}) will be removed. The receipt number stays reserved in the log for audit, but the invoice balance is restored."
                                                 confirm-label="Reverse payment"
                                                 confirm-class="bg-red-600 hover:bg-red-700"
                                                 tone="warning">
@@ -346,7 +346,7 @@
                             <tfoot class="bg-gray-50">
                                 <tr>
                                     <td colspan="4" class="px-4 py-2 text-right text-xs uppercase tracking-wider text-gray-500 font-semibold">Total received</td>
-                                    <td class="px-4 py-2 text-right font-mono font-bold">₹{{ number_format((float) $payments->sum('amount'), 2) }}</td>
+                                    <td class="px-4 py-2 text-right font-mono font-bold">₹{{ inr($payments->sum('amount')) }}</td>
                                     <td></td>
                                 </tr>
                             </tfoot>

@@ -44,7 +44,7 @@
                 <div class="absolute top-0 right-0 w-48 h-48 bg-emerald-400 rounded-full blur-3xl opacity-20 -translate-y-12 translate-x-12"></div>
                 <div class="relative">
                     <div class="text-xs font-bold uppercase tracking-widest text-emerald-200">Revenue processed · All time</div>
-                    <div class="mt-2 font-display text-4xl lg:text-5xl font-extrabold tabular-nums">₹{{ number_format($stats['revenue']['grand_total_all_time'], 2) }}</div>
+                    <div class="mt-2 font-display text-4xl lg:text-5xl font-extrabold tabular-nums">₹{{ inr($stats['revenue']['grand_total_all_time']) }}</div>
                     <div class="mt-5 grid grid-cols-3 gap-4 text-sm">
                         <div class="border-l-2 border-emerald-400/50 pl-3">
                             <div class="text-emerald-200 text-[10px] uppercase tracking-wider font-bold">Collected</div>
@@ -196,7 +196,7 @@
                     @forelse ($gstRateUsage as $row)
                         @php $pct = round(($row->line_count / $totalLines) * 100, 1); @endphp
                         <tr>
-                            <td class="px-5 py-2 font-mono">{{ rtrim(rtrim(number_format((float) $row->gst_rate, 2), '0'), '.') }}%</td>
+                            <td class="px-5 py-2 font-mono">{{ rtrim(rtrim(inr($row->gst_rate), '0'), '.') }}%</td>
                             <td class="px-5 py-2 text-right font-mono tabular-nums">{{ number_format($row->line_count) }}</td>
                             <td class="px-5 py-2">
                                 <div class="flex items-center gap-2">

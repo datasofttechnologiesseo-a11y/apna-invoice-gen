@@ -1,5 +1,6 @@
 @php
     $faqs = [
+        ['q' => 'How to use Apna Invoice — step by step?', 'a' => "1. Sign up free at apnainvoice.com (no credit card, takes 30 seconds).\n\n2. Add your business once — name, GSTIN, address, state. The state determines CGST + SGST (same state) vs IGST (different state) automatically.\n\n3. Add your first customer — name + state are required, GSTIN optional for B2C. You can also click '+ New' on any invoice to add a customer inline (no page refresh, no lost data).\n\n4. Click 'New invoice' — pick the customer, type description / HSN-SAC / qty / rate / GST%. Defaults to GST 18%, qty 1.\n\n5. Click 'Issue' — the invoice locks, gets a permanent number (auto-resets every 1 April), and the PDF is generated. Goods invoices auto-print 3 copies (Original / Duplicate-Transporter / Triplicate-Supplier) per CGST Rule 48.\n\n6. Share — WhatsApp (pre-filled message), Email (PDF attached), or copy a 30-day public link. UPI QR is auto-included if you've added a UPI ID.\n\n7. Record payment when received — full or part payment, with TDS support. Receipt PDF auto-generated.\n\n8. End-of-month — download GSTR-1 CSV, GSTR-3B summary, receivables aging report, or full ZIP backup from the dashboard.\n\nTip: Install Apna Invoice as a phone app via Chrome's 'Install' menu — works like a native app."],
         ['q' => 'How can I create a GST invoice online for free in India?', 'a' => "Sign up on Apna Invoice (no card required), add your business GSTIN and state once, then create your first GST invoice in about 60 seconds. The tool auto-calculates CGST + SGST for intra-state and IGST for inter-state supplies, supports HSN/SAC codes, and exports a GST-compliant tax invoice as PDF — completely free for unlimited invoices during beta."],
         ['q' => 'Is Apna Invoice the best free GST invoice generator for freelancers and small businesses in India?', 'a' => "We're built specifically for Indian freelancers, MSMEs, SMEs, startups, small shops and CAs. Apna Invoice is fully online (no installation), zero-cost, with India-first defaults — Indian numbering (lakhs/crores), GST slabs pre-loaded, FY-reset invoice numbers, UPI QR on every invoice, and one-click WhatsApp share — with no per-invoice or per-user limit."],
         ['q' => 'Does the invoice generator include HSN/SAC code and auto GST calculation?', 'a' => "Yes — every line item has an HSN/SAC field with a built-in search link to the official GST portal, and you pick the GST rate (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%) per item. We auto-split CGST/SGST or IGST based on customer state, round to the paisa, and print the rate on every line as Rule 46 requires."],
@@ -155,9 +156,13 @@
 
 <!-- Announcement bar -->
 <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white text-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-2 flex-wrap">
-        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent-500 text-accent-900 text-[10px] font-bold uppercase tracking-wider">New</span>
-        <span><strong>Free during beta</strong> for India's MSMEs, SMEs &amp; startups — unlimited GST invoices, unlimited customers. <a href="{{ route('register') }}" class="underline font-semibold hover:text-accent-300">Claim now →</a></span>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-2.5 flex-wrap">
+        <span class="inline-flex flex-col w-4 h-3 rounded-[1px] overflow-hidden ring-1 ring-white/30 shrink-0" aria-label="Made in India">
+            <span class="block w-full h-1/3 bg-[#ff9933]"></span>
+            <span class="block w-full h-1/3 bg-white"></span>
+            <span class="block w-full h-1/3 bg-[#138808]"></span>
+        </span>
+        <span><strong>Specially designed for India's SMEs &amp; MSMEs</strong> — unlimited bills, unlimited quotations, unlimited customers. <a href="{{ route('register') }}" class="underline font-semibold hover:text-accent-300">Get started free →</a></span>
     </div>
 </div>
 
@@ -185,15 +190,11 @@
 </header>
 
 <!-- Hero -->
-<section class="relative overflow-hidden bg-gradient-to-b from-white to-brand-50/30">
-    {{-- Subtle India-flag-coloured ambient glows — one each side, low opacity so type stays the hero --}}
-    <div class="absolute -top-40 -right-32 w-[420px] h-[420px] bg-brand-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
-    <div class="absolute -bottom-40 -left-32 w-[360px] h-[360px] bg-accent-200 rounded-full blur-3xl opacity-25 hidden md:block" aria-hidden="true"></div>
-
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 md:pt-20 md:pb-24 grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+<section class="relative overflow-hidden bg-white">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 md:pt-10 md:pb-20 grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
 
         {{-- ─── Left: marketing copy + features + CTA ─── --}}
-        <div class="lg:col-span-7 animate-fade-up">
+        <div class="lg:col-span-7 animate-fade-up bg-brand-50/60 ring-1 ring-brand-100 rounded-3xl p-6 sm:p-8 lg:p-10">
 
             {{-- Trust pills — three of them deliberately echo the Indian tricolour
                  in reading order: saffron → white (with mini flag) → green. A
@@ -277,6 +278,42 @@
                         <div class="mt-0.5 text-sm text-gray-600">India data residency · DPDP Act compliant · works on any device</div>
                     </div>
                 </li>
+                <li class="flex items-start gap-4">
+                    <div class="shrink-0 w-12 h-12 rounded-full bg-money-100 ring-1 ring-money-200 text-money-700 flex items-center justify-center" aria-hidden="true">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
+                    </div>
+                    <div class="min-w-0 pt-1">
+                        <div class="text-lg font-bold text-gray-900 leading-tight">Audit-Ready &amp; GST-Compliant</div>
+                        <div class="mt-0.5 text-sm text-gray-600">CGST Rule 46 / 49 · GST 2.0 ready · GSTR-1 &amp; GSTR-3B export · Section 34 credit notes</div>
+                    </div>
+                </li>
+                <li class="flex items-start gap-4">
+                    <div class="shrink-0 w-12 h-12 rounded-full bg-saffron-100 ring-1 ring-saffron-200 text-saffron-700 flex items-center justify-center" aria-hidden="true">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    </div>
+                    <div class="min-w-0 pt-1">
+                        <div class="text-lg font-bold text-gray-900 leading-tight">Quotation → Invoice in One Click</div>
+                        <div class="mt-0.5 text-sm text-gray-600">Send price proposals · convert accepted quotes to invoices · separate FY-aware numbering</div>
+                    </div>
+                </li>
+                <li class="flex items-start gap-4">
+                    <div class="shrink-0 w-12 h-12 rounded-full bg-purple-100 ring-1 ring-purple-200 text-purple-700 flex items-center justify-center" aria-hidden="true">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <div class="min-w-0 pt-1">
+                        <div class="text-lg font-bold text-gray-900 leading-tight">Built-in Reports for Your CA</div>
+                        <div class="mt-0.5 text-sm text-gray-600">Receivables aging · P&amp;L (accrual / cash / GST) · expenses CSV · one-click backup</div>
+                    </div>
+                </li>
+                <li class="flex items-start gap-4">
+                    <div class="shrink-0 w-12 h-12 rounded-full bg-accent-100 ring-1 ring-accent-200 text-accent-700 flex items-center justify-center" aria-hidden="true">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                    </div>
+                    <div class="min-w-0 pt-1">
+                        <div class="text-lg font-bold text-gray-900 leading-tight">Track Payments &amp; Outstanding</div>
+                        <div class="mt-0.5 text-sm text-gray-600">Record full / part payments · TDS support · auto WhatsApp + email reminders · printable receipts</div>
+                    </div>
+                </li>
             </ul>
 
             {{-- BIG CTA — dark navy with confident copy, full-width on mobile --}}
@@ -291,10 +328,11 @@
                     <a href="{{ route('login') }}" class="underline hover:text-brand-700 font-semibold">I have an account →</a>
                 </p>
             </div>
+
         </div>
 
         <!-- GST Calculator (no login needed) -->
-        <div class="relative lg:col-span-5 animate-fade-up"
+        <div class="relative lg:col-span-5 animate-fade-up bg-saffron-50/60 ring-1 ring-saffron-100 rounded-3xl p-6 sm:p-8"
              x-data="{
                 amount: 10000,
                 rate: 18,
@@ -312,12 +350,35 @@
                 get igst() { return this.scope === 'inter' ? this.tax : 0; },
                 get total() { return this.base + this.tax; },
                 get halfRate() { return (this.rate / 2).toFixed(this.rate % 2 ? 1 : 0); },
-                fmt(n) { return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0); }
+                get taxPct() {
+                    const t = this.total || 0;
+                    return t > 0 ? Math.min(100, Math.max(0, (this.tax / t) * 100)) : 0;
+                },
+                fmt(n) { return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0); },
+                presets: [
+                    { label: '₹1K',  v: 1000 },
+                    { label: '₹10K', v: 10000 },
+                    { label: '₹50K', v: 50000 },
+                    { label: '₹1L',  v: 100000 },
+                    { label: '₹5L',  v: 500000 },
+                ],
+                get whatsappLink() {
+                    const lines = [
+                        `*GST Calculation*`,
+                        `Amount: ₹${this.fmt(this.base)} (${this.mode === 'inclusive' ? 'extracted from inclusive ₹' + this.fmt(parseFloat(this.amount) || 0) : 'excl. GST'})`,
+                        `GST @ ${this.rate}% (${this.scope === 'intra' ? 'intra-state' : 'inter-state'}): ₹${this.fmt(this.tax)}`,
+                    ];
+                    if (this.scope === 'intra' && this.rate > 0) {
+                        lines.push(`  • CGST @ ${this.halfRate}%: ₹${this.fmt(this.cgst)}`);
+                        lines.push(`  • SGST @ ${this.halfRate}%: ₹${this.fmt(this.sgst)}`);
+                    }
+                    lines.push(`*Grand Total: ₹${this.fmt(this.total)}*`);
+                    lines.push('');
+                    lines.push('Calculated free on Apna Invoice — apnainvoice.com');
+                    return 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
+                }
              }"
              style="animation-delay: 0.15s; animation-fill-mode: both;">
-            {{-- Ambient glow behind the card --}}
-            <div class="absolute -inset-8 bg-gradient-to-br from-brand-400/40 via-accent-400/30 to-saffron-300/30 blur-3xl rounded-[3rem]"></div>
-
             {{-- Gradient border wrapper --}}
             <div class="relative rounded-3xl bg-gradient-to-br from-brand-300/60 via-accent-300/50 to-saffron-300/60 p-[1px] shadow-2xl transition-transform duration-500 hover:-translate-y-1">
                 <div class="relative bg-white rounded-[calc(1.5rem-1px)] overflow-hidden">
@@ -343,13 +404,22 @@
 
                     {{-- Inputs + breakdown --}}
                     <div class="p-6 md:p-7 space-y-4 text-sm">
-                        {{-- Amount --}}
+                        {{-- Amount + quick presets (one-tap common Indian invoice amounts) --}}
                         <div>
                             <label for="gst-amount" class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Amount</label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold pointer-events-none">₹</span>
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold pointer-events-none text-xl leading-none">₹</span>
                                 <input id="gst-amount" type="number" min="0" step="any" inputmode="decimal" x-model.number="amount"
-                                       class="w-full pl-8 pr-3 py-3 text-lg font-mono font-bold tabular-nums border border-gray-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none">
+                                       class="w-full pl-12 pr-3 py-3.5 text-xl font-mono font-extrabold tabular-nums border border-gray-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none">
+                            </div>
+                            <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mr-1">Quick:</span>
+                                <template x-for="p in presets" :key="p.v">
+                                    <button type="button" @click="amount = p.v"
+                                            :class="parseFloat(amount) === p.v ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 hover:text-brand-700'"
+                                            class="inline-flex items-center justify-center min-h-[44px] px-2.5 text-xs font-bold border rounded-md transition tabular-nums"
+                                            x-text="p.label"></button>
+                                </template>
                             </div>
                         </div>
 
@@ -375,25 +445,32 @@
                                 <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Supply</label>
                                 <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-lg">
                                     <button type="button" @click="scope = 'intra'"
-                                            :class="scope === 'intra' ? 'bg-white shadow-sm text-brand-900' : 'text-gray-500 hover:text-gray-700'"
-                                            class="py-1.5 text-xs font-semibold rounded transition">Intra-state</button>
+                                            :class="scope === 'intra' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Intra-state</button>
                                     <button type="button" @click="scope = 'inter'"
-                                            :class="scope === 'inter' ? 'bg-white shadow-sm text-brand-900' : 'text-gray-500 hover:text-gray-700'"
-                                            class="py-1.5 text-xs font-semibold rounded transition">Inter-state</button>
+                                            :class="scope === 'inter' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Inter-state</button>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Amount is</label>
                                 <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-lg">
                                     <button type="button" @click="mode = 'exclusive'"
-                                            :class="mode === 'exclusive' ? 'bg-white shadow-sm text-brand-900' : 'text-gray-500 hover:text-gray-700'"
-                                            class="py-1.5 text-xs font-semibold rounded transition">Excl. GST</button>
+                                            :class="mode === 'exclusive' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Excl. GST</button>
                                     <button type="button" @click="mode = 'inclusive'"
-                                            :class="mode === 'inclusive' ? 'bg-white shadow-sm text-brand-900' : 'text-gray-500 hover:text-gray-700'"
-                                            class="py-1.5 text-xs font-semibold rounded transition">Incl. GST</button>
+                                            :class="mode === 'inclusive' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Incl. GST</button>
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Inclusive-mode helper hint --}}
+                        <template x-if="mode === 'inclusive' && rate > 0">
+                            <div class="text-[11px] text-brand-700 bg-brand-50 ring-1 ring-brand-100 rounded-md px-3 py-2 leading-snug">
+                                <span class="font-semibold">Reverse-calculation mode:</span> we extract the GST hidden inside your inclusive price.
+                            </div>
+                        </template>
 
                         {{-- Breakdown --}}
                         <div class="pt-3 border-t border-gray-100 space-y-1.5">
@@ -404,21 +481,33 @@
                             <template x-if="scope === 'intra'">
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span>CGST @ <span x-text="halfRate"></span>%</span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>CGST @ <span x-text="halfRate"></span>%</span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(cgst)"></span></span>
                                     </div>
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span>SGST @ <span x-text="halfRate"></span>%</span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-money-500"></span>SGST @ <span x-text="halfRate"></span>%</span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(sgst)"></span></span>
                                     </div>
                                 </div>
                             </template>
                             <template x-if="scope === 'inter'">
                                 <div class="flex justify-between text-gray-600 text-xs">
-                                    <span>IGST @ <span x-text="rate"></span>%</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>IGST @ <span x-text="rate"></span>%</span>
                                     <span class="font-mono tabular-nums">₹<span x-text="fmt(igst)"></span></span>
                                 </div>
                             </template>
+
+                            {{-- Visual tax-vs-base bar (where every rupee goes) --}}
+                            <div class="pt-2">
+                                <div class="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+                                    <span>Where every ₹100 goes</span>
+                                    <span class="font-mono"><span x-text="(100 - taxPct).toFixed(0)"></span>% you · <span x-text="taxPct.toFixed(0)"></span>% tax</span>
+                                </div>
+                                <div class="h-2 bg-gray-100 rounded-full overflow-hidden flex" role="img" aria-label="Tax vs base ratio">
+                                    <div class="bg-gradient-to-r from-money-400 to-money-500" :style="`width: ${100 - taxPct}%`" title="Your money"></div>
+                                    <div class="bg-gradient-to-r from-saffron-400 to-saffron-500" :style="`width: ${taxPct}%`" title="GST to government"></div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Grand Total --}}
@@ -433,52 +522,29 @@
                         </div>
                     </div>
 
-                    {{-- CTA — login to create real invoice --}}
+                    {{-- CTAs: primary (login) + WhatsApp share of the calculation --}}
                     <div class="px-6 md:px-7 pb-6 md:pb-7 space-y-2">
-                        <a href="{{ route('login') }}"
-                           class="group flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand-900 hover:bg-brand-800 text-white rounded-lg font-bold text-sm transition shadow-sm">
-                            Log in to create a GST invoice
-                            <svg class="w-4 h-4 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
-                        </a>
-                        <p class="text-center text-[11px] text-gray-500">
+                        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                            <a href="{{ route('login') }}"
+                               class="group flex items-center justify-center gap-2 px-4 py-3 bg-brand-900 hover:bg-brand-800 text-white rounded-lg font-bold text-sm transition shadow-sm">
+                                Log in to create a GST invoice
+                                <svg class="w-4 h-4 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                            </a>
+                            <a :href="whatsappLink" target="_blank" rel="noopener"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] hover:bg-[#1ebe5b] text-white rounded-lg font-bold text-sm transition shadow-sm whitespace-nowrap"
+                               title="Share this calculation on WhatsApp">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                Share
+                            </a>
+                        </div>
+                        <p class="text-center text-sm text-gray-500">
                             New here? <a href="{{ route('register') }}" class="text-brand-700 font-semibold hover:underline">Sign up free</a> · no card required
                         </p>
                     </div>
                 </div>
             </div>
 
-            {{-- Floating status pills — corners, no overlap with invoice content --}}
-            <div class="hidden md:flex absolute -top-10 -left-8 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-1s;">
-                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-money-400 to-money-600 text-white flex items-center justify-center font-bold shadow-sm">₹</div>
-                <div class="text-xs leading-snug space-y-0.5">
-                    <div class="font-bold text-gray-900 font-display tabular-nums">₹<span data-countup="1250000" data-format="inr">0</span></div>
-                    <div class="text-gray-500 text-[11px]">collected this month</div>
-                </div>
-            </div>
 
-            <div class="hidden md:flex absolute -top-10 -right-8 items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float z-10" style="animation-delay:-4s;">
-                <div class="w-9 h-9 rounded-lg bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shadow-sm">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg>
-                </div>
-                <div class="text-xs leading-snug space-y-0.5">
-                    <div class="font-bold text-gray-900">Reminder sent</div>
-                    <div class="text-gray-500 text-[11px]">via WhatsApp · just now</div>
-                </div>
-            </div>
-
-            {{-- Outer div handles absolute positioning + horizontal centering;
-                 inner div runs the float keyframe so its transform can't clobber translate-x-1/2. --}}
-            <div class="hidden md:block absolute -bottom-14 left-1/2 -translate-x-1/2 z-10">
-                <div class="flex items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl shadow-xl ring-1 ring-gray-100 animate-float-fast" style="animation-delay:-1.5s;">
-                    <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-saffron-400 to-accent-500 text-white flex items-center justify-center shadow-sm">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>
-                    </div>
-                    <div class="text-xs leading-snug space-y-0.5">
-                        <div class="font-bold text-gray-900">GST 2.0 compliant</div>
-                        <div class="text-gray-500 text-[11px]">HSN, SAC, e-invoice ready</div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -1055,7 +1121,7 @@
                     <h3 class="mt-2 font-display text-3xl font-extrabold">DST Invoice · Free</h3>
                     <div class="mt-6 flex items-baseline gap-2">
                         <span class="text-6xl font-black font-display">₹0</span>
-                        <span class="text-brand-200 text-sm">/forever</span>
+                        <span class="text-brand-200 text-sm">/ Free</span>
                     </div>
                     <p class="mt-4 text-brand-100 text-sm">For Indian solo professionals, SMEs &amp; startups billing up to 500 invoices/month.</p>
                     <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-900 font-bold rounded-xl transition">Claim free account →</a>
@@ -1227,7 +1293,7 @@
                         <span>{{ $faq['q'] }}</span>
                         <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </summary>
-                    <div class="px-5 pb-5 text-gray-600 leading-relaxed">{{ $faq['a'] }}</div>
+                    <div class="px-5 pb-5 text-gray-600 leading-relaxed whitespace-pre-line">{{ $faq['a'] }}</div>
                 </details>
             @endforeach
         </div>

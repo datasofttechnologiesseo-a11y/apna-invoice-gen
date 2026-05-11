@@ -48,8 +48,8 @@
                         <td class="px-5 py-3 text-slate-700">{{ $inv->company?->name ?? '—' }}</td>
                         <td class="px-5 py-3 text-slate-700">{{ $inv->customer?->name ?? '—' }}</td>
                         <td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded font-semibold {{ $statusColor[$inv->status] ?? 'bg-slate-100 text-slate-700' }}">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>
-                        <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">₹{{ number_format((float) $inv->grand_total, 2) }}</td>
-                        <td class="px-5 py-3 text-right font-mono tabular-nums {{ (float) $inv->balance > 0 ? 'text-amber-700 font-semibold' : 'text-slate-400' }}">₹{{ number_format((float) $inv->balance, 2) }}</td>
+                        <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">₹{{ inr($inv->grand_total) }}</td>
+                        <td class="px-5 py-3 text-right font-mono tabular-nums {{ (float) $inv->balance > 0 ? 'text-amber-700 font-semibold' : 'text-slate-400' }}">₹{{ inr($inv->balance) }}</td>
                         <td class="px-5 py-3 text-xs text-slate-500 whitespace-nowrap">{{ $inv->invoice_date?->format('d M Y') }}</td>
                     </tr>
                 @empty
