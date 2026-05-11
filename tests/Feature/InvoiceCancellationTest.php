@@ -127,4 +127,46 @@ class InvoiceCancellationTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Audit trail preserved');
     }
+
+    public function test_cancelled_invoice_can_be_deleted_and_counter_is_not_recycled(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $this->finalizedInvoice($user);
+        $company = $invoice->company;
+
+        // Cancel first
+        $invoice->fill(['status' => 'cancelled', 'cancelled_at' => now(), 'cancellation_reason' => 'Test'])->save();
+
+        // Snapshot the counter — we want to confirm deletion does NOT recycle the number.
+        $counterBefore = $company->invoice_counter;
+        $invoiceId = $invoice->id;
+        $invoiceNumber = $invoice->invoice_number;
+
+        $this->actingAs($user)->delete(route('invoices.destroy', $invoice))
+            ->assertRedirect(route('invoices.index'));
+
+        // Row gone
+        $this->assertNull(Invoice::find($invoiceId));
+
+        // Counter unchanged — the number is "consumed", deleting doesn't free it
+        $this->assertSame($counterBefore, $company->fresh()->invoice_counter);
+
+        // AuditLog entry recorded with the cancelled-invoice number
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'invoice.deleted',
+            'summary' => "Cancelled invoice {$invoiceNumber} deleted (number stays consumed; counter not recycled)",
+        ]);
+    }
+
+    public function test_cannot_delete_an_uncancelled_finalized_invoice(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $this->finalizedInvoice($user); // status: 'final'
+
+        $this->actingAs($user)->delete(route('invoices.destroy', $invoice))
+            ->assertStatus(403);
+
+        // Invoice still in DB
+        $this->assertNotNull(Invoice::find($invoice->id));
+    }
 }

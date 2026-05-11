@@ -419,22 +419,48 @@ class InvoiceController extends Controller
     public function destroy(Request $request, Invoice $invoice): RedirectResponse
     {
         $this->authorizeInvoice($request, $invoice);
-        abort_unless($invoice->isEditable(), 403, 'Issued invoices cannot be deleted.');
 
-        // Books-period lock: even drafts dated inside a closed FY shouldn't be silently dropped.
+        // Three states can be deleted:
+        //  - Draft   → never had a number, no audit consequences
+        //  - Cancelled → had a number, but was already void; deletion just cleans
+        //               up the row. The number stays consumed (counter never
+        //               recycles), and the AuditLog entry below preserves the
+        //               trail for any future GST audit.
+        // Anything else (final / partially_paid / paid) must remain in the books.
+        abort_unless(
+            $invoice->isEditable() || $invoice->isCancelled(),
+            403,
+            'Issued invoices cannot be deleted. Cancel first, then delete.'
+        );
+
+        // Books-period lock applies to both drafts and cancelled invoices —
+        // anything dated inside a closed FY stays.
         if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
-            return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This draft cannot be deleted.");
+            $what = $invoice->isCancelled() ? 'cancelled invoice' : 'draft';
+            return redirect()->back()->with(
+                'error',
+                "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This {$what} cannot be deleted."
+            );
         }
 
+        $wasCancelled = $invoice->isCancelled();
+        $logMessage = $wasCancelled
+            ? "Cancelled invoice {$invoice->invoice_number} deleted (number stays consumed; counter not recycled)"
+            : "Draft #{$invoice->id} deleted";
+
         \App\Models\AuditLog::record('invoice.deleted',
-            "Draft #{$invoice->id} deleted",
+            $logMessage,
             $invoice,
-            $invoice->only(['invoice_number', 'invoice_date', 'grand_total', 'status'])
+            $invoice->only(['invoice_number', 'invoice_date', 'grand_total', 'status', 'cancelled_at', 'cancellation_reason'])
         );
 
         $invoice->delete();
 
-        return redirect()->route('invoices.index')->with('status', 'Draft deleted.');
+        $successMessage = $wasCancelled
+            ? 'Cancelled invoice deleted. The invoice number is preserved as a gap in your series — for any GST audit, the deletion is recorded in your activity log.'
+            : 'Draft deleted.';
+
+        return redirect()->route('invoices.index')->with('status', $successMessage);
     }
 
     public function finalize(Request $request, Invoice $invoice): RedirectResponse

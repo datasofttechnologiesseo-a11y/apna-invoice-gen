@@ -90,7 +90,71 @@ class CompanyController extends Controller
 
         $company->update($data);
 
-        return $this->redirectAfterSave($request, $company, "'{$company->name}' saved.");
+        // "Set next invoice number" — handled separately so it can be validated
+        // against already-issued invoices in the current FY (preventing
+        // duplicates) without polluting the main validation rules.
+        $statusExtra = $this->applyNextInvoiceNumber($request, $company);
+
+        $status = "'{$company->name}' saved." . $statusExtra;
+        return $this->redirectAfterSave($request, $company, $status);
+    }
+
+    /**
+     * Optional one-shot "I'm migrating mid-FY from another tool, my next
+     * invoice number should be N" override. Set invoice_counter to N-1 so the
+     * next finalize bumps it to N.
+     *
+     * Refuses to set the counter to a value ≤ the highest invoice_number
+     * already issued in the current FY (would create duplicate numbers).
+     * Returns a status fragment for the flash message, or '' on no-op.
+     */
+    private function applyNextInvoiceNumber(Request $request, Company $company): string
+    {
+        $raw = $request->input('next_invoice_number');
+        if ($raw === null || $raw === '') {
+            return '';
+        }
+
+        // Soft validate: must be a positive integer. We use a separate
+        // validator so a bad value here doesn't roll back the whole form save
+        // — the user just sees an inline error and the rest of their edits
+        // (logo, terms, GSTIN, etc.) still persist.
+        $v = \Illuminate\Support\Facades\Validator::make(
+            ['next_invoice_number' => $raw],
+            ['next_invoice_number' => ['integer', 'min:1', 'max:9999999']],
+            ['next_invoice_number.*' => 'Next invoice number must be a positive whole number (e.g. 145).']
+        );
+        if ($v->fails()) {
+            session()->flash('error', $v->errors()->first('next_invoice_number'));
+            return '';
+        }
+
+        $next = (int) $raw;
+
+        $newCounter = $next - 1;
+        $current = (int) ($company->invoice_counter ?? 0);
+        if ($newCounter === $current) {
+            return ''; // no-op, the existing counter already produces this number
+        }
+
+        // Refuse to go BACKWARD past invoice numbers already issued this FY.
+        // We compare counter values, not parsed strings, since the format may
+        // change over time; the counter is the source of truth.
+        if ($newCounter < $current) {
+            session()->flash('error', "Cannot set next invoice number to {$next} — your current counter is at {$current}, so the next invoice would already be #{$company->nextInvoiceNumber()}. Set a higher number to skip ahead.");
+            return '';
+        }
+
+        // Bump the FY tag to the current FY too, so the FY-reset logic doesn't
+        // wipe the new starting point on the next finalize.
+        [$fyStartYear] = \App\Models\Company::financialYearFor(now());
+        $company->update([
+            'invoice_counter' => $newCounter,
+            'invoice_counter_fy' => $fyStartYear,
+        ]);
+
+        $preview = $company->fresh()->nextInvoiceNumber();
+        return " Next invoice will be {$preview}.";
     }
 
     /**

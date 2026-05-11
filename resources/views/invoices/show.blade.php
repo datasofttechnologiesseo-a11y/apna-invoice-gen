@@ -76,6 +76,20 @@
                         tone="danger">
                         <button type="button" class="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700 shadow-sm">Delete draft</button>
                     </x-confirm-form>
+                @elseif ($invoice->isCancelled())
+                    {{-- Cancelled invoices can be deleted, but the invoice number stays
+                         consumed (counter never recycles) and the deletion is recorded
+                         in the activity log so the audit trail isn't entirely lost. --}}
+                    <x-confirm-form
+                        :action="route('invoices.destroy', $invoice)"
+                        method="DELETE"
+                        title="Delete cancelled invoice {{ $invoice->invoice_number }}?"
+                        :message="'This permanently removes the cancelled invoice from your books. The invoice number ' . $invoice->invoice_number . ' will stay as a gap in your series (it is NOT reused). The deletion is recorded in your activity log so a GST auditor can see why the gap exists. Skip this if you might need the document later.'"
+                        confirm-label="Yes, delete it"
+                        confirm-class="bg-red-600 hover:bg-red-700"
+                        tone="danger">
+                        <button type="button" class="px-3 py-1.5 bg-white border border-red-300 text-red-700 rounded text-sm hover:bg-red-50" title="Permanently delete this cancelled invoice">Delete invoice</button>
+                    </x-confirm-form>
                 @endif
                 @if ($invoice->canBeCancelled())
                     <button type="button" onclick="document.getElementById('cancel-invoice-modal').showModal()" class="px-3 py-1.5 bg-white border border-red-300 text-red-700 rounded text-sm hover:bg-red-50">Cancel invoice</button>

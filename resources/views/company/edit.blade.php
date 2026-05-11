@@ -190,6 +190,38 @@
                         </p>
                     </div>
 
+                    {{-- Migrating from another tool mid-FY? Set the starting number
+                         here so your existing series doesn't break. --}}
+                    @php
+                        $currentCounter = (int) ($company->invoice_counter ?? 0);
+                        $nextSequenceNumber = $currentCounter + 1;
+                        $nextPreview = $company->exists ? $company->nextInvoiceNumber() : '';
+                    @endphp
+                    <div class="p-4 bg-saffron-50 border border-saffron-200 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-saffron-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            <div class="min-w-0 flex-1">
+                                <div class="font-semibold text-gray-900">Continuing a series from another tool?</div>
+                                <p class="mt-0.5 text-xs text-gray-600">
+                                    If you already issued invoices on Tally, Vyapar, Excel, etc. this financial year, set your next number here so the series stays unbroken. Skip if you're starting fresh.
+                                </p>
+                                <div class="mt-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+                                    <div>
+                                        <x-input-label for="next_invoice_number" value="Next invoice sequence (number only)" class="text-xs" />
+                                        <x-text-input id="next_invoice_number" name="next_invoice_number" type="number" min="1" class="mt-1 block w-full font-mono" :value="old('next_invoice_number')" placeholder="{{ $nextSequenceNumber }}" />
+                                        <p class="mt-1 text-[11px] text-gray-500">
+                                            Currently set to <strong class="font-mono">{{ $nextSequenceNumber }}</strong>. Enter a higher number to skip ahead.
+                                            @if ($company->exists && $nextPreview)
+                                                Preview: <strong class="font-mono">{{ $nextPreview }}</strong>
+                                            @endif
+                                        </p>
+                                        <x-input-error :messages="$errors->get('next_invoice_number')" class="mt-1" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <x-input-label for="default_terms" value="Default terms & conditions (shown at bottom of invoices)" />
                         <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" placeholder="1. Payment due within 30 days.&#10;2. Late payment attracts 2% monthly interest.">{{ old('default_terms', $company->default_terms) }}</textarea>
