@@ -187,6 +187,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('customers/quick-create', [CustomerController::class, 'quickStore'])->name('customers.quick-create');
 
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
+    // Lightweight inline create from the invoice form — same pattern as customers.quick-create.
+    Route::post('products/quick-create', [ProductController::class, 'quickStore'])->name('products.quick-create');
     Route::resource('products', ProductController::class)->except(['show']);
 
     Route::get('invoices/export/gstr1', [InvoiceController::class, 'gstr1Csv'])->name('invoices.gstr1');
@@ -282,6 +284,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Blog authoring — full CRUD + quick publish toggle.
         Route::post('/blog/{post}/toggle', [\App\Http\Controllers\Admin\BlogAdminController::class, 'togglePublish'])->name('blog.toggle');
+        // AJAX preview — renders raw markdown to safe HTML using the same
+        // renderer the public blog uses, so the editor sees prod-true output.
+        Route::post('/blog/preview', [\App\Http\Controllers\Admin\BlogAdminController::class, 'preview'])->name('blog.preview');
+        // AJAX image upload — used by the toolbar Image button and the paste-from-
+        // clipboard handler. Returns JSON { url } that the editor inserts as markdown.
+        Route::post('/blog/upload-image', [\App\Http\Controllers\Admin\BlogAdminController::class, 'uploadImage'])->name('blog.upload-image');
         Route::resource('/blog', \App\Http\Controllers\Admin\BlogAdminController::class)->parameters(['blog' => 'post'])->except(['show']);
     });
 });

@@ -134,8 +134,8 @@
                             'n' => 5,
                             'title' => 'Create an invoice',
                             'time' => '~30 seconds once set up',
-                            'desc' => 'Click <em>New invoice</em>, pick a template (or start blank), choose the customer, add line items (or pick from your products), save. We auto-compute CGST/SGST vs IGST based on the customer\'s state.',
-                            'cta' => ['label' => 'Start a new invoice', 'href' => route('invoices.templates')],
+                            'desc' => 'Click <em>New invoice</em> — it opens a blank invoice straight away. Pick a customer (or type a new name), add line items (or type a new product), save. We auto-compute CGST/SGST vs IGST based on the customer\'s state. Want a starting layout? Use the <em>Browse templates</em> link inside the form.',
+                            'cta' => ['label' => 'Start a new invoice', 'href' => route('invoices.create')],
                             'tips' => [
                                 '<strong>Draft vs Final.</strong> Everything starts as a draft — you can edit freely. Finalizing assigns the legal invoice number and locks the amounts.',
                                 '<strong>Five template styles.</strong> Classic Navy, Executive Maroon, Minimal Slate, Mercantile Forest, and Heritage Burgundy — pick whichever matches your brand. The GST format is identical; only the colour and rule weight differ.',

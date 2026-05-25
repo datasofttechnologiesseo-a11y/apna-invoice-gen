@@ -285,9 +285,21 @@
                         </thead>
                         <tbody>
                             @foreach ($quotation->items as $i => $item)
+                                @php
+                                    $productName = $item->product?->name ?? null;
+                                    $descRaw = trim((string) $item->description);
+                                    $descIsJunk = $descRaw === '' || preg_match('/^0+(\.0+)?$/', $descRaw) === 1;
+                                    $primary = $productName ?: ($descIsJunk ? '' : $descRaw);
+                                    $secondary = ($productName && ! $descIsJunk && strcasecmp($descRaw, $productName) !== 0) ? $descRaw : null;
+                                @endphp
                                 <tr class="border-t">
                                     <td class="px-3 py-2 text-gray-500">{{ $i + 1 }}</td>
-                                    <td class="px-3 py-2">{{ $item->description }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-semibold">{{ $primary }}</div>
+                                        @if ($secondary)
+                                            <div class="text-xs text-gray-500 mt-0.5">{{ $secondary }}</div>
+                                        @endif
+                                    </td>
                                     <td class="px-3 py-2 font-mono">{{ $item->hsn_sac }}</td>
                                     <td class="px-3 py-2 text-right">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                                     <td class="px-3 py-2 text-right font-mono">{{ inr($item->rate) }}</td>

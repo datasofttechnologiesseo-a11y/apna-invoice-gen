@@ -21,10 +21,11 @@
             $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
         }
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
+        $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
         $companyStateId = $company->state_id;
     @endphp
 
-    <div class="py-10" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex))'
+    <div class="py-10" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, {{ ! empty($company->gstin) ? 'true' : 'false' }})'
          @customer-added.window="addCustomer($event.detail)">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-breadcrumbs :items="[
@@ -184,7 +185,7 @@
                                 @endif
                                 <div>
                                     <label class="text-xs text-gray-500 font-semibold">Description</label>
-                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="e.g. Website development — Phase 1" class="mt-1 block w-full border-gray-300 rounded text-sm" required>
+                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -214,7 +215,7 @@
                                         <label class="text-xs text-gray-500 font-semibold">GST rate</label>
                                         <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                             @foreach (config('gst.rates') as $r)
-                                                <option value="{{ $r['value'] }}" title="{{ $r['note'] }}">{{ $r['label'] }}</option>
+                                                <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -264,7 +265,7 @@
                                                 </select>
                                             </td>
                                         @endif
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="e.g. Website development" class="w-full border-gray-300 rounded text-sm" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
@@ -275,9 +276,9 @@
                                         <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
-                                            <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-36 border-gray-300 rounded text-sm">
+                                            <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
-                                                    <option value="{{ $r['value'] }}" title="{{ $r['note'] }}">{{ $r['label'] }}</option>
+                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -339,16 +340,27 @@
 
     @push('scripts')
     <script>
-        function quotationForm(initialItems, customerStates, companyStateId, productIndex) {
+        function quotationForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, companyHasGstin) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
             return {
                 items: initialItems.map(i => ({product_id: null, ...i, amount: 0, tax: 0, total: 0})),
                 customerId: @json(old('customer_id', $quotation->customer_id)),
                 customerStates,
+                customerHasGstin: customerHasGstin || {},
                 companyStateId,
+                companyHasGstin: !! companyHasGstin,
                 productMap,
                 totals: {subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
+                /**
+                 * HSN/SAC is required only when either party is GST-registered
+                 * (Rule 46(g)). For two unregistered parties, HSN is purely optional.
+                 */
+                get hsnRequired() {
+                    if (this.companyHasGstin) return true;
+                    if (this.customerId && this.customerHasGstin[this.customerId]) return true;
+                    return false;
+                },
                 get isInterstate() {
                     if (!this.customerId || !this.companyStateId) return false;
                     const cs = this.customerStates[this.customerId];

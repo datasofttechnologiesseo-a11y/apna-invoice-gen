@@ -104,7 +104,7 @@ class InvoiceShareController extends Controller
         // the cancelled bill as payable.
         abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
 
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
+        $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
         $style = $invoice->style ?: 'classic';
         $print = ! $request->boolean('color');

@@ -27,6 +27,9 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('onboarding.index', absolute: false));
+        // Quick-invoice UX: new users land on the dashboard, not the setup
+        // wizard. The dashboard exposes the setup checklist with one-click
+        // links and lets users dive straight into creating an invoice.
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 }

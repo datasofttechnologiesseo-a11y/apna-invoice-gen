@@ -18,6 +18,48 @@ class DashboardController extends Controller
 
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
+        $todayStart = now()->startOfDay();
+        $todayEnd = now()->endOfDay();
+
+        // Today's micro-stats — drive the "you've done X today" line in the
+        // dashboard header. Keeps users engaged with a sense of momentum.
+        $todayIssued = (clone $invoices)->whereNotNull('finalized_at')
+            ->whereBetween('finalized_at', [$todayStart, $todayEnd])->count();
+        $todayCollected = (float) (clone $payments)
+            ->whereBetween('received_at', [$todayStart, $todayEnd])->sum('amount');
+
+        // Personalised, time-aware greeting. Indian SMEs respond to warmth —
+        // not "Welcome back, USER". Honorific "ji" is universally polite
+        // across regions and ages without being culture-specific.
+        $hour = (int) now()->format('H');
+        $greeting = match (true) {
+            $hour < 5            => 'Working late',
+            $hour < 12           => 'Good morning',
+            $hour < 17           => 'Good afternoon',
+            $hour < 21           => 'Good evening',
+            default              => 'Good night',
+        };
+        $firstName = preg_split('/\s+/', trim($user->name ?? ''))[0] ?? '';
+
+        // Fixed-date festivals + national days. Keep it small and tasteful —
+        // a single emoji + short label. Variable-date festivals (Diwali, Holi,
+        // Eid) need a year lookup; for 2026 we hard-code the known dates.
+        $today = now()->format('m-d');
+        $festivals2026 = [
+            '01-01' => ['name' => 'Happy New Year', 'emoji' => '🎊'],
+            '01-14' => ['name' => 'Happy Makar Sankranti / Pongal', 'emoji' => '🌾'],
+            '01-26' => ['name' => 'Happy Republic Day', 'emoji' => '🇮🇳'],
+            '03-04' => ['name' => 'Happy Holi', 'emoji' => '🎨'],     // 2026
+            '04-14' => ['name' => 'Happy Baisakhi / Tamil New Year', 'emoji' => '🌻'],
+            '05-01' => ['name' => 'Happy Labour Day', 'emoji' => '👷'],
+            '08-15' => ['name' => 'Happy Independence Day', 'emoji' => '🇮🇳'],
+            '10-02' => ['name' => 'Gandhi Jayanti', 'emoji' => '🕊️'],
+            '10-20' => ['name' => 'Shubh Dhanteras', 'emoji' => '💰'],   // 2026
+            '10-22' => ['name' => 'Shubh Diwali', 'emoji' => '🪔'],      // 2026
+            '11-14' => ['name' => "Children's Day", 'emoji' => '🧒'],
+            '12-25' => ['name' => 'Merry Christmas', 'emoji' => '🎄'],
+        ];
+        $festival = $festivals2026[$today] ?? null;
 
         $stats = [
             'total' => (clone $invoices)->count(),
@@ -52,6 +94,70 @@ class DashboardController extends Controller
             'profit' => $monthIncome - $monthExpense,
         ];
 
+        // Smart Action Items — the "what should I do today?" widget. Each entry
+        // is something the user can act on in one click. Computed cheap from
+        // existing indexed columns; no separate tables or jobs.
+        $today = now()->toDateString();
+        $overdueQ = (clone $invoices)
+            ->whereIn('status', ['final', 'partially_paid'])
+            ->where('balance', '>', 0)
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', $today);
+        $overdueCount  = (clone $overdueQ)->count();
+        $overdueAmount = (float) (clone $overdueQ)->sum('balance');
+
+        $staleDraftsQ = (clone $invoices)
+            ->where('status', 'draft')
+            ->where('created_at', '<', now()->subDays(7));
+        $staleDrafts  = (clone $staleDraftsQ)->count();
+
+        // Invoices issued but never sent (no email, no reminder, no payment).
+        // Cheap heuristic: finalised > 1 day ago, balance owed, no reminders sent.
+        $unsentRecent = (clone $invoices)
+            ->whereIn('status', ['final', 'partially_paid'])
+            ->where('balance', '>', 0)
+            ->where('finalized_at', '<', now()->subDay())
+            ->whereDoesntHave('reminders')
+            ->count();
+
+        $actionItems = [];
+        if ($overdueCount > 0) {
+            $actionItems[] = [
+                'tone' => 'red',
+                'icon' => 'overdue',
+                'title' => $overdueCount === 1
+                    ? '1 invoice is overdue'
+                    : "{$overdueCount} invoices are overdue",
+                'sub'   => '₹' . number_format($overdueAmount, 2, '.', ',') . ' awaiting payment',
+                'cta'   => 'Send reminders',
+                'href'  => route('invoices.index', ['status' => 'outstanding']),
+            ];
+        }
+        if ($staleDrafts > 0) {
+            $actionItems[] = [
+                'tone' => 'amber',
+                'icon' => 'draft',
+                'title' => $staleDrafts === 1
+                    ? '1 draft older than a week'
+                    : "{$staleDrafts} drafts older than a week",
+                'sub'   => 'Issue them or delete to keep things tidy',
+                'cta'   => 'Review drafts',
+                'href'  => route('invoices.index', ['status' => 'draft']),
+            ];
+        }
+        if ($unsentRecent > 0) {
+            $actionItems[] = [
+                'tone' => 'blue',
+                'icon' => 'send',
+                'title' => $unsentRecent === 1
+                    ? '1 invoice not shared yet'
+                    : "{$unsentRecent} invoices not shared yet",
+                'sub'   => 'Send on WhatsApp or email so they get paid faster',
+                'cta'   => 'See invoices',
+                'href'  => route('invoices.index', ['status' => 'outstanding']),
+            ];
+        }
+
         $setup = [
             'business' => $company->isBusinessComplete(),
             'customer' => $company->customers()->exists(),
@@ -81,6 +187,11 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('dashboard', compact('stats', 'recent', 'currency', 'company', 'setup', 'setupComplete', 'setupProgress', 'pnl', 'trend30'));
+        return view('dashboard', compact(
+            'stats', 'recent', 'currency', 'company', 'setup', 'setupComplete',
+            'setupProgress', 'pnl', 'trend30',
+            'greeting', 'firstName', 'festival', 'todayIssued', 'todayCollected',
+            'actionItems'
+        ));
     }
 }

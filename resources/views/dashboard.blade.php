@@ -2,10 +2,44 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Dashboard') }}</h2>
-                <p class="text-sm text-gray-500 mt-1">Welcome back, {{ Str::limit(auth()->user()->name, 30) }}. Here's today's view.</p>
+                {{-- Personalised greeting — first name + honorific "ji" (polite,
+                     pan-Indian, age-neutral). Time-of-day verb keeps it warm.
+                     Falls back to plain "Hello" if we didn't capture a name. --}}
+                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+                    @if ($firstName)
+                        {{ $greeting }}, {{ $firstName }} ji
+                    @else
+                        {{ $greeting }}
+                    @endif
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    {{ now()->format('l, d M Y') }}
+                    @if ($todayIssued > 0 || $todayCollected > 0)
+                        <span class="text-gray-300 mx-1">·</span>
+                        @if ($todayIssued > 0)
+                            <span class="text-gray-700"><strong>{{ $todayIssued }}</strong> invoice{{ $todayIssued > 1 ? 's' : '' }} issued today</span>
+                        @endif
+                        @if ($todayIssued > 0 && $todayCollected > 0)
+                            <span class="text-gray-300 mx-1">·</span>
+                        @endif
+                        @if ($todayCollected > 0)
+                            <span class="text-money-700"><strong>₹{{ inr($todayCollected) }}</strong> collected today</span>
+                        @endif
+                    @else
+                        <span class="text-gray-300 mx-1">·</span>
+                        <span>Ready when you are — let's get this billed.</span>
+                    @endif
+                </p>
+                @if ($festival)
+                    {{-- Festival/national-day microbanner. Single line, small, never blocks.
+                         Hard-coded date list in DashboardController — refresh annually. --}}
+                    <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-saffron-50 via-white to-money-50 ring-1 ring-saffron-200 text-saffron-800 text-xs font-medium">
+                        <span class="text-base leading-none">{{ $festival['emoji'] }}</span>
+                        <span>{{ $festival['name'] }} from all of us at {{ $company->name ?: 'Apnainvoice' }}!</span>
+                    </div>
+                @endif
             </div>
-            <a href="{{ route('invoices.templates') }}" class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition whitespace-nowrap">
+            <a href="{{ route('invoices.create') }}" class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition whitespace-nowrap">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 New invoice
             </a>
@@ -17,18 +51,30 @@
             <x-flash />
 
             @unless ($setupComplete)
-                <div class="bg-white rounded-2xl shadow-card ring-1 ring-accent-200 overflow-hidden">
+                {{-- Setup checklist is dismissible — users who want to invoice right away
+                     can hide it. We remember the choice in localStorage (per browser/device).
+                     They can still reach business/customer setup from Settings or the
+                     in-form nudges, so nothing is permanently lost. --}}
+                <div x-data="{ show: !localStorage.getItem('hideSetupChecklist') }" x-show="show" x-cloak
+                     class="bg-white rounded-2xl shadow-card ring-1 ring-accent-200 overflow-hidden">
                     <div class="p-6 bg-gradient-to-r from-brand-900 via-brand-800 to-accent-900 text-white flex items-center justify-between">
                         <div class="flex-1 min-w-0">
                             <div class="text-xs uppercase font-bold tracking-widest text-accent-300">Getting started</div>
                             <h3 class="mt-1 font-display text-xl font-extrabold">You're {{ $setupProgress }}% set up.</h3>
-                            <p class="mt-1 text-brand-100 text-sm">Complete the remaining steps to issue your first invoice.</p>
+                            <p class="mt-1 text-brand-100 text-sm">Optional — finish these to unlock automatic GST detection and faster invoicing.</p>
                         </div>
-                        {{-- Progress circle — mobile shows a smaller inline version so the % is always visible --}}
-                        <div class="shrink-0 ml-4">
+                        <div class="flex items-center gap-2 shrink-0 ml-4">
+                            {{-- Progress circle — mobile shows a smaller inline version so the % is always visible --}}
                             <div class="w-14 h-14 md:w-20 md:h-20 rounded-full ring-2 md:ring-4 ring-white/20 flex items-center justify-center font-display font-extrabold text-base md:text-2xl bg-white/10 backdrop-blur">
                                 {{ $setupProgress }}%
                             </div>
+                            <button type="button"
+                                    @click="localStorage.setItem('hideSetupChecklist','1'); show=false"
+                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+                                    aria-label="Hide getting-started checklist"
+                                    title="Hide this — I'll set things up later">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                         </div>
                     </div>
                     <div class="divide-y divide-gray-100">
@@ -36,7 +82,7 @@
                             $checklist = [
                                 ['done' => $setup['business'], 'title' => 'Complete your business profile', 'sub' => 'Business name, GSTIN, address, state, logo', 'href' => route('company.edit'), 'cta' => $setup['business'] ? 'Edit' : 'Complete →'],
                                 ['done' => $setup['customer'], 'title' => 'Add your first customer', 'sub' => 'Save details once, reuse on every invoice', 'href' => route('customers.create'), 'cta' => $setup['customer'] ? 'Manage' : 'Add customer →'],
-                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, issue, download PDF', 'href' => route('invoices.templates'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
+                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, issue, download PDF', 'href' => route('invoices.create'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
                             ];
                         @endphp
                         @foreach ($checklist as $item)
@@ -66,6 +112,67 @@
                     </div>
                 </div>
             @endunless
+
+            {{-- Smart Action Items — guides the user to the highest-impact
+                 thing to do today. Hidden entirely if there's nothing to act on
+                 (replaced with a quiet "all clear" line) so the dashboard
+                 doesn't feel naggy on quiet days. --}}
+            @if (count($actionItems) > 0)
+                <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                    <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-saffron-100 text-saffron-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </span>
+                            <div>
+                                <div class="text-sm font-bold text-gray-900">Today's action items</div>
+                                <div class="text-xs text-gray-500">Things that need a minute of your time</div>
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full bg-saffron-50 text-saffron-700 font-bold">{{ count($actionItems) }}</span>
+                    </div>
+                    <ul class="divide-y divide-gray-100">
+                        @foreach ($actionItems as $item)
+                            @php
+                                $toneClasses = [
+                                    'red'   => ['ring' => 'ring-red-200',   'bg' => 'bg-red-50',   'text' => 'text-red-700',   'cta' => 'bg-red-600 hover:bg-red-700'],
+                                    'amber' => ['ring' => 'ring-amber-200', 'bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'cta' => 'bg-amber-600 hover:bg-amber-700'],
+                                    'blue'  => ['ring' => 'ring-brand-200', 'bg' => 'bg-brand-50', 'text' => 'text-brand-700', 'cta' => 'bg-brand-700 hover:bg-brand-800'],
+                                ][$item['tone']];
+                                $iconPath = [
+                                    'overdue' => 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                                    'draft'   => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                                    'send'    => 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+                                ][$item['icon']];
+                            @endphp
+                            <li class="flex items-center gap-4 px-5 py-3">
+                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg {{ $toneClasses['bg'] }} {{ $toneClasses['text'] }} shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $iconPath }}"/></svg>
+                                </span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-gray-900 text-sm">{{ $item['title'] }}</div>
+                                    <div class="text-xs text-gray-500">{{ $item['sub'] }}</div>
+                                </div>
+                                <a href="{{ $item['href'] }}" class="inline-flex items-center px-3 py-1.5 {{ $toneClasses['cta'] }} text-white text-sm font-semibold rounded-lg shadow-sm transition whitespace-nowrap">
+                                    {{ $item['cta'] }} →
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @elseif ($setupComplete && $stats['total'] > 0)
+                {{-- Calm "you're on top of it" state — only shown when there's
+                     genuinely nothing pending. Avoids fake-positive noise on
+                     accounts that just haven't created anything yet. --}}
+                <div class="bg-gradient-to-r from-money-50 to-white rounded-2xl shadow-card ring-1 ring-money-100 px-5 py-4 flex items-center gap-3">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-money-100 text-money-700 text-xl">✨</span>
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900">All clear — nothing pending</div>
+                        <div class="text-sm text-gray-600">No overdue invoices, no stale drafts. Carry on!</div>
+                    </div>
+                    <a href="{{ route('invoices.create') }}" class="text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline whitespace-nowrap">+ New invoice</a>
+                </div>
+            @endif
 
             <!-- Headline KPIs: Bills issued + Payments received -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -160,7 +267,7 @@
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
                         <h3 class="font-display font-bold text-gray-900">Quick actions</h3>
                         <div class="mt-4 space-y-2">
-                            <a href="{{ route('invoices.templates') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
+                            <a href="{{ route('invoices.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center group-hover:bg-brand-700 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
@@ -353,7 +460,7 @@
                                 </div>
                                 <h4 class="mt-4 font-semibold text-gray-900">No invoices yet</h4>
                                 <p class="mt-1 text-sm text-gray-500">Create your first invoice to see it here.</p>
-                                <a href="{{ route('invoices.templates') }}" class="mt-5 inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition">+ Create invoice</a>
+                                <a href="{{ route('invoices.create') }}" class="mt-5 inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition">+ Create invoice</a>
                             </div>
                         @else
                             <div class="divide-y divide-gray-100">

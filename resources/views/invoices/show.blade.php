@@ -28,19 +28,22 @@
                     <a href="{{ route('invoices.edit', $invoice) }}" class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300" title="{{ $invoice->isEditable() ? 'Edit draft' : 'Edit notes, terms, due date, transporter (amounts are locked)' }}">Edit</a>
                 @endif
                 @if ($invoice->isEditable())
-                    {{-- Direct form + native browser confirm. Avoids the Alpine
-                         teleport modal entirely so this always works regardless
-                         of viewport quirks, browser extensions, or stale
-                         frontend state. Clicking the button → native confirm
-                         dialog → form POSTs to /invoices/{id}/finalize. --}}
-                    <form method="POST" action="{{ route('invoices.finalize', $invoice) }}" class="inline"
-                          onsubmit="return confirm('Issue this invoice?\n\nIssuing assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable.\n\nClick OK to issue.');">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded text-sm font-semibold shadow-sm transition">
+                    {{-- Branded confirm dialog (same teleport-modal pattern used by
+                         Delete draft below). Replaces the older native confirm()
+                         which was jarring on mobile and broke visual flow. --}}
+                    <x-confirm-form
+                        :action="route('invoices.finalize', $invoice)"
+                        method="POST"
+                        title="Issue this invoice?"
+                        message="Issuing assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable."
+                        confirm-label="Issue invoice"
+                        confirm-class="bg-brand-700 hover:bg-brand-800"
+                        tone="default">
+                        <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded text-sm font-semibold shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Issue
                         </button>
-                    </form>
+                    </x-confirm-form>
                 @endif
                 <span class="inline-flex rounded overflow-hidden shadow-sm">
                     <a href="{{ route('invoices.pdf', $invoice) }}" class="px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900" title="Ink-saver download — black on white for printing">Download PDF</a>
@@ -49,6 +52,15 @@
                     </a>
                 </span>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
+                {{-- Thermal 80mm receipt — for retail counters with 2"/3" thermal
+                     printers. Auto-prints on load; falls back to readable preview
+                     in browsers without a connected printer. --}}
+                <a href="{{ route('invoices.print', ['invoice' => $invoice, 'format' => 'thermal']) }}"
+                   target="_blank"
+                   class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50"
+                   title="80mm thermal receipt — for counter printers (kirana/retail/cafe)">
+                    Thermal 80mm
+                </a>
                 @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)
                     @if ($invoice->isCreditNoteWindowClosed())
                         {{-- Section 34(2) window closed — disable the action with a tooltip
@@ -132,6 +144,46 @@
 
             @php $payments = $invoice->payments; @endphp
 
+            {{-- Once-in-a-lifetime first-issued-invoice celebration. Server gate:
+                 user has exactly 1 finalized invoice AND this is it. Client gate:
+                 localStorage so it doesn't re-show on revisit (e.g. via email link).
+                 Together: fires once, never again. --}}
+            @if (! empty($isFirstFinalized) && $isFirstFinalized)
+                <div x-data="{ show: !localStorage.getItem('hideFirstInvoiceCelebration') }" x-show="show" x-cloak
+                     class="relative bg-gradient-to-r from-saffron-50 via-white to-money-50 ring-1 ring-saffron-200 rounded-xl p-5 overflow-hidden">
+                    {{-- Subtle Indian-flag stripe accent on top edge --}}
+                    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron-500 via-white to-money-600"></div>
+                    <button type="button"
+                            @click="localStorage.setItem('hideFirstInvoiceCelebration','1'); show=false"
+                            class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 text-gray-400 hover:text-gray-700 hover:bg-white/60 rounded"
+                            aria-label="Close celebration">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <div class="flex items-start gap-4 pt-1">
+                        <div class="text-4xl leading-none">🎉</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs uppercase font-bold tracking-widest text-saffron-700">First invoice issued — welcome aboard!</div>
+                            <h3 class="font-display text-xl font-extrabold text-gray-900 mt-1">
+                                Mubarak ho, {{ Str::limit(explode(' ', auth()->user()->name)[0] ?? 'friend', 20) }} ji!
+                            </h3>
+                            <p class="text-sm text-gray-700 mt-1">
+                                You're officially running paperless GST billing. Share this invoice on WhatsApp,
+                                record the payment when it arrives, and we'll keep your GSTR-1 ready every month.
+                            </p>
+                            <div class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white ring-1 ring-saffron-200 text-xs font-medium text-saffron-800">
+                                <span class="text-base leading-none">🇮🇳</span>
+                                <span>Made in India for Indian businesses · Apnainvoice by Datasoft Technologies</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Engagement layer: tells the user, in plain language, what the
+                 most useful next step is. Sits above the share/reminder panels
+                 so users don't drown in actions. --}}
+            @include('invoices.partials.whats-next', ['invoice' => $invoice])
+
             @include('invoices.partials.activity-timeline', ['invoice' => $invoice])
 
             @if (! $invoice->isDraft() && ! $invoice->isCancelled())
@@ -155,7 +207,7 @@
             @endif
 
             @if ($invoice->balance > 0 && ! $invoice->isDraft() && $invoice->status !== 'cancelled')
-                <form method="POST" action="{{ route('invoices.payments', $invoice) }}" class="bg-white shadow sm:rounded-lg p-5 space-y-4">
+                <form id="record-payment" method="POST" action="{{ route('invoices.payments', $invoice) }}" class="bg-white shadow sm:rounded-lg p-5 space-y-4 scroll-mt-20">
                     @csrf
                     <div class="flex items-center justify-between">
                         <h3 class="font-semibold text-gray-900">Record a payment</h3>
@@ -360,4 +412,23 @@
             </div>
         </div>
     </div>
+
+    {{-- One-click "Save & Download PDF" support: when the edit form sets
+         post_save_action=pdf, the controller redirects here with ?download=1.
+         A hidden anchor with the `download` attribute is clicked once on load,
+         triggering the browser's native download flow without navigating away. --}}
+    @if (request('download'))
+        @push('scripts')
+        <script>
+            (function() {
+                const url = @json(route('invoices.pdf', $invoice));
+                const a = document.createElement('a');
+                a.href = url;
+                a.rel = 'noopener';
+                // Tiny delay so the page paints first — feels more responsive.
+                setTimeout(() => { a.click(); }, 250);
+            })();
+        </script>
+        @endpush
+    @endif
 </x-app-layout>

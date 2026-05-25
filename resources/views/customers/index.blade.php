@@ -24,8 +24,8 @@
                 @if ($customers->isEmpty())
                     <x-empty-state
                         icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        title="{{ request('search') ? 'No customers match that search' : 'No customers yet' }}"
-                        description="{{ request('search') ? 'Try a different search term or clear the filter.' : 'Save customer details once — name, GSTIN, address, mobile — and reuse them on every invoice. We auto-detect intrastate vs interstate GST based on their state.' }}"
+                        title="{{ request('search') ? 'No customers match that search' : 'Add your first customer' }}"
+                        description="{{ request('search') ? 'Try a different search term or clear the filter.' : 'Save details once — name, mobile, GSTIN, state — and reuse them on every bill. CGST/SGST vs IGST is auto-detected from their state, so you never have to think about it. A mobile number unlocks one-tap WhatsApp share.' }}"
                         actionHref="{{ request('search') ? route('customers.index') : route('customers.create') }}"
                         actionLabel="{{ request('search') ? 'Clear search' : 'Add a customer' }}"
                     />

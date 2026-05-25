@@ -99,23 +99,139 @@
                         </div>
                     </div>
 
-                    {{-- Body editor with live word count + reading time --}}
+                    {{-- Body editor: toolbar + textarea + AJAX preview modal.
+                         The toolbar inserts markdown around the user's selection
+                         instead of forcing them to memorise the syntax. --}}
                     <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                         <div class="px-5 sm:px-6 py-3 border-b flex items-center justify-between gap-3 flex-wrap">
                             <div>
-                                <h3 class="font-medium text-gray-900">Body (Markdown)</h3>
-                                <p class="text-[11px] text-gray-500">Headings <code>##</code>, lists <code>-</code>, links <code>[text](url)</code>, code <code>`...`</code>, tables — all GitHub-flavored.</p>
+                                <h3 class="font-medium text-gray-900">Body</h3>
+                                <p class="text-[11px] text-gray-500">Markdown — use the toolbar or type directly. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
                             </div>
                             <div class="flex items-center gap-3 text-xs text-gray-600">
                                 <span><strong x-text="wordCount"></strong> words</span>
                                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span><strong x-text="readingMinutes"></strong> min read</span>
+                                {{-- Autosave indicator — set to "Saving…" then "Saved {time}"
+                                     while autosaving to localStorage. Restored on page reload. --}}
+                                <span class="w-1 h-1 rounded-full bg-gray-300" x-show="autosaveLabel" x-cloak></span>
+                                <span x-show="autosaveLabel" x-cloak class="text-emerald-700" x-text="autosaveLabel"></span>
                             </div>
                         </div>
-                        <textarea id="body" name="body" required rows="22"
-                                  x-model="body" @input="updateBodyStats"
-                                  placeholder="## Introduction&#10;&#10;Write your post here…"
+
+                        {{-- Formatting toolbar — clicking a button wraps the textarea
+                             selection in the matching markdown. Keyboard friendly:
+                             still works while the textarea is focused (mousedown is on
+                             the button so the textarea selection is preserved). --}}
+                        <div class="px-3 py-2 border-b bg-gray-50 flex items-center gap-0.5 flex-wrap text-sm">
+                            <button type="button" @mousedown.prevent="format('bold')" title="Bold (Ctrl+B)"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 font-bold">B</button>
+                            <button type="button" @mousedown.prevent="format('italic')" title="Italic (Ctrl+I)"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 italic">I</button>
+                            <span class="w-px h-5 bg-gray-300 mx-1"></span>
+                            <button type="button" @mousedown.prevent="format('h2')" title="Heading 2"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 font-bold text-base">H2</button>
+                            <button type="button" @mousedown.prevent="format('h3')" title="Heading 3"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 font-bold text-sm">H3</button>
+                            <span class="w-px h-5 bg-gray-300 mx-1"></span>
+                            <button type="button" @mousedown.prevent="format('link')" title="Link (Ctrl+K)"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            </button>
+                            {{-- Image — clicking opens a hidden file picker. On choose,
+                                 we upload via AJAX and insert ![](url) at the caret.
+                                 No prompt, no placeholder URL nonsense — the writer
+                                 picks a file, sees their image inline. --}}
+                            <button type="button" @click.prevent="$refs.bodyImagePicker.click()"
+                                    :disabled="imageUploading"
+                                    title="Insert image (upload)"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 disabled:opacity-50 disabled:cursor-wait">
+                                <svg x-show="!imageUploading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <svg x-show="imageUploading" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"/></svg>
+                            </button>
+                            <input type="file" x-ref="bodyImagePicker" class="hidden"
+                                   accept="image/jpeg,image/png,image/webp,image/gif"
+                                   @change="onBodyImagePick($event)">
+                            <span class="w-px h-5 bg-gray-300 mx-1"></span>
+                            <button type="button" @mousedown.prevent="format('ul')" title="Bulleted list"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            </button>
+                            <button type="button" @mousedown.prevent="format('ol')" title="Numbered list"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 text-xs font-mono">1.</button>
+                            <button type="button" @mousedown.prevent="format('quote')" title="Blockquote"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                            </button>
+                            <button type="button" @mousedown.prevent="format('code')" title="Inline code"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 font-mono text-xs">&lt;/&gt;</button>
+                            <button type="button" @mousedown.prevent="format('codeblock')" title="Code block"
+                                    class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 font-mono text-xs">```</button>
+
+                            <div class="flex-1"></div>
+
+                            {{-- Preview button — opens a modal rendering the markdown
+                                 via the same server-side renderer as production. --}}
+                            <button type="button" @click="openPreview()"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded font-semibold text-xs transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Preview
+                            </button>
+                        </div>
+
+                        <textarea id="body" name="body" x-ref="bodyTextarea" rows="22"
+                                  x-model="body" @input="updateBodyStats(); scheduleAutosave()"
+                                  @keydown="onKeydown($event)"
+                                  @paste="onPaste($event)"
+                                  placeholder="## Introduction&#10;&#10;Write your post here…&#10;&#10;Tip: Paste an image directly from your clipboard (Ctrl+V) — it'll auto-upload."
                                   class="block w-full border-0 focus:ring-0 font-mono text-sm leading-relaxed p-5 sm:p-6 resize-y">{{ $bodyVal }}</textarea>
+                    </div>
+
+                    {{-- Restore-from-localStorage banner — shown if a newer autosave
+                         exists than what the server gave us. One-click to restore. --}}
+                    <div x-show="autosaveAvailable" x-cloak
+                         class="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-4 flex items-center justify-between gap-3">
+                        <div class="text-sm">
+                            <strong>Unsaved draft from <span x-text="autosaveAge"></span></strong>
+                            found on this browser. Restore it?
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="discardAutosave()" class="text-xs text-amber-800 hover:underline px-2 py-1">Discard</button>
+                            <button type="button" @click="restoreAutosave()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded">Restore</button>
+                        </div>
+                    </div>
+
+                    {{-- Preview modal — full-screen iframe-style overlay with the
+                         rendered markdown styled the same way the public blog renders it. --}}
+                    <div x-show="previewOpen" x-cloak
+                         @keydown.escape.window="previewOpen = false"
+                         class="fixed inset-0 z-50 bg-gray-900/70 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" @click.outside="previewOpen = false">
+                            <div class="px-5 py-3 border-b flex items-center justify-between bg-gray-50">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Live preview</h3>
+                                    <p class="text-xs text-gray-500">Same renderer as the public blog. Press Esc to close.</p>
+                                </div>
+                                <button type="button" @click="previewOpen = false"
+                                        class="text-gray-400 hover:text-gray-700 p-1" aria-label="Close preview">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="overflow-y-auto p-8">
+                                <article class="prose prose-lg max-w-none
+                                                [&_h2]:font-bold [&_h2]:text-3xl [&_h2]:mt-10 [&_h2]:mb-4
+                                                [&_h3]:font-bold [&_h3]:text-2xl [&_h3]:mt-8 [&_h3]:mb-3
+                                                [&_p]:my-4 [&_p]:leading-relaxed
+                                                [&_a]:text-brand-700 [&_a]:underline
+                                                [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ul]:space-y-2
+                                                [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_ol]:space-y-2
+                                                [&_blockquote]:border-l-4 [&_blockquote]:border-brand-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4
+                                                [&_code]:bg-gray-100 [&_code]:px-1.5 [&_code]:rounded [&_code]:text-sm
+                                                [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
+                                                [&_img]:rounded-lg [&_img]:my-4"
+                                         x-html="previewHtml || '<p class=\'text-gray-400 text-center py-20\'>Loading preview…</p>'"></article>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -217,18 +333,28 @@
                         </div>
                     </div>
 
-                    {{-- Featured image --}}
+                    {{-- Featured image — with instant preview the moment a file is
+                         picked (not waiting until form submit). URL.createObjectURL
+                         is revoked on the next pick to avoid memory leaks. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
                         <h3 class="font-display font-bold text-gray-900">Featured image</h3>
+                        {{-- Preview: shows the picked-but-not-saved file first; falls back
+                             to whatever's saved on the server. --}}
+                        <template x-if="featuredPreview">
+                            <img :src="featuredPreview" alt="New featured image preview"
+                                 class="w-full rounded-lg ring-1 ring-gray-200 aspect-[16/9] object-cover">
+                        </template>
                         @if ($post->featured_image_path)
-                            <img src="{{ asset('storage/' . $post->featured_image_path) }}" alt="{{ $altVal }}"
+                            <img x-show="!featuredPreview" src="{{ asset('storage/' . $post->featured_image_path) }}" alt="{{ $altVal }}"
                                  class="w-full rounded-lg ring-1 ring-gray-200 aspect-[16/9] object-cover">
                         @endif
                         <div>
                             <x-input-label for="featured_image" value="Upload (max 4 MB)" />
                             <input id="featured_image" name="featured_image" type="file" accept="image/jpeg,image/png,image/webp"
+                                   @change="onFilePick($event, 'featured')"
                                    class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-brand-700 file:text-white file:font-semibold hover:file:bg-brand-800">
                             <p class="mt-1 text-[10px] text-gray-500">Recommended: 1200×675 (16:9), JPEG or WebP.</p>
+                            <p x-show="featuredPreview" x-cloak class="mt-1 text-[10px] text-emerald-700 font-medium">✓ New image selected. Click Save to publish.</p>
                         </div>
                         <div>
                             <x-input-label for="featured_image_alt" value="Alt text (for SEO + accessibility)" />
@@ -239,18 +365,24 @@
                         </div>
                     </div>
 
-                    {{-- Social card override --}}
+                    {{-- Social card override — same instant-preview pattern. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
                         <h3 class="font-display font-bold text-gray-900">Social-card image</h3>
+                        <template x-if="ogPreview">
+                            <img :src="ogPreview" alt="New OG image preview"
+                                 class="w-full rounded-lg ring-1 ring-gray-200 aspect-[1200/630] object-cover">
+                        </template>
                         @if ($post->og_image_path)
-                            <img src="{{ asset('storage/' . $post->og_image_path) }}" alt="OG override"
+                            <img x-show="!ogPreview" src="{{ asset('storage/' . $post->og_image_path) }}" alt="OG override"
                                  class="w-full rounded-lg ring-1 ring-gray-200 aspect-[1200/630] object-cover">
                         @endif
                         <div>
                             <x-input-label for="og_image" value="Override (1200×630 ideal)" />
                             <input id="og_image" name="og_image" type="file" accept="image/jpeg,image/png,image/webp"
+                                   @change="onFilePick($event, 'og')"
                                    class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-700 file:text-white file:font-semibold hover:file:bg-gray-800">
                             <p class="mt-1 text-[10px] text-gray-500">Optional. Falls back to the featured image.</p>
+                            <p x-show="ogPreview" x-cloak class="mt-1 text-[10px] text-emerald-700 font-medium">✓ New image selected. Click Save to publish.</p>
                         </div>
                     </div>
                 </aside>
@@ -272,6 +404,11 @@
         }
 
         function postEditor({ initialTitle, initialSlug, initialBody, initialMetaTitle, initialMetaDescription, slugLocked }) {
+            // localStorage key — namespaced per post-id so different posts don't
+            // clobber each other's drafts on the same browser.
+            const postId = @json($post->id ?? 'new');
+            const autosaveKey = 'apnainvoice.blog-draft.' + postId;
+
             return {
                 title: initialTitle,
                 slug: initialSlug,
@@ -283,14 +420,36 @@
                 wordCount: 0,
                 readingMinutes: 1,
 
+                // Preview state — opens a modal with server-rendered HTML.
+                previewOpen: false,
+                previewHtml: '',
+
+                // Autosave state — stored in localStorage, restored on next load
+                // if newer than the server's saved copy.
+                autosaveLabel: '',
+                autosaveTimer: null,
+                autosaveAvailable: false,
+                autosaveAge: '',
+                _pendingAutosave: null,
+
+                // Instant-preview of picked-but-not-saved featured / OG images.
+                // null until a file is chosen; then a blob: URL via createObjectURL.
+                featuredPreview: null,
+                ogPreview: null,
+                // Body-image upload state — disables the toolbar Image button
+                // while a request is in flight (prevents double-uploads).
+                imageUploading: false,
+
                 init() {
                     this.updateBodyStats();
+                    this.checkAutosave();
                 },
 
                 onTitleChange() {
                     if (! this.slugLocked) {
                         this.slug = slugify(this.title);
                     }
+                    this.scheduleAutosave();
                 },
 
                 updateBodyStats() {
@@ -304,11 +463,6 @@
                     return this.metaTitle || this.title;
                 },
 
-                /**
-                 * Lightweight SEO grade — 4 checks: meta description length,
-                 * meta title length, body word count, slug presence. Surfaces
-                 * one of three traffic-light states the operator can act on.
-                 */
                 get seoScore() {
                     const issues = [];
                     if (this.metaDescription.length < 80 || this.metaDescription.length > 160) issues.push('description');
@@ -320,6 +474,273 @@
                     if (issues.length <= 1) return { tone: 'good', label: 'SEO mostly ready' };
                     if (issues.length <= 2) return { tone: 'warn', label: 'SEO needs work' };
                     return { tone: 'bad', label: 'SEO incomplete' };
+                },
+
+                // ──── Formatting toolbar — wraps selection in markdown ─────────────
+                /**
+                 * Replace the textarea selection with markdown syntax. For inline
+                 * formats (bold, italic, code, link, image) we wrap the selection;
+                 * for block formats (h2, h3, ul, ol, quote, codeblock) we prefix
+                 * the line. Always restores caret position so the user keeps typing.
+                 */
+                format(kind) {
+                    const ta = this.$refs.bodyTextarea;
+                    if (!ta) return;
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const value = ta.value;
+                    const selected = value.slice(start, end);
+                    let before = '', after = '', placeholder = '', isBlock = false;
+                    switch (kind) {
+                        case 'bold':      before = '**'; after = '**'; placeholder = 'bold text'; break;
+                        case 'italic':    before = '*';  after = '*';  placeholder = 'italic text'; break;
+                        case 'code':      before = '`';  after = '`';  placeholder = 'code'; break;
+                        case 'link':      before = '['; after = '](https://)'; placeholder = 'link text'; break;
+                        case 'image':     before = '![';after = '](image-url)'; placeholder = 'alt text'; break;
+                        case 'h2':        before = '\n## '; after = '\n'; placeholder = 'Heading'; isBlock = true; break;
+                        case 'h3':        before = '\n### '; after = '\n'; placeholder = 'Subheading'; isBlock = true; break;
+                        case 'ul':        before = '\n- '; after = '\n'; placeholder = 'list item'; isBlock = true; break;
+                        case 'ol':        before = '\n1. '; after = '\n'; placeholder = 'list item'; isBlock = true; break;
+                        case 'quote':     before = '\n> '; after = '\n'; placeholder = 'quote'; isBlock = true; break;
+                        case 'codeblock': before = '\n```\n'; after = '\n```\n'; placeholder = 'your code'; isBlock = true; break;
+                    }
+                    const text = selected || placeholder;
+                    const replacement = before + text + after;
+                    const newValue = value.slice(0, start) + replacement + value.slice(end);
+                    this.body = newValue;
+                    ta.value = newValue;
+                    // Restore caret to highlight the inserted placeholder (or end of insertion).
+                    this.$nextTick(() => {
+                        ta.focus();
+                        const caretStart = start + before.length;
+                        const caretEnd = caretStart + text.length;
+                        ta.setSelectionRange(caretStart, caretEnd);
+                    });
+                    this.updateBodyStats();
+                    this.scheduleAutosave();
+                },
+
+                /** Keyboard shortcuts inside the textarea: Ctrl+B/I/K for bold/italic/link. */
+                onKeydown(e) {
+                    if (!(e.ctrlKey || e.metaKey)) return;
+                    const key = e.key.toLowerCase();
+                    if (key === 'b') { e.preventDefault(); this.format('bold'); }
+                    else if (key === 'i') { e.preventDefault(); this.format('italic'); }
+                    else if (key === 'k') { e.preventDefault(); this.format('link'); }
+                },
+
+                // ──── Preview ──────────────────────────────────────────────────────
+                async openPreview() {
+                    this.previewOpen = true;
+                    this.previewHtml = '';
+                    try {
+                        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const res = await fetch('{{ route("admin.blog.preview") }}', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'text/html',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrf,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: JSON.stringify({ body: this.body }),
+                        });
+                        if (res.ok) {
+                            this.previewHtml = await res.text();
+                        } else {
+                            this.previewHtml = '<p class="text-red-600">Preview failed (HTTP ' + res.status + ').</p>';
+                        }
+                    } catch (e) {
+                        this.previewHtml = '<p class="text-red-600">Network error generating preview.</p>';
+                    }
+                },
+
+                // ──── Autosave ─────────────────────────────────────────────────────
+                /**
+                 * Schedule a debounced autosave to localStorage. Called on every
+                 * input change. Real save happens 1.5s after the user stops typing,
+                 * so we don't thrash localStorage on every keystroke.
+                 */
+                scheduleAutosave() {
+                    if (this._pendingAutosave) clearTimeout(this._pendingAutosave);
+                    this._pendingAutosave = setTimeout(() => this.doAutosave(), 1500);
+                },
+                doAutosave() {
+                    try {
+                        const snapshot = {
+                            title: this.title,
+                            slug: this.slug,
+                            body: this.body,
+                            metaTitle: this.metaTitle,
+                            metaDescription: this.metaDescription,
+                            savedAt: Date.now(),
+                        };
+                        localStorage.setItem(autosaveKey, JSON.stringify(snapshot));
+                        const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        this.autosaveLabel = 'Saved locally at ' + t;
+                    } catch (e) {
+                        // localStorage full / disabled — fail silently.
+                    }
+                },
+                /**
+                 * On mount, see if there's a newer local snapshot than what the
+                 * server gave us. Shows the "Restore" banner if so.
+                 */
+                checkAutosave() {
+                    try {
+                        const raw = localStorage.getItem(autosaveKey);
+                        if (!raw) return;
+                        const snap = JSON.parse(raw);
+                        if (!snap || !snap.savedAt) return;
+                        // Only show banner if the snapshot is meaningfully different
+                        // from the server-provided body — otherwise it's just noise.
+                        if ((snap.body || '') === (this.body || '')) return;
+                        this.autosaveAvailable = true;
+                        // Human-readable age — "2 minutes ago", "1 hour ago".
+                        const mins = Math.round((Date.now() - snap.savedAt) / 60000);
+                        this.autosaveAge = mins < 1 ? 'just now'
+                            : mins < 60 ? mins + ' minute' + (mins > 1 ? 's' : '') + ' ago'
+                            : Math.round(mins / 60) + ' hour' + (Math.round(mins / 60) > 1 ? 's' : '') + ' ago';
+                    } catch (e) {}
+                },
+                restoreAutosave() {
+                    try {
+                        const snap = JSON.parse(localStorage.getItem(autosaveKey) || '{}');
+                        if (snap.title) this.title = snap.title;
+                        if (snap.slug) this.slug = snap.slug;
+                        if (snap.body !== undefined) this.body = snap.body;
+                        if (snap.metaTitle !== undefined) this.metaTitle = snap.metaTitle;
+                        if (snap.metaDescription !== undefined) this.metaDescription = snap.metaDescription;
+                        this.updateBodyStats();
+                        this.autosaveAvailable = false;
+                        this.autosaveLabel = 'Restored from local draft';
+                    } catch (e) {}
+                },
+                discardAutosave() {
+                    localStorage.removeItem(autosaveKey);
+                    this.autosaveAvailable = false;
+                },
+
+                // ──── Featured / OG image instant-preview ──────────────────────────
+                /**
+                 * When the user picks a featured or OG image, show it instantly
+                 * via a blob: URL (no upload, no server round-trip). The real
+                 * upload happens on form submit. We revoke any previous blob URL
+                 * to avoid memory leaks.
+                 */
+                onFilePick(ev, kind) {
+                    const file = ev.target?.files?.[0];
+                    if (!file) return;
+                    // Revoke old preview's blob URL (if any).
+                    if (kind === 'featured' && this.featuredPreview) URL.revokeObjectURL(this.featuredPreview);
+                    if (kind === 'og' && this.ogPreview) URL.revokeObjectURL(this.ogPreview);
+                    const url = URL.createObjectURL(file);
+                    if (kind === 'featured') this.featuredPreview = url;
+                    else if (kind === 'og') this.ogPreview = url;
+                },
+
+                // ──── Body-image upload (toolbar + paste) ──────────────────────────
+                /**
+                 * Toolbar Image button: file picker → AJAX upload → insert markdown.
+                 * Inserts `![](url)` at the caret so the user can type the alt text
+                 * inside the brackets.
+                 */
+                async onBodyImagePick(ev) {
+                    const file = ev.target?.files?.[0];
+                    if (!file) return;
+                    await this.uploadAndInsertImage(file);
+                    // Reset the input so picking the same file again still fires change.
+                    ev.target.value = '';
+                },
+
+                /**
+                 * Paste-from-clipboard handler on the body textarea. If the paste
+                 * contains an image (screenshot, copied web image), we intercept,
+                 * upload it, and insert the markdown. Text pastes fall through to
+                 * normal behaviour.
+                 */
+                async onPaste(ev) {
+                    const items = ev.clipboardData?.items;
+                    if (!items) return;
+                    for (const item of items) {
+                        if (item.kind === 'file' && item.type.startsWith('image/')) {
+                            ev.preventDefault();
+                            const file = item.getAsFile();
+                            if (file) await this.uploadAndInsertImage(file);
+                            return;
+                        }
+                    }
+                    // No image in the paste → let the textarea handle it normally.
+                },
+
+                /**
+                 * Upload an image File to the server and insert the resulting URL
+                 * as a Markdown image at the textarea's current caret. Used by
+                 * both the Image toolbar button and the paste-from-clipboard handler.
+                 */
+                async uploadAndInsertImage(file) {
+                    if (this.imageUploading) return;
+                    this.imageUploading = true;
+                    try {
+                        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const fd = new FormData();
+                        fd.append('image', file);
+                        const res = await fetch('{{ route("admin.blog.upload-image") }}', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                            body: fd,
+                        });
+                        if (res.status === 201) {
+                            const data = await res.json();
+                            this.insertAtCaret('![](' + data.url + ')', { selectAlt: true });
+                            this.scheduleAutosave();
+                        } else if (res.status === 422) {
+                            const body = await res.json();
+                            const firstErr = Object.values(body.errors || {})[0]?.[0] || 'Invalid image.';
+                            alert('Could not upload image: ' + firstErr);
+                        } else {
+                            alert('Image upload failed (status ' + res.status + ').');
+                        }
+                    } catch (e) {
+                        alert('Network error uploading image.');
+                    } finally {
+                        this.imageUploading = false;
+                    }
+                },
+
+                /**
+                 * Insert text at the textarea's current caret position. If
+                 * `selectAlt` is true (we just inserted `![](url)`), highlight
+                 * the empty `[]` so the user immediately types the alt text.
+                 */
+                insertAtCaret(text, opts = {}) {
+                    const ta = this.$refs.bodyTextarea;
+                    if (!ta) return;
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const value = ta.value;
+                    const newValue = value.slice(0, start) + text + value.slice(end);
+                    this.body = newValue;
+                    ta.value = newValue;
+                    this.$nextTick(() => {
+                        ta.focus();
+                        if (opts.selectAlt) {
+                            // Find the empty `![](` brackets we just inserted and
+                            // place caret inside them so the writer can type alt.
+                            const altPos = start + 2; // after "!["
+                            ta.setSelectionRange(altPos, altPos);
+                        } else {
+                            const caretPos = start + text.length;
+                            ta.setSelectionRange(caretPos, caretPos);
+                        }
+                    });
+                    this.updateBodyStats();
                 },
             };
         }

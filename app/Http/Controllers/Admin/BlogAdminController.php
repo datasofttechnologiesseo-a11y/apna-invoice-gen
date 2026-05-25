@@ -127,6 +127,49 @@ class BlogAdminController extends Controller
     }
 
     /**
+     * AJAX endpoint: render arbitrary markdown to safe HTML using the EXACT
+     * same renderer the public blog uses, so the editor preview is pixel-true
+     * to production. Returns plain text/html (sanitised by Post::renderedBody).
+     */
+    public function preview(Request $request): \Illuminate\Http\Response
+    {
+        $data = $request->validate([
+            'body' => ['nullable', 'string'],
+        ]);
+        // Spin up a transient Post just to use its renderer — no DB write.
+        $post = new Post(['body' => $data['body'] ?? '']);
+        return response($post->renderedBody(), 200)
+            ->header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    /**
+     * AJAX endpoint: accept an image upload (from the toolbar Image button or
+     * a clipboard paste in the body textarea), store it under posts/inline/
+     * and return its public URL so the editor can insert `![alt](url)`.
+     *
+     * Strict whitelist on mime/size — this endpoint is super-admin only via
+     * the surrounding route group, but defence in depth still applies.
+     */
+    public function uploadImage(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate([
+            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:4096'],
+            'alt'   => ['nullable', 'string', 'max:200'],
+        ]);
+
+        // Stored under posts/inline so it's easy to spot & clean up later.
+        // Storage facade gives us the path; asset('storage/...') turns it
+        // into a public URL via the public-disk symlink.
+        $path = $data['image']->store('posts/inline', 'public');
+
+        return response()->json([
+            'url' => asset('storage/' . $path),
+            'path' => $path,
+            'alt' => $data['alt'] ?? '',
+        ], 201);
+    }
+
+    /**
      * Quick publish/unpublish toggle from the index list — saves a click
      * vs entering the editor every time.
      */

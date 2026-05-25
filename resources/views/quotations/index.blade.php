@@ -50,8 +50,8 @@
                 @if ($quotations->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No quotations match that filter' : 'No quotations yet' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Create a price proposal in 30 seconds — share with your customer, then convert to a tax invoice once they accept.' }}"
+                        title="{{ request('search') || request('status') ? 'No quotations match that filter' : 'Send your first quote' }}"
+                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Send a price proposal on WhatsApp or email, your customer clicks Accept on the public link — you click Convert and it becomes a tax invoice. No re-typing.' }}"
                         actionHref="{{ request('search') || request('status') ? route('quotations.index') : route('quotations.create') }}"
                         actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create quotation' }}"
                     />

@@ -79,6 +79,15 @@ class ReminderService
             return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "Unknown channel {$channel}");
         }
 
+        // Refresh from DB before doing anything else. Eligibility was already
+        // checked by callers, but a payment may have landed between that check
+        // and this send. Re-verify so we never send "Balance Due" after paid.
+        // This is the explicit Vyapar-trust-killer guard.
+        $invoice->refresh();
+        if (! $this->isEligible($invoice)) {
+            return $this->log($invoice, $channel, '', 'skipped', 0, $trigger, 'Invoice no longer eligible (paid or cancelled in the meantime).');
+        }
+
         if (! $ch->isAvailable()) {
             return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "Channel {$channel} not configured.");
         }

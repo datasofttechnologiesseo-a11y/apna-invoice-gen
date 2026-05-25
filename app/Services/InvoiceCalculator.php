@@ -26,7 +26,12 @@ class InvoiceCalculator
 
         $computed = [];
 
+        // Track position so sort_order reflects the order the rows arrived in.
+        // Without this, every row writes sort_order=0 and the relation order
+        // becomes non-deterministic across re-saves (update() deletes + recreates).
+        $position = 0;
         foreach ($items as $item) {
+            $position++;
             $qty = (float) ($item['quantity'] ?? 0);
             $rate = (float) ($item['rate'] ?? 0);
             $gstRate = (float) ($item['gst_rate'] ?? 0);
@@ -72,7 +77,9 @@ class InvoiceCalculator
                 'sgst_amount' => $sgst,
                 'igst_amount' => $igst,
                 'total' => $total,
-                'sort_order' => (int) ($item['sort_order'] ?? 0),
+                // Use explicit sort_order if supplied (e.g. drag-to-reorder UI later);
+                // otherwise stamp from the position so order is stable across saves.
+                'sort_order' => (int) ($item['sort_order'] ?? $position),
             ];
         }
 

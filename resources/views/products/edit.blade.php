@@ -43,13 +43,26 @@
                             <x-text-input id="sku" name="sku" type="text" class="mt-1 block w-full font-mono" :value="old('sku', $product->sku)" maxlength="60" placeholder="e.g. CEMENT-50KG" />
                         </div>
 
+                        @php
+                            // HSN is mandated by Rule 46(g) only when the supplier
+                            // (this company) is GST-registered. For un-registered
+                            // dealers (no GSTIN), the catalogue field is genuinely
+                            // optional — they're not filing GSTR-1.
+                            $hsnRequired = ! empty($company?->gstin ?? null);
+                        @endphp
                         <div>
                             <div class="flex items-center justify-between gap-2">
-                                <x-input-label for="hsn_sac" value="HSN / SAC code *" />
+                                <x-input-label for="hsn_sac" :value="'HSN / SAC code' . ($hsnRequired ? ' *' : ' (optional)')" />
                                 @include('partials.hsn-search-link', ['label' => 'Search on GST portal'])
                             </div>
-                            <x-text-input id="hsn_sac" name="hsn_sac" type="text" class="mt-1 block w-full font-mono" :value="old('hsn_sac', $product->hsn_sac)" required pattern="[0-9]{4,8}" inputmode="numeric" placeholder="e.g. 25232910" />
-                            <p class="text-xs text-gray-500 mt-1">4 digits (turnover &lt; ₹5 Cr) · 6 digits (&gt; ₹5 Cr) · 8 digits for exports.</p>
+                            <x-text-input id="hsn_sac" name="hsn_sac" type="text" class="mt-1 block w-full font-mono" :value="old('hsn_sac', $product->hsn_sac)" :required="$hsnRequired" pattern="[0-9]{4,8}" inputmode="numeric" placeholder="e.g. 25232910" />
+                            <p class="text-xs text-gray-500 mt-1">
+                                @if ($hsnRequired)
+                                    4 digits (turnover &lt; ₹5 Cr) · 6 digits (&gt; ₹5 Cr) · 8 digits for exports.
+                                @else
+                                    Optional — your business isn't GST-registered. You can add this later when needed.
+                                @endif
+                            </p>
                         </div>
 
                         <div>

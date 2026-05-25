@@ -13,6 +13,10 @@
 
     // Only render the discount column when at least one line carries one.
     $hasDiscount = $invoice->items->sum(fn ($i) => (float) ($i->discount ?? 0)) > 0;
+    // Only render the Product column when at least one line is linked to a
+    // saved product. Cash-bill style invoices with all-custom lines don't need
+    // the column at all — saves horizontal room for Description.
+    $hasProducts = $invoice->items->contains(fn ($i) => $i->product_id !== null && $i->product?->name);
 @endphp
 
 <div class="p-8 text-gray-900 invoice-doc">
@@ -127,6 +131,9 @@
         <thead>
             <tr class="bg-gray-100 text-gray-700 text-left">
                 <th class="px-2 py-2">#</th>
+                @if ($hasProducts)
+                    <th class="px-2 py-2">Product</th>
+                @endif
                 <th class="px-2 py-2">Description</th>
                 <th class="px-2 py-2">HSN/SAC</th>
                 <th class="px-2 py-2 text-right">Qty</th>
@@ -142,7 +149,32 @@
             @foreach ($invoice->items as $idx => $item)
                 <tr class="border-b">
                     <td class="px-2 py-2">{{ $idx + 1 }}</td>
-                    <td class="px-2 py-2">{{ $item->description }}</td>
+                    @if ($hasProducts)
+                        {{-- Product column — bold name if linked to a saved product.
+                             Empty dash for custom-typed lines so the user can see at
+                             a glance which lines are catalogued vs one-offs. --}}
+                        <td class="px-2 py-2 font-medium">
+                            {{ $item->product?->name ?: '—' }}
+                        </td>
+                    @endif
+                    {{-- Description: raw saved value. When the Product column is
+                         present, the description is purely the user's extra note.
+                         When there's no Product column (all custom lines), the
+                         description doubles as the item identifier — and the
+                         legacy display fallback fills it in from product.name if
+                         it was saved as blank/junk. --}}
+                    <td class="px-2 py-2">
+                        @php
+                            $desc = trim((string) $item->description);
+                            $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
+                            // Only apply the product-name fallback when there's NO Product
+                            // column already showing it — avoid duplication.
+                            $shown = ($looksLikeJunk && ! $hasProducts && $item->product?->name)
+                                ? $item->product->name
+                                : ($looksLikeJunk ? '' : $item->description);
+                        @endphp
+                        {{ $shown }}
+                    </td>
                     <td class="px-2 py-2 font-mono">{{ $item->hsn_sac }}</td>
                     <td class="px-2 py-2 text-right font-mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="px-2 py-2 text-right font-mono">{{ inr($item->rate) }}</td>

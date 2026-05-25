@@ -105,6 +105,10 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('onboarding.index', absolute: false));
+        // New users land on the dashboard, not the setup wizard. The dashboard
+        // shows a setup checklist with one-click links to each step — they can
+        // also click "New invoice" and start billing immediately. Optional guided
+        // wizard remains accessible at /setup for those who prefer it.
+        return redirect(route('dashboard', absolute: false));
     }
 }

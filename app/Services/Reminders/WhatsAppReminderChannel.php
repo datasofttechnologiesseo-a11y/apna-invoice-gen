@@ -69,25 +69,17 @@ class WhatsAppReminderChannel implements ReminderChannel
     /**
      * Build a wa.me deep link with the reminder text — used by the UI for
      * manual click-to-send (100% free, no BSP needed).
+     *
+     * Delegates to Invoice::whatsAppShareLink('reminder') so the wording stays
+     * in lock-step with the share panel and the email reminder template. The
+     * 'reminder' context biases the copy toward "is N days overdue" framing.
      */
     public static function waMeLink(Invoice $invoice, int $daysPastDue = 0): ?string
     {
-        $phone = $invoice->customer?->phone;
-        if (! $phone) return null;
-        $digits = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($digits) < 10) return null;
-
-        $balance = number_format((float) $invoice->balance, 2);
-        $overdueLabel = $daysPastDue <= 0
-            ? 'is due'
-            : ('is ' . $daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue');
-
-        $text = "Hi " . ($invoice->customer?->name ?? 'there') . ",\n\n"
-            . "Just a reminder that invoice " . $invoice->invoice_number . " " . $overdueLabel . ".\n"
-            . "Balance: ₹" . $balance . "\n\n"
-            . "View & pay: " . InvoiceShareController::makePublicUrl($invoice) . "\n\n"
-            . "Thanks,\n" . $invoice->company->name;
-
-        return 'https://wa.me/' . $digits . '?text=' . rawurlencode($text);
+        // Re-read from DB so a payment recorded a second ago is reflected in
+        // the balance — defense in depth against the race between "user clicks
+        // remind" and "another user records payment" on the same invoice.
+        $invoice->refresh();
+        return $invoice->whatsAppShareLink('reminder');
     }
 }

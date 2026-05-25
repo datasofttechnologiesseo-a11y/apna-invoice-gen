@@ -36,10 +36,9 @@ class AuthenticatedSessionController extends Controller
             return redirect($intended);
         }
 
-        if (! $company->isOnboarded() && ! $company->isBusinessComplete()) {
-            return redirect()->route('onboarding.index');
-        }
-
+        // Everyone lands on the dashboard. The dashboard shows a setup checklist
+        // for incomplete profiles, but never forces the wizard — users can dive
+        // straight into creating an invoice and fill business details later.
         return redirect()->route('dashboard');
     }
 

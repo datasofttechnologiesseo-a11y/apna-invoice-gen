@@ -84,7 +84,12 @@ class Invoice extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(InvoiceItem::class);
+        // Deterministic line order — sort_order is stamped from the row's array
+        // position in InvoiceCalculator. id is the fallback when two rows tie
+        // (legacy rows from before the sort_order fill all share sort_order=0).
+        return $this->hasMany(InvoiceItem::class)
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function payments(): HasMany
@@ -287,5 +292,112 @@ class Invoice extends Model
             2 => ['Original for Recipient', 'Duplicate for Supplier'],
             3 => ['Original for Recipient', 'Duplicate for Transporter', 'Triplicate for Supplier'],
         };
+    }
+
+    /**
+     * Generate the share/reminder message text — WhatsApp, SMS, email body all
+     * use this so a single source of truth controls what customers see.
+     *
+     * Crucially: balance is read fresh from $this at call time. The Vyapar
+     * pattern of "got a Balance Due message AFTER I paid cash" cannot happen
+     * here because:
+     *   1. ReminderService::isEligible() rejects invoices with balance ≤ 0
+     *   2. This method emits a "Thank you for payment" message when paid
+     *   3. Reminders are synchronous (not queued) so there is no race with payments
+     *
+     * @param string $context  'share' (manual click), 'reminder' (payment chase), 'thanks' (post-payment)
+     */
+    public function shareMessageText(string $context = 'share'): string
+    {
+        $cust = $this->customer;
+        $company = $this->company;
+        $name = trim($cust?->name ?? '') ?: 'there';
+        $business = trim($company?->name ?? '') ?: 'Us';
+        $docTitle = $this->documentTitle();
+        $number = $this->invoice_number ?: ('#' . $this->id);
+        $grand = number_format((float) $this->grand_total, 2);
+        $balance = (float) $this->balance;
+        $paid = (float) $this->paid_amount;
+        $upi = trim((string) ($company?->upi_id ?? ''));
+
+        // Build a public link only if the invoice is finalized — drafts have no
+        // shareable identity yet, and cancelled invoices are blocked at the
+        // public route (HTTP 410). Generating it for those wastes signed tokens.
+        $url = $this->finalized_at && ! $this->isCancelled()
+            ? \App\Http\Controllers\InvoiceShareController::makePublicUrl($this)
+            : null;
+
+        $lines = ["Hi {$name},"];
+        $lines[] = '';
+
+        if ($this->isCancelled()) {
+            $lines[] = "Please ignore {$docTitle} {$number} — it has been cancelled.";
+            $lines[] = '';
+            $lines[] = "Sorry for any confusion. — {$business}";
+            return implode("\n", $lines);
+        }
+
+        // PAID IN FULL — explicit thank-you message. Prevents the Vyapar
+        // trust-killer where users get "Balance Due" reminders after paying.
+        if ($balance <= 0 && $paid > 0) {
+            $lines[] = "Thank you for the payment of ₹{$grand} for {$docTitle} {$number}.";
+            if ($url) {
+                $lines[] = '';
+                $lines[] = "Your receipt is here: {$url}";
+            }
+            $lines[] = '';
+            $lines[] = "Appreciate your business. — {$business}";
+            return implode("\n", $lines);
+        }
+
+        // PARTIALLY PAID
+        if ($paid > 0 && $balance > 0) {
+            $paidStr = number_format($paid, 2);
+            $balStr = number_format($balance, 2);
+            $lines[] = "Sharing {$docTitle} {$number} for ₹{$grand}.";
+            $lines[] = "Already received: ₹{$paidStr}.";
+            $dueClause = $this->due_date
+                ? " (due by " . $this->due_date->format('d M Y') . ")"
+                : '';
+            $lines[] = "Balance: ₹{$balStr}{$dueClause}.";
+        } else {
+            // Fully unpaid — vary the language based on overdue/due-today/future.
+            $today = \Illuminate\Support\Carbon::now()->startOfDay();
+            $due = $this->due_date?->copy()->startOfDay();
+            $intro = match (true) {
+                $due === null               => "Sharing {$docTitle} {$number} for ₹{$grand}.",
+                $today->greaterThan($due)   => "{$docTitle} {$number} for ₹{$grand} is "
+                                                . (int) $today->diffInDays($due, true)
+                                                . " day(s) overdue.",
+                $today->equalTo($due)       => "{$docTitle} {$number} for ₹{$grand} is due today.",
+                default                     => "Sharing {$docTitle} {$number} for ₹{$grand}. Due by " . $due->format('d M Y') . ".",
+            };
+            $lines[] = $intro;
+        }
+
+        if ($url) {
+            $lines[] = '';
+            $lines[] = "View & download: {$url}";
+        }
+        if ($upi !== '') {
+            $lines[] = "Pay via UPI: {$upi}";
+        }
+        $lines[] = '';
+        $lines[] = "Thanks, — {$business}";
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Convenience helper for callers that want a `wa.me/<digits>?text=...` URL.
+     * Returns null when there's no usable phone (UI hides the button in that case).
+     */
+    public function whatsAppShareLink(string $context = 'share'): ?string
+    {
+        $phone = $this->customer?->phone;
+        if (! $phone) return null;
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        if (strlen($digits) < 10) return null;
+        return 'https://wa.me/' . $digits . '?text=' . rawurlencode($this->shareMessageText($context));
     }
 }

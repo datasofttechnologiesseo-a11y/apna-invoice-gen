@@ -410,9 +410,27 @@
         </thead>
         <tbody>
             @foreach ($invoice->items as $idx => $item)
+                @php
+                    // Resolve what to show as the line identifier vs supplementary text.
+                    //   • product linked + custom description differs → show both (product
+                    //     name as bold heading, description as smaller gray subline)
+                    //   • product linked + description matches product name (or is blank/junk)
+                    //     → show product name only (avoid duplication)
+                    //   • no product linked → show description as the identifier
+                    $productName = $item->product?->name;
+                    $descRaw = trim((string) $item->description);
+                    $descIsJunk = $descRaw === '' || preg_match('/^0+(\.0+)?$/', $descRaw) === 1;
+                    $primary = $productName ?: ($descIsJunk ? '' : $descRaw);
+                    $secondary = ($productName && ! $descIsJunk && strcasecmp($descRaw, $productName) !== 0) ? $descRaw : null;
+                @endphp
                 <tr>
                     <td class="muted">{{ $idx + 1 }}</td>
-                    <td><div style="font-weight: 600;">{{ $item->description }}</div></td>
+                    <td>
+                        <div style="font-weight: 600;">{{ $primary }}</div>
+                        @if ($secondary)
+                            <div style="font-size: 9px; color: #555; margin-top: 2px;">{{ $secondary }}</div>
+                        @endif
+                    </td>
                     <td class="mono x-small">{{ $item->hsn_sac }}</td>
                     <td class="tr mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="tr mono">{{ $inr($item->rate) }}</td>

@@ -256,9 +256,22 @@
         </thead>
         <tbody>
             @foreach ($quotation->items as $i => $item)
+                @php
+                    // Same product-name / description merge logic as the invoice PDF.
+                    $productName = $item->product?->name ?? null;
+                    $descRaw = trim((string) $item->description);
+                    $descIsJunk = $descRaw === '' || preg_match('/^0+(\.0+)?$/', $descRaw) === 1;
+                    $primary = $productName ?: ($descIsJunk ? '' : $descRaw);
+                    $secondary = ($productName && ! $descIsJunk && strcasecmp($descRaw, $productName) !== 0) ? $descRaw : null;
+                @endphp
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ $item->description }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ $primary }}</div>
+                        @if ($secondary)
+                            <div style="font-size: 9px; color: #555; margin-top: 2px;">{{ $secondary }}</div>
+                        @endif
+                    </td>
                     <td class="mono">{{ $item->hsn_sac }}</td>
                     <td class="tr">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="tr mono">{{ $inr($item->rate) }}</td>

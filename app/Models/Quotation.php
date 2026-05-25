@@ -71,7 +71,11 @@ class Quotation extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(QuotationItem::class);
+        // Deterministic line order. quotation_items doesn't carry a sort_order
+        // column yet (would need a migration), so id is the best we have —
+        // since update() deletes + recreates items in array order, id mirrors
+        // the row position as the user last saw it.
+        return $this->hasMany(QuotationItem::class)->orderBy('id');
     }
 
     public function convertedInvoice(): BelongsTo
@@ -136,5 +140,76 @@ class Quotation extends Model
             return null;
         }
         return (int) now()->startOfDay()->diffInDays($this->valid_until->startOfDay(), false);
+    }
+
+    /**
+     * Status-aware share message — same single-source-of-truth pattern as
+     * Invoice::shareMessageText() so WhatsApp and email defaults stay in sync.
+     *
+     * Branches:
+     *   • Accepted → thank-you + "we'll proceed"
+     *   • Declined → minimal "noted, get in touch if you change your mind"
+     *   • Expired  → "this quote has expired; let us know if you'd like a fresh quote"
+     *   • Sent/Draft → standard "find attached" with validity countdown
+     */
+    public function shareMessageText(): string
+    {
+        $cust = $this->customer;
+        $company = $this->company;
+        $name = trim($cust?->name ?? '') ?: 'there';
+        $business = trim($company?->name ?? '') ?: 'Us';
+        $number = $this->quote_number ?: ('#' . $this->id);
+        $grand = number_format((float) $this->grand_total, 2);
+        $url = ! $this->isDraft() && ! $this->isDeclined()
+            ? \App\Http\Controllers\QuotationShareController::makePublicUrl($this)
+            : null;
+
+        $lines = ["Hi {$name},", ''];
+
+        if ($this->isAccepted() || $this->isConverted()) {
+            $lines[] = "Thank you for accepting Quotation {$number}.";
+            $lines[] = "We'll proceed with the next steps and keep you posted.";
+            $lines[] = '';
+            $lines[] = "Appreciate your business. — {$business}";
+            return implode("\n", $lines);
+        }
+
+        if ($this->isDeclined()) {
+            $lines[] = "Noted — Quotation {$number} has been declined. Do reach out anytime if you'd like a fresh proposal.";
+            $lines[] = '';
+            $lines[] = "Thanks, — {$business}";
+            return implode("\n", $lines);
+        }
+
+        if ($this->isExpired()) {
+            $lines[] = "Quotation {$number} for ₹{$grand} has expired.";
+            $lines[] = "Happy to share an updated quote whenever you're ready.";
+            $lines[] = '';
+            $lines[] = "Thanks, — {$business}";
+            return implode("\n", $lines);
+        }
+
+        $lines[] = "Sharing Quotation {$number} for ₹{$grand}.";
+        if ($this->valid_until) {
+            $lines[] = "Valid until: " . $this->valid_until->format('d M Y') . ".";
+        }
+        if ($url) {
+            $lines[] = '';
+            $lines[] = "View & download: {$url}";
+        }
+        $lines[] = '';
+        $lines[] = "Let me know if you'd like to proceed or have any questions.";
+        $lines[] = "Thanks, — {$business}";
+
+        return implode("\n", $lines);
+    }
+
+    public function whatsAppShareLink(): ?string
+    {
+        $phone = $this->customer?->phone;
+        if (! $phone) return null;
+        $digits = preg_replace('/[^0-9]/', '', $phone);
+        if (strlen($digits) < 10) return null;
+        return 'https://wa.me/' . $digits . '?text=' . rawurlencode($this->shareMessageText());
     }
 }

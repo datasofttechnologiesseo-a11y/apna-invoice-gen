@@ -27,7 +27,9 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('onboarding.index', absolute: false));
+        // Quick-invoice UX: login lands on the dashboard. The dashboard shows a
+        // setup checklist for incomplete profiles, but never forces the wizard.
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

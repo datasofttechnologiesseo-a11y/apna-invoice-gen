@@ -7,22 +7,11 @@
     $waDigits = $cust?->phone ? preg_replace('/[^0-9]/', '', $cust->phone) : '';
     $defaultSubject = ($c->name ?? 'Quotation') . ' · Quotation ' . $number;
 
-    $defaultBody = "Hi " . ($cust->name ?? 'there') . ",\n\n"
-        . "Please find attached our quotation " . $number . " "
-        . "dated " . $quotation->quote_date?->format('d M Y')
-        . " for ₹" . inr($quotation->grand_total) . ".\n\n"
-        . ($quotation->valid_until
-            ? "This quote is valid until " . $quotation->valid_until->format('d M Y') . ".\n\n"
-            : "")
-        . "Let me know if you'd like to proceed or have any questions.\n\n"
-        . "Warm regards,\n"
-        . $c->name;
-
-    $waText = "Quotation " . $number . " from " . ($c->name ?? '')
-        . "\nAmount: ₹" . inr($quotation->grand_total)
-        . ($quotation->valid_until ? "\nValid until: " . $quotation->valid_until->format('d M Y') : "")
-        . "\n\nView & download: " . $publicUrl;
-    $waLink = 'https://wa.me/' . $waDigits . '?text=' . rawurlencode($waText);
+    // Status-aware message body — accepted/declined/expired branches matter
+    // here because customers don't want a "find attached" message after
+    // they've already declined the quote. See Quotation::shareMessageText().
+    $defaultBody = $quotation->shareMessageText();
+    $waLink = $quotation->whatsAppShareLink() ?? '';
 @endphp
 
 <div x-data="{ open: null }" class="bg-white shadow sm:rounded-lg">

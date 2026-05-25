@@ -1,7 +1,7 @@
 @props([
     // Primary CTA — defaults to "New invoice", which is the most-pressed
     // button in the app for the target audience (SMEs, freelancers).
-    'href' => route('invoices.templates'),
+    'href' => route('invoices.create'),
     'label' => 'New invoice',
 ])
 

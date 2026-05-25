@@ -9,7 +9,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                     GSTR-1 (this month)
                 </a>
-                <a href="{{ route('invoices.templates') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
+                <a href="{{ route('invoices.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     New invoice
                 </a>
@@ -42,9 +42,9 @@
                 @if ($invoices->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No invoices match that filter' : 'No invoices yet' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Create your first invoice — it takes about 30 seconds once your customer and product details are saved.' }}"
-                        actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.templates') }}"
+                        title="{{ request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!' }}"
+                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done — share on WhatsApp from the next screen.' }}"
+                        actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.create') }}"
                         actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create invoice' }}"
                         :secondaryHref="request('search') || request('status') ? null : route('help')"
                         :secondaryLabel="request('search') || request('status') ? null : 'Read the how-to guide'"

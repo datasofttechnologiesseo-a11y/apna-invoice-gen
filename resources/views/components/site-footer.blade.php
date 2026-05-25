@@ -187,6 +187,32 @@
             {{-- Divider --}}
             <div class="my-6 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></div>
 
+            {{-- "We're here for you" support row — keeps the user from feeling
+                 stranded. Sits above the legal line so it reads as the primary
+                 message, not boilerplate. Mailto on email so a tap opens the
+                 native compose sheet on mobile. --}}
+            <div class="rounded-xl bg-white/5 ring-1 ring-white/10 px-4 py-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                <div class="flex items-center gap-3 text-gray-200">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-saffron-500/15 ring-1 ring-saffron-500/40 text-saffron-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10c0 3.866-3.582 7-8 7a8.84 8.84 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
+                    </span>
+                    <div class="leading-tight">
+                        <div class="font-semibold text-white">Need help? We're a message away.</div>
+                        <div class="text-xs text-gray-400">No bots, no queues — real humans from the Datasoft team.</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a href="mailto:support@datasofttechnologies.com" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        support@datasofttechnologies.com
+                    </a>
+                    <a href="{{ route('help') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-saffron-500/15 hover:bg-saffron-500/25 ring-1 ring-saffron-500/40 text-saffron-100 text-xs font-semibold transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Help &amp; FAQ
+                    </a>
+                </div>
+            </div>
+
             {{-- Bottom strip --}}
             <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">

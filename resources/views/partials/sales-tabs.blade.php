@@ -43,7 +43,7 @@
                 'cta_bg'          => 'bg-brand-700 hover:bg-brand-800',
                 'bg_active'       => 'bg-gradient-to-br from-brand-50/80 via-white to-saffron-50/30',
             ],
-            'create_route' => route('invoices.templates'),
+            'create_route' => route('invoices.create'),
             'create_label' => 'New invoice',
             // Stat sub-label
             'stat_key'   => 'open',

@@ -19,7 +19,15 @@
 <div x-data="quickCustomerModal()"
      x-show="open"
      x-cloak
-     @open-quick-customer.window="open = true; $nextTick(() => $refs.nameInput?.focus())"
+     @open-quick-customer.window="
+        open = true;
+        if ($event.detail && $event.detail.name) {
+            // Pre-fill the name field with whatever the user typed in the combobox
+            // so they don't retype. Empty/null detail just opens an empty modal.
+            form.name = $event.detail.name;
+        }
+        $nextTick(() => $refs.nameInput?.focus());
+     "
      @keydown.escape.window="open = false"
      class="fixed inset-0 z-50 flex items-center justify-center p-4">
 

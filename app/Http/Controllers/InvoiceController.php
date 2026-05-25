@@ -182,14 +182,9 @@ class InvoiceController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
 
-        if (! $company->state_id) {
-            return redirect()->route('company.edit')
-                ->with('status', 'Set your company state before creating invoices — GST place-of-supply needs it.');
-        }
-        if ($company->customers()->count() === 0) {
-            return redirect()->route('customers.create')
-                ->with('status', 'Add at least one customer to ' . $company->name . ' before creating an invoice.');
-        }
+        // Setup is no longer a hard gate. The form itself shows nudges for missing
+        // company state / customers, and lets the user create a customer inline.
+        // Anyone who clicks "Browse templates" expects to see templates — show them.
 
         $calc = $this->calculator;
         $templates = collect(config('invoice_templates'))->map(function ($tpl) use ($calc) {
@@ -210,17 +205,14 @@ class InvoiceController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
 
-        if (! $company->state_id) {
-            return redirect()->route('company.edit')
-                ->with('status', 'Set your company state before creating invoices — GST place-of-supply needs it.');
-        }
+        // Setup is NOT a hard gate. New users land on a blank invoice and the
+        // form's inline nudges + "+ New customer" modal let them fill missing
+        // pieces without leaving. Missing company state shows a banner above
+        // the form (handled in the view) — the calculator falls back to
+        // interstate (IGST) when company state is null.
 
-        $customers = $company->customers()->orderBy('name')->get();
-        if ($customers->isEmpty()) {
-            return redirect()->route('customers.create')
-                ->with('status', 'Add at least one customer before creating an invoice.');
-        }
-
+        // Eager-load state so the combobox can show "Acme — Maharashtra" without N+1.
+        $customers = $company->customers()->with('state:id,name')->orderBy('name')->get();
         $states = State::orderBy('name')->get();
 
         $templateKey = $request->query('template');
@@ -254,7 +246,9 @@ class InvoiceController extends Controller
     {
         $user = $request->user();
         $company = $user->ensureCompany();
-        $data = $this->validateInvoice($request, $company->id);
+        $data = $this->validateInvoice($request, $company);
+        // Safety net: backfill blank/"0" descriptions from the product name.
+        $data = $this->hydrateProductDescriptions($data, $company->id);
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
@@ -301,16 +295,30 @@ class InvoiceController extends Controller
             return $invoice;
         });
 
-        return redirect()->route('invoices.show', $invoice)->with('status', 'Draft invoice created.');
+        // "Save & Download PDF" one-click flow: the form posts post_save_action=pdf.
+        // Send the user to the show page with ?download=1; an unobtrusive script
+        // on that page triggers the PDF download once the page is rendered.
+        $action = $request->input('post_save_action');
+        $redirect = redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => $action === 'pdf' ? 1 : null]);
+        return $redirect->with('status', $action === 'pdf' ? 'Draft saved — PDF downloading.' : 'Draft invoice created.');
     }
 
     public function show(Request $request, Invoice $invoice): View
     {
         $this->authorizeInvoice($request, $invoice);
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
+        // Eager-load items.product so the PDF/show description fallback (when
+        // legacy data has description="0" or empty) can render product->name
+        // without N+1 queries.
+        $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
 
-        return view('invoices.show', compact('invoice', 'amountInWords'));
+        // First-invoice celebration: cheap COUNT, only matters once in a user's
+        // lifetime. The view also gates on localStorage so revisits don't repeat
+        // the moment. Both gates together = banner fires exactly once for real.
+        $isFirstFinalized = $invoice->finalized_at !== null
+            && $request->user()->invoices()->whereNotNull('finalized_at')->count() === 1;
+
+        return view('invoices.show', compact('invoice', 'amountInWords', 'isFirstFinalized'));
     }
 
     public function edit(Request $request, Invoice $invoice): View
@@ -322,7 +330,7 @@ class InvoiceController extends Controller
         // company, not the currently-active company. Lets users edit invoices
         // that belong to a non-active company without needing to switch first.
         $company = $invoice->company;
-        $customers = $company->customers()->orderBy('name')->get();
+        $customers = $company->customers()->with('state:id,name')->orderBy('name')->get();
         $states = State::orderBy('name')->get();
         $invoice->load('items');
 
@@ -371,7 +379,9 @@ class InvoiceController extends Controller
         }
 
         $company = $invoice->company;
-        $data = $this->validateInvoice($request, $company->id);
+        $data = $this->validateInvoice($request, $company);
+        // Safety net: backfill blank/"0" descriptions from the product name.
+        $data = $this->hydrateProductDescriptions($data, $company->id);
         $user = $request->user();
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
@@ -413,7 +423,9 @@ class InvoiceController extends Controller
             $invoice->items()->createMany($calc['items']);
         });
 
-        return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice updated.');
+        $action = $request->input('post_save_action');
+        $redirect = redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => $action === 'pdf' ? 1 : null]);
+        return $redirect->with('status', $action === 'pdf' ? 'Invoice saved — PDF downloading.' : 'Invoice updated.');
     }
 
     public function destroy(Request $request, Invoice $invoice): RedirectResponse
@@ -656,6 +668,12 @@ class InvoiceController extends Controller
         if ($record->status === 'sent') {
             return back()->with('status', "Reminder sent via {$data['channel']} to {$record->recipient}.");
         }
+        if ($record->status === 'skipped') {
+            // Not a failure — the invoice was paid (or cancelled) between the
+            // eligibility check and the send. Tell the user politely, not with
+            // a red error banner.
+            return back()->with('status', $record->error ?: 'No reminder needed — invoice is already settled.');
+        }
         return back()->withErrors(['reminder' => $record->error ?: 'Failed to send reminder.']);
     }
 
@@ -802,7 +820,7 @@ class InvoiceController extends Controller
     public function pdf(Request $request, Invoice $invoice): Response
     {
         $this->authorizeInvoice($request, $invoice);
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
+        $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
         $style = $invoice->style ?: 'classic';
 
@@ -828,8 +846,17 @@ class InvoiceController extends Controller
     public function printView(Request $request, Invoice $invoice): View
     {
         $this->authorizeInvoice($request, $invoice);
-        $invoice->load(['items', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
+        $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
+
+        // Thermal 80mm receipt layout for kirana/retail counter printers (2"/3").
+        // Same data, different template — @page size: 80mm + single-column flow.
+        // Selected via ?format=thermal so the existing "Print view" button keeps
+        // its A4 behaviour and the new "Thermal print" button passes the flag.
+        $format = $request->query('format') === 'thermal' ? 'thermal' : 'a4';
+        if ($format === 'thermal') {
+            return view('invoices.print-thermal', compact('invoice', 'amountInWords'));
+        }
 
         return view('invoices.print', compact('invoice', 'amountInWords'));
     }
@@ -839,8 +866,71 @@ class InvoiceController extends Controller
         abort_unless($invoice->user_id === $request->user()->id, 403);
     }
 
-    private function validateInvoice(Request $request, int $companyId): array
+    /**
+     * Server-side safety net for line-item descriptions.
+     *
+     * If the JS combobox failed to propagate the product name into the
+     * description field — or if the user typed a placeholder like "0" — fall
+     * back to the product's name so the PDF doesn't end up showing "0" or
+     * an empty description column. We never overwrite a real, meaningful
+     * description that the user typed; we only fill the obviously-bad ones.
+     */
+    private function hydrateProductDescriptions(array $data, int $companyId): array
     {
+        if (empty($data['items']) || ! is_array($data['items'])) {
+            return $data;
+        }
+
+        // Collect product ids referenced by any item to fetch in one query.
+        $productIds = collect($data['items'])
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($productIds->isEmpty()) {
+            return $data;
+        }
+
+        $productNames = \App\Models\Product::query()
+            ->where('company_id', $companyId)
+            ->whereIn('id', $productIds)
+            ->pluck('name', 'id');
+
+        foreach ($data['items'] as $i => $item) {
+            $pid = $item['product_id'] ?? null;
+            if (! $pid || ! isset($productNames[$pid])) {
+                continue;
+            }
+            $desc = trim((string) ($item['description'] ?? ''));
+            // Treat empty / "0" / "0.0" / "0.00" etc. as "needs fallback" — these
+            // are the failure modes we've seen from a broken combobox or a stray
+            // numeric paste. A real description like "Item #0" passes through.
+            $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
+            if ($looksLikeJunk) {
+                $data['items'][$i]['description'] = $productNames[$pid];
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Validate the invoice form.
+     *
+     * Accepts the full Company instance (not just id) so HSN/SAC validation
+     * can be conditional: HSN is legally required ONLY when at least one
+     * party is GST-registered (Rule 46(g)). Cash sales between two
+     * unregistered parties don't need HSN — forcing it would be friction
+     * without compliance value.
+     */
+    private function validateInvoice(Request $request, \App\Models\Company $company): array
+    {
+        $companyId = $company->id;
+        $customerId = (int) $request->input('customer_id');
+        $customer = $customerId ? $company->customers()->find($customerId) : null;
+        $hsnRequired = ! empty($company->gstin) || ! empty($customer?->gstin);
+
         return $request->validate([
             'customer_id' => ['required', Rule::exists('customers', 'id')->where('company_id', $companyId)],
             'invoice_date' => ['required', 'date'],
@@ -871,11 +961,13 @@ class InvoiceController extends Controller
                 'nullable',
                 Rule::exists('products', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
-            // Cap at 150 — the invoice_items.description column is VARCHAR(255),
-            // and 150 is plenty for a real line-item description. Keeping validation
-            // below the column size prevents a DB 1406 leaking a 500 page.
-            'items.*.description' => ['required', 'string', 'max:150'],
-            'items.*.hsn_sac' => ['required', 'string', 'max:10'],
+            // Description is OPTIONAL — if blank and a product is picked, the
+            // server backfills it from the product's name (see hydrateProduct-
+            // Descriptions). Cap at 150 — the invoice_items.description column
+            // is VARCHAR(255), and 150 is plenty for a real line-item description.
+            'items.*.description' => ['nullable', 'string', 'max:150'],
+            // HSN required only when either party is GST-registered.
+            'items.*.hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'max:10'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],

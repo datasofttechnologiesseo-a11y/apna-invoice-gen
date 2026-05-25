@@ -35,8 +35,8 @@
                 @if ($products->isEmpty())
                     <x-empty-state
                         icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        title="{{ request('search') || request('kind') ? 'No products match that filter' : 'No products yet' }}"
-                        description="{{ request('search') || request('kind') ? 'Try a different search term or clear the filter.' : 'Save the things you sell — name, HSN/SAC code, unit and default rate. On the invoice form, picking a product auto-fills all those fields so one customer + two clicks = an invoice.' }}"
+                        title="{{ request('search') || request('kind') ? 'No products match that filter' : 'Save the things you sell' }}"
+                        description="{{ request('search') || request('kind') ? 'Try a different search term or clear the filter.' : 'Name, HSN/SAC, unit, price, GST% — saved once, auto-filled forever. You can also create products on the fly while typing an invoice, no need to come back here.' }}"
                         actionHref="{{ request('search') || request('kind') ? route('products.index') : route('products.create') }}"
                         actionLabel="{{ request('search') || request('kind') ? 'Clear filters' : 'Add your first product' }}"
                     />

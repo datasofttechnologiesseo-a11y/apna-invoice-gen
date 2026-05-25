@@ -118,6 +118,7 @@ class QuotationController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
         $data = $this->validateQuotation($request, $company->id);
+        $data = $this->hydrateProductDescriptions($data, $company->id);
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
@@ -160,7 +161,7 @@ class QuotationController extends Controller
     public function show(Request $request, Quotation $quotation): View
     {
         abort_unless($quotation->user_id === $request->user()->id, 403);
-        $quotation->load(['customer', 'company.state', 'items', 'convertedInvoice']);
+        $quotation->load(['customer', 'company.state', 'items.product:id,name', 'convertedInvoice']);
         $amountInWords = NumberToWords::indianRupees((float) $quotation->grand_total, $quotation->currency);
         return view('quotations.show', compact('quotation', 'amountInWords'));
     }
@@ -196,6 +197,7 @@ class QuotationController extends Controller
 
         $company = $quotation->company;
         $data = $this->validateQuotation($request, $company->id);
+        $data = $this->hydrateProductDescriptions($data, $company->id);
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
@@ -381,7 +383,7 @@ class QuotationController extends Controller
     public function pdf(Request $request, Quotation $quotation): Response
     {
         abort_unless($quotation->user_id === $request->user()->id, 403);
-        $quotation->load(['customer.state', 'company.state', 'items']);
+        $quotation->load(['customer.state', 'company.state', 'items.product:id,name']);
         $amountInWords = NumberToWords::indianRupees((float) $quotation->grand_total, $quotation->currency);
 
         // Default to ink-saver ($print=true). Pass ?color=1 to get the
@@ -393,6 +395,37 @@ class QuotationController extends Controller
 
         $filename = ($quotation->quote_number ?: 'quotation-draft-' . $quotation->id) . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Server-side safety net: if the line-item description is blank or just "0",
+     * fill it from the picked product's name. Mirrors InvoiceController so
+     * quotations don't end up with "0" in the description column on the PDF
+     * when the JS combobox fails to propagate the product name.
+     */
+    private function hydrateProductDescriptions(array $data, int $companyId): array
+    {
+        if (empty($data['items']) || ! is_array($data['items'])) {
+            return $data;
+        }
+        $productIds = collect($data['items'])->pluck('product_id')->filter()->unique()->values();
+        if ($productIds->isEmpty()) {
+            return $data;
+        }
+        $productNames = \App\Models\Product::query()
+            ->where('company_id', $companyId)
+            ->whereIn('id', $productIds)
+            ->pluck('name', 'id');
+        foreach ($data['items'] as $i => $item) {
+            $pid = $item['product_id'] ?? null;
+            if (! $pid || ! isset($productNames[$pid])) continue;
+            $desc = trim((string) ($item['description'] ?? ''));
+            $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
+            if ($looksLikeJunk) {
+                $data['items'][$i]['description'] = $productNames[$pid];
+            }
+        }
+        return $data;
     }
 
     private function validateQuotation(Request $request, int $companyId): array
@@ -409,7 +442,8 @@ class QuotationController extends Controller
             'terms' => ['nullable', 'string', 'max:2000'],
             'style' => ['nullable', 'string', 'in:classic,bold,minimal,retail,warm'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.description' => ['required', 'string', 'max:255'],
+            // Description optional — server backfills from product name if blank.
+            'items.*.description' => ['nullable', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],

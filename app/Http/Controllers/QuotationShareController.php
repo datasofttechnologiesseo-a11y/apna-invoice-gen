@@ -92,7 +92,7 @@ class QuotationShareController extends Controller
         // declined, kill the link too so a stale forward can't re-open it.
         abort_if($quotation->isDeclined(), 410, 'This quotation has been declined and is no longer available.');
 
-        $quotation->load(['items', 'customer.state', 'company.state']);
+        $quotation->load(['items.product:id,name', 'customer.state', 'company.state']);
         $amountInWords = NumberToWords::indianRupees((float) $quotation->grand_total, $quotation->currency);
         // Default ink-saver for the public link too — recipients almost always
         // print rather than re-share digitally.

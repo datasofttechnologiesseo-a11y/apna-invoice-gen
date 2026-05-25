@@ -34,7 +34,7 @@
             "name": "New invoice",
             "short_name": "New invoice",
             "description": "Create a new GST invoice",
-            "url": "/invoices/templates",
+            "url": "/invoices/create",
             "icons": [{ "src": "/brand/apna-invoice-logo.png", "sizes": "192x192" }]
         },
         {

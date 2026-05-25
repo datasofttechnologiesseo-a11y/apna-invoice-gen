@@ -501,39 +501,72 @@
 
                     {{-- Inputs + breakdown --}}
                     <div class="p-6 md:p-7 space-y-4 text-sm">
-                        {{-- Amount + quick presets (one-tap common Indian invoice amounts) --}}
+
+                        {{-- "Live calculator — tap to recalculate" affordance line.
+                             Visual cue that this whole panel is an interactive tool,
+                             not a static screenshot. Pulsing dot reinforces "live". --}}
+                        <div class="flex items-center justify-between gap-2 -mt-1 mb-1">
+                            <div class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-money-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-money-500 animate-[pulse_2s_ease-in-out_infinite]"></span>
+                                Live calculator — tap any field to recalculate instantly
+                            </div>
+                        </div>
+
+                        {{-- Amount + quick presets (one-tap common Indian invoice amounts).
+                             Heavier border + pencil cue + clear button so it reads as a
+                             primary editable surface, not a read-only field. --}}
                         <div>
-                            <label for="gst-amount" class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Amount</label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold pointer-events-none text-xl leading-none">₹</span>
+                            <label for="gst-amount" class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    Amount
+                                </span>
+                                <span class="text-[10px] font-medium text-gray-400 normal-case tracking-normal">Type your amount ↓</span>
+                            </label>
+                            <div class="relative group">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-700 font-bold pointer-events-none text-xl leading-none">₹</span>
+                                {{-- Heavier border + saffron focus ring makes it obvious this is the
+                                     primary input. Group-hover shows the field comes alive on hover. --}}
                                 <input id="gst-amount" type="number" min="0" step="any" inputmode="decimal" x-model.number="amount"
-                                       class="w-full pl-12 pr-3 py-3.5 text-xl font-mono font-extrabold tabular-nums border border-gray-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none">
+                                       placeholder="0"
+                                       class="w-full pl-12 pr-12 py-4 text-2xl font-mono font-extrabold tabular-nums bg-white border-2 border-brand-200 hover:border-brand-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-4 focus:ring-brand-200/60 focus:outline-none transition cursor-text">
+                                {{-- Clear button — appears only when there's a value. Quick reset
+                                     so users can swap amounts without selecting + deleting. --}}
+                                <button type="button" @click="amount = 0; $nextTick(() => document.getElementById('gst-amount')?.focus())"
+                                        x-show="parseFloat(amount) > 0"
+                                        x-cloak
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-gray-600 transition"
+                                        aria-label="Clear amount" title="Clear">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
                             </div>
                             <div class="mt-2 flex items-center gap-1.5 flex-wrap">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mr-1">Quick:</span>
                                 <template x-for="p in presets" :key="p.v">
                                     <button type="button" @click="amount = p.v"
-                                            :class="parseFloat(amount) === p.v ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 hover:text-brand-700'"
+                                            :class="parseFloat(amount) === p.v ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 hover:text-brand-700 hover:shadow-sm'"
                                             class="inline-flex items-center justify-center min-h-[44px] px-2.5 text-xs font-bold border rounded-md transition tabular-nums"
                                             x-text="p.label"></button>
                                 </template>
                             </div>
                         </div>
 
-                        {{-- Rate dropdown --}}
+                        {{-- GST Rate as a button row (was a native <select>). Same pill-toggle
+                             pattern as Supply / Amount-is below — consistent, obviously tappable,
+                             and the selected rate is visible without opening a dropdown. Active
+                             pill gets the brand fill so the current rate reads at a glance. --}}
                         <div>
-                            <label for="gst-rate" class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">GST Rate</label>
-                            <div class="relative">
-                                <select id="gst-rate" x-model.number="rate"
-                                        class="w-full appearance-none pl-3 pr-9 py-3 text-sm font-bold border border-gray-200 rounded-lg bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none">
-                                    <option value="0">0% — Exempt / Nil-rated</option>
-                                    <option value="5">5%</option>
-                                    <option value="12">12%</option>
-                                    <option value="18">18%</option>
-                                    <option value="28">28%</option>
-                                </select>
-                                <svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">GST Rate</label>
+                            <div class="grid grid-cols-5 gap-1 p-1 bg-gray-100 rounded-lg">
+                                @foreach ([0, 5, 12, 18, 28] as $r)
+                                    <button type="button" @click="rate = {{ $r }}"
+                                            :class="rate === {{ $r }} ? 'bg-brand-600 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
+                                            class="inline-flex items-center justify-center min-h-[44px] text-sm font-extrabold rounded transition tabular-nums">
+                                        {{ $r }}%
+                                    </button>
+                                @endforeach
                             </div>
+                            <p class="mt-1.5 text-[10px] text-gray-400">5 most-used slabs. <a href="{{ route('blog.index') }}" class="text-brand-600 hover:underline">Need 0.10%, 1%, 3%, 40%?</a> Use the full GST app.</p>
                         </div>
 
                         {{-- Toggles --}}
@@ -569,39 +602,53 @@
                             </div>
                         </template>
 
-                        {{-- Breakdown --}}
+                        {{-- Breakdown.
+
+                             Consistent colour semantics across the panel:
+                               • GREEN (money) = your retained value (taxable amount)
+                               • SAFFRON       = tax going to government (CGST / SGST / IGST)
+
+                             CGST and SGST share the same saffron family (just different
+                             shades) because they're equal twin taxes — same rate, same
+                             amount, only different recipient (Centre vs State). Using
+                             two unrelated colours implied they were different kinds. --}}
                         <div class="pt-3 border-t border-gray-100 space-y-1.5">
-                            <div class="flex justify-between text-gray-600 text-xs">
-                                <span>Taxable amount</span>
+                            <div class="flex justify-between text-gray-700 text-xs">
+                                <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-money-500"></span>Taxable amount <span class="text-gray-400">(your value)</span></span>
                                 <span class="font-mono tabular-nums">₹<span x-text="fmt(base)"></span></span>
                             </div>
                             <template x-if="scope === 'intra'">
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>CGST @ <span x-text="halfRate"></span>%</span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>CGST @ <span x-text="halfRate"></span>% <span class="text-gray-400">(to Centre)</span></span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(cgst)"></span></span>
                                     </div>
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-money-500"></span>SGST @ <span x-text="halfRate"></span>%</span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-400"></span>SGST @ <span x-text="halfRate"></span>% <span class="text-gray-400">(to State)</span></span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(sgst)"></span></span>
                                     </div>
                                 </div>
                             </template>
                             <template x-if="scope === 'inter'">
                                 <div class="flex justify-between text-gray-600 text-xs">
-                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>IGST @ <span x-text="rate"></span>%</span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>IGST @ <span x-text="rate"></span>% <span class="text-gray-400">(to Centre, split later)</span></span>
                                     <span class="font-mono tabular-nums">₹<span x-text="fmt(igst)"></span></span>
                                 </div>
                             </template>
 
-                            {{-- Visual tax-vs-base bar (where every rupee goes) --}}
+                            {{-- Visual tax-vs-base bar (where every rupee goes). Same
+                                 GREEN = yours / SAFFRON = tax semantics as the dots above. --}}
                             <div class="pt-2">
-                                <div class="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+                                <div class="flex items-center justify-between text-[10px] text-gray-500 mb-1">
                                     <span>Where every ₹100 goes</span>
-                                    <span class="font-mono"><span x-text="(100 - taxPct).toFixed(0)"></span>% you · <span x-text="taxPct.toFixed(0)"></span>% tax</span>
+                                    <span>
+                                        <span class="font-semibold text-money-700">You keep <span x-text="(100 - taxPct).toFixed(0)"></span>%</span>
+                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="font-semibold text-saffron-700">₹<span x-text="fmt(tax)"></span> to GST</span>
+                                    </span>
                                 </div>
                                 <div class="h-2 bg-gray-100 rounded-full overflow-hidden flex" role="img" aria-label="Tax vs base ratio">
-                                    <div class="bg-gradient-to-r from-money-400 to-money-500" :style="`width: ${100 - taxPct}%`" title="Your money"></div>
+                                    <div class="bg-gradient-to-r from-money-400 to-money-500" :style="`width: ${100 - taxPct}%`" title="Your retained value"></div>
                                     <div class="bg-gradient-to-r from-saffron-400 to-saffron-500" :style="`width: ${taxPct}%`" title="GST to government"></div>
                                 </div>
                             </div>

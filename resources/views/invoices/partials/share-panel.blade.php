@@ -9,25 +9,13 @@
     $docTitle = $invoice->documentTitle();
     $defaultSubject = ($c->name ?? 'Invoice') . ' · ' . $docTitle . ' ' . ($invoice->invoice_number ?? '#' . $invoice->id);
 
-    $defaultBody = "Hi " . ($cust->name ?? 'there') . ",\n\n"
-        . "Please find attached " . strtolower($docTitle) . " " . ($invoice->invoice_number ?? '') . " "
-        . "dated " . $invoice->invoice_date?->format('d M Y') . " for ₹" . inr($invoice->grand_total) . ".\n\n"
-        . ((float) $invoice->balance > 0
-            ? "Balance due: ₹" . inr($invoice->balance) . (
-                $invoice->due_date ? " (due by " . $invoice->due_date->format('d M Y') . ")" : ""
-              ) . ".\n\n"
-            : "Thank you for your prompt payment — balance is clear.\n\n"
-          )
-        . ($c->upi_id ? "Pay via UPI: " . $c->upi_id . "\n" : "")
-        . "Let me know if you have any questions.\n\n"
-        . "Warm regards,\n"
-        . $c->name;
-
-    $waText = $docTitle . " " . ($invoice->invoice_number ?? '') . " from " . ($c->name ?? '')
-        . "\nAmount: ₹" . inr($invoice->grand_total)
-        . ((float) $invoice->balance > 0 ? "\nBalance due: ₹" . inr($invoice->balance) : "")
-        . "\n\nView & download: " . $publicUrl;
-    $waLink = 'https://wa.me/' . $waDigits . '?text=' . rawurlencode($waText);
+    // Payment-status-aware message body (paid → thank you, partial → balance,
+    // overdue → days, future → due-date language). Single source of truth on
+    // the Invoice model — same text used by WhatsApp share, email default body,
+    // and the WhatsApp reminder channel, so customers never see contradictory
+    // copy across channels. Fixes the Vyapar "Balance Due after paying" complaint.
+    $defaultBody = $invoice->shareMessageText('share');
+    $waLink = $invoice->whatsAppShareLink('share') ?? '';
 @endphp
 
 <div x-data="{ open: null }" class="bg-white shadow sm:rounded-lg">
