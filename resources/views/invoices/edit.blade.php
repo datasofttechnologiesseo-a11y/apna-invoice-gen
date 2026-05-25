@@ -394,14 +394,44 @@
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-500 font-semibold">GST rate</label>
-                                    {{-- Short labels (just "18%") so the cell stays compact.
-                                         Full descriptive text and the regulatory note are kept
-                                         in the option's title for tooltip-on-hover. --}}
-                                    <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="mt-1 block w-full border-gray-300 rounded text-sm">
-                                        @foreach (config('gst.rates') as $r)
-                                            <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                    {{-- Compact horizontal pill toggles for the 5 common rates +
+                                         a tiny "Other" dropdown for the 7 rare ones (0.10, 0.25,
+                                         1, 1.5, 3, 7.5, 40). Covers ~95% of invoices in one tap,
+                                         keeps the rare-rate UX one extra click but doesn't waste
+                                         vertical space. The hidden input is the actual form value
+                                         so Alpine reactivity stays consistent with the rest. --}}
+                                    @php
+                                        $commonRates = [0, 5, 12, 18, 28];
+                                        $rareRates = collect(config('gst.rates'))->whereNotIn('value', $commonRates)->values();
+                                    @endphp
+                                    <input type="hidden" :name="`items[${idx}][gst_rate]`" :value="item.gst_rate">
+                                    <div class="mt-1 grid grid-cols-5 gap-1 p-1 bg-gray-100 rounded-lg">
+                                        @foreach ($commonRates as $r)
+                                            <button type="button"
+                                                    @click="item.gst_rate = {{ $r }}; recompute()"
+                                                    :class="(parseFloat(item.gst_rate) === {{ $r }}) ? 'bg-brand-600 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
+                                                    class="inline-flex items-center justify-center min-h-[40px] text-sm font-extrabold rounded transition tabular-nums">
+                                                {{ $r }}%
+                                            </button>
                                         @endforeach
-                                    </select>
+                                    </div>
+                                    {{-- "Other rate" select — only used for the rare slabs.
+                                         Its current value reflects the row's rate when it's not
+                                         one of the common 5, so the user always sees what's set. --}}
+                                    <div class="mt-1.5 flex items-center gap-2 text-[11px] text-gray-500">
+                                        <span>Or pick a special rate:</span>
+                                        <select @change="item.gst_rate = parseFloat($event.target.value); recompute()"
+                                                class="flex-1 border-gray-300 rounded text-xs py-1">
+                                            <option value="">— Other —</option>
+                                            @foreach ($rareRates as $r)
+                                                <option value="{{ $r['value'] }}"
+                                                        :selected="parseFloat(item.gst_rate) === {{ $r['value'] }}"
+                                                        title="{{ $r['label'] . ' — ' . $r['note'] }}">
+                                                    {{ (float) $r['value'] }}% — {{ Str::after($r['label'], '· ') }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="flex justify-between pt-2 border-t text-sm">
                                     <span class="text-gray-500">Line amount</span>
