@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Apna Invoice",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiBaseUrl": "http://10.223.244.14:8741"
+    }
+  }
+}
