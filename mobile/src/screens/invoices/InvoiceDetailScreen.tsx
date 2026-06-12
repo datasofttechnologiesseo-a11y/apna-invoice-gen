@@ -20,6 +20,7 @@ import {
   sendInvoiceReminder,
 } from '../../api/endpoints';
 import { apiErrorMessage } from '../../api/client';
+import { downloadAndShare } from '../../api/files';
 import { Button, Card, Centered, StatusBadge, TextField } from '../../components/ui';
 import { colors, formatINR } from '../../theme';
 import type { InvoicesStackParamList } from '../../navigation/types';
@@ -98,12 +99,11 @@ export default function InvoiceDetailScreen({ route, navigation }: Props) {
     }
   }
 
-  // Opens the signed public PDF in the device browser, which renders/downloads
-  // it natively (works on Android Chrome + iOS Safari over the LAN host).
+  // Downloads the full tax-invoice PDF (the GST copy set — 3 for goods, 2 for
+  // services — same as the web download) and opens the share sheet.
   async function onViewPdf() {
     try {
-      const { url } = await getShareLink(id);
-      await Linking.openURL(url);
+      await downloadAndShare(`/invoices/${id}/pdf`, `invoice-${invoice?.display_number ?? id}.pdf`);
     } catch (e) {
       Alert.alert('Error', apiErrorMessage(e));
     }

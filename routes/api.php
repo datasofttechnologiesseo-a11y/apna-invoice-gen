@@ -89,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('invoices/{invoice}/finalize', [InvoiceController::class, 'finalize']);
     Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel']);
     Route::get('invoices/{invoice}/share-link', [InvoiceController::class, 'shareLink']);
+    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
     Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])->middleware('throttle:5,1');
 
     // Payments (nested under invoice for create; flat for delete)

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppHeader, HeaderAction } from '../../components/AppHeader';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -42,16 +43,14 @@ export default function InvoicesScreen({ navigation }: Props) {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top + 8 }}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Invoices</Text>
-        <Pressable style={styles.newBtn} onPress={() => navigation.navigate('InvoiceEdit', {})}>
-          <Text style={styles.newBtnText}>+ New</Text>
-        </Pressable>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <AppHeader
+        title="Invoices"
+        right={<HeaderAction label="+ New" onPress={() => navigation.navigate('InvoiceEdit', {})} />}
+      />
 
       <TextInput
-        style={styles.search}
+        style={[styles.search, { marginTop: 12 }]}
         placeholder="Search number or customer…"
         placeholderTextColor={colors.muted}
         value={search}

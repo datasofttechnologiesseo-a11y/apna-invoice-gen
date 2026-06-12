@@ -54,5 +54,5 @@ export type MainTabParamList = {
   Customers: NavigatorScreenParams<CustomersStackParamList> | undefined;
   Products: undefined;
   Finance: NavigatorScreenParams<FinanceStackParamList> | undefined;
-  More: NavigatorScreenParams<SettingsStackParamList> | undefined;
+  Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };

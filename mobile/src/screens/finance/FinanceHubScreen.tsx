@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Card } from '../../components/ui';
+import { AppHeader } from '../../components/AppHeader';
 import { colors } from '../../theme';
 import type { FinanceStackParamList } from '../../navigation/types';
 
@@ -30,14 +31,9 @@ export default function FinanceHubScreen() {
   const navigation = useNavigation<Nav>();
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, paddingTop: insets.top + 12 }}
-    >
-      <Text style={styles.title}>Finance</Text>
-      <Text style={styles.subtitle}>Purchases, expenses & GST reports</Text>
-
-      <View style={{ height: 12 }} />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <AppHeader title="Finance" subtitle="Purchases, expenses & GST reports" />
+      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 12 }}>
       {MENU.map((item) => (
         <Pressable key={item.route} onPress={() => navigation.navigate(item.route as never)}>
           <Card style={styles.row}>
@@ -50,7 +46,8 @@ export default function FinanceHubScreen() {
           </Card>
         </Pressable>
       ))}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

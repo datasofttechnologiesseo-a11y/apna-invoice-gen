@@ -12,8 +12,11 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Services\InvoiceCalculator;
+use App\Support\NumberToWords;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -287,6 +290,35 @@ class InvoiceController extends Controller
         );
 
         return new InvoiceResource($invoice->fresh(['items', 'customer.state', 'payments']));
+    }
+
+    /**
+     * Full tax-invoice PDF download — renders the GST copy set (3 for goods,
+     * 2 for services, per CGST Rule 48), identical to the web download. This is
+     * what the mobile "Download PDF" button fetches (the public share link is a
+     * single recipient copy instead).
+     */
+    public function pdf(Request $request, Invoice $invoice): Response
+    {
+        $this->authorizeInvoice($request, $invoice);
+
+        if ($invoice->isDraft()) {
+            return response()->json(['message' => 'Issue the invoice before downloading the PDF.'], 422);
+        }
+
+        $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
+        $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
+        $style = $invoice->style ?: 'classic';
+        $print = ! $request->boolean('color');
+        $copies = $request->has('copies')
+            ? max(1, min(3, (int) $request->input('copies')))
+            : $invoice->defaultCopyCount();
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print', 'copies'))
+            ->setPaper('A4')
+            ->setOption(['isRemoteEnabled' => true]);
+
+        return $pdf->download('invoice-' . $invoice->filenameSafeNumber() . '.pdf');
     }
 
     /** A shareable signed PDF link (30-day TTL), same as the web "Copy link". */

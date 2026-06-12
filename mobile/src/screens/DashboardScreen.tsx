@@ -7,6 +7,7 @@ import { getDashboard } from '../api/endpoints';
 import { apiErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { Card, Centered, StatusBadge } from '../components/ui';
+import { AppHeader } from '../components/AppHeader';
 import { colors, formatINR } from '../theme';
 import type { MainTabParamList } from '../navigation/types';
 import { ActivityIndicator } from 'react-native';
@@ -51,14 +52,15 @@ export default function DashboardScreen({ navigation }: Props) {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: 16, paddingTop: insets.top + 12, paddingBottom: 32 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-    >
-      <Text style={styles.greeting}>Hi {user?.name?.split(' ')[0]} 👋</Text>
-      <Text style={styles.company}>{company?.name ?? data?.company.name}</Text>
-
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <AppHeader
+        title={`Hi ${user?.name?.split(' ')[0] ?? ''} 👋`}
+        subtitle={company?.name ?? data?.company.name}
+      />
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      >
       <View style={styles.kpiGrid}>
         <Kpi label="Outstanding" value={formatINR(data!.kpis.outstanding)} color={colors.warning} />
         <Kpi label="Overdue" value={formatINR(data!.kpis.overdue)} color={colors.danger} />
@@ -98,7 +100,8 @@ export default function DashboardScreen({ navigation }: Props) {
           </Card>
         ))
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

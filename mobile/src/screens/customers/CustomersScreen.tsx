@@ -13,6 +13,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { AppHeader, HeaderAction } from '../../components/AppHeader';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   createCustomer,
@@ -39,13 +40,8 @@ export default function CustomersScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top + 8 }}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Customers</Text>
-        <Pressable style={styles.newBtn} onPress={() => setEditing('new')}>
-          <Text style={styles.newBtnText}>+ New</Text>
-        </Pressable>
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <AppHeader title="Customers" right={<HeaderAction label="+ New" onPress={() => setEditing('new')} />} />
 
       {isLoading ? (
         <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
