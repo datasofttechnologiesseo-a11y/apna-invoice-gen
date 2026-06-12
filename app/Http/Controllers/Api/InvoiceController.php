@@ -310,11 +310,19 @@ class InvoiceController extends Controller
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
         $style = $invoice->style ?: 'classic';
         $print = ! $request->boolean('color');
-        $copies = $request->has('copies')
-            ? max(1, min(3, (int) $request->input('copies')))
-            : $invoice->defaultCopyCount();
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print', 'copies'))
+        // Caller can pick exactly which copies to print via ?copyTypes=recipient,
+        // transporter,supplier. Falls back to the count-based default (3 for
+        // goods, 2 for services) when no selection is sent.
+        $copyLabels = $request->filled('copyTypes')
+            ? $invoice->copyLabelsFor(array_filter(array_map('trim', explode(',', (string) $request->input('copyTypes')))))
+            : $invoice->copyLabels(
+                $request->has('copies')
+                    ? max(1, min(3, (int) $request->input('copies')))
+                    : $invoice->defaultCopyCount()
+            );
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print', 'copyLabels'))
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 

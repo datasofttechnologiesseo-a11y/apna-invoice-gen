@@ -2,11 +2,13 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { TabIcon } from './icons';
 import { colors } from '../theme';
 
 /**
- * Blue app header with a settings gear on the top-left. Drop it at the top of a
- * main tab screen; the gear jumps to the Settings tab from anywhere.
+ * Blue app header: invoice logo on the top-left (taps to Home), settings gear on
+ * the top-right (jumps to Settings). Drop it at the top of a main tab screen.
+ * An optional `right` action sits just left of the gear.
  */
 export function AppHeader({
   title,
@@ -22,8 +24,8 @@ export function AppHeader({
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-      <Pressable hitSlop={10} style={styles.gear} onPress={() => navigation.navigate('Settings')}>
-        <Text style={styles.gearIcon}>⚙️</Text>
+      <Pressable hitSlop={10} style={styles.logo} onPress={() => navigation.navigate('Home')}>
+        <TabIcon name="home" size={22} color={colors.primary} />
       </Pressable>
       <View style={{ flex: 1 }}>
         <Text style={styles.title} numberOfLines={1}>
@@ -36,6 +38,9 @@ export function AppHeader({
         ) : null}
       </View>
       {right ? <View style={styles.right}>{right}</View> : null}
+      <Pressable hitSlop={10} style={styles.gear} onPress={() => navigation.navigate('Settings')}>
+        <TabIcon name="settings" size={20} color="#fff" />
+      </Pressable>
     </View>
   );
 }
@@ -57,6 +62,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 14,
   },
+  logo: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
   gear: {
     width: 38,
     height: 38,
@@ -64,9 +78,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginLeft: 12,
   },
-  gearIcon: { fontSize: 18 },
   title: { fontSize: 20, fontWeight: '800', color: '#fff' },
   subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
   right: { marginLeft: 12 },

@@ -1,10 +1,11 @@
 import React from 'react';
-import { ActivityIndicator, Text } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../auth/AuthContext';
 import { Centered } from '../components/ui';
+import { TabIcon, type IconName } from '../components/icons';
 import { colors } from '../theme';
 
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -176,14 +177,15 @@ function SettingsNavigator() {
   );
 }
 
-const TAB_ICONS: Record<keyof MainTabParamList, string> = {
-  Home: '🏠',
-  Invoices: '🧾',
-  Quotes: '📝',
-  Customers: '👥',
-  Products: '📦',
-  Finance: '📊',
-  Settings: '⚙️',
+// Icon per visible tab. Home and Settings are intentionally omitted — Home is
+// reached from the header logo, Settings from the header gear; neither shows in
+// the bottom bar.
+const TAB_ICONS: Partial<Record<keyof MainTabParamList, IconName>> = {
+  Invoices: 'invoices',
+  Quotes: 'quotes',
+  Customers: 'customers',
+  Products: 'products',
+  Finance: 'finance',
 };
 
 function MainNavigator() {
@@ -193,18 +195,30 @@ function MainNavigator() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarIcon: ({ color }) => (
-          <Text style={{ fontSize: 18, color }}>{TAB_ICONS[route.name]}</Text>
-        ),
+        tabBarIcon: ({ color, size }) => {
+          const name = TAB_ICONS[route.name];
+          return name ? <TabIcon name={name} color={color} size={size ?? 24} /> : null;
+        },
       })}
     >
-      <Tab.Screen name="Home" component={DashboardScreen} />
+      {/* Hidden from the bar but kept navigable — reached via the header logo.
+          display:'none' collapses the slot so visible tabs space evenly. */}
+      <Tab.Screen
+        name="Home"
+        component={DashboardScreen}
+        options={{ tabBarItemStyle: { display: 'none' } }}
+      />
       <Tab.Screen name="Invoices" component={InvoicesNavigator} />
       <Tab.Screen name="Quotes" component={QuotationsNavigator} />
       <Tab.Screen name="Customers" component={CustomersNavigator} />
       <Tab.Screen name="Products" component={ProductsScreen} />
       <Tab.Screen name="Finance" component={FinanceNavigator} />
-      <Tab.Screen name="Settings" component={SettingsNavigator} />
+      {/* Hidden from the bar but kept navigable so the header gear still works. */}
+      <Tab.Screen
+        name="Settings"
+        component={SettingsNavigator}
+        options={{ tabBarItemStyle: { display: 'none' } }}
+      />
     </Tab.Navigator>
   );
 }

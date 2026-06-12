@@ -242,10 +242,10 @@
 @php
     // CGST Rule 48(1): goods supplies require 3 copies (Original/Recipient,
     // Duplicate/Transporter, Triplicate/Supplier); services need only 2.
-    // Resolved by the controller; fall back to a sensible default if any
-    // legacy caller doesn't pass it.
-    $copies = $copies ?? 1;
-    $copyLabels = $invoice->copyLabels($copies);
+    // The controller passes an explicit $copyLabels list (honouring a caller's
+    // copy selection). Fall back to the count-based default for any legacy
+    // caller that only passes $copies (or neither — e.g. the email attachment).
+    $copyLabels = $copyLabels ?? $invoice->copyLabels($copies ?? 1);
 @endphp
 
 @foreach ($copyLabels as $copyIndex => $copyLabel)

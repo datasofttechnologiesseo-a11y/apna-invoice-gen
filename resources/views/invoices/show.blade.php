@@ -45,12 +45,38 @@
                         </button>
                     </x-confirm-form>
                 @endif
-                <span class="inline-flex rounded overflow-hidden shadow-sm">
-                    <a href="{{ route('invoices.pdf', $invoice) }}" class="px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900" title="Ink-saver download — black on white for printing">Download PDF</a>
-                    <a href="{{ route('invoices.pdf', $invoice, false) . '?color=1' }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-gray-700 text-white hover:bg-gray-800 border-l border-gray-600" title="Download full-colour PDF (uses more ink)" aria-label="Download full-colour PDF (uses more ink)">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
-                    </a>
-                </span>
+                <div class="relative inline-block" x-data="{
+                        open: false,
+                        types: { recipient: true, supplier: false, transporter: false },
+                        base: '{{ route('invoices.pdf', $invoice) }}',
+                        get selected() { return Object.keys(this.types).filter(k => this.types[k]); },
+                        download() {
+                            if (!this.selected.length) return;
+                            window.location = this.base + '?copyTypes=' + this.selected.join(',');
+                            this.open = false;
+                        }
+                    }">
+                    <button type="button" @click="open = !open" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900 rounded shadow-sm">
+                        Download PDF
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-cloak class="absolute left-0 z-20 mt-1 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-sm">
+                        <div class="font-semibold text-gray-700 mb-1">Copies to include</div>
+                        <label class="flex items-start gap-2 py-1.5 cursor-pointer">
+                            <input type="checkbox" x-model="types.recipient" class="mt-0.5">
+                            <span><span class="font-medium text-gray-800">Customer</span><br><span class="text-xs text-gray-500">Original for Recipient</span></span>
+                        </label>
+                        <label class="flex items-start gap-2 py-1.5 cursor-pointer">
+                            <input type="checkbox" x-model="types.supplier" class="mt-0.5">
+                            <span><span class="font-medium text-gray-800">Supplier</span><br><span class="text-xs text-gray-500">Duplicate for Supplier</span></span>
+                        </label>
+                        <label class="flex items-start gap-2 py-1.5 cursor-pointer">
+                            <input type="checkbox" x-model="types.transporter" class="mt-0.5">
+                            <span><span class="font-medium text-gray-800">Delivery</span><br><span class="text-xs text-gray-500">Triplicate for Transporter</span></span>
+                        </label>
+                        <button type="button" @click="download()" :disabled="!selected.length" class="mt-2 w-full px-3 py-1.5 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:opacity-40 disabled:cursor-not-allowed">Download</button>
+                    </div>
+                </div>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
                 {{-- Thermal 80mm receipt — for retail counters with 2"/3" thermal
                      printers. Auto-prints on load; falls back to readable preview

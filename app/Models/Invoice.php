@@ -290,8 +290,33 @@ class Invoice extends Model
         return match ($count) {
             1 => ['Original for Recipient'],
             2 => ['Original for Recipient', 'Duplicate for Supplier'],
-            3 => ['Original for Recipient', 'Duplicate for Transporter', 'Triplicate for Supplier'],
+            3 => ['Original for Recipient', 'Duplicate for Supplier', 'Triplicate for Transporter'],
         };
+    }
+
+    /**
+     * Labels for a caller-selected subset of copies. Accepts any of the keys
+     * 'recipient' (Customer), 'transporter' (Delivery) and 'supplier'
+     * (Supplier); the returned labels are always kept in Rule 48(1) order
+     * regardless of the order the keys are passed in. Unknown keys are ignored;
+     * an empty/invalid selection falls back to a single recipient copy.
+     */
+    public function copyLabelsFor(array $types): array
+    {
+        $map = [
+            'recipient' => 'Original for Recipient',
+            'supplier' => 'Duplicate for Supplier',
+            'transporter' => 'Triplicate for Transporter',
+        ];
+
+        $labels = [];
+        foreach ($map as $key => $label) {
+            if (in_array($key, $types, true)) {
+                $labels[] = $label;
+            }
+        }
+
+        return $labels ?: ['Original for Recipient'];
     }
 
     /**

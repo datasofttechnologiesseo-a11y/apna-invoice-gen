@@ -22,6 +22,7 @@ import {
 import { apiErrorMessage } from '../../api/client';
 import { downloadAndShare } from '../../api/files';
 import { Button, Card, Centered, StatusBadge, TextField } from '../../components/ui';
+import { CopiesPickerModal, type CopyType } from '../../components/CopiesPickerModal';
 import { colors, formatINR } from '../../theme';
 import type { InvoicesStackParamList } from '../../navigation/types';
 
@@ -31,6 +32,7 @@ export default function InvoiceDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
   const qc = useQueryClient();
   const [payAmount, setPayAmount] = useState('');
+  const [copiesPicker, setCopiesPicker] = useState(false);
 
   const { data: invoice, isLoading, isError, error } = useQuery({
     queryKey: ['invoice', id],
@@ -99,11 +101,20 @@ export default function InvoiceDetailScreen({ route, navigation }: Props) {
     }
   }
 
-  // Downloads the full tax-invoice PDF (the GST copy set — 3 for goods, 2 for
-  // services — same as the web download) and opens the share sheet.
-  async function onViewPdf() {
+  // Opens the copy picker; the actual download runs once the user confirms
+  // which copies (Customer / Delivery / Supplier) they want.
+  function onViewPdf() {
+    setCopiesPicker(true);
+  }
+
+  async function downloadCopies(types: CopyType[]) {
+    setCopiesPicker(false);
     try {
-      await downloadAndShare(`/invoices/${id}/pdf`, `invoice-${invoice?.display_number ?? id}.pdf`);
+      const qs = types.length ? `?copyTypes=${types.join(',')}` : '';
+      await downloadAndShare(
+        `/invoices/${id}/pdf${qs}`,
+        `invoice-${invoice?.display_number ?? id}.pdf`,
+      );
     } catch (e) {
       Alert.alert('Error', apiErrorMessage(e));
     }
@@ -283,6 +294,12 @@ export default function InvoiceDetailScreen({ route, navigation }: Props) {
           />
         ) : null}
       </View>
+
+      <CopiesPickerModal
+        visible={copiesPicker}
+        onClose={() => setCopiesPicker(false)}
+        onConfirm={downloadCopies}
+      />
     </ScrollView>
   );
 }
