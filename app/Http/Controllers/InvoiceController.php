@@ -829,12 +829,17 @@ class InvoiceController extends Controller
         $print = ! $request->boolean('color');
 
         // CGST Rule 48(1): goods → 3 copies, services → 2 copies. Auto-detected
-        // from line items, but caller can override with ?copies=1|2|3.
-        $copies = $request->has('copies')
-            ? max(1, min(3, (int) $request->input('copies')))
-            : $invoice->defaultCopyCount();
+        // from line items. Caller can override the count with ?copies=1|2|3, or
+        // pick exactly which copies with ?copyTypes=recipient,transporter,supplier.
+        $copyLabels = $request->filled('copyTypes')
+            ? $invoice->copyLabelsFor(array_filter(array_map('trim', explode(',', (string) $request->input('copyTypes')))))
+            : $invoice->copyLabels(
+                $request->has('copies')
+                    ? max(1, min(3, (int) $request->input('copies')))
+                    : $invoice->defaultCopyCount()
+            );
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print', 'copies'))
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords', 'style', 'print', 'copyLabels'))
             ->setPaper('A4')
             ->setOption(['isRemoteEnabled' => true]);
 
