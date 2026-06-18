@@ -32,6 +32,15 @@ class PasswordResetLinkController extends Controller
             'cf-turnstile-response' => ['nullable', 'string', new TurnstileValid($request->ip())],
         ]);
 
+        // Google-only accounts (no password set) sign in with Google. Issuing a
+        // password-reset would let whoever controls the inbox bypass Google as
+        // the sole sign-in factor, so we steer them back to "Sign in with Google".
+        $user = \App\Models\User::where('email', $request->email)->first();
+        if ($user && $user->google_id && $user->password === null) {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => 'This account uses Google sign-in. Please use "Sign in with Google".']);
+        }
+
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
         // need to show to the user. Finally, we'll send out a proper response.

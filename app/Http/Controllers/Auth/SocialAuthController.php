@@ -48,12 +48,15 @@ class SocialAuthController extends Controller
         }
 
         // Returning user — match on google_id first, then on a pre-existing
-        // email account (which we link to Google on the fly).
-        $existing = User::where('google_id', $googleUser->getId())->first()
-            ?? User::where('email', $email)->first();
+        // email account. Erased (depersonalised) accounts are never matched, so
+        // a DPDP-erased account can't be re-opened via Google.
+        $existing = User::where('google_id', $googleUser->getId())->whereNull('erased_at')->first()
+            ?? User::where('email', $email)->whereNull('erased_at')->first();
 
         if ($existing) {
             if (! $existing->google_id) {
+                // Google has verified ownership of this email address, so it's
+                // safe to link it to the existing account and mark it verified.
                 $existing->forceFill([
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),

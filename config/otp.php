@@ -21,6 +21,11 @@ return [
     // Seconds the user must wait before requesting a new code.
     'resend_cooldown_seconds' => (int) env('OTP_RESEND_COOLDOWN', 30),
 
+    // Total new codes a user may request per sign-up attempt. Caps the overall
+    // guess budget (max_resends x max_attempts) so the attempt limit can't be
+    // reset indefinitely by repeatedly resending.
+    'max_resends' => (int) env('OTP_MAX_RESENDS', 3),
+
     // SMS driver: 'log' (dev — writes code to log) or a real gateway once built.
     'driver' => env('OTP_SMS_DRIVER', 'log'),
 

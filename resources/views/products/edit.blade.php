@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
             {{ $product->exists ? 'Edit product' : 'New product' }}
         </h2>
     </x-slot>

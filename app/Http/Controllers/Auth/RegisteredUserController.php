@@ -84,6 +84,7 @@ class RegisteredUserController extends Controller
             'otp_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes((int) config('otp.ttl_minutes', 10))->timestamp,
             'attempts' => 0,
+            'resends' => 0,
             'resend_at' => now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp,
         ]);
 
@@ -127,6 +128,7 @@ class RegisteredUserController extends Controller
         $reg['otp_hash'] = Hash::make($code);
         $reg['expires_at'] = now()->addMinutes((int) config('otp.ttl_minutes', 10))->timestamp;
         $reg['attempts'] = 0;
+        $reg['resends'] = 0;
         $reg['resend_at'] = now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp;
         $request->session()->put(self::SESSION_KEY, $reg);
 
@@ -260,11 +262,19 @@ class RegisteredUserController extends Controller
             return back()->withErrors(['code' => "Please wait {$wait}s before requesting a new code."]);
         }
 
+        // Cap total resends so the per-code attempt limit can't be reset forever.
+        if (($reg['resends'] ?? 0) >= (int) config('otp.max_resends', 3)) {
+            $request->session()->forget(self::SESSION_KEY);
+            return redirect()->route('register')
+                ->withErrors(['phone' => 'Too many code requests. Please sign up again.']);
+        }
+
         $code = $otp->generateCode();
         $reg['otp_hash'] = Hash::make($code);
         $reg['expires_at'] = now()->addMinutes((int) config('otp.ttl_minutes', 10))->timestamp;
         $reg['resend_at'] = now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp;
         $reg['attempts'] = 0;
+        $reg['resends'] = ($reg['resends'] ?? 0) + 1;
         $request->session()->put(self::SESSION_KEY, $reg);
 
         $result = $otp->send($reg['phone'], $code);

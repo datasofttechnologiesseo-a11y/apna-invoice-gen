@@ -145,6 +145,10 @@ class AccountErasureService
             'password' => Hash::make(Str::random(64)),
             'remember_token' => null,
             'email_verified_at' => null,
+            // Sever the Google link too, otherwise the account could be
+            // re-opened via "Sign in with Google" (matched on google_id).
+            'google_id' => null,
+            'avatar' => null,
             'is_super_admin' => false,
             'auto_backup_enabled' => false,
             'referral_code' => null,

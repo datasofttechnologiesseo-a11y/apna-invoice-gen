@@ -2,10 +2,10 @@
     @php $restricted = $restricted ?? false; @endphp
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
                 @if ($restricted)
-                    <span class="ml-2 text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase font-bold tracking-wider">Limited edit</span>
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Limited edit</span>
                 @elseif (! $invoice->exists && ! empty($templateLabel))
                     <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Using template: {{ $templateLabel }}</span>
                 @endif
@@ -154,7 +154,7 @@
                 @csrf
                 @if ($invoice->exists) @method('PATCH') @endif
 
-                <div class="bg-white shadow sm:rounded-lg p-6 space-y-6">
+                <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="md:col-span-2">
                             <x-input-label for="customer_search" value="Customer *" />
@@ -280,7 +280,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
+                <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
                         <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked — amounts are immutable</span>@endif</h3>
                         <div class="flex items-center gap-3">
@@ -771,7 +771,7 @@
                         </button>
                         <button type="button"
                                 @click="submitForm('pdf')"
-                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-saffron-600 hover:bg-saffron-700 text-white font-semibold rounded-lg text-sm shadow-sm transition">
+                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h11l5 5v7a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                             Save &amp; Download PDF
                         </button>
