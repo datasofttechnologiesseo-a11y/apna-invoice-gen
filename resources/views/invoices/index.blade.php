@@ -23,8 +23,8 @@
 
             @include('partials.sales-tabs', ['active' => 'invoices', 'stats' => $salesStats ?? []])
 
-            <div class="bg-white shadow sm:rounded-lg">
-                <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
+            <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                <form method="GET" class="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
                     <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
@@ -55,11 +55,11 @@
                         @foreach ($invoices as $inv)
                             @php
                                 $colors = [
-                                    'draft' => 'bg-gray-100 text-gray-700',
-                                    'final' => 'bg-blue-100 text-blue-800',
-                                    'partially_paid' => 'bg-amber-100 text-amber-800',
-                                    'paid' => 'bg-green-100 text-green-800',
-                                    'cancelled' => 'bg-red-100 text-red-800',
+                                    'draft' => 'bg-gray-100 text-gray-600',
+                                    'final' => 'bg-brand-50 text-brand-700',
+                                    'partially_paid' => 'bg-amber-50 text-amber-700',
+                                    'paid' => 'bg-money-50 text-money-700',
+                                    'cancelled' => 'bg-rose-50 text-rose-700',
                                 ];
                             @endphp
                             <li class="p-4 flex flex-col gap-2">
@@ -75,7 +75,7 @@
                                         <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '—' }}</div>
                                         <div class="text-xs text-gray-500">{{ $inv->invoice_date?->format('d M Y') }}</div>
                                     </div>
-                                    <span class="shrink-0 inline-block px-2 py-0.5 rounded text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
+                                    <span class="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                 </div>
                                 <div class="flex items-baseline justify-between text-sm">
                                     <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($inv->grand_total) }}</span></span>
@@ -154,7 +154,7 @@
                                                 'cancelled' => 'bg-red-100 text-red-800',
                                             ];
                                         @endphp
-                                        <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
+                                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         <a href="{{ route('invoices.show', $inv) }}" class="text-brand-600 hover:underline">View</a>

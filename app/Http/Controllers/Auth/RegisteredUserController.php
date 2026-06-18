@@ -239,6 +239,10 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
         Auth::login($user);
 
+        // Kick off the activation sequence with a welcome email. Failures here
+        // must never block sign-up, so OnboardingMailer swallows its own errors.
+        app(\App\Services\Onboarding\OnboardingMailer::class)->send($user, 'welcome');
+
         return redirect(route('dashboard', absolute: false));
     }
 
