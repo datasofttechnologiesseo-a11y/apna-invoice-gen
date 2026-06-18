@@ -6,7 +6,7 @@
 ])
 
 {{--
-    Mobile-first floating action button. Vyapar / WhatsApp / Gmail pattern:
+    Mobile-first floating action button. Common mobile-app pattern:
     a primary brand-coloured circle in the bottom-right thumb zone, hidden
     on lg+ where the regular page-header CTA already exists.
 

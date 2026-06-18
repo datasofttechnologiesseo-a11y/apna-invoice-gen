@@ -203,7 +203,7 @@
                             <div class="min-w-0 flex-1">
                                 <div class="font-semibold text-gray-900">Continuing a series from another tool?</div>
                                 <p class="mt-0.5 text-xs text-gray-600">
-                                    If you already issued invoices on Tally, Vyapar, Excel, etc. this financial year, set your next number here so the series stays unbroken. Skip if you're starting fresh.
+                                    If you already issued invoices on another tool this financial year, set your next number here so the series stays unbroken. Skip if you're starting fresh.
                                 </p>
                                 <div class="mt-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
                                     <div>

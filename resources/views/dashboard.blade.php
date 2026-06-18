@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
-                {{-- Personalised greeting — first name + honorific "ji" (polite,
+                {{-- Personalised greeting, first name + honorific "ji" (polite,
                      pan-Indian, age-neutral). Time-of-day verb keeps it warm.
                      Falls back to plain "Hello" if we didn't capture a name. --}}
                 <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
@@ -27,12 +27,12 @@
                         @endif
                     @else
                         <span class="text-gray-300 mx-1">·</span>
-                        <span>Ready when you are — let's get this billed.</span>
+                        <span>Ready when you are, let's get this billed.</span>
                     @endif
                 </p>
                 @if ($festival)
                     {{-- Festival/national-day microbanner. Single line, small, never blocks.
-                         Hard-coded date list in DashboardController — refresh annually. --}}
+                         Hard-coded date list in DashboardController, refresh annually. --}}
                     <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-saffron-50 via-white to-money-50 ring-1 ring-saffron-200 text-saffron-800 text-xs font-medium">
                         <span class="text-base leading-none">{{ $festival['emoji'] }}</span>
                         <span>{{ $festival['name'] }} from all of us at {{ $company->name ?: 'Apnainvoice' }}!</span>
@@ -51,28 +51,28 @@
             <x-flash />
 
             @unless ($setupComplete)
-                {{-- Setup checklist is dismissible — users who want to invoice right away
+                {{-- Setup checklist is dismissible, users who want to invoice right away
                      can hide it. We remember the choice in localStorage (per browser/device).
                      They can still reach business/customer setup from Settings or the
                      in-form nudges, so nothing is permanently lost. --}}
                 <div x-data="{ show: !localStorage.getItem('hideSetupChecklist') }" x-show="show" x-cloak
-                     class="bg-white rounded-2xl shadow-card ring-1 ring-accent-200 overflow-hidden">
-                    <div class="p-6 bg-gradient-to-r from-brand-900 via-brand-800 to-accent-900 text-white flex items-center justify-between">
+                     class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                    <div class="p-6 bg-brand-50/60 border-b border-gray-100 flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <div class="text-xs uppercase font-bold tracking-widest text-accent-300">Getting started</div>
-                            <h3 class="mt-1 font-display text-xl font-extrabold">You're {{ $setupProgress }}% set up.</h3>
-                            <p class="mt-1 text-brand-100 text-sm">Optional — finish these to unlock automatic GST detection and faster invoicing.</p>
+                            <div class="text-xs uppercase font-semibold tracking-widest text-brand-600">Getting started</div>
+                            <h3 class="mt-1 font-display text-xl font-extrabold text-gray-900">You're {{ $setupProgress }}% set up.</h3>
+                            <p class="mt-1 text-gray-600 text-sm">Optional, finish these to unlock automatic GST detection and faster invoicing.</p>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 ml-4">
-                            {{-- Progress circle — mobile shows a smaller inline version so the % is always visible --}}
-                            <div class="w-14 h-14 md:w-20 md:h-20 rounded-full ring-2 md:ring-4 ring-white/20 flex items-center justify-center font-display font-extrabold text-base md:text-2xl bg-white/10 backdrop-blur">
+                            {{-- Progress circle, mobile shows a smaller inline version so the % is always visible --}}
+                            <div class="w-14 h-14 md:w-20 md:h-20 rounded-full ring-4 ring-brand-100 bg-white text-brand-700 flex items-center justify-center font-display font-extrabold text-base md:text-2xl">
                                 {{ $setupProgress }}%
                             </div>
                             <button type="button"
                                     @click="localStorage.setItem('hideSetupChecklist','1'); show=false"
-                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
                                     aria-label="Hide getting-started checklist"
-                                    title="Hide this — I'll set things up later">
+                                    title="Hide this, I'll set things up later">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
@@ -113,7 +113,7 @@
                 </div>
             @endunless
 
-            {{-- Smart Action Items — guides the user to the highest-impact
+            {{-- Smart Action Items, guides the user to the highest-impact
                  thing to do today. Hidden entirely if there's nothing to act on
                  (replaced with a quiet "all clear" line) so the dashboard
                  doesn't feel naggy on quiet days. --}}
@@ -161,13 +161,13 @@
                     </ul>
                 </div>
             @elseif ($setupComplete && $stats['total'] > 0)
-                {{-- Calm "you're on top of it" state — only shown when there's
+                {{-- Calm "you're on top of it" state, only shown when there's
                      genuinely nothing pending. Avoids fake-positive noise on
                      accounts that just haven't created anything yet. --}}
                 <div class="bg-gradient-to-r from-money-50 to-white rounded-2xl shadow-card ring-1 ring-money-100 px-5 py-4 flex items-center gap-3">
                     <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-money-100 text-money-700 text-xl">✨</span>
                     <div class="flex-1">
-                        <div class="font-semibold text-gray-900">All clear — nothing pending</div>
+                        <div class="font-semibold text-gray-900">All clear, nothing pending</div>
                         <div class="text-sm text-gray-600">No overdue invoices, no stale drafts. Carry on!</div>
                     </div>
                     <a href="{{ route('invoices.create') }}" class="text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline whitespace-nowrap">+ New invoice</a>
@@ -340,7 +340,7 @@
                         </div>
                     </div>
 
-                    {{-- Reports & exports — surfaced on the dashboard so CAs landing here at month-end can grab the GSTR-1 CSV without hunting --}}
+                    {{-- Reports & exports, surfaced on the dashboard so CAs landing here at month-end can grab the GSTR-1 CSV without hunting --}}
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
                         <div class="flex items-center justify-between gap-2">
                             <h3 class="font-display font-bold text-gray-900">Reports & exports</h3>
@@ -366,7 +366,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">GSTR-3B · last month</div>
-                                    <div class="text-xs text-gray-500 truncate">Outward, ITC, net cash payable — return-form layout</div>
+                                    <div class="text-xs text-gray-500 truncate">Outward, ITC, net cash payable, return-form layout</div>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-money-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
@@ -424,7 +424,7 @@
                             Refer a friend
                         </div>
                         <p class="mt-3 text-brand-100 text-sm leading-relaxed">
-                            Know another business that would benefit? Share your <strong class="text-white">personal referral code</strong> — WhatsApp, email, or a signup link.
+                            Know another business that would benefit? Share your <strong class="text-white">personal referral code</strong>, WhatsApp, email, or a signup link.
                         </p>
                         <div class="mt-4 inline-flex items-center text-sm font-semibold text-accent-300 hover:text-accent-200">
                             Get your code →

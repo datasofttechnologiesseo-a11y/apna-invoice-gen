@@ -40,7 +40,7 @@
                 </form>
             </div>
         @endif
-        <div class="min-h-screen flex flex-col bg-gray-100">
+        <div class="min-h-screen flex flex-col bg-gray-50">
             @include('layouts.navigation')
 
             <!-- Page Content (heading slot renders in-flow above the body) -->

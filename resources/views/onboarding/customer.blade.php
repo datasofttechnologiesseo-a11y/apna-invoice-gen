@@ -3,7 +3,7 @@
         <div class="p-6 md:p-8 bg-gradient-to-br from-saffron-600 to-accent-700 text-white">
             <div class="text-xs font-bold uppercase tracking-widest text-accent-100">Step 2 of 3</div>
             <h1 class="mt-2 font-display text-2xl md:text-3xl font-extrabold">Add your first customer</h1>
-            <p class="mt-2 text-accent-100">Save customer details once — we'll auto-fill them on every future invoice. You can add more any time.</p>
+            <p class="mt-2 text-accent-100">Save customer details once, we'll auto-fill them on every future invoice. You can add more any time.</p>
         </div>
 
         <form method="POST" action="{{ route('onboarding.customer.save') }}" class="p-6 md:p-8 space-y-6">
@@ -72,7 +72,7 @@
                     <div>
                         <x-input-label for="state_id" value="State *" />
                         <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-                            <option value="">— Select —</option>
+                            <option value="">, Select, </option>
                             @foreach ($states as $s)
                                 <option value="{{ $s->id }}" @selected(old('state_id') == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                             @endforeach
@@ -88,7 +88,7 @@
             </div>
 
             <div class="border-t pt-6 flex items-center justify-between gap-4">
-                <a href="{{ route('onboarding.customer.skip') }}" class="text-sm text-gray-500 hover:text-gray-700 underline">Skip for now — I'll add customers later</a>
+                <a href="{{ route('onboarding.customer.skip') }}" class="text-sm text-gray-500 hover:text-gray-700 underline">Skip for now, I'll add customers later</a>
                 <button class="inline-flex items-center px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
                     Save customer
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>

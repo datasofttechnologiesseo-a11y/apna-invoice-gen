@@ -1,19 +1,19 @@
 @php
     $faqs = [
-        ['q' => 'How to use Apna Invoice — step by step?', 'a' => "1. Sign up free at apnainvoice.com (no credit card, takes 30 seconds).\n\n2. Add your business once — name, GSTIN, address, state. The state determines CGST + SGST (same state) vs IGST (different state) automatically.\n\n3. Add your first customer — name + state are required, GSTIN optional for B2C. You can also click '+ New' on any invoice to add a customer inline (no page refresh, no lost data).\n\n4. Click 'New invoice' — pick the customer, type description / HSN-SAC / qty / rate / GST%. Defaults to GST 18%, qty 1.\n\n5. Click 'Issue' — the invoice locks, gets a permanent number (auto-resets every 1 April), and the PDF is generated. Goods invoices auto-print 3 copies (Original / Duplicate-Transporter / Triplicate-Supplier) per CGST Rule 48.\n\n6. Share — WhatsApp (pre-filled message), Email (PDF attached), or copy a 30-day public link. UPI QR is auto-included if you've added a UPI ID.\n\n7. Record payment when received — full or part payment, with TDS support. Receipt PDF auto-generated.\n\n8. End-of-month — download GSTR-1 CSV, GSTR-3B summary, receivables aging report, or full ZIP backup from the dashboard.\n\nTip: Install Apna Invoice as a phone app via Chrome's 'Install' menu — works like a native app."],
-        ['q' => 'How can I create a GST invoice online for free in India?', 'a' => "Sign up on Apna Invoice (no card required), add your business GSTIN and state once, then create your first GST invoice in about 60 seconds. The tool auto-calculates CGST + SGST for intra-state and IGST for inter-state supplies, supports HSN/SAC codes, and exports a GST-compliant tax invoice as PDF — completely free for unlimited invoices during beta."],
-        ['q' => 'Is Apna Invoice the best free GST invoice generator for freelancers and small businesses in India?', 'a' => "We're built specifically for Indian freelancers, MSMEs, SMEs, startups, small shops and CAs. Apna Invoice is fully online (no installation), zero-cost, with India-first defaults — Indian numbering (lakhs/crores), GST slabs pre-loaded, FY-reset invoice numbers, UPI QR on every invoice, and one-click WhatsApp share — with no per-invoice or per-user limit."],
-        ['q' => 'Does the invoice generator include HSN/SAC code and auto GST calculation?', 'a' => "Yes — every line item has an HSN/SAC field with a built-in search link to the official GST portal, and you pick the GST rate (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%) per item. We auto-split CGST/SGST or IGST based on customer state, round to the paisa, and print the rate on every line as Rule 46 requires."],
-        ['q' => 'Can I use this as free billing software for a small shop or MSME?', 'a' => "Yes. Small shops, retail stores, MSMEs and SMEs across India use Apna Invoice as a simple GST billing tool — issue tax invoices, cash memos for over-the-counter sales, credit notes, and track payment status. It runs in any browser on any device — no desktop software to install and no billing-machine hardware needed. Free during beta with unlimited invoices."],
-        ['q' => 'Can I download a GST invoice format for free?', 'a' => "Every invoice you create on Apna Invoice exports to a CBIC-compliant GST tax invoice PDF — five professional template styles (Classic Navy, Executive Maroon, Minimal Slate, Mercantile Forest, Heritage Burgundy). The PDF includes GSTIN, HSN/SAC, CGST/SGST/IGST split, place of supply, amount in words, signature block and your bank/UPI details. No template downloads to fiddle with — just create and download."],
-        ['q' => 'Are these invoices GST-compliant?', 'a' => "Yes. We include GSTIN, HSN/SAC codes, place of supply, CGST/SGST or IGST split, invoice number, and amount in words (Indian format — lakhs and crores). The format aligns with CBIC's prescribed tax invoice requirements."],
+        ['q' => 'How to use Apna Invoice, step by step?', 'a' => "1. Sign up free at apnainvoice.com (no credit card, takes 30 seconds).\n\n2. Add your business once: name, GSTIN, address, state. The state decides CGST + SGST (same state) or IGST (different state) automatically.\n\n3. Add your first customer. Name and state are required; GSTIN is optional for B2C. You can also click '+ New' on any invoice to add a customer inline (no page refresh, no lost data).\n\n4. Click 'New invoice', pick the customer, then type description, HSN/SAC, qty, rate and GST%. Defaults to GST 18%, qty 1.\n\n5. Click 'Issue'. The invoice locks, gets a permanent number (auto-resets every 1 April), and the PDF is generated. Goods invoices auto-print 3 copies (Original, Duplicate-Transporter, Triplicate-Supplier) per CGST Rule 48.\n\n6. Share on WhatsApp (pre-filled message), Email (PDF attached), or copy a 30-day public link. UPI QR is included if you've added a UPI ID.\n\n7. Record payment when received: full or part payment, with TDS support. The receipt PDF is generated automatically.\n\n8. At month-end, download the GSTR-1 CSV, GSTR-3B summary, receivables aging report, or a full ZIP backup from the dashboard.\n\nTip: Install Apna Invoice as a phone app via Chrome's 'Install' menu. It works like a native app."],
+        ['q' => 'How can I create a GST invoice online for free in India?', 'a' => "Sign up on Apna Invoice (no card required), add your business GSTIN and state once, then create your first GST invoice in about 60 seconds. The tool auto-calculates CGST + SGST for intra-state and IGST for inter-state supplies, supports HSN/SAC codes, and exports a GST-compliant tax invoice as PDF. It's completely free for unlimited invoices during beta."],
+        ['q' => 'Is Apna Invoice the best free GST invoice generator for freelancers and small businesses in India?', 'a' => "We're built specifically for Indian freelancers, MSMEs, SMEs, startups, small shops and CAs. Apna Invoice is fully online (no installation), zero-cost, with India-first defaults: Indian numbering (lakhs and crores), GST slabs pre-loaded, FY-reset invoice numbers, UPI QR on every invoice, and one-click WhatsApp share, with no per-invoice or per-user limit."],
+        ['q' => 'Does the invoice generator include HSN/SAC code and auto GST calculation?', 'a' => "Yes. Every line item has an HSN/SAC field with a built-in search link to the official GST portal, and you pick the GST rate (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%) per item. We auto-split CGST/SGST or IGST based on customer state, round to the paisa, and print the rate on every line as Rule 46 requires."],
+        ['q' => 'Can I use this as free billing software for a small shop or MSME?', 'a' => "Yes. Small shops, retail stores, MSMEs and SMEs across India use Apna Invoice as a simple GST billing tool to issue tax invoices, cash memos for over-the-counter sales, and credit notes, and to track payment status. It runs in any browser on any device, with no desktop software to install and no billing-machine hardware needed. Free during beta with unlimited invoices."],
+        ['q' => 'Can I download a GST invoice format for free?', 'a' => "Every invoice you create on Apna Invoice exports to a CBIC-compliant GST tax invoice PDF, five professional template styles (Classic Navy, Executive Maroon, Minimal Slate, Mercantile Forest, Heritage Burgundy). The PDF includes GSTIN, HSN/SAC, CGST/SGST/IGST split, place of supply, amount in words, signature block and your bank/UPI details. No template downloads to fiddle with, just create and download."],
+        ['q' => 'Are these invoices GST-compliant?', 'a' => "Yes. We include GSTIN, HSN/SAC codes, place of supply, CGST/SGST or IGST split, invoice number, and amount in words (Indian format, in lakhs and crores). The format aligns with CBIC's prescribed tax invoice requirements."],
         ['q' => 'Do I need to know the GST rate for each item?', 'a' => 'Yes, but we pre-load the standard slabs (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%). You pick one per line item; the system handles CGST/SGST or IGST math based on customer state.'],
         ['q' => "What's the difference between draft and final?", 'a' => 'Drafts are editable and have no invoice number yet. Once you issue it, the invoice gets a permanent number (e.g. INV-0001), becomes read-only, and is considered legally issued. You can still mark payments against issued invoices.'],
-        ['q' => 'Can I issue credit notes against an issued invoice?', 'a' => "Yes. Credit notes follow the GST Section 34 format — reason code, reference to the original invoice, CGST/SGST or IGST reversal. They flow through your books and are ready for GSTR-1 reporting."],
-        ['q' => 'I already maintain books in spreadsheets or another tool. Is it hard to switch?', 'a' => "No setup migration required for most users — add your company once, paste in customers as you bill them, and carry on. You keep your existing invoice numbering series (we don't force ours). You can also export your Apna Invoice data at any time as a ZIP of CSV files, so you're never locked in."],
-        ['q' => 'Can I bill international clients?', 'a' => 'Not yet. Apna Invoice is built for Indian domestic GST invoicing in INR (₹) only — export under LUT/Bond, SEZ supplies, and multi-currency billing are intentionally out of scope while we stay focused on MSMEs, SMEs, startups and freelancers billing within India.'],
+        ['q' => 'Can I issue credit notes against an issued invoice?', 'a' => "Yes. Credit notes follow the GST Section 34 format: reason code, reference to the original invoice, and CGST/SGST or IGST reversal. They flow through your books and are ready for GSTR-1 reporting."],
+        ['q' => 'I already maintain books in spreadsheets or another tool. Is it hard to switch?', 'a' => "No setup migration required for most users. Add your company once, paste in customers as you bill them, and carry on. You keep your existing invoice numbering series (we don't force ours). You can also export your Apna Invoice data at any time as a ZIP of CSV files, so you're never locked in."],
+        ['q' => 'Can I bill international clients?', 'a' => 'Not yet. Apna Invoice is built for Indian domestic GST invoicing in INR (₹) only. Export under LUT/Bond, SEZ supplies, and multi-currency billing are intentionally out of scope while we stay focused on MSMEs, SMEs, startups and freelancers billing within India.'],
         ['q' => 'What happens to my data?', 'a' => 'It lives in your account, on our servers in India. You can export your invoices and customer data any time. We never sell data to third parties.'],
-        ['q' => 'Who builds this?', 'a' => 'Datasoft Technologies (DST) — an Indian software company focused on practical tools for modern businesses. This product is free during beta while we grow.'],
+        ['q' => 'Who builds this?', 'a' => 'Datasoft Technologies (DST) is an Indian software company focused on practical tools for modern businesses. This product is free during beta while we grow.'],
     ];
 
     $appUrl = rtrim(config('app.url'), '/');
@@ -90,13 +90,13 @@
                 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
             ], $faqs),
         ],
-        // HowTo schema — targets "how to create GST invoice in India" rich results
+        // HowTo schema, targets "how to create GST invoice in India" rich results
         // and reinforces the "60-second setup" ranking promise.
         [
             '@context' => 'https://schema.org',
             '@type' => 'HowTo',
             'name' => 'How to make your first GST invoice in 60 seconds with Apna Invoice',
-            'description' => 'Create a GST-compliant tax invoice online for free — auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share.',
+            'description' => 'Create a GST-compliant tax invoice online for free, with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share.',
             'totalTime' => 'PT60S',
             'estimatedCost' => ['@type' => 'MonetaryAmount', 'currency' => 'INR', 'value' => '0'],
             'tool' => [['@type' => 'HowToTool', 'name' => 'Apna Invoice (web)']],
@@ -122,7 +122,7 @@
                 ],
             ],
         ],
-        // WebApplication schema — declares the page hosts a free GST calculator
+        // WebApplication schema, declares the page hosts a free GST calculator
         // tool. Targets rich-result eligibility for "free GST calculator",
         // "GST calculator India", "CGST SGST IGST calculator" queries.
         [
@@ -142,7 +142,7 @@
             'browserRequirements' => 'Requires JavaScript',
             'inLanguage' => 'en-IN',
             'isAccessibleForFree' => true,
-            'description' => 'Free online GST calculator for India — compute CGST, SGST and IGST on any amount instantly. Supports intra-state and inter-state supplies, plus tax-inclusive and tax-exclusive modes (reverse GST). Works for all standard slabs: 0%, 5%, 12%, 18%, 28%. No login, no signup, runs in your browser.',
+            'description' => 'Free online GST calculator for India, compute CGST, SGST and IGST on any amount instantly. Supports intra-state and inter-state supplies, plus tax-inclusive and tax-exclusive modes (reverse GST). Works for all standard slabs: 0%, 5%, 12%, 18%, 28%. No login, no signup, runs in your browser.',
             'featureList' => [
                 'Calculate CGST + SGST for intra-state supplies',
                 'Calculate IGST for inter-state supplies',
@@ -162,13 +162,13 @@
                 'url' => config('seo.organization.url'),
             ],
         ],
-        // SoftwareApplication schema — declares the invoicing/billing tool
+        // SoftwareApplication schema, declares the invoicing/billing tool
         // itself. Targets rich-result eligibility for "online invoice generator",
         // "free bill generator", "GST bill generator", "invoice generator India".
         [
             '@context' => 'https://schema.org',
             '@type' => 'SoftwareApplication',
-            'name' => 'Apna Invoice — Free GST Invoice & Bill Generator',
+            'name' => 'Apna Invoice, Free GST Invoice & Bill Generator',
             'alternateName' => [
                 'Online Invoice Generator',
                 'Free Bill Generator',
@@ -195,7 +195,7 @@
                 'GSTR-1 + GSTR-3B export · Receivables aging report',
                 'WhatsApp + email + 30-day signed public-link sharing',
                 'Multi-copy invoice PDFs (Original / Duplicate / Triplicate) per CGST Rule 48',
-                'PWA — installable on any phone or desktop',
+                'PWA, installable on any phone or desktop',
             ],
             'offers' => [
                 '@type' => 'Offer',
@@ -219,11 +219,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
         title="Free GST Invoice Generator + GST Calculator India"
-        description="Free online invoice generator + GST calculator + bill generator for India. Make CGST/SGST/IGST invoices in 60 seconds with HSN/SAC, UPI QR and WhatsApp share. Calculate GST on any amount — inclusive or exclusive — instantly, no login needed. For SMEs, MSMEs, freelancers, shops and CAs. GSTR-1 export. CGST Rule 46/49 compliant. GST 2.0 ready. No card, unlimited invoices during beta."
+        description="Free online invoice generator + GST calculator + bill generator for India. Make CGST/SGST/IGST invoices in 60 seconds with HSN/SAC, UPI QR and WhatsApp share. Calculate GST on any amount, inclusive or exclusive, instantly, no login needed. For SMEs, MSMEs, freelancers, shops and CAs. GSTR-1 export. CGST Rule 46/49 compliant. GST 2.0 ready. No card, unlimited invoices during beta."
         keywords="free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, free GST billing software India, online GST invoice generator, GST bill maker, GSTR-1 export, HSN SAC search, GST invoice format India, free invoicing app for SMEs, MSME billing software, freelancer invoice India, shop billing software, composition dealer Bill of Supply, audit defensible invoicing, GSTR-3B summary, UPI QR invoice, WhatsApp invoice share"
         type="website"
         :json-ld="$jsonLd" />
-    {{-- PWA — installable on mobile/desktop, offline-capable for assets --}}
+    {{-- PWA, installable on mobile/desktop, offline-capable for assets --}}
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1e3a8a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -231,7 +231,7 @@
     <meta name="apple-mobile-web-app-title" content="Apna Invoice">
     <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
 
-    {{-- Preload the brand logo — it's the LCP element on the landing header. --}}
+    {{-- Preload the brand logo, it's the LCP element on the landing header. --}}
     <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" as="image" type="image/jpeg">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
@@ -249,7 +249,7 @@
             <span class="block w-full h-1/3 bg-white"></span>
             <span class="block w-full h-1/3 bg-[#138808]"></span>
         </span>
-        <span><strong>Specially designed for India's SMEs &amp; MSMEs</strong> — unlimited bills, unlimited quotations, unlimited customers. <a href="{{ route('register') }}" class="underline font-semibold hover:text-accent-300">Get started free →</a></span>
+        <span><strong>Made for India's SMEs &amp; MSMEs.</strong> Unlimited bills, quotations and customers. <a href="{{ route('register') }}" class="underline font-semibold hover:text-accent-300">Get started free →</a></span>
     </div>
 </div>
 
@@ -283,7 +283,7 @@
         {{-- ─── Left: marketing copy + features + CTA ─── --}}
         <div class="lg:col-span-7 animate-fade-up bg-brand-50/60 ring-1 ring-brand-100 rounded-3xl p-6 sm:p-8 lg:p-10">
 
-            {{-- Trust pills — three of them deliberately echo the Indian tricolour
+            {{-- Trust pills, three of them deliberately echo the Indian tricolour
                  in reading order: saffron → white (with mini flag) → green. A
                  subtle but unmissable India cue without being kitsch. --}}
             <div class="flex items-center gap-2.5 flex-wrap mb-6">
@@ -310,7 +310,7 @@
                 </span>
             </div>
 
-            {{-- HEADLINE — matches the marketing brief exactly --}}
+            {{-- HEADLINE, matches the marketing brief exactly --}}
             <h1 class="font-display font-extrabold tracking-tight text-gray-900 leading-[1.02]">
                 <span class="block whitespace-nowrap text-xl sm:text-2xl md:text-3xl lg:text-4xl">Free GST <span class="text-brand-700">Invoicing</span> Software</span>
                 <span class="block mt-3 text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold text-brand-700 leading-tight tracking-wide [word-spacing:0.2em]">
@@ -318,26 +318,26 @@
                 </span>
             </h1>
 
-            {{-- SR-only H2 — keeps SEO weight on the long-form ranking phrases.
+            {{-- SR-only H2, keeps SEO weight on the long-form ranking phrases.
                  Combines the high-volume search variants without keyword-stuffing
                  the visible UI: GST invoice generator, online invoice generator,
                  free bill generator, GST bill generator, GST calculator. --}}
-            <h2 class="sr-only">Best free online invoice generator, GST invoice generator and bill generator for India — make GST-compliant tax invoices, bills, credit notes and receipts with auto CGST, SGST and IGST. Includes a free GST calculator (no login).</h2>
+            <h2 class="sr-only">Best free online invoice generator, GST invoice generator and bill generator for India. Make GST-compliant tax invoices, bills, credit notes and receipts with auto CGST, SGST and IGST. Includes a free GST calculator (no login).</h2>
 
-            {{-- Hindi tagline — small, restrained, signals India-first without dominating --}}
+            {{-- Hindi tagline, small, restrained, signals India-first without dominating --}}
             <p class="mt-4 text-base sm:text-lg font-bold text-brand-900 leading-snug" lang="hi">
-                आपका अपना <span class="text-saffron-600">GST बिलिंग साथी</span> — हर invoice
+                आपका अपना <span class="text-saffron-600">GST बिलिंग साथी</span>। हर invoice
                 <span class="px-1.5 rounded text-money-800 bg-money-100">सिर्फ़&nbsp;60 सेकंड</span> में।
             </p>
 
-            {{-- English keyword-rich sub-line — visible to users AND indexed by Google.
+            {{-- English keyword-rich sub-line, visible to users AND indexed by Google.
                  Uses the three-way phrase ("invoice generator · bill generator · GST
                  calculator") that captures all primary search intents on one line. --}}
             <p class="mt-2 text-sm text-gray-700 leading-snug">
                 The <strong>free online invoice generator</strong>, <strong>bill generator</strong> and <strong>GST calculator</strong> built for Indian SMEs, MSMEs, freelancers, shops &amp; CAs.
             </p>
 
-            {{-- Four feature rows — clean icon + bold title + caption pattern from the brief --}}
+            {{-- Four feature rows, clean icon + bold title + caption pattern from the brief --}}
             <ul class="mt-8 space-y-4 max-w-2xl" role="list">
                 <li class="flex items-start gap-4">
                     <div class="shrink-0 w-12 h-12 rounded-full bg-orange-100 ring-1 ring-orange-200 text-orange-600 flex items-center justify-center" aria-hidden="true">
@@ -353,7 +353,7 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div class="min-w-0 pt-1">
-                        <div class="text-lg font-bold text-gray-900 leading-tight">100% Free — No Hidden Charges</div>
+                        <div class="text-lg font-bold text-gray-900 leading-tight">100% Free, No Hidden Charges</div>
                         <div class="mt-0.5 text-sm text-gray-600">Unlimited invoices &amp; customers · no card required · free during beta</div>
                     </div>
                 </li>
@@ -413,11 +413,11 @@
                 </li>
             </ul>
 
-            {{-- BIG CTA — dark navy with confident copy, full-width on mobile --}}
+            {{-- BIG CTA, dark navy with confident copy, full-width on mobile --}}
             <div class="mt-10">
                 <a href="{{ route('register') }}"
                    class="group inline-flex w-full sm:w-auto items-center justify-center gap-3 px-8 py-4 bg-brand-900 hover:bg-brand-800 text-white font-bold text-base sm:text-lg rounded-xl shadow-brand transition">
-                    Start Creating Invoices — It's 100% Free
+                    Start Creating Invoices Free
                     <svg class="w-5 h-5 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
                 </a>
                 <p class="mt-3 text-xs sm:text-sm text-gray-500">
@@ -428,7 +428,7 @@
 
         </div>
 
-        <!-- Free GST Calculator (no login needed) — anchor target for deep links from blog/articles -->
+        <!-- Free GST Calculator (no login needed), anchor target for deep links from blog/articles -->
         <div id="free-gst-calculator" class="relative lg:col-span-5 animate-fade-up bg-saffron-50/60 ring-1 ring-saffron-100 rounded-3xl p-6 sm:p-8"
              x-data="{
                 amount: 10000,
@@ -471,7 +471,7 @@
                     }
                     lines.push(`*Grand Total: ₹${this.fmt(this.total)}*`);
                     lines.push('');
-                    lines.push('Calculated free on Apna Invoice — apnainvoice.com');
+                    lines.push('Calculated free on Apna Invoice, apnainvoice.com');
                     return 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
                 }
              }"
@@ -488,7 +488,7 @@
                                 <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-accent-400 to-saffron-400 text-brand-900 font-black text-lg flex items-center justify-center shadow-lg ring-1 ring-white/20">₹</div>
                                 <div>
                                     <div class="text-[10px] uppercase tracking-[0.2em] text-accent-300 font-bold">Free GST Calculator · No Login</div>
-                                    <h2 id="gst-calculator" class="font-display font-black text-xl md:text-2xl mt-0.5 leading-tight">Free GST Calculator — CGST, SGST &amp; IGST</h2>
+                                    <h2 id="gst-calculator" class="font-display font-black text-xl md:text-2xl mt-0.5 leading-tight">Free GST Calculator for CGST, SGST &amp; IGST</h2>
                                 </div>
                             </div>
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-money-400/20 text-money-200 ring-1 ring-money-300/40">
@@ -496,19 +496,19 @@
                                 Live
                             </span>
                         </div>
-                        <p class="relative mt-3 text-xs text-brand-200">India's free online GST calculator — CGST · SGST · IGST · intra &amp; inter-state · tax-inclusive or exclusive (reverse GST).</p>
+                        <p class="relative mt-3 text-xs text-brand-200">India's free online GST calculator, CGST · SGST · IGST · intra &amp; inter-state · tax-inclusive or exclusive (reverse GST).</p>
                     </div>
 
                     {{-- Inputs + breakdown --}}
                     <div class="p-6 md:p-7 space-y-4 text-sm">
 
-                        {{-- "Live calculator — tap to recalculate" affordance line.
+                        {{-- "Live calculator, tap to recalculate" affordance line.
                              Visual cue that this whole panel is an interactive tool,
                              not a static screenshot. Pulsing dot reinforces "live". --}}
                         <div class="flex items-center justify-between gap-2 -mt-1 mb-1">
                             <div class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-money-700">
                                 <span class="w-1.5 h-1.5 rounded-full bg-money-500 animate-[pulse_2s_ease-in-out_infinite]"></span>
-                                Live calculator — tap any field to recalculate instantly
+                                Live calculator, tap any field to recalculate instantly
                             </div>
                         </div>
 
@@ -530,7 +530,7 @@
                                 <input id="gst-amount" type="number" min="0" step="any" inputmode="decimal" x-model.number="amount"
                                        placeholder="0"
                                        class="w-full pl-12 pr-12 py-4 text-2xl font-mono font-extrabold tabular-nums bg-white border-2 border-brand-200 hover:border-brand-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-4 focus:ring-brand-200/60 focus:outline-none transition cursor-text">
-                                {{-- Clear button — appears only when there's a value. Quick reset
+                                {{-- Clear button, appears only when there's a value. Quick reset
                                      so users can swap amounts without selecting + deleting. --}}
                                 <button type="button" @click="amount = 0; $nextTick(() => document.getElementById('gst-amount')?.focus())"
                                         x-show="parseFloat(amount) > 0"
@@ -552,7 +552,7 @@
                         </div>
 
                         {{-- GST Rate as a button row (was a native <select>). Same pill-toggle
-                             pattern as Supply / Amount-is below — consistent, obviously tappable,
+                             pattern as Supply / Amount-is below, consistent, obviously tappable,
                              and the selected rate is visible without opening a dropdown. Active
                              pill gets the brand fill so the current rate reads at a glance. --}}
                         <div>
@@ -609,7 +609,7 @@
                                • SAFFRON       = tax going to government (CGST / SGST / IGST)
 
                              CGST and SGST share the same saffron family (just different
-                             shades) because they're equal twin taxes — same rate, same
+                             shades) because they're equal twin taxes, same rate, same
                              amount, only different recipient (Centre vs State). Using
                              two unrelated colours implied they were different kinds. --}}
                         <div class="pt-3 border-t border-gray-100 space-y-1.5">
@@ -693,7 +693,7 @@
     </div>
 </section>
 
-{{-- ─── Marketing slider — 4 hero posters that rotate every 5 s with prev/next
+{{-- ─── Marketing slider, 4 hero posters that rotate every 5 s with prev/next
      controls, dot indicators, keyboard arrow nav, touch swipe, and the
      standard pause-on-hover behaviour. Uses the existing brand palette
      (navy gradient backing, saffron accent on active dot, tricolor blur
@@ -703,10 +703,10 @@
             slides: [
                 {
                     src: "/brand/slider/slide-1-gst-software.png",
-                    alt: "Apna Invoice — Free GST Software for Indian SMEs, MSMEs and Freelancers — 100% verified by CAs",
+                    alt: "Apna Invoice, free GST software for Indian SMEs, MSMEs and freelancers",
                     eyebrow: "Free for everyone",
                     title: "Free GST Software for Indian SMEs &amp; MSMEs",
-                    sub: "Auto CGST · SGST · IGST · HSN/SAC. Unlimited invoices. Verified by CAs.",
+                    sub: "Auto CGST · SGST · IGST · HSN/SAC. Unlimited invoices, built to be CA-friendly.",
                 },
                 {
                     src: "/brand/slider/slide-2-tablet-modern.png",
@@ -717,10 +717,10 @@
                 },
                 {
                     src: "/brand/slider/slide-3-freelancer.png",
-                    alt: "Freelancer using Apna Invoice — testimonial from एक फ्रीलांसर",
-                    eyebrow: "Loved by freelancers",
-                    title: "एक फ्रीलांसर के रूप में, मैं बिल बनाने के लिए Apna Invoice का उपयोग करती हूं",
-                    sub: "Bahut आसान है इसका उपयोग करना. Trusted by Indian freelancers across 36 states &amp; UTs.",
+                    alt: "Freelancer using Apna Invoice to create GST invoices",
+                    eyebrow: "Made for freelancers",
+                    title: "फ्रीलांसर के लिए आसान GST बिलिंग",
+                    sub: "इस्तेमाल करना बहुत आसान। Built for freelancers across all 36 states &amp; UTs.",
                 },
             ],
             current: 0,
@@ -744,7 +744,7 @@
          @keydown.window.arrow-left="prev(); start()"
          @keydown.window.arrow-right="next(); start()">
 
-    {{-- Decorative tricolor blur orbs — keep section visually anchored to brand. --}}
+    {{-- Decorative tricolor blur orbs, keep section visually anchored to brand. --}}
     <div class="absolute -top-32 -left-24 w-[420px] h-[420px] bg-saffron-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
     <div class="absolute -bottom-32 -right-24 w-[420px] h-[420px] bg-money-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
 
@@ -761,7 +761,7 @@
             </h2>
         </div>
 
-        {{-- Slider stage — square posters look best in a tall responsive viewport.
+        {{-- Slider stage, square posters look best in a tall responsive viewport.
              We constrain max-width and let the image be the hero, with a small
              caption pill overlay (eyebrow + title + sub-text). Swipe via Alpine
              touch events on mobile; arrow buttons on desktop. --}}
@@ -774,7 +774,7 @@
 
             {{-- Stage with rounded gradient border. All 3 remaining slides
                  are landscape (~1.5–1.79). We pin the stage at 3:2 (1.5)
-                 and use object-cover with object-center — slides 2 + 3
+                 and use object-cover with object-center, slides 2 + 3
                  (16:9) crop a few px from the sides; their key content
                  (faces + dashboards) is centered so nothing important is lost.
                  Fixed aspect = zero layout shift on slide change. --}}
@@ -793,7 +793,7 @@
                         </div>
                     </template>
 
-                    {{-- Prev / next buttons — smaller, less intrusive on mobile;
+                    {{-- Prev / next buttons, smaller, less intrusive on mobile;
                          full-size on sm+. Larger tap target via padding-box. --}}
                     <button type="button" @click="prev(); start()"
                             class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-saffron-400 transition"
@@ -808,7 +808,7 @@
                 </div>
             </div>
 
-            {{-- Active slide caption — sits BELOW the image so it doesn't fight
+            {{-- Active slide caption, sits BELOW the image so it doesn't fight
                  with the poster's own text. Updates reactively as slides change. --}}
             <div class="mt-5 text-center min-h-[80px]" x-show="slides[current]" x-cloak>
                 <span class="inline-block px-2.5 py-0.5 rounded-full bg-saffron-100 text-saffron-800 ring-1 ring-saffron-200 text-[10px] font-bold uppercase tracking-widest" x-text="slides[current].eyebrow"></span>
@@ -849,7 +849,7 @@
             @endforeach
         </div>
 
-        {{-- Bharat city strip — 12 major business hubs as location pills.
+        {{-- Bharat city strip, 12 major business hubs as location pills.
              Higher-contrast than the previous text-dot line to signal national reach. --}}
         <div class="mt-10 pt-8 border-t border-gray-200">
             <div class="text-center">
@@ -870,7 +870,7 @@
     </div>
 </section>
 
-<!-- How it works — 3 steps from signup to first invoice -->
+<!-- How it works, 3 steps from signup to first invoice -->
 <section class="relative py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="max-w-2xl mx-auto text-center">
@@ -878,7 +878,7 @@
             <h2 class="mt-4 font-display text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
                 Your first invoice in <span class="text-brand-700">60 seconds</span>.
             </h2>
-            <p class="mt-3 text-gray-600">Sign up and add your business once — every invoice after that is 60 seconds flat. No onboarding call, nothing to learn.</p>
+            <p class="mt-3 text-gray-600">Sign up and add your business once, every invoice after that is 60 seconds flat. No onboarding call, nothing to learn.</p>
         </div>
 
         <div class="mt-14 grid md:grid-cols-3 gap-6 md:gap-8 relative">
@@ -888,7 +888,7 @@
             @foreach ([
                 ['n' => '01', 'title' => 'Sign up', 'desc' => 'Just email and password. No credit card, no company docs.', 'gradient' => 'from-brand-500 to-brand-700', 'ring' => 'ring-brand-200', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
                 ['n' => '02', 'title' => 'Add your business (one-time)', 'desc' => 'Paste GSTIN, pick state, upload logo. Letterhead auto-generates on every invoice.', 'gradient' => 'from-accent-500 to-saffron-500', 'ring' => 'ring-accent-200', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
-                ['n' => '03', 'title' => 'Issue invoice — 60 seconds', 'desc' => 'Pick a customer, type one line item, tap Issue. PDF is ready to WhatsApp.', 'gradient' => 'from-money-500 to-money-700', 'ring' => 'ring-money-200', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                ['n' => '03', 'title' => 'Issue invoice in 60 seconds', 'desc' => 'Pick a customer, type one line item, tap Issue. PDF is ready to WhatsApp.', 'gradient' => 'from-money-500 to-money-700', 'ring' => 'ring-money-200', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
             ] as $step)
                 <div class="relative bg-white rounded-2xl p-6 md:p-8 ring-1 {{ $step['ring'] }} shadow-sm hover:shadow-card transition-all duration-300 hover:-translate-y-1 z-10">
                     <div class="flex items-start gap-4">
@@ -907,16 +907,16 @@
 
         <div class="mt-12 text-center">
             <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-saffron-500 hover:bg-saffron-600 text-white font-semibold rounded-xl shadow-brand transition">
-                Signup for Free — no card needed
+                Signup for Free, no card needed
                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
             </a>
         </div>
     </div>
 </section>
 
-{{-- ─── Why Apna Invoice — competitive differentiator.
+{{-- ─── Why Apna Invoice, competitive differentiator.
      Most free Indian billing tools are pretty PDF generators. We're
-     positioned as the rule-aware alternative — actual CGST sections cited,
+     positioned as the rule-aware alternative, actual CGST sections cited,
      audit-defensible by design. This section is the strongest reason a
      CA-using SME picks us over "easy and free" alternatives. --}}
 <section class="relative py-24 bg-gradient-to-br from-white via-brand-50/30 to-saffron-50/40 border-y border-gray-100 overflow-hidden">
@@ -934,7 +934,7 @@
                 Your CA will <span class="text-brand-700">never bounce an invoice back</span>.
             </h2>
             <p class="mt-4 text-base sm:text-lg text-gray-700 leading-relaxed max-w-2xl">
-                Other free billing apps make pretty PDFs. <strong class="text-gray-900">Apna Invoice is engineered around 12+ specific CGST Rules</strong> — so the document you issue today still passes muster when your CA opens GSTR-1 next month. No silent edge cases. No "we don't support that case." Audit-defensible by design.
+                Other free billing apps make pretty PDFs. <strong class="text-gray-900">Apna Invoice is engineered around 12+ specific CGST Rules</strong>, so the document you issue today still passes muster when your CA opens GSTR-1 next month. No silent edge cases. No "we don't support that case." Audit-defensible by design.
             </p>
         </div>
 
@@ -970,21 +970,21 @@
                     'icon'  => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
                     'title' => 'Section 34(2) credit-note window',
                     'rule'  => 'CGST §34(2)',
-                    'body'  => 'Credit notes can only reduce GST liability if issued by 30 Nov of the FY following the supply. We compute the deadline per invoice and block late issuance — politely — so you never file a worthless CN.',
+                    'body'  => 'Credit notes can only reduce GST liability if issued by 30 Nov of the FY following the supply. We compute the deadline per invoice and block late issuance, politely, so you never file a worthless CN.',
                 ],
                 [
                     'tone'  => 'saffron',
                     'icon'  => 'M13 10V3L4 14h7v7l9-11h-7z',
                     'title' => 'Reverse-charge ready',
                     'rule'  => 'CGST §9(3)/(4) · Rule 46(p)',
-                    'body'  => 'Tick "RCM applicable" — tax is zeroed out, the recipient declaration "Tax payable on reverse charge basis" prints automatically per Rule 46(p), GSTR-1 marks it correctly. Done.',
+                    'body'  => 'Tick "RCM applicable", tax is zeroed out, the recipient declaration "Tax payable on reverse charge basis" prints automatically per Rule 46(p), GSTR-1 marks it correctly. Done.',
                 ],
                 [
                     'tone'  => 'money',
                     'icon'  => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
                     'title' => 'GST 2.0 ready (Sep 2025)',
                     'rule'  => '56th GST Council',
-                    'body'  => 'New 40% sin/luxury slab. New 1.5% / 7.5% under-construction housing rates. Merchant export 0.10%. All loaded — pick the right slab from the dropdown, the system does the rest.',
+                    'body'  => 'New 40% sin/luxury slab. New 1.5% / 7.5% under-construction housing rates. Merchant export 0.10%. All loaded, pick the right slab from the dropdown, the system does the rest.',
                 ],
             ] as $card)
                 @php
@@ -1008,7 +1008,7 @@
             @endforeach
         </div>
 
-        {{-- Closing reassurance — generic framing, no named competitors.
+        {{-- Closing reassurance, generic framing, no named competitors.
              Keeps the message ("CA-friendly · GSTR-1-ready · free") without
              the legal exposure of trademark parity claims. --}}
         <div class="mt-14 max-w-4xl mx-auto p-6 md:p-8 rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-900 text-white text-center shadow-xl">
@@ -1016,7 +1016,7 @@
                 Your CA loves the <span class="text-saffron-300">established billing tools</span>?
             </p>
             <p class="mt-2 text-sm md:text-base text-brand-100 leading-relaxed">
-                They'll love this too — same audit defensibility, same CGST-Rule-46 compliance, for <span class="text-saffron-300 font-bold">₹0 during beta</span>. Export GSTR-1 CSV, hand over the books, file in minutes.
+                They'll love this too, same audit defensibility, same CGST-Rule-46 compliance, for <span class="text-saffron-300 font-bold">₹0 during beta</span>. Export GSTR-1 CSV, hand over the books, file in minutes.
             </p>
             <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-saffron-500 hover:bg-saffron-600 text-brand-900 font-bold shadow-md transition">
@@ -1039,20 +1039,20 @@
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
                 Everything you need. <span class="text-brand-700">Nothing you don't.</span>
             </h2>
-            <p class="mt-4 text-lg text-gray-600">No bloated ERP. No spreadsheet gymnastics. Just the core tools to bill customers and get paid — the way India does business.</p>
+            <p class="mt-4 text-lg text-gray-600">No bloated ERP. No spreadsheet gymnastics. Just the core tools to bill customers and get paid, the way India does business.</p>
         </div>
 
         <div class="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ([
-                ['gr' => 'from-brand-500 to-brand-800', 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'GST auto-detection', 'body' => "CGST+SGST for intra-state, IGST for inter-state. Picks up from customer's state automatically — no manual math."],
-                ['gr' => 'from-accent-500 to-saffron-600', 'icon' => 'M9 17v-2a4 4 0 014-4h2m-4-4V3m0 0L8 6m3-3l3 3M4 19h16a1 1 0 001-1v-7a1 1 0 00-1-1h-3.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H9.414a1 1 0 01-.707-.293L7.293 10.293A1 1 0 006.586 10H3a1 1 0 00-1 1v7a1 1 0 001 1z', 'title' => 'One-click PDF', 'body' => 'Letterhead, logo, signature, HSN/SAC, amount in words (Indian format). Download or print — always pixel-perfect.'],
+                ['gr' => 'from-brand-500 to-brand-800', 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'GST auto-detection', 'body' => "CGST+SGST for intra-state, IGST for inter-state. Picks up from customer's state automatically, no manual math."],
+                ['gr' => 'from-accent-500 to-saffron-600', 'icon' => 'M9 17v-2a4 4 0 014-4h2m-4-4V3m0 0L8 6m3-3l3 3M4 19h16a1 1 0 001-1v-7a1 1 0 00-1-1h-3.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H9.414a1 1 0 01-.707-.293L7.293 10.293A1 1 0 006.586 10H3a1 1 0 00-1 1v7a1 1 0 001 1z', 'title' => 'One-click PDF', 'body' => 'Letterhead, logo, signature, HSN/SAC, amount in words (Indian format). Download or print, always pixel-perfect.'],
                 ['gr' => 'from-money-500 to-money-700', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'title' => 'Draft → Issued flow', 'body' => 'Edit drafts as much as you want. Issue to lock the number and make it legally final. Atomic numbering, no duplicates.'],
                 ['gr' => 'from-brand-600 to-accent-500', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'title' => 'Partial payments', 'body' => 'Record advance payments, track balance at a glance. Status moves from Final → Partially paid → Paid as you go.'],
-                ['gr' => 'from-saffron-500 to-accent-700', 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 'title' => 'Customer book', 'body' => 'Save customer details once — GSTIN, address, state. Reuse across invoices. Auto-fills the GST tax mode based on state.'],
+                ['gr' => 'from-saffron-500 to-accent-700', 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 'title' => 'Customer book', 'body' => 'Save customer details once, GSTIN, address, state. Reuse across invoices. Auto-fills the GST tax mode based on state.'],
                 ['gr' => 'from-brand-700 to-money-600', 'icon' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'title' => 'Payment reminders', 'body' => 'Auto-email nudges at 0 / 3 / 7 / 15 / 30 days past due, or send a one-tap WhatsApp follow-up. Receipts are generated the moment payment is recorded.'],
-                ['gr' => 'from-red-500 to-saffron-600', 'icon' => 'M19 14l-7 7m0 0l-7-7m7 7V3', 'title' => 'Credit notes — GST Section 34', 'body' => 'Issue credit notes against an issued invoice with reason codes. Compliant with CBIC Section 34 format for returns, adjustments, and disputes.'],
-                ['gr' => 'from-accent-600 to-brand-700', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', 'title' => 'Multi-GSTIN / multi-branch', 'body' => 'Run multiple companies or state branches from one login. Each entity gets its own GSTIN, logo, numbering series — one click to switch.'],
-                ['gr' => 'from-money-600 to-brand-700', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'title' => 'One-click backups', 'body' => 'Download a full ZIP of your invoices, customers, and PDFs anytime — or schedule it to email itself monthly. Your data, your move.'],
+                ['gr' => 'from-red-500 to-saffron-600', 'icon' => 'M19 14l-7 7m0 0l-7-7m7 7V3', 'title' => 'Credit notes (GST Section 34)', 'body' => 'Issue credit notes against an issued invoice with reason codes. Compliant with CBIC Section 34 format for returns, adjustments, and disputes.'],
+                ['gr' => 'from-accent-600 to-brand-700', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', 'title' => 'Multi-GSTIN / multi-branch', 'body' => 'Run multiple companies or state branches from one login. Each entity gets its own GSTIN, logo, numbering series, one click to switch.'],
+                ['gr' => 'from-money-600 to-brand-700', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'title' => 'One-click backups', 'body' => 'Download a full ZIP of your invoices, customers, and PDFs anytime, or schedule it to email itself monthly. Your data, your move.'],
             ] as $f)
                 <div class="group relative bg-white rounded-2xl p-6 ring-1 ring-gray-100 hover:ring-brand-200 shadow-sm hover:shadow-card transition">
                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br {{ $f['gr'] }} flex items-center justify-center text-white shadow-sm">
@@ -1066,7 +1066,7 @@
     </div>
 </section>
 
-<!-- Excel vs Apna Invoice — addresses the #1 "competitor" for Indian SMEs -->
+<!-- Excel vs Apna Invoice, addresses the #1 "competitor" for Indian SMEs -->
 <section class="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
@@ -1090,12 +1090,12 @@
                 <h3 class="mt-2 font-display text-xl font-extrabold text-gray-900">The way most of India still bills</h3>
                 <ul class="mt-6 space-y-4">
                     @foreach ([
-                        'Manual CGST/SGST/IGST math — one wrong state and the whole invoice is non-compliant',
-                        'No HSN/SAC codes handy — Google each line, paste, hope it\'s right',
-                        'Amount in words written by hand — "lakh" vs "lac" arguments with the CA every month',
-                        'Invoice numbers reset wrong at FY-end — GST officer flags it in audit',
-                        'Version chaos: invoice_final_v3_FINAL.xlsx — nobody knows which one was sent',
-                        'Can\'t WhatsApp the file directly — customers get a broken .xlsx preview',
+                        'Manual CGST/SGST/IGST math, one wrong state and the whole invoice is non-compliant',
+                        'No HSN/SAC codes handy, Google each line, paste, hope it\'s right',
+                        'Amount in words written by hand, "lakh" vs "lac" arguments with the CA every month',
+                        'Invoice numbers reset wrong at FY-end, GST officer flags it in audit',
+                        'Version chaos: invoice_final_v3_FINAL.xlsx, nobody knows which one was sent',
+                        'Can\'t WhatsApp the file directly, customers get a broken .xlsx preview',
                     ] as $pain)
                         <li class="flex items-start gap-3">
                             <div class="mt-0.5 w-5 h-5 rounded-full bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0 ring-1 ring-red-100">
@@ -1120,10 +1120,10 @@
                 <ul class="relative mt-6 space-y-4">
                     @foreach ([
                         'Same-state? Auto CGST+SGST. Inter-state? Auto IGST. Zero math on your end.',
-                        'HSN / SAC codes pre-loaded — start typing, pick from the list. Every line is compliant.',
-                        'Amount in words in proper Indian format — "Rupees One Lakh Twenty-Five Thousand Only".',
+                        'HSN / SAC codes pre-loaded, start typing, pick from the list. Every line is compliant.',
+                        'Amount in words in proper Indian format, "Rupees One Lakh Twenty-Five Thousand Only".',
                         'Auto FY-reset numbering: ACME/2025-26/0001 → ACME/2026-27/0001 on 1st April.',
-                        'One source of truth — every draft, edit, and revision is tracked with version history.',
+                        'One source of truth, every draft, edit, and revision is tracked with version history.',
                         'One-click WhatsApp share with a preview-ready PDF. Customer opens it on their phone.',
                     ] as $win)
                         <li class="flex items-start gap-3">
@@ -1136,7 +1136,7 @@
                 </ul>
                 <div class="relative mt-7 pt-6 border-t border-white/10">
                     <a href="{{ route('register') }}" class="group inline-flex items-center gap-2 text-accent-300 hover:text-accent-200 font-bold text-sm transition">
-                        Switch to Apna Invoice — it's free
+                        Switch to Apna Invoice, it's free
                         <svg class="w-4 h-4 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M5 12h13"/></svg>
                     </a>
                 </div>
@@ -1157,7 +1157,7 @@
         <div class="mt-14 grid md:grid-cols-3 gap-6 md:gap-8">
             @foreach ([
                 ['n' => '01', 't' => 'Set up your business', 'b' => 'Company name, GSTIN, logo, default terms. Uploading takes a minute.'],
-                ['n' => '02', 't' => 'Add your customer', 'b' => 'Save their details once — we auto-fill them in every future invoice.'],
+                ['n' => '02', 't' => 'Add your customer', 'b' => 'Save their details once, we auto-fill them in every future invoice.'],
                 ['n' => '03', 't' => 'Issue and share', 'b' => 'Fill line items, click Issue, download PDF. Done.'],
             ] as $i => $s)
                 <div class="relative">
@@ -1206,7 +1206,7 @@
                 [
                     'n' => 'Rohit Patel', 'r' => 'Director', 'company' => 'Patel Trading Co.',
                     'city' => 'Surat', 'industry' => 'Textile · Exports',
-                    'q' => 'Finally, an invoicing tool that speaks Indian — lakhs, crores, HSN, SAC, state-based GST. Not a rebranded US product with bolted-on GST.',
+                    'q' => 'Finally, an invoicing tool that speaks Indian, lakhs, crores, HSN, SAC, state-based GST. Not a rebranded US product with bolted-on GST.',
                     'metric' => '₹50L+ billed/mo', 'metric_icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                     'i' => 'RP', 'c' => 'from-money-500 to-money-700',
                 ],
@@ -1254,7 +1254,7 @@
         <div class="text-center">
             <span class="inline-block px-3 py-1 rounded-full bg-accent-100 text-accent-800 text-xs font-bold uppercase tracking-wider">Beta pricing</span>
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Free for Indian MSMEs, SMEs <span class="text-brand-700">&amp; startups</span>.</h2>
-            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Sign up today and get unlimited invoices, customers, and PDF exports — no credit card, no feature locks, no hidden add-ons. When we launch paid tiers for larger businesses, beta users keep the free plan.</p>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Sign up today and get unlimited invoices, customers, and PDF exports, no credit card, no feature locks, no hidden add-ons. When we launch paid tiers for larger businesses, beta users keep the free plan.</p>
         </div>
 
         <div class="mt-12 relative">
@@ -1297,7 +1297,7 @@
     </div>
 </section>
 
-<!-- Built for India — trust & compliance strip -->
+<!-- Built for India, trust & compliance strip -->
 <section class="py-20 bg-white relative overflow-hidden">
     <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron-200 to-transparent"></div>
     <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-money-200 to-transparent"></div>
@@ -1359,7 +1359,7 @@
     </div>
 </section>
 
-{{-- ─── From the blog — drives discovery of /blog content + builds topical
+{{-- ─── From the blog, drives discovery of /blog content + builds topical
      authority for SEO. Section is hidden when no posts are published yet,
      so the landing page degrades gracefully on a fresh install. --}}
 @php
@@ -1375,7 +1375,7 @@
             <div>
                 <span class="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold uppercase tracking-wider">Blogs</span>
                 <h2 class="mt-3 font-display text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">GST tips & invoicing how-tos</h2>
-                <p class="mt-2 text-gray-600 max-w-2xl">Practical guides for Indian freelancers, MSMEs and CAs — written by the team behind Apna Invoice.</p>
+                <p class="mt-2 text-gray-600 max-w-2xl">Practical guides for Indian freelancers, MSMEs and CAs, written by the team behind Apna Invoice.</p>
             </div>
             <a href="{{ route('blog.index') }}" class="inline-flex items-center gap-1 text-sm font-bold text-brand-700 hover:text-brand-800 self-start sm:self-end whitespace-nowrap">
                 Browse all blogs
@@ -1442,7 +1442,7 @@
             @endforeach
         </div>
 
-        {{-- Downloadable user guide — public, no signup needed.
+        {{-- Downloadable user guide, public, no signup needed.
              Lets prospects preview the full flow before creating an account. --}}
         <div class="mt-10 p-5 sm:p-6 rounded-2xl bg-white ring-1 ring-brand-100 shadow-card flex flex-col sm:flex-row sm:items-center gap-4">
             <div class="shrink-0 w-12 h-12 rounded-xl bg-brand-50 ring-1 ring-brand-100 text-brand-700 flex items-center justify-center">
@@ -1451,7 +1451,7 @@
             <div class="flex-1 min-w-0">
                 <div class="text-[11px] font-bold uppercase tracking-widest text-saffron-600">Free guide · No signup</div>
                 <h3 class="mt-0.5 font-display text-lg font-extrabold text-gray-900">17-slide getting-started deck</h3>
-                <p class="mt-1 text-sm text-gray-600">A complete walkthrough — from sign-up to your first paid GST invoice — in 17 slides. Share with your team or your CA.</p>
+                <p class="mt-1 text-sm text-gray-600">A complete walkthrough, from sign-up to your first paid GST invoice, in 17 slides. Share with your team or your CA.</p>
             </div>
             <a href="{{ asset('downloads/apna-invoice-getting-started.pptx') }}" download
                class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm transition whitespace-nowrap">

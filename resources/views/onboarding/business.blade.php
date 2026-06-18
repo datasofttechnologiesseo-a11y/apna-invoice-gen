@@ -61,7 +61,7 @@
                     <div>
                         <x-input-label for="state_id" value="State *" />
                         <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" required>
-                            <option value="">— Select —</option>
+                            <option value="">, Select, </option>
                             @foreach ($states as $s)
                                 <option value="{{ $s->id }}" @selected(old('state_id', $company->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                             @endforeach
@@ -98,7 +98,7 @@
 
             <div class="border-t pt-6">
                 <h3 class="font-display font-bold text-gray-900 text-lg">Letterhead logo</h3>
-                <p class="text-sm text-gray-500 mt-0.5">Optional — shown at the top of every invoice PDF</p>
+                <p class="text-sm text-gray-500 mt-0.5">Optional, shown at the top of every invoice PDF</p>
                 @if ($company->logo_path)
                     <img src="{{ Storage::url($company->logo_path) }}" alt="Current logo" class="mt-4 h-20 border rounded-lg bg-white p-2">
                 @endif
@@ -121,7 +121,7 @@
                         <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="$previewPrefix" required maxlength="10" />
                         <p class="mt-1 text-xs text-gray-500">
                             Your first invoice will be <strong class="font-mono text-brand-700">{{ $previewPrefix }}/{{ $fyLabel }}/0001</strong>
-                            <span class="text-gray-400">— sequence auto-resets on 1&nbsp;April (GST best practice). You can change the format later in Company settings.</span>
+                            <span class="text-gray-400">, sequence auto-resets on 1&nbsp;April (GST best practice). You can change the format later in Company settings.</span>
                         </p>
                     </div>
                 </div>
@@ -130,7 +130,7 @@
             <div class="border-t pt-6">
                 <h3 class="font-display font-bold text-gray-900 text-lg">Payment details</h3>
                 <p class="text-sm text-gray-500 mt-0.5">
-                    Shown in the "Payment details" block on every invoice. Add a UPI ID to auto-generate a Scan-to-Pay QR on bills. All fields are optional — fill what applies.
+                    Shown in the "Payment details" block on every invoice. Add a UPI ID to auto-generate a Scan-to-Pay QR on bills. All fields are optional, fill what applies.
                 </p>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>

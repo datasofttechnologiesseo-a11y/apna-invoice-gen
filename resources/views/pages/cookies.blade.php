@@ -2,7 +2,7 @@
     title="Cookie Settings"
     eyebrow="Preferences"
     lead="Control which cookies Apna Invoice uses. Essential cookies are always on because the product can't function without them."
-    description="Manage your Apna Invoice cookie preferences — essential, analytics, and marketing. Settings are stored locally and respected across the site."
+    description="Manage your Apna Invoice cookie preferences, essential, analytics, and marketing. Settings are stored locally and respected across the site."
     keywords="Apna Invoice cookies, cookie preferences India, GDPR cookies, DPDP cookies, SaaS cookie settings"
     type="article">
 
@@ -61,10 +61,10 @@
 
     <h2>What we use</h2>
     <ul>
-        <li><strong>Session cookies</strong> (essential) — keep you logged in.</li>
-        <li><strong>XSRF-TOKEN</strong> (essential) — protects against cross-site request forgery.</li>
-        <li><strong>Product analytics</strong> (optional) — anonymous feature-usage metrics.</li>
-        <li><strong>Marketing</strong> (optional) — ad measurement pixels for campaigns.</li>
+        <li><strong>Session cookies</strong> (essential), keep you logged in.</li>
+        <li><strong>XSRF-TOKEN</strong> (essential), protects against cross-site request forgery.</li>
+        <li><strong>Product analytics</strong> (optional), anonymous feature-usage metrics.</li>
+        <li><strong>Marketing</strong> (optional), ad measurement pixels for campaigns.</li>
     </ul>
 
     <p>

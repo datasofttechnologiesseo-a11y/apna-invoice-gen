@@ -1,6 +1,6 @@
 <x-guest-layout
     :title="'Log in to your free GST invoice account'"
-    :description="'Log in to Apna Invoice — free GST-compliant online invoice generator for Indian SMEs, startups, freelancers, and CAs.'"
+    :description="'Log in to Apna Invoice, free GST-compliant online invoice generator for Indian SMEs, startups, freelancers, and CAs.'"
     :keywords="'Apna Invoice login, GST invoice login, invoice generator India login'">
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -44,4 +44,6 @@
             </x-primary-button>
         </div>
     </form>
+
+    <x-google-auth-button label="Sign in with Google" />
 </x-guest-layout>

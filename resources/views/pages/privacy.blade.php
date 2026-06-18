@@ -1,9 +1,9 @@
 @php $effective = 'April 18, 2026'; @endphp
 <x-layouts.marketing
-    title="Privacy Policy — DPDP Act 2023 Compliant"
+    title="Privacy Policy, DPDP Act 2023 Compliant"
     eyebrow="Legal"
     lead="What data we collect, why we collect it, and the controls you have over it. Your records stay in India under the Digital Personal Data Protection Act, 2023."
-    description="DPDP Act 2023 compliant privacy policy for Apna Invoice — data residency in India, your rights as a Data Principal, retention rules, security, subprocessors and grievance contact."
+    description="DPDP Act 2023 compliant privacy policy for Apna Invoice, data residency in India, your rights as a Data Principal, retention rules, security, subprocessors and grievance contact."
     keywords="Apna Invoice privacy policy, DPDP Act 2023 compliance, Data Principal rights India, invoice software privacy India, GST data residency, SaaS privacy India, grievance officer DPDP"
     type="article">
 

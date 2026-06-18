@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\UserConsent;
+use App\Services\AccountErasureService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,9 +54,54 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Data & Privacy Center — the data principal's self-service hub for the
+     * DPDP rights: view consent history, withdraw marketing consent, export
+     * (right to access) and erase (right to erasure).
      */
-    public function destroy(Request $request): RedirectResponse
+    public function privacy(Request $request): View
+    {
+        $user = $request->user();
+
+        return view('profile.privacy', [
+            'user' => $user,
+            'marketingConsent' => $user->marketingConsentGiven(),
+            'consents' => $user->consents()->orderByDesc('id')->limit(50)->get(),
+        ]);
+    }
+
+    /**
+     * Grant or withdraw marketing consent. Each change is appended to the
+     * immutable consent log (never an in-place edit) so withdrawal history is
+     * complete and provable under DPDP §6.
+     */
+    public function updateMarketingConsent(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'marketing_opt_in' => ['required', 'boolean'],
+        ]);
+
+        UserConsent::record(
+            $request->user()->id,
+            'marketing',
+            (bool) $data['marketing_opt_in'],
+            'privacy_center',
+            $request,
+        );
+
+        return back()->with('status', $data['marketing_opt_in']
+            ? 'You\'ll now receive product and offer emails.'
+            : 'You\'ve been opted out of marketing emails.');
+    }
+
+    /**
+     * Delete (erase) the user's account.
+     *
+     * Erasure is delegated to AccountErasureService, which either fully deletes
+     * the account or — when GST records must legally be retained — depersonalises
+     * it. Either way the login is destroyed, so we log out and invalidate the
+     * session here.
+     */
+    public function destroy(Request $request, AccountErasureService $eraser): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
@@ -64,11 +111,15 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        $result = $eraser->erase($user);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        $message = $result['mode'] === 'deleted'
+            ? 'Your account and all personal data have been permanently deleted.'
+            : 'Your account has been closed and your personal data erased. Your GST invoice records are retained only as long as Indian tax law requires, then automatically purged.';
+
+        return Redirect::to('/')->with('status', $message);
     }
 }

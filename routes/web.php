@@ -282,6 +282,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/companies', [\App\Http\Controllers\Admin\DashboardController::class, 'companies'])->name('companies');
         Route::get('/customers', [\App\Http\Controllers\Admin\DashboardController::class, 'customers'])->name('customers');
 
+        // Personal-data breach register (DPDP §8(6)).
+        Route::get('/breaches', [\App\Http\Controllers\Admin\BreachController::class, 'index'])->name('breaches.index');
+        Route::get('/breaches/create', [\App\Http\Controllers\Admin\BreachController::class, 'create'])->name('breaches.create');
+        Route::post('/breaches', [\App\Http\Controllers\Admin\BreachController::class, 'store'])->name('breaches.store');
+        Route::get('/breaches/{breach}', [\App\Http\Controllers\Admin\BreachController::class, 'show'])->name('breaches.show');
+        Route::patch('/breaches/{breach}', [\App\Http\Controllers\Admin\BreachController::class, 'update'])->name('breaches.update');
+        Route::post('/breaches/{breach}/notify', [\App\Http\Controllers\Admin\BreachController::class, 'notify'])->name('breaches.notify');
+
         // Blog authoring — full CRUD + quick publish toggle.
         Route::post('/blog/{post}/toggle', [\App\Http\Controllers\Admin\BlogAdminController::class, 'togglePublish'])->name('blog.toggle');
         // AJAX preview — renders raw markdown to safe HTML using the same
@@ -299,6 +307,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
+
+    // Data & Privacy Center — DPDP data principal rights (consent, access, erasure).
+    Route::get('/profile/privacy', [ProfileController::class, 'privacy'])->name('profile.privacy');
+    Route::post('/profile/privacy/marketing', [ProfileController::class, 'updateMarketingConsent'])
+        ->name('profile.privacy.marketing');
 
     // Settings hub — single landing page that organises every existing
     // settings route (company, profile, activity, etc.) under one roof.

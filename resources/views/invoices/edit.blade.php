@@ -65,7 +65,7 @@
 
     <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }})'
          @customer-added.window="addCustomer($event.detail)"
-         {{-- Tally-style keyboard shortcuts. Listen at window level so they
+         {{-- power-user keyboard shortcuts. Listen at window level so they
               fire from anywhere on the page (combobox dropdowns, side panels
               etc.). The handler inspects $event.target so we don't hijack
               Ctrl+S while the user is typing in a textarea. --}}
@@ -735,9 +735,9 @@
                  totals inline + the FAB. --}}
             @unless ($restricted)
             <div class="hidden lg:block fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-                {{-- Tally-style keyboard shortcut strip — kept subtle so it doesn't
+                {{-- power-user keyboard shortcut strip — kept subtle so it doesn't
                      compete with the action buttons, but always visible for power
-                     users (the #1 Vyapar user complaint is missing shortcuts). --}}
+                     users (a common complaint in Indian billing apps is missing shortcuts). --}}
                 <div class="max-w-7xl mx-auto px-6 py-1 text-[11px] text-gray-500 border-b border-gray-100 flex items-center gap-x-4 gap-y-0.5 flex-wrap">
                     <span class="font-semibold text-gray-700 uppercase tracking-wider text-[10px]">Shortcuts</span>
                     <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px]">F2</kbd> add row</span>
@@ -977,7 +977,7 @@
                 },
 
                 /**
-                 * Keyboard shortcuts (Tally-style — common in Indian SME billing apps).
+                 * Keyboard shortcuts (power-user — common in Indian SME billing apps).
                  *   F2          → add a new row
                  *   F9          → save & download PDF
                  *   Ctrl+S      → save draft  (overrides browser save-as)

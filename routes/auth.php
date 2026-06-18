@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,31 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store'])
         ->middleware('throttle:5,1');
+
+    // Sign up / sign in with Google (OAuth).
+    Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->where('provider', 'google')
+        ->name('social.redirect');
+    Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+        ->where('provider', 'google')
+        ->name('social.callback');
+
+    // Mobile-entry step for Google sign-ups (collect number, then OTP).
+    Route::get('register/mobile', [RegisteredUserController::class, 'showMobile'])
+        ->name('register.mobile');
+    Route::post('register/mobile', [RegisteredUserController::class, 'storeMobile'])
+        ->middleware('throttle:5,1')
+        ->name('register.mobile.store');
+
+    // Mobile OTP verification (step 2 of registration).
+    Route::get('register/verify', [RegisteredUserController::class, 'showVerify'])
+        ->name('register.verify');
+    Route::post('register/verify', [RegisteredUserController::class, 'verify'])
+        ->middleware('throttle:10,1')
+        ->name('register.verify.store');
+    Route::post('register/resend', [RegisteredUserController::class, 'resend'])
+        ->middleware('throttle:5,1')
+        ->name('register.resend');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

@@ -1,4 +1,4 @@
-{{-- Cookie banner — shown on first visit across marketing, auth, and app layouts.
+{{-- Cookie banner, shown on first visit across marketing, auth, and app layouts.
      Once a choice is made the banner hides for 12 months (stored in localStorage).
      For authenticated users, the choice is also POSTed to /cookie-consent so it lands
      in the user_consents audit log. --}}
@@ -33,7 +33,7 @@ function cookieBanner() {
         visible: false,
         STORAGE_KEY: 'cookiePrefs',
         VERSION_KEY: 'cookiePrefsVersion',
-        // Bump when Cookie Policy substance changes — forces a re-prompt.
+        // Bump when Cookie Policy substance changes, forces a re-prompt.
         CURRENT_VERSION: '2026-04-24',
         init() {
             try {
@@ -61,7 +61,7 @@ function cookieBanner() {
             this.persist({ analytics: false, marketing: false });
         },
         syncToServer(prefs) {
-            // Only logged-in users — guest preferences stay client-side.
+            // Only logged-in users, guest preferences stay client-side.
             const token = document.querySelector('meta[name="csrf-token"]')?.content;
             if (!token) return;
             fetch('{{ route('cookie-consent.store') }}', {

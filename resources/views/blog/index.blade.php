@@ -3,7 +3,7 @@
         '@context' => 'https://schema.org',
         '@type' => 'Blog',
         'name' => 'Apna Invoice Blog',
-        'description' => 'GST tips, invoicing how-tos, and Indian small-business finance guides — written by the Apna Invoice team.',
+        'description' => 'GST tips, invoicing how-tos, and Indian small-business finance guides, written by the Apna Invoice team.',
         'url' => route('blog.index'),
         'inLanguage' => 'en-IN',
         'publisher' => [
@@ -27,8 +27,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="GST & Invoicing Blog — Tips for Indian Small Businesses · Apna Invoice"
-        description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow — written for Indian MSMEs, freelancers and CAs."
+        title="GST & Invoicing Blog, Tips for Indian Small Businesses · Apna Invoice"
+        description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow, written for Indian MSMEs, freelancers and CAs."
         keywords="GST blog India, invoicing tips, HSN SAC guide, GSTR-1 filing, MSME finance, free GST invoice software"
         type="website"
         :json-ld="$blogJsonLd" />
@@ -66,7 +66,7 @@
     <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-100 text-brand-700 text-xs font-bold uppercase tracking-widest ring-1 ring-brand-200">Apna Invoice Blogs</span>
         <h1 class="mt-4 font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">GST tips, invoicing how-tos, and small-business guides</h1>
-        <p class="mt-4 text-base sm:text-lg text-gray-600 leading-relaxed max-w-2xl">Written for Indian freelancers, MSMEs and CAs. Get the most out of GST, save time on billing, and grow your business — without the jargon.</p>
+        <p class="mt-4 text-base sm:text-lg text-gray-600 leading-relaxed max-w-2xl">Written for Indian freelancers, MSMEs and CAs. Get the most out of GST, save time on billing, and grow your business, without the jargon.</p>
 
         <form method="GET" class="mt-6 max-w-md">
             <label for="blog-search" class="sr-only">Search articles</label>
@@ -85,7 +85,7 @@
         <div class="text-center py-16">
             <div class="text-5xl mb-4">📝</div>
             <h2 class="font-display text-2xl font-bold text-gray-900">No posts yet</h2>
-            <p class="mt-2 text-gray-600">@if (request('search'))No articles match "{{ request('search') }}". <a href="{{ route('blog.index') }}" class="text-brand-700 underline">Clear search</a>.@else We're cooking up our first guides — check back soon.@endif</p>
+            <p class="mt-2 text-gray-600">@if (request('search'))No articles match "{{ request('search') }}". <a href="{{ route('blog.index') }}" class="text-brand-700 underline">Clear search</a>.@else We're cooking up our first guides, check back soon.@endif</p>
         </div>
     @else
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">

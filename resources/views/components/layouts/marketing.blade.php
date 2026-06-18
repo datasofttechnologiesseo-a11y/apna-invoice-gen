@@ -10,7 +10,7 @@
 ])
 @php
     // Auto-generate a BreadcrumbList JSON-LD for every marketing page so Google
-    // shows Home › {page} breadcrumbs in SERPs — free rich-result boost.
+    // shows Home › {page} breadcrumbs in SERPs, free rich-result boost.
     $breadcrumb = [
         '@context' => 'https://schema.org',
         '@type' => 'BreadcrumbList',
