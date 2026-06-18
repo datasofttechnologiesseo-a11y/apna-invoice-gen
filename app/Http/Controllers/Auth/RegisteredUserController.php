@@ -72,12 +72,15 @@ class RegisteredUserController extends Controller
         $code = $otp->generateCode();
         $referralCode = strtoupper(trim((string) ($request->input('referral_code') ?? session('referral_code', ''))));
 
+        $phone = $otp->normalizeIndianMobile($request->phone);
+        $result = $otp->send($phone, $code, $request->email);
+
         // Stash the pending registration. Password is kept only for the life of
         // this server-side session and is hashed the moment the account is made.
         $request->session()->put(self::SESSION_KEY, [
             'name' => $request->name,
             'email' => $request->email,
-            'phone' => $otp->normalizeIndianMobile($request->phone),
+            'phone' => $phone,
             'password' => $request->password,
             'marketing_opt_in' => $request->boolean('marketing_opt_in'),
             'referral_code' => $referralCode,
@@ -86,13 +89,20 @@ class RegisteredUserController extends Controller
             'attempts' => 0,
             'resends' => 0,
             'resend_at' => now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp,
+            'channel' => $result['channel'],
         ]);
 
-        $result = $otp->send($otp->normalizeIndianMobile($request->phone), $code);
-
         return redirect()->route('register.verify')
-            ->with('status', 'We\'ve sent a 6-digit code to your mobile.')
+            ->with('status', $this->codeSentMessage($result['channel']))
             ->with('otp_dev_code', $result['dev_code']);
+    }
+
+    /** Channel-aware "we sent your code" message. */
+    private function codeSentMessage(string $channel): string
+    {
+        return $channel === 'email'
+            ? 'We\'ve emailed you a 6-digit verification code.'
+            : 'We\'ve sent a 6-digit code to your mobile.';
     }
 
     /**
@@ -125,17 +135,17 @@ class RegisteredUserController extends Controller
 
         $code = $otp->generateCode();
         $reg['phone'] = $otp->normalizeIndianMobile($request->phone);
+        $result = $otp->send($reg['phone'], $code, $reg['email'] ?? null);
         $reg['otp_hash'] = Hash::make($code);
         $reg['expires_at'] = now()->addMinutes((int) config('otp.ttl_minutes', 10))->timestamp;
         $reg['attempts'] = 0;
         $reg['resends'] = 0;
         $reg['resend_at'] = now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp;
+        $reg['channel'] = $result['channel'];
         $request->session()->put(self::SESSION_KEY, $reg);
 
-        $result = $otp->send($reg['phone'], $code);
-
         return redirect()->route('register.verify')
-            ->with('status', 'We\'ve sent a 6-digit code to your mobile.')
+            ->with('status', $this->codeSentMessage($result['channel']))
             ->with('otp_dev_code', $result['dev_code']);
     }
 
@@ -148,8 +158,13 @@ class RegisteredUserController extends Controller
                 ->withErrors(['phone' => 'Your sign-up session expired. Please start again.']);
         }
 
+        // Where the code actually went — email (fallback) or the masked mobile.
+        $sentTo = ($reg['channel'] ?? 'sms') === 'email'
+            ? 'your email'
+            : $otp->mask($reg['phone']);
+
         return view('auth.verify-otp', [
-            'maskedPhone' => $otp->mask($reg['phone']),
+            'sentTo' => $sentTo,
             'canResendAt' => $reg['resend_at'],
             'devCode' => session('otp_dev_code'),
         ]);
@@ -270,14 +285,14 @@ class RegisteredUserController extends Controller
         }
 
         $code = $otp->generateCode();
+        $result = $otp->send($reg['phone'], $code, $reg['email'] ?? null);
         $reg['otp_hash'] = Hash::make($code);
         $reg['expires_at'] = now()->addMinutes((int) config('otp.ttl_minutes', 10))->timestamp;
         $reg['resend_at'] = now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp;
         $reg['attempts'] = 0;
         $reg['resends'] = ($reg['resends'] ?? 0) + 1;
+        $reg['channel'] = $result['channel'];
         $request->session()->put(self::SESSION_KEY, $reg);
-
-        $result = $otp->send($reg['phone'], $code);
 
         return back()
             ->with('status', 'A new code is on its way.')

@@ -10,7 +10,7 @@
         </div>
         <h1 class="mt-3 font-display text-xl font-extrabold text-gray-900">Verify your mobile</h1>
         <p class="mt-1 text-sm text-gray-500">
-            Enter the {{ config('otp.length', 6) }}-digit code we sent to <strong class="text-gray-700">{{ $maskedPhone }}</strong>.
+            Enter the {{ config('otp.length', 6) }}-digit code we sent to <strong class="text-gray-700">{{ $sentTo }}</strong>.
         </p>
     </div>
 

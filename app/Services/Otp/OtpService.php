@@ -24,23 +24,39 @@ class OtpService
     }
 
     /**
-     * Send the code to the phone.
+     * Send the code. Falls back to email when no real SMS gateway is wired up
+     * in production, so sign-ups keep working before DLT/SMS is configured.
      *
-     * @return array{sent: bool, dev_code: ?string}
+     * @return array{sent: bool, dev_code: ?string, channel: string}
      */
-    public function send(string $phone, string $code): array
+    public function send(string $phone, string $code, ?string $email = null): array
     {
         $driver = config('otp.driver', 'log');
+        $channel = 'sms';
 
-        $sent = match ($driver) {
-            'log' => $this->sendViaLog($phone, $code),
-            // 'msg91', 'twilio', … — implement once DLT-registered.
-            default => $this->sendViaLog($phone, $code),
-        };
+        if ($driver === 'email') {
+            $sent = $this->sendViaEmail($email, $code);
+            $channel = 'email';
+        } elseif ($driver === 'log') {
+            // No real SMS gateway. In production, email the code so the user
+            // actually receives it; in dev, log it (and we expose it in the UI).
+            if (app()->isProduction() && filled($email) && config('otp.email_fallback', true)) {
+                $sent = $this->sendViaEmail($email, $code);
+                $channel = 'email';
+            } else {
+                $sent = $this->sendViaLog($phone, $code);
+                $channel = 'log';
+            }
+        } else {
+            // A real gateway ('msg91', 'twilio', …) — implement once DLT-registered.
+            $sent = $this->sendViaLog($phone, $code);
+            $channel = 'log';
+        }
 
         return [
             'sent' => $sent,
             'dev_code' => $this->shouldExposeCode() ? $code : null,
+            'channel' => $channel,
         ];
     }
 
@@ -49,6 +65,23 @@ class OtpService
         Log::info("OTP for {$phone}: {$code} (valid " . config('otp.ttl_minutes', 10) . ' min)');
 
         return true;
+    }
+
+    private function sendViaEmail(?string $email, string $code): bool
+    {
+        if (! filled($email)) {
+            return false;
+        }
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\OtpEmail($code));
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('OTP email delivery failed', ['error' => $e->getMessage()]);
+
+            return false;
+        }
     }
 
     private function shouldExposeCode(): bool

@@ -26,8 +26,16 @@ return [
     // reset indefinitely by repeatedly resending.
     'max_resends' => (int) env('OTP_MAX_RESENDS', 3),
 
-    // SMS driver: 'log' (dev — writes code to log) or a real gateway once built.
+    // OTP delivery driver:
+    //   'log'   — dev: writes the code to the log (and exposes it in the UI).
+    //   'email' — always email the code.
+    //   (a real SMS gateway like 'msg91' can be added later).
     'driver' => env('OTP_SMS_DRIVER', 'log'),
+
+    // Safety net: in PRODUCTION, if the driver is 'log' (i.e. no real SMS
+    // gateway is wired up yet), deliver the code by email instead so sign-ups
+    // never break while DLT/SMS is being set up.
+    'email_fallback' => (bool) env('OTP_EMAIL_FALLBACK', true),
 
     // In non-production, surface the code in the UI so testing doesn't need a
     // live SMS gateway. NEVER enabled in production.
