@@ -232,9 +232,17 @@
     <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
 
     {{-- Preload the brand logo, it's the LCP element on the landing header. --}}
-    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" as="image" type="image/jpeg">
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
+    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" as="image" type="image/jpeg" fetchpriority="high">
+    {{-- Fonts: warm the connection (crossorigin is REQUIRED — font files are
+         fetched with CORS, so a plain preconnect warms the wrong connection),
+         then load the stylesheet non-render-blocking. display=swap already
+         paints text immediately in a fallback face and swaps the web font in
+         on load, so making the request async costs nothing and frees up FCP. --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap">
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @include('partials.google-analytics')
@@ -279,10 +287,23 @@
 
 <!-- Hero -->
 <section class="relative overflow-hidden bg-white">
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 md:pt-10 md:pb-20 grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 md:pt-10 md:pb-20 grid lg:grid-cols-12 gap-10 lg:gap-12 items-start lg:items-center">
 
         {{-- ─── Left: marketing copy + features + CTA ─── --}}
-        <div class="lg:col-span-7 animate-fade-up bg-white ring-1 ring-gray-200/80 shadow-xl rounded-3xl p-6 sm:p-8 lg:p-10">
+        <div class="lg:col-span-7 animate-fade-up bg-white ring-1 ring-gray-200/80 shadow-2xl rounded-2xl overflow-hidden">
+            {{-- macOS-style browser window chrome. Pairs with the phone frame on
+                 the right so the hero reads as "works on desktop and mobile" and
+                 gives the landing page a premium, product-forward feel. --}}
+            <div class="flex items-center gap-2 px-5 py-3.5 bg-gray-100/90 border-b border-gray-200">
+                <span class="w-3 h-3 rounded-full bg-[#ff5f57]"></span>
+                <span class="w-3 h-3 rounded-full bg-[#febc2e]"></span>
+                <span class="w-3 h-3 rounded-full bg-[#28c840]"></span>
+                <div class="mx-auto flex items-center gap-1.5 px-4 py-1 rounded-md bg-white ring-1 ring-gray-200 text-xs text-gray-500 font-medium max-w-[60%] truncate">
+                    <svg class="w-3 h-3 text-money-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                    apnainvoice.com
+                </div>
+            </div>
+            <div class="p-6 sm:p-8 lg:p-10">
 
             {{-- Trust pills, three of them deliberately echo the Indian tricolour
                  in reading order: saffron → white (with mini flag) → green. A
@@ -392,10 +413,34 @@
                 </p>
             </div>
 
-        </div>
+            {{-- Honest stat strip. Balances the hero height against the taller
+                 calculator card on desktop (kills the dead whitespace) and
+                 reinforces the value. Every figure here is factual: free beta,
+                 60-second flow, 36 states/UTs preloaded, unlimited invoices. --}}
+            <dl class="mt-10 pt-8 border-t border-gray-200 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6">
+                @foreach ([
+                    ['n' => '₹0', 'l' => 'Free during beta'],
+                    ['n' => '60 sec', 'l' => 'To your first invoice'],
+                    ['n' => '36', 'l' => 'States & UTs built in'],
+                    ['n' => 'Unlimited', 'l' => 'Invoices & customers'],
+                ] as $stat)
+                    <div>
+                        <dt class="font-display font-extrabold text-2xl md:text-3xl text-brand-800 leading-none">{{ $stat['n'] }}</dt>
+                        <dd class="mt-1.5 text-xs sm:text-sm text-gray-500 leading-snug">{{ $stat['l'] }}</dd>
+                    </div>
+                @endforeach
+            </dl>
+
+            <p class="mt-6 flex items-center gap-2 text-sm text-gray-500">
+                <svg class="w-4 h-4 text-money-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1l7 3v6c0 4.5-3 8.3-7 9-4-.7-7-4.5-7-9V4l7-3zm-.7 12.3L6 10l1.4-1.4 1.9 1.9 4.4-4.4L15 7.5l-5.7 5.8z" clip-rule="evenodd"/></svg>
+                Made in India by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-semibold text-gray-700 hover:text-brand-700">Datasoft Technologies</a>. Real humans on WhatsApp &amp; call.
+            </p>
+
+            </div>{{-- /window content --}}
+        </div>{{-- /mac window --}}
 
         <!-- Free GST Calculator (no login needed), anchor target for deep links from blog/articles -->
-        <div id="free-gst-calculator" class="relative lg:col-span-5 animate-fade-up bg-saffron-50/60 ring-1 ring-saffron-100 rounded-3xl p-6 sm:p-8"
+        <div id="free-gst-calculator" class="relative lg:col-span-5 animate-fade-up flex justify-center"
              x-data="{
                 amount: 10000,
                 rate: 18,
@@ -442,19 +487,22 @@
                 }
              }"
              style="animation-delay: 0.15s; animation-fill-mode: both;">
-            {{-- Gradient border wrapper --}}
-            <div class="relative rounded-3xl bg-gradient-to-br from-brand-300/60 via-accent-300/50 to-saffron-300/60 p-[1px] shadow-2xl transition-transform duration-500 hover:-translate-y-1">
-                <div class="relative bg-white rounded-[calc(1.5rem-1px)] overflow-hidden">
+            {{-- Phone frame: makes the live calculator read as a real mobile app
+                 running on a device. Reuses the original two wrapper divs (bezel
+                 + screen) so the Alpine root and tag balance stay intact. --}}
+            <div class="relative w-full max-w-[390px] mx-auto rounded-[3rem] bg-gradient-to-b from-gray-800 to-gray-950 p-3 shadow-2xl ring-1 ring-white/10 transition-transform duration-500 hover:-translate-y-1">
+                {{-- dynamic island --}}
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-24 h-6 bg-black rounded-full ring-1 ring-white/10" aria-hidden="true"></div>
+                <div class="relative bg-white rounded-[2.25rem] overflow-hidden">
                     {{-- Dark header --}}
-                    <div class="relative p-6 md:p-7 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 text-white overflow-hidden">
+                    <div class="relative p-6 md:p-7 pt-9 md:pt-10 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 text-white overflow-hidden">
                         <div class="absolute inset-0 bg-grid-soft opacity-[0.08]"></div>
                         <div class="absolute -top-16 -right-16 w-40 h-40 bg-accent-400 rounded-full blur-3xl opacity-30"></div>
                         <div class="relative flex justify-between items-start">
                             <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-accent-400 to-saffron-400 text-brand-900 font-black text-lg flex items-center justify-center shadow-lg ring-1 ring-white/20">₹</div>
                                 <div>
-                                    <div class="text-[10px] uppercase tracking-[0.2em] text-accent-300 font-bold">Free GST Calculator · No Login</div>
-                                    <h2 id="gst-calculator" class="font-display font-black text-xl md:text-2xl mt-0.5 leading-tight">Free GST Calculator for CGST, SGST &amp; IGST</h2>
+                                    <div class="text-[10px] uppercase tracking-[0.2em] text-accent-300 font-bold">No login required</div>
+                                    <h2 id="gst-calculator" class="font-display font-black text-lg sm:text-xl mt-0.5 leading-tight whitespace-nowrap">Free GST Calculator</h2>
                                 </div>
                             </div>
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-money-400/20 text-money-200 ring-1 ring-money-300/40">
@@ -462,7 +510,7 @@
                                 Live
                             </span>
                         </div>
-                        <p class="relative mt-3 text-xs text-brand-200">India's free online GST calculator, CGST · SGST · IGST · intra &amp; inter-state · tax-inclusive or exclusive (reverse GST).</p>
+                        <p class="relative mt-2 text-xs text-brand-200">CGST · SGST · IGST · inclusive or reverse GST.</p>
                     </div>
 
                     {{-- Inputs + breakdown --}}
@@ -632,12 +680,15 @@
                         </div>
                     </div>
 
-                    {{-- CTAs: primary (login) + WhatsApp share of the calculation --}}
+                    {{-- CTA: primary action + WhatsApp share of the calculation.
+                         Auth-aware and short enough to stay on one line inside the
+                         phone screen. New visitors go to sign up (the conversion
+                         goal); returning users get a "Log in" link below. --}}
                     <div class="px-6 md:px-7 pb-6 md:pb-7 space-y-2">
                         <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-                            <a href="{{ route('login') }}"
-                               class="group flex items-center justify-center gap-2 px-4 py-3 bg-brand-900 hover:bg-brand-800 text-white rounded-lg font-bold text-sm transition shadow-sm">
-                                Log in to create a GST invoice
+                            <a href="{{ auth()->check() ? route('invoices.create') : route('register') }}"
+                               class="group flex items-center justify-center gap-2 px-4 py-3 bg-brand-900 hover:bg-brand-800 text-white rounded-lg font-bold text-sm transition shadow-sm whitespace-nowrap">
+                                Create a GST invoice
                                 <svg class="w-4 h-4 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
                             </a>
                             <a :href="whatsappLink" target="_blank" rel="noopener"
@@ -648,7 +699,11 @@
                             </a>
                         </div>
                         <p class="text-center text-sm text-gray-500">
-                            New here? <a href="{{ route('register') }}" class="text-brand-700 font-semibold hover:underline">Sign up free</a> · no card required
+                            @auth
+                                You're signed in. <a href="{{ route('dashboard') }}" class="text-brand-700 font-semibold hover:underline">Go to dashboard →</a>
+                            @else
+                                Free · no card required · <a href="{{ route('login') }}" class="text-brand-700 font-semibold hover:underline">Log in</a>
+                            @endauth
                         </p>
                     </div>
                 </div>

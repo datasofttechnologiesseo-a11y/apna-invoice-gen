@@ -104,13 +104,13 @@ return [
     'google_site_verification' => env('GOOGLE_SITE_VERIFICATION'),
     'bing_site_verification' => env('BING_SITE_VERIFICATION'),
 
-    // NOTE: this is the wordmark (wide). For best link-preview cards, replace
-    // with a dedicated 1200x630 social image and update the dimensions below.
-    'og_image' => '/brand/apna-invoice-logo.jpg',
+    // Dedicated 1200x630 social share card (the ideal OG aspect ratio).
+    // Regenerate with: php scripts/make-og-card.php
+    'og_image' => '/brand/og-card.png',
 
-    'og_image_width' => 1939,
+    'og_image_width' => 1200,
 
-    'og_image_height' => 454,
+    'og_image_height' => 630,
 
     'locale' => 'en_IN',
 

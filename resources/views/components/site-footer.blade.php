@@ -83,6 +83,8 @@
                         ['href' => route('login'), 'label' => 'Log in'],
                     ]],
                     ['title' => 'Resources', 'color' => 'accent', 'links' => [
+                        ['href' => route('pages.gst-calculator'), 'label' => 'GST calculator'],
+                        ['href' => route('pages.gst-invoice-format'), 'label' => 'GST invoice format'],
                         ['href' => route('help'), 'label' => 'Help Center'],
                         ['href' => route('blog.index'), 'label' => 'Blogs'],
                         ['href' => route('invoices.templates'), 'label' => 'Invoice templates'],
