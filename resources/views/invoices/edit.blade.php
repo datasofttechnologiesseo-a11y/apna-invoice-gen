@@ -1,11 +1,13 @@
 <x-app-layout>
-    @php $restricted = $restricted ?? false; @endphp
+    @php $restricted = $restricted ?? false; $isSample = ! $invoice->exists && request()->boolean('sample'); @endphp
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
                 @if ($restricted)
                     <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Limited edit</span>
+                @elseif ($isSample)
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Sample · edit &amp; save</span>
                 @elseif (! $invoice->exists && ! empty($templateLabel))
                     <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Using template: {{ $templateLabel }}</span>
                 @endif
@@ -32,8 +34,19 @@
         ])->toArray();
         $oldItems = old('items', $existingItems);
         if (empty($oldItems)) {
-            $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
+            if (! $invoice->exists && request()->boolean('sample')) {
+                // One-click "Try a sample invoice": prefill demo lines so a new
+                // user instantly sees a populated invoice with live GST totals.
+                // Nothing is saved until they hit Save.
+                $oldItems = [
+                    ['product_id' => null, 'description' => 'Consulting services (sample)', 'hsn_sac' => '998311', 'quantity' => 10, 'unit' => 'NOS', 'rate' => 1500, 'discount' => 0, 'gst_rate' => 18],
+                    ['product_id' => null, 'description' => 'Website design (sample)', 'hsn_sac' => '998314', 'quantity' => 1, 'unit' => 'NOS', 'rate' => 25000, 'discount' => 0, 'gst_rate' => 18],
+                ];
+            } else {
+                $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
+            }
         }
+        $isSample = ! $invoice->exists && request()->boolean('sample');
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
         $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
@@ -134,7 +147,10 @@
             @endif
 
             {{-- Soft nudge when the company has no state set. GST place-of-supply needs it
-                 to compute CGST/SGST vs IGST correctly. Without it we fall back to IGST. --}}
+                 to compute CGST/SGST vs IGST correctly. Without it the invoice cannot tell
+                 a same-state sale from an inter-state one and defaults to intra-state
+                 (CGST/SGST), so an inter-state sale would be split incorrectly. We block
+                 finalisation of a taxed invoice until the state is set (see InvoiceController). --}}
             @if (! $company->state_id && ! $restricted)
                 <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
                     <svg class="w-5 h-5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +158,7 @@
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">Your business state is not set.</span>
-                        Until you set it, GST is computed as IGST (inter-state) by default. Set state to enable CGST/SGST for same-state customers.
+                        Until you set it, we can't tell a same-state sale from an inter-state one, so GST defaults to intra-state (CGST/SGST) and an inter-state sale would be split incorrectly. Set your state so CGST/SGST and IGST apply correctly. You'll need it set before issuing a GST invoice.
                     </div>
                     <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         Set business state

@@ -35,7 +35,7 @@ class CreditNoteController extends Controller
         // Max creditable = grand_total - already credited (we don't subtract
         // paid_amount, because a credit note can apply even on a paid invoice
         // to trigger a refund).
-        $creditable = max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount);
+        $creditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount), 2);
         if ($creditable <= 0) {
             return redirect()->route('invoices.show', $invoice)
                 ->with('status', 'This invoice is already fully credited.');
@@ -61,7 +61,7 @@ class CreditNoteController extends Controller
                     . $invoice->creditNoteDeadline()->format('d M Y') . '. Credit notes issued after this date cannot reduce GST liability.');
         }
 
-        $creditable = max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount);
+        $creditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount), 2);
         $reasons = array_keys(config('credit_note_reasons'));
 
         $data = $request->validate([

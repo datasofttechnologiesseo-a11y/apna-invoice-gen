@@ -39,10 +39,13 @@
                     </div>
                 @endif
             </div>
-            <a href="{{ route('invoices.create') }}" class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition whitespace-nowrap">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                New invoice
-            </a>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <a href="{{ route('invoices.create', ['sample' => 1]) }}" class="inline-flex items-center justify-center px-4 py-2.5 bg-white ring-1 ring-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-lg text-sm transition whitespace-nowrap">Try a sample</a>
+                <a href="{{ route('invoices.create') }}" class="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition whitespace-nowrap">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    New invoice
+                </a>
+            </div>
         </div>
     </x-slot>
 

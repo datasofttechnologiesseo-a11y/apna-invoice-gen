@@ -46,8 +46,8 @@
                         description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done — share on WhatsApp from the next screen.' }}"
                         actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.create') }}"
                         actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create invoice' }}"
-                        :secondaryHref="request('search') || request('status') ? null : route('help')"
-                        :secondaryLabel="request('search') || request('status') ? null : 'Read the how-to guide'"
+                        :secondaryHref="request('search') || request('status') ? null : route('invoices.create', ['sample' => 1])"
+                        :secondaryLabel="request('search') || request('status') ? null : 'Try a sample invoice'"
                     />
                 @else
                     {{-- Mobile card view — one card per invoice, no horizontal scroll --}}

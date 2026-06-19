@@ -56,6 +56,7 @@
             <x-site-footer variant="minimal" />
         </div>
 
+        <x-whatsapp-float />
         @include('partials.cookie-banner')
         @stack('scripts')
     </body>

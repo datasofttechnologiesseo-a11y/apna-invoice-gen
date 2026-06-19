@@ -63,6 +63,52 @@ form[data-submitting] button[type="submit"]::after {
     outline-offset: 2px;
 }
 
+/* ----------------------------------------------------------------
+ * Premium polish layer — global touches that lift the whole product
+ * from "clean" toward "crafted": smooth in-page scrolling, a refined
+ * text-selection colour, and a subtle custom scrollbar on desktop.
+ * -------------------------------------------------------------- */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Offset in-page anchors so the sticky header never covers the target
+   section heading (#features, #how-to, #faq, #pricing, etc.). */
+[id] {
+    scroll-margin-top: 5.5rem;
+}
+
+/* Brand-tinted text selection. */
+::selection {
+    background: #dbe3f5; /* brand-100 */
+    color: #0f1f4f;      /* brand-900 */
+}
+
+/* Subtle, premium scrollbar (desktop pointers only). */
+@media (min-width: 768px) and (pointer: fine) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd2e0 transparent;
+    }
+    ::-webkit-scrollbar {
+        width: 11px;
+        height: 11px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #cbd2e0;
+        border-radius: 9999px;
+        border: 3px solid transparent;
+        background-clip: content-box;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #aab4c8;
+        background-clip: content-box;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;

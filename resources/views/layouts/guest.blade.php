@@ -74,6 +74,12 @@
 
             {{-- Form panel --}}
             <main class="flex flex-col min-h-screen overflow-y-auto">
+                <div class="px-6 sm:px-10 pt-6">
+                    <a href="{{ url('/') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-brand-700 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        Back to home
+                    </a>
+                </div>
                 <div class="w-full max-w-md mx-auto my-auto px-6 py-10 sm:px-10 animate-fade-up">
                     {{-- Logo for mobile (brand panel is hidden below lg) --}}
                     <div class="lg:hidden mb-8 flex justify-center">
@@ -90,6 +96,7 @@
                 </div>
             </main>
         </div>
+        <x-whatsapp-float />
         @include('partials.cookie-banner')
         @stack('scripts')
     </body>

@@ -263,6 +263,7 @@
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
             <a href="#features" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
+            <a href="#how-to" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
             <a href="#pricing" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
             <a href="{{ route('blog.index') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
             <a href="#faq" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
@@ -311,9 +312,9 @@
             </div>
 
             {{-- HEADLINE, matches the marketing brief exactly --}}
-            <h1 class="font-display font-extrabold tracking-tight text-gray-900 leading-[1.02]">
-                <span class="block whitespace-nowrap text-xl sm:text-2xl md:text-3xl lg:text-4xl">Free GST <span class="text-brand-700">Invoicing</span> Software</span>
-                <span class="block mt-3 text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold text-brand-700 leading-tight tracking-wide [word-spacing:0.2em]">
+            <h1 class="font-display font-extrabold tracking-tight text-gray-900 leading-[1.05]">
+                <span class="block text-3xl sm:text-4xl md:text-5xl">Free GST <span class="text-brand-700">Invoicing</span> Software</span>
+                <span class="block mt-2 text-xl sm:text-2xl md:text-3xl font-extrabold text-brand-700 leading-tight">
                     Built for <span class="text-saffron-600">Indian</span> Businesses
                 </span>
             </h1>
@@ -375,43 +376,8 @@
                         <div class="mt-0.5 text-sm text-gray-600">India data residency · DPDP Act compliant · works on any device</div>
                     </div>
                 </li>
-                <li class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full bg-money-100 ring-1 ring-money-200 text-money-700 flex items-center justify-center" aria-hidden="true">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
-                    </div>
-                    <div class="min-w-0 pt-1">
-                        <div class="text-lg font-bold text-gray-900 leading-tight">Audit-Ready &amp; GST-Compliant</div>
-                        <div class="mt-0.5 text-sm text-gray-600">CGST Rule 46 / 49 · GST 2.0 ready · GSTR-1 &amp; GSTR-3B export · Section 34 credit notes</div>
-                    </div>
-                </li>
-                <li class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full bg-saffron-100 ring-1 ring-saffron-200 text-saffron-700 flex items-center justify-center" aria-hidden="true">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                    </div>
-                    <div class="min-w-0 pt-1">
-                        <div class="text-lg font-bold text-gray-900 leading-tight">Quotation → Invoice in One Click</div>
-                        <div class="mt-0.5 text-sm text-gray-600">Send price proposals · convert accepted quotes to invoices · separate FY-aware numbering</div>
-                    </div>
-                </li>
-                <li class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full bg-purple-100 ring-1 ring-purple-200 text-purple-700 flex items-center justify-center" aria-hidden="true">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    </div>
-                    <div class="min-w-0 pt-1">
-                        <div class="text-lg font-bold text-gray-900 leading-tight">Built-in Reports for Your CA</div>
-                        <div class="mt-0.5 text-sm text-gray-600">Receivables aging · P&amp;L (accrual / cash / GST) · expenses CSV · one-click backup</div>
-                    </div>
-                </li>
-                <li class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full bg-accent-100 ring-1 ring-accent-200 text-accent-700 flex items-center justify-center" aria-hidden="true">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-                    </div>
-                    <div class="min-w-0 pt-1">
-                        <div class="text-lg font-bold text-gray-900 leading-tight">Track Payments &amp; Outstanding</div>
-                        <div class="mt-0.5 text-sm text-gray-600">Record full / part payments · TDS support · auto WhatsApp + email reminders · printable receipts</div>
-                    </div>
-                </li>
             </ul>
+            <p class="mt-4 text-sm text-gray-500">…plus GSTR-1/3B reports, credit notes, quotations, payment tracking and more. <a href="#features" class="text-brand-700 font-semibold hover:underline">See all features</a></p>
 
             {{-- BIG CTA, dark navy with confident copy, full-width on mobile --}}
             <div class="mt-10">
@@ -910,6 +876,107 @@
                 Signup for Free, no card needed
                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
             </a>
+        </div>
+    </div>
+</section>
+
+<!-- How to use, tabbed learning section -->
+<section id="how-to" class="relative py-20 bg-gray-50 border-y border-gray-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto text-center">
+            <span class="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-bold uppercase tracking-wider">Learn the tool</span>
+            <h2 class="mt-4 font-display text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">How to use Apna Invoice</h2>
+            <p class="mt-3 text-gray-600">Pick a task to see the exact steps. No jargon, no manual to read.</p>
+        </div>
+
+        @php
+            $howto = [
+                ['key' => 'create', 'label' => 'Create an invoice', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                    'title' => 'Create & issue a GST invoice',
+                    'steps' => [
+                        ['t' => 'Sign up in seconds', 'd' => 'Continue with Google, or enter your mobile and verify it with the one-time code we send.'],
+                        ['t' => 'Add your business once', 'd' => 'GSTIN, state and logo. Your letterhead is generated on every invoice automatically.'],
+                        ['t' => 'Add the line items', 'd' => 'Pick a customer, type description, HSN/SAC, quantity, rate and GST%. CGST/SGST/IGST is worked out for you.'],
+                        ['t' => 'Issue & download', 'd' => 'Tap Issue: the invoice locks, gets a permanent number, and the GST-compliant PDF is ready.'],
+                    ],
+                    'tip' => 'GST splits automatically: same state prints CGST + SGST, a different state prints IGST, based on the customer\'s state.'],
+                ['key' => 'share', 'label' => 'Share & get paid', 'icon' => 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',
+                    'title' => 'Share the invoice and collect payment',
+                    'steps' => [
+                        ['t' => 'Share on WhatsApp', 'd' => 'One tap opens WhatsApp with a pre-filled message and the invoice link.'],
+                        ['t' => 'Email or public link', 'd' => 'Email the PDF, or copy a secure 30-day public link the customer can open without logging in.'],
+                        ['t' => 'Scan-and-pay UPI QR', 'd' => 'Add your UPI ID in settings and a payment QR prints on every invoice PDF.'],
+                        ['t' => 'Record the payment', 'd' => 'Mark full or part payment (with TDS). A payment receipt PDF is generated automatically.'],
+                    ],
+                    'tip' => 'Outstanding invoices can send automatic WhatsApp and email reminders so you chase payments less.'],
+                ['key' => 'reports', 'label' => 'Reports for your CA', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                    'title' => 'Month-end reports your CA actually asks for',
+                    'steps' => [
+                        ['t' => 'GSTR-1 export', 'd' => 'Download a GSTR-1-friendly CSV of B2B and B2C invoices for the period.'],
+                        ['t' => 'GSTR-3B summary', 'd' => 'A pre-filled summary with output tax, ITC and net payable, laid out like the form.'],
+                        ['t' => 'Receivables aging', 'd' => 'See who owes you, bucketed by how overdue they are.'],
+                        ['t' => 'Profit & loss', 'd' => 'Accrual, cash and GST views, plus an expenses CSV and one-click backup.'],
+                    ],
+                    'tip' => 'Every report exports as both PDF (to review) and CSV (for spreadsheets, your accountant, or the GST portal).'],
+                ['key' => 'docs', 'label' => 'Quotations & credit notes', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                    'title' => 'Quotations and credit notes, the compliant way',
+                    'steps' => [
+                        ['t' => 'Send a quotation', 'd' => 'Create a price proposal (proforma) and share it just like an invoice.'],
+                        ['t' => 'Convert in one click', 'd' => 'When the customer accepts, turn the quotation into a tax invoice instantly.'],
+                        ['t' => 'Issue a credit note', 'd' => 'Raise a Section 34 credit note against any issued invoice, with reason codes.'],
+                        ['t' => 'Stay audit-ready', 'd' => 'Quotations use a separate FY-aware series and stay out of GST returns until converted.'],
+                    ],
+                    'tip' => 'We compute the Section 34(2) credit-note deadline per invoice and block late issuance, so you never file a worthless credit note.'],
+            ];
+        @endphp
+
+        <div x-data="{ tab: 'create' }" class="mt-12">
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3" role="tablist" aria-label="How to use Apna Invoice">
+                @foreach ($howto as $t)
+                    <button type="button" @click="tab = '{{ $t['key'] }}'" role="tab" :aria-selected="tab === '{{ $t['key'] }}'"
+                        :class="tab === '{{ $t['key'] }}' ? 'bg-brand-700 text-white shadow-sm ring-brand-700' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-100'"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold ring-1 transition">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $t['icon'] }}"/></svg>
+                        {{ $t['label'] }}
+                    </button>
+                @endforeach
+            </div>
+
+            <div class="mt-8 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6 sm:p-10">
+                @foreach ($howto as $p)
+                    <div x-show="tab === '{{ $p['key'] }}'" x-cloak role="tabpanel" class="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
+                        <div>
+                            <h3 class="font-display text-xl sm:text-2xl font-extrabold text-gray-900">{{ $p['title'] }}</h3>
+                            <ol class="mt-6 space-y-5">
+                                @foreach ($p['steps'] as $i => $step)
+                                    <li class="flex gap-4">
+                                        <span class="shrink-0 w-8 h-8 rounded-full bg-brand-50 text-brand-700 font-bold flex items-center justify-center text-sm">{{ $i + 1 }}</span>
+                                        <div class="min-w-0">
+                                            <div class="font-semibold text-gray-900">{{ $step['t'] }}</div>
+                                            <div class="mt-0.5 text-sm text-gray-600 leading-relaxed">{{ $step['d'] }}</div>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ol>
+                        </div>
+                        <div class="rounded-xl bg-brand-50/60 ring-1 ring-brand-100 p-6">
+                            <div class="flex items-center gap-2 text-brand-700 font-bold text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Good to know
+                            </div>
+                            <p class="mt-2 text-sm text-gray-700 leading-relaxed">{{ $p['tip'] }}</p>
+                            <a href="{{ route('register') }}" class="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold transition">
+                                Try it free
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <p class="mt-6 text-center text-sm text-gray-500">
+                Prefer a slide-deck? <a href="{{ asset('downloads/apna-invoice-getting-started.pptx') }}" download class="text-brand-700 font-semibold hover:underline">Download the getting-started guide</a> or read the <a href="{{ route('help') }}" class="text-brand-700 font-semibold hover:underline">full how-to</a>.
+            </p>
         </div>
     </div>
 </section>
@@ -1479,8 +1546,53 @@
     </div>
 </section>
 
+<!-- Backed by Datasoft Technologies -->
+<section class="py-16 sm:py-20 bg-gray-50 border-t border-gray-100">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl ring-1 ring-gray-200 shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div>
+                <div class="text-xs font-bold uppercase tracking-widest text-brand-600">Built &amp; supported by</div>
+                <a href="{{ config('seo.organization.url') }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center gap-3 group">
+                    <img src="{{ asset('brand/dst-logo.png') }}" alt="Datasoft Technologies" class="h-11 w-auto" loading="lazy">
+                    <span class="font-display text-2xl font-extrabold text-gray-900 group-hover:text-brand-700 transition">Datasoft Technologies</span>
+                </a>
+                <p class="mt-4 text-gray-600 leading-relaxed">
+                    Apna Invoice is built and <strong class="text-gray-900">actively maintained</strong> by Datasoft Technologies, an Indian software company. It's a supported product with a team behind it, free during beta, not a side-project left to gather dust.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a href="{{ config('seo.contact.whatsapp_url') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#25D366] hover:bg-[#1ebe5b] text-white text-sm font-semibold transition">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                        WhatsApp support
+                    </a>
+                    <a href="tel:{{ config('seo.contact.phone_e164') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white ring-1 ring-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-semibold transition">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        {{ config('seo.contact.phone_display') }}
+                    </a>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                @foreach ([
+                    ['icon' => 'M5 13l4 4L19 7', 'title' => 'Real-time support', 'sub' => 'WhatsApp & phone, real humans'],
+                    ['icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'Data stays in India', 'sub' => 'DPDP Act compliant'],
+                    ['icon' => 'M13 10V3L4 14h7v7l9-11h-7z', 'title' => 'Actively shipped', 'sub' => 'New features during beta'],
+                    ['icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 10v1', 'title' => 'Free during beta', 'sub' => 'No card, no per-invoice limit'],
+                ] as $point)
+                    <div class="rounded-xl bg-gray-50 ring-1 ring-gray-100 p-4">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-brand-50 text-brand-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $point['icon'] }}"/></svg>
+                        </span>
+                        <div class="mt-2 font-semibold text-gray-900 text-sm">{{ $point['title'] }}</div>
+                        <div class="text-xs text-gray-500">{{ $point['sub'] }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+
 <x-site-footer variant="full" />
 
+<x-whatsapp-float />
 @include('partials.cookie-banner')
 
 </body>
