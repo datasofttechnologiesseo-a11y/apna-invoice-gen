@@ -5,51 +5,73 @@
         </h2>
     </x-slot>
 
+    @php
+        // HSN is mandated by Rule 46(g) only when the supplier (this company) is
+        // GST-registered. For un-registered dealers the catalogue field is optional.
+        $hsnRequired = ! empty($company?->gstin ?? null);
+    @endphp
+
     <div class="py-10">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <x-breadcrumbs :items="[
                 ['label' => 'Products', 'href' => route('products.index')],
                 ['label' => $product->exists ? $product->name : 'New product'],
             ]" />
-            @if ($errors->any())
-                <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded">
-                    <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-                </div>
-            @endif
 
-            <div class="p-6 sm:p-8 bg-white shadow sm:rounded-lg">
-                <form method="POST" action="{{ $product->exists ? route('products.update', $product) : route('products.store') }}" class="space-y-6">
-                    @csrf
-                    @if ($product->exists) @method('PATCH') @endif
+            <form method="POST" action="{{ $product->exists ? route('products.update', $product) : route('products.store') }}"
+                  class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                @csrf
+                @if ($product->exists) @method('PATCH') @endif
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @if ($errors->any())
+                    <div class="m-6 mb-0 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" role="alert">
+                        <div class="font-semibold mb-1">Please fix the following before saving:</div>
+                        <ul class="list-disc pl-5 space-y-0.5">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                    </div>
+                @endif
+
+                {{-- Section: Item details --}}
+                <section class="p-6 sm:p-8 border-b border-gray-100">
+                    <h3 class="text-sm font-bold text-gray-900">Item details</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">What you're selling. Reused across invoices via autocomplete.</p>
+                    <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
                             <x-input-label for="name" value="Product / service name *" />
-                            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $product->name)" required autofocus />
+                            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $product->name)" required autofocus placeholder="e.g. OPC 53 Grade Cement" />
+                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
-
                         <div>
                             <x-input-label for="kind" value="Kind *" />
-                            <select id="kind" name="kind" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <select id="kind" name="kind" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                 @foreach (config('uqc_units.kinds') as $value => $label)
                                     <option value="{{ $value }}" @selected(old('kind', $product->kind) === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">Goods use HSN (4/6/8 digits). Services use SAC (6 digits starting with 99).</p>
+                            <p class="text-xs text-gray-500 mt-1">Goods use HSN. Services use SAC (6 digits starting with 99).</p>
                         </div>
-
                         <div>
                             <x-input-label for="sku" value="SKU (optional, internal code)" />
                             <x-text-input id="sku" name="sku" type="text" class="mt-1 block w-full font-mono" :value="old('sku', $product->sku)" maxlength="60" placeholder="e.g. CEMENT-50KG" />
                         </div>
+                        <div class="md:col-span-2">
+                            <x-input-label for="description" value="Description (optional, shown on invoice)" />
+                            <textarea id="description" name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500" maxlength="1000">{{ old('description', $product->description) }}</textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="inline-flex items-center gap-2">
+                                <input type="hidden" name="is_active" value="0">
+                                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                <span class="text-sm text-gray-700">Active, available in invoice autocomplete</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
 
-                        @php
-                            // HSN is mandated by Rule 46(g) only when the supplier
-                            // (this company) is GST-registered. For un-registered
-                            // dealers (no GSTIN), the catalogue field is genuinely
-                            // optional — they're not filing GSTR-1.
-                            $hsnRequired = ! empty($company?->gstin ?? null);
-                        @endphp
+                {{-- Section: Tax & pricing --}}
+                <section class="p-6 sm:p-8">
+                    <h3 class="text-sm font-bold text-gray-900">Tax &amp; pricing</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Defaults pre-fill the invoice line; you can still tweak per invoice.</p>
+                    <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <div class="flex items-center justify-between gap-2">
                                 <x-input-label for="hsn_sac" :value="'HSN / SAC code' . ($hsnRequired ? ' *' : ' (optional)')" />
@@ -60,54 +82,41 @@
                                 @if ($hsnRequired)
                                     4 digits (turnover &lt; ₹5 Cr) · 6 digits (&gt; ₹5 Cr) · 8 digits for exports.
                                 @else
-                                    Optional — your business isn't GST-registered. You can add this later when needed.
+                                    Optional, your business isn't GST-registered. You can add this later.
                                 @endif
                             </p>
+                            <x-input-error :messages="$errors->get('hsn_sac')" class="mt-2" />
                         </div>
-
                         <div>
                             <x-input-label for="unit" value="Unit (UQC) *" />
-                            <select id="unit" name="unit" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <select id="unit" name="unit" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                 @foreach (config('uqc_units.codes') as $u)
                                     <option value="{{ $u['code'] }}" @selected(old('unit', $product->unit ?: 'NOS') === $u['code'])>{{ $u['label'] }}</option>
                                 @endforeach
                             </select>
                         </div>
-
                         <div>
                             <x-input-label for="rate" value="Default rate (₹, pre-tax) *" />
                             <x-text-input id="rate" name="rate" type="number" step="any" min="0" class="mt-1 block w-full" :value="old('rate', $product->rate ?? 0)" required />
+                            <x-input-error :messages="$errors->get('rate')" class="mt-2" />
                         </div>
-
                         <div>
                             <x-input-label for="gst_rate" value="Default GST% *" />
-                            <select id="gst_rate" name="gst_rate" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <select id="gst_rate" name="gst_rate" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                 @foreach (config('gst.rates') as $r)
                                     <option value="{{ $r['value'] }}" @selected((float) old('gst_rate', $product->gst_rate ?? 18) === (float) $r['value']) title="{{ $r['note'] }}">{{ $r['label'] }}</option>
                                 @endforeach
                             </select>
                         </div>
-
-                        <div class="md:col-span-2">
-                            <x-input-label for="description" value="Description (optional, shown on invoice)" />
-                            <textarea id="description" name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" maxlength="1000">{{ old('description', $product->description) }}</textarea>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="inline-flex items-center gap-2">
-                                <input type="hidden" name="is_active" value="0">
-                                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
-                                <span class="text-sm text-gray-700">Active — available in invoice autocomplete</span>
-                            </label>
-                        </div>
                     </div>
+                </section>
 
-                    <div class="flex items-center justify-between">
-                        <a href="{{ route('products.index') }}" class="text-gray-500 hover:underline">← Cancel</a>
-                        <x-primary-button>{{ $product->exists ? 'Save' : 'Create product' }}</x-primary-button>
-                    </div>
-                </form>
-            </div>
+                {{-- Action bar --}}
+                <div class="px-6 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <a href="{{ route('products.index') }}" class="text-sm text-gray-500 hover:text-gray-800">Cancel</a>
+                    <x-primary-button>{{ $product->exists ? 'Save' : 'Create product' }}</x-primary-button>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>
