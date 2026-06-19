@@ -22,6 +22,7 @@
         <li><strong>Invoice &amp; customer data:</strong> records you create in the Service.</li>
         <li><strong>Usage data:</strong> IP, device, browser, session events, product analytics.</li>
         <li><strong>Support data:</strong> messages and attachments you send us.</li>
+        <li><strong>Sign-in data:</strong> if you choose "Sign in with Google", we receive your name, email address and Google profile ID from Google to create or access your account. We also verify your mobile number by one-time code at sign-up.</li>
     </ul>
 
     <h2>3. How we use data</h2>
@@ -54,7 +55,7 @@
         <li>Withdraw consent for non-essential processing.</li>
     </ul>
     <p>
-        To exercise these rights, email <a href="mailto:privacy@datasofttechnologies.com">privacy@datasofttechnologies.com</a>.
+        To exercise these rights, use the in-app <strong>Data &amp; Privacy</strong> centre (Settings → Data &amp; Privacy) or email <a href="mailto:privacy@datasofttechnologies.com">privacy@datasofttechnologies.com</a>.
         We respond within 30 days.
     </p>
 

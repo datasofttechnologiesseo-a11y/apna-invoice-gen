@@ -99,6 +99,13 @@ return [
         'Apna Invoice',
     ]),
 
+    // Search-engine ownership verification (paste the token from Google Search
+    // Console → Settings → Ownership verification → "HTML tag", and Bing too).
+    'google_site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+    'bing_site_verification' => env('BING_SITE_VERIFICATION'),
+
+    // NOTE: this is the wordmark (wide). For best link-preview cards, replace
+    // with a dedicated 1200x630 social image and update the dimensions below.
     'og_image' => '/brand/apna-invoice-logo.jpg',
 
     'og_image_width' => 1939,

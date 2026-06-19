@@ -67,7 +67,7 @@
         Want to partner, ask a question, or just say hi? Call or WhatsApp us on
         <a href="tel:{{ config('seo.contact.phone_e164') }}" class="font-mono">{{ config('seo.contact.phone_display') }}</a>,
         email <a href="mailto:hello@datasofttechnologies.com">hello@datasofttechnologies.com</a>,
-        or visit <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer">datasofttechnologies.com</a>.
+        or visit <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener">datasofttechnologies.com</a>.
     </p>
 
     <p class="mt-10 text-sm text-gray-500">Last updated: {{ $effectiveDate }}</p>

@@ -152,7 +152,7 @@
         <strong>Datasoft Technologies</strong><br>
         Corporate Office · Delhi NCR, India<br>
         Phone / WhatsApp: <a href="tel:{{ config('seo.contact.phone_e164') }}" class="font-mono">{{ config('seo.contact.phone_display') }}</a><br>
-        <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer">datasofttechnologies.com</a>
+        <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener">datasofttechnologies.com</a>
     </p>
 
     @push('scripts')

@@ -48,12 +48,12 @@
             <div class="grid grid-cols-2 md:grid-cols-12 gap-y-10 gap-x-8">
                 {{-- Brand column --}}
                 <div class="col-span-2 md:col-span-4">
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" aria-label="Apna Invoice" class="inline-block bg-white rounded-lg p-2 ring-1 ring-white/10 hover:ring-white/30 transition">
+                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" aria-label="Apna Invoice" class="inline-block bg-white rounded-lg p-2 ring-1 ring-white/10 hover:ring-white/30 transition">
                         <x-brand-logo class="h-10 w-auto" />
                     </a>
                     <p class="mt-5 text-gray-400 text-sm leading-relaxed max-w-sm">
                         GST-compliant invoicing built for Indian SMEs &amp; Startups by
-                        <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="text-white font-semibold hover:text-accent-400 transition">Datasoft Technologies</a>.
+                        <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="text-white font-semibold hover:text-accent-400 transition">Datasoft Technologies</a>.
                         Professional invoices in 60 seconds.
                     </p>
 
@@ -127,7 +127,7 @@
         <div class="relative border-t border-white/10 bg-black/40 backdrop-blur-sm">
             <div class="max-w-7xl mx-auto px-6 lg:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">
-                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
+                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>All rights reserved</span>
                     <span class="hidden md:inline text-white/40">•</span>
@@ -137,7 +137,7 @@
                     <span>Built with</span>
                     <svg class="w-4 h-4 text-red-400 animate-shimmer" fill="currentColor" viewBox="0 0 20 20"><path d="M3.2 5.3a5.3 5.3 0 017.5 0l.3.3.3-.3a5.3 5.3 0 017.5 7.5L10.9 17.6a1.3 1.3 0 01-1.8 0L3.2 12.8a5.3 5.3 0 010-7.5z"/></svg>
                     <span>in India by</span>
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="font-bold hover:text-accent-400 transition">DST</a>
+                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-bold hover:text-accent-400 transition">DST</a>
                 </div>
             </div>
         </div>
@@ -156,12 +156,12 @@
             <div class="grid md:grid-cols-3 gap-8 items-center">
                 {{-- Brand --}}
                 <div class="flex items-center gap-4">
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" aria-label="Apna Invoice" class="inline-block bg-white rounded-lg p-1.5 ring-1 ring-white/10 hover:ring-white/30 transition">
+                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" aria-label="Apna Invoice" class="inline-block bg-white rounded-lg p-1.5 ring-1 ring-white/10 hover:ring-white/30 transition">
                         <x-brand-logo class="h-8 w-auto" />
                     </a>
                     <div class="leading-tight hidden sm:block">
                         <div class="font-bold text-white text-sm">Apna Invoice</div>
-                        <div class="mt-0.5 text-xs text-gray-400">By <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies</a></div>
+                        <div class="mt-0.5 text-xs text-gray-400">By <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-accent-400 transition">Datasoft Technologies</a></div>
                     </div>
                 </div>
 
@@ -216,7 +216,7 @@
             {{-- Bottom strip --}}
             <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">
-                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
+                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>All rights reserved</span>
                 </div>
@@ -224,7 +224,7 @@
                     <span>Built with</span>
                     <svg class="w-4 h-4 text-red-400 animate-shimmer" fill="currentColor" viewBox="0 0 20 20"><path d="M3.2 5.3a5.3 5.3 0 017.5 0l.3.3.3-.3a5.3 5.3 0 017.5 7.5L10.9 17.6a1.3 1.3 0 01-1.8 0L3.2 12.8a5.3 5.3 0 010-7.5z"/></svg>
                     <span>in India by</span>
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="font-bold hover:text-accent-400 transition">DST</a>
+                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-bold hover:text-accent-400 transition">DST</a>
                 </div>
             </div>
         </div>

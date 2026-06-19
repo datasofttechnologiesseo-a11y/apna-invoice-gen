@@ -174,7 +174,7 @@ class RegisteredUserController extends Controller
     public function verify(Request $request): RedirectResponse
     {
         $request->validate([
-            'code' => ['required', 'string', 'regex:/^\d{4,8}$/'],
+            'code' => ['required', 'digits:' . (int) config('otp.length', 6)],
         ]);
 
         $reg = $request->session()->get(self::SESSION_KEY);

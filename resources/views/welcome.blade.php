@@ -254,11 +254,11 @@
 </div>
 
 <!-- Header -->
-<header class="relative bg-white border-b border-gray-100">
+<header class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-gray-200 transition-shadow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <a href="{{ url('/') }}" class="flex items-center gap-3 py-4 min-w-0 flex-shrink" aria-label="Apna Invoice home">
-            <span class="inline-block bg-white rounded">
-                <x-brand-logo class="h-9 md:h-14 w-auto block" />
+        <a href="{{ url('/') }}" class="flex items-center gap-3 py-3 min-w-0 flex-shrink" aria-label="Apna Invoice home">
+            <span class="inline-block">
+                <x-brand-logo class="h-9 md:h-11 w-auto block" />
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
@@ -281,7 +281,7 @@
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 md:pt-10 md:pb-20 grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
 
         {{-- ─── Left: marketing copy + features + CTA ─── --}}
-        <div class="lg:col-span-7 animate-fade-up bg-brand-50/60 ring-1 ring-brand-100 rounded-3xl p-6 sm:p-8 lg:p-10">
+        <div class="lg:col-span-7 animate-fade-up bg-white ring-1 ring-gray-200/80 shadow-xl rounded-3xl p-6 sm:p-8 lg:p-10">
 
             {{-- Trust pills, three of them deliberately echo the Indian tricolour
                  in reading order: saffron → white (with mini flag) → green. A

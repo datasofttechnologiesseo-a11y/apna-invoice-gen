@@ -98,7 +98,7 @@
 </main>
 
 <footer class="text-center py-6 text-xs text-gray-500">
-    © 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a> · All rights reserved.
+    © 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a> · All rights reserved.
 </footer>
 
 </body>

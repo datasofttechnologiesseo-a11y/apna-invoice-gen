@@ -2,6 +2,11 @@
     :title="'Sign up free, GST Invoice Generator'"
     :description="'Create a free Apna Invoice account. GST-compliant invoices, HSN/SAC codes, Indian number format and payment reminders, built for Indian SMEs, startups, freelancers, and CAs.'"
     :keywords="'free GST invoice signup, invoice generator signup India, create GST invoice free, Apna Invoice register'">
+    <div class="mb-6">
+        <h1 class="font-display text-2xl font-extrabold text-gray-900 tracking-tight">Create your free account</h1>
+        <p class="mt-1 text-sm text-gray-500">Unlimited GST invoices, free during beta.</p>
+    </div>
+
     @if (! empty($referralCode))
         <div class="mb-4 p-3 bg-money-50 border border-money-200 rounded text-sm text-money-900 flex items-center gap-2">
             <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2l2.39 4.84L18 8l-4 3.9.94 5.48L10 14.77 5.06 17.38 6 11.9 2 8l5.61-1.16z"/></svg>

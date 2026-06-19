@@ -54,8 +54,11 @@
         :keywords="$post->meta_keywords"
         type="article"
         :image="$ogImage"
+        :url="route('blog.show', $post->slug)"
+        :published-time="$post->published_at?->toIso8601String()"
+        :modified-time="$post->updated_at?->toIso8601String()"
+        section="Blog"
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
-    <link rel="canonical" href="{{ route('blog.show', $post->slug) }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     {{-- Lora (serif) added for the article body, long-form reading typography.
          figtree stays for chrome/UI, plus-jakarta-sans stays for display headlines. --}}
