@@ -87,6 +87,13 @@
                    title="80mm thermal receipt — for counter printers (kirana/retail/cafe)">
                     Thermal 80mm
                 </a>
+                {{-- Duplicate into a fresh editable draft — repeat/recurring billing. --}}
+                <form method="POST" action="{{ route('invoices.duplicate', $invoice) }}" class="inline">
+                    @csrf
+                    <button type="submit" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50" title="Create a new editable draft with the same customer and line items">
+                        Duplicate
+                    </button>
+                </form>
                 @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)
                     @if ($invoice->isCreditNoteWindowClosed())
                         {{-- Section 34(2) window closed — disable the action with a tooltip

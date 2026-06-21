@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">New Cash Memo</h2>
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit Cash Memo' : 'New Cash Memo' }}</h2>
             <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← All memos</a>
         </div>
     </x-slot>
@@ -15,11 +15,12 @@
         $companyStateName = optional($company->state)->name;
     @endphp
 
-    <div class="py-8" x-data='cashMemoForm(@json($oldItems), {{ (int) old('is_interstate', 0) }}, {{ (float) old('gst_rate', 0) }}, {{ (float) old('discount', 0) }})'>
+    <div class="py-8" x-data='cashMemoForm(@json($oldItems), {{ (int) old('is_interstate', $isInterstate ?? 0) }}, {{ (float) old('gst_rate', $gstRate ?? 0) }}, {{ (float) old('discount', $discount ?? 0) }})'>
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="p-6 sm:p-8 bg-white shadow sm:rounded-lg">
-                <form method="POST" action="{{ route('finance.cash-memos.store') }}" class="space-y-8">
+                <form method="POST" action="{{ ($isEdit ?? false) ? route('finance.cash-memos.update', $memo) : route('finance.cash-memos.store') }}" class="space-y-8">
                     @csrf
+                    @if ($isEdit ?? false) @method('PUT') @endif
 
                     @if ($errors->any())
                         <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
@@ -37,7 +38,7 @@
                             <div>
                                 <x-input-label for="memo_date" value="Date *" />
                                 <x-text-input id="memo_date" name="memo_date" type="date" class="mt-1 block w-full"
-                                              :value="old('memo_date', now()->toDateString())" required />
+                                              :value="old('memo_date', optional($memo->memo_date)->toDateString() ?? now()->toDateString())" required />
                             </div>
                             <div x-data="{ locked: !{{ old('memo_number') ? 'true' : 'false' }} && true }">
                                 <div class="flex items-center justify-between">
@@ -70,23 +71,23 @@
                             <div class="md:col-span-2">
                                 <x-input-label for="seller_name" value="Seller / Vendor name *" />
                                 <x-text-input id="seller_name" name="seller_name" type="text" class="mt-1 block w-full"
-                                              :value="old('seller_name')" placeholder="E.g. Sharma Stationery, Ballabgarh" required maxlength="160" />
+                                              :value="old('seller_name', $memo->seller_name)" placeholder="E.g. Sharma Stationery, Ballabgarh" required maxlength="160" />
                             </div>
                             <div class="md:col-span-2">
                                 <x-input-label for="seller_address" value="Address" />
                                 <textarea id="seller_address" name="seller_address" rows="2" maxlength="500"
                                           placeholder="Shop / street, city, pin code"
-                                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ old('seller_address') }}</textarea>
+                                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ old('seller_address', $memo->seller_address) }}</textarea>
                             </div>
                             <div>
                                 <x-input-label for="seller_gstin" value="GSTIN (if any)" />
                                 <x-text-input id="seller_gstin" name="seller_gstin" type="text" class="mt-1 block w-full font-mono uppercase"
-                                              :value="old('seller_gstin')" maxlength="20" placeholder="22AAAAA0000A1Z5" />
+                                              :value="old('seller_gstin', $memo->seller_gstin)" maxlength="20" placeholder="22AAAAA0000A1Z5" />
                             </div>
                             <div>
                                 <x-input-label for="seller_phone" value="Phone" />
                                 <x-text-input id="seller_phone" name="seller_phone" type="text" class="mt-1 block w-full"
-                                              :value="old('seller_phone')" maxlength="30" placeholder="+91 …" />
+                                              :value="old('seller_phone', $memo->seller_phone)" maxlength="30" placeholder="+91 …" />
                             </div>
                             <div>
                                 <x-input-label for="seller_state" value="Seller state" />
@@ -94,7 +95,7 @@
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                     <option value="">— Select —</option>
                                     @foreach ($states as $st)
-                                        <option value="{{ $st->name }}" @selected(old('seller_state') === $st->name)>{{ $st->name }}</option>
+                                        <option value="{{ $st->name }}" @selected(old('seller_state', $memo->seller_state) === $st->name)>{{ $st->name }}</option>
                                     @endforeach
                                 </select>
                                 @if ($companyStateName)
@@ -144,7 +145,7 @@
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500 font-semibold">Qty</label>
-                                            <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="1" min="1" inputmode="numeric" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                            <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
@@ -197,7 +198,7 @@
                                                 <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="10" class="w-24 border-gray-300 rounded text-sm font-mono">
                                             </td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="1" min="1" inputmode="numeric" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                             </td>
                                             <td class="px-2 py-2">
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" maxlength="20" class="w-20 border-gray-300 rounded text-sm" placeholder="NOS">
@@ -282,21 +283,21 @@
                                 <select id="payment_mode" name="payment_mode" required
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                     @foreach (['cash' => 'Cash', 'upi' => 'UPI', 'card' => 'Card', 'bank' => 'Bank transfer', 'cheque' => 'Cheque', 'other' => 'Other'] as $v => $label)
-                                        <option value="{{ $v }}" @selected(old('payment_mode', 'cash') === $v)>{{ $label }}</option>
+                                        <option value="{{ $v }}" @selected(old('payment_mode', $memo->payment_mode ?? 'cash') === $v)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div>
                                 <x-input-label for="reference_number" value="Reference number" />
                                 <x-text-input id="reference_number" name="reference_number" type="text" class="mt-1 block w-full font-mono"
-                                              :value="old('reference_number')" maxlength="60" placeholder="UPI ref, cheque no., …" />
+                                              :value="old('reference_number', $memo->reference_number)" maxlength="60" placeholder="UPI ref, cheque no., …" />
                             </div>
                             <div>
                                 <x-input-label for="expense_category" value="Expense category" />
                                 <select id="expense_category" name="expense_category"
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                     @foreach (config('expense_categories') as $key => $cfg)
-                                        <option value="{{ $key }}" @selected(old('expense_category', 'misc') === $key)>{{ $cfg['label'] }}</option>
+                                        <option value="{{ $key }}" @selected(old('expense_category', $memo->expense_category ?? 'misc') === $key)>{{ $cfg['label'] }}</option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 text-xs text-gray-500">Used for the linked Expense entry in your P&amp;L.</p>
@@ -309,12 +310,12 @@
                         <x-input-label for="notes" value="Notes" />
                         <textarea id="notes" name="notes" rows="2" maxlength="1000"
                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500"
-                                  placeholder="Any additional remarks, terms, etc.">{{ old('notes') }}</textarea>
+                                  placeholder="Any additional remarks, terms, etc.">{{ old('notes', $memo->notes) }}</textarea>
                     </section>
 
                     <div class="flex items-center justify-between pt-4 border-t border-gray-100">
                         <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:underline">← Cancel</a>
-                        <x-primary-button>Create Cash Memo</x-primary-button>
+                        <x-primary-button>{{ ($isEdit ?? false) ? 'Save Changes' : 'Create Cash Memo' }}</x-primary-button>
                     </div>
                 </form>
             </div>

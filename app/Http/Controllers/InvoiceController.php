@@ -307,6 +307,73 @@ class InvoiceController extends Controller
         return $redirect->with('status', $action === 'pdf' ? 'Draft saved — PDF downloading.' : 'Draft invoice created.');
     }
 
+    /**
+     * Duplicate any invoice into a fresh editable DRAFT. Removes the re-keying
+     * friction of repeat/recurring billing: copies the customer, line items and
+     * presentation, but resets the number, dates, status, and all payment/credit
+     * history so the copy is a clean new draft. Shipment-specific fields
+     * (transporter, e-way bill, ship-to) are intentionally NOT copied.
+     */
+    public function duplicate(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $this->authorizeInvoice($request, $invoice);
+        $invoice->load('items');
+
+        // Preserve the original payment-term gap (due − issue), default 30 days.
+        $termDays = ($invoice->invoice_date && $invoice->due_date)
+            ? (int) $invoice->invoice_date->diffInDays($invoice->due_date)
+            : 30;
+
+        $copy = DB::transaction(function () use ($request, $invoice, $termDays) {
+            $new = $request->user()->invoices()->create([
+                'company_id' => $invoice->company_id,
+                'customer_id' => $invoice->customer_id,
+                'invoice_number' => null,
+                'invoice_date' => now()->toDateString(),
+                'due_date' => now()->addDays($termDays)->toDateString(),
+                'place_of_supply_state_id' => $invoice->place_of_supply_state_id,
+                'is_interstate' => $invoice->is_interstate,
+                'reverse_charge' => $invoice->reverse_charge,
+                'currency' => $invoice->currency,
+                'exchange_rate' => $invoice->exchange_rate,
+                'status' => 'draft',
+                'style' => $invoice->style,
+                'notes' => $invoice->notes,
+                'terms' => $invoice->terms,
+                // Money snapshot copied as-is (identical items → identical totals);
+                // the editor recomputes on the next save regardless.
+                'subtotal' => $invoice->subtotal,
+                'total_cgst' => $invoice->total_cgst,
+                'total_sgst' => $invoice->total_sgst,
+                'total_igst' => $invoice->total_igst,
+                'total_tax' => $invoice->total_tax,
+                'round_off' => $invoice->round_off,
+                'grand_total' => $invoice->grand_total,
+                'paid_amount' => 0,
+                'credited_amount' => 0,
+                'balance' => $invoice->grand_total,
+            ]);
+
+            foreach ($invoice->items as $item) {
+                $new->items()->create($item->only([
+                    'product_id', 'description', 'hsn_sac', 'quantity', 'unit', 'rate',
+                    'discount', 'amount', 'gst_rate', 'cgst_amount', 'sgst_amount',
+                    'igst_amount', 'total', 'sort_order',
+                ]));
+            }
+
+            return $new;
+        });
+
+        \App\Models\AuditLog::record('invoice.duplicated',
+            "Draft #{$copy->id} created by duplicating " . $invoice->displayNumber(),
+            $copy
+        );
+
+        return redirect()->route('invoices.edit', $copy)
+            ->with('status', 'Invoice duplicated as a new draft. Review the date and details, then save.');
+    }
+
     public function show(Request $request, Invoice $invoice): View
     {
         $this->authorizeInvoice($request, $invoice);

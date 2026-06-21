@@ -300,6 +300,120 @@ class CashMemoController extends Controller
         return view('finance.cash-memos.show', ['memo' => $cashMemo]);
     }
 
+    public function edit(Request $request, CashMemo $cashMemo): View
+    {
+        abort_unless($cashMemo->user_id === $request->user()->id, 403);
+        $company = $request->user()->ensureCompany();
+        $cashMemo->load('items');
+
+        // Reconstruct the form's GST inputs (rate + intra/inter) from the stored split.
+        $taxTotal = (float) $cashMemo->total_cgst + (float) $cashMemo->total_sgst + (float) $cashMemo->total_igst;
+        $isInterstate = (float) $cashMemo->total_igst > 0 ? 1 : 0;
+        $gstRate = (float) $cashMemo->taxable_value > 0
+            ? round($taxTotal / (float) $cashMemo->taxable_value * 100, 2)
+            : 0;
+
+        $items = $cashMemo->items->map(fn ($i) => [
+            'description' => $i->description,
+            'hsn_sac' => $i->hsn_sac,
+            'quantity' => (float) $i->quantity,
+            'unit' => $i->unit,
+            'rate' => (float) $i->rate,
+            'amount' => (float) $i->amount,
+        ])->all();
+
+        $states = State::orderBy('name')->get(['id', 'name', 'code']);
+
+        return view('finance.cash-memos.form', [
+            'company' => $company,
+            'memo' => $cashMemo,
+            'items' => $items,
+            'states' => $states,
+            'nextMemoNumber' => $cashMemo->memo_number,
+            'isEdit' => true,
+            'gstRate' => $gstRate,
+            'isInterstate' => $isInterstate,
+            'discount' => (float) $cashMemo->discount,
+        ]);
+    }
+
+    public function update(Request $request, CashMemo $cashMemo): RedirectResponse
+    {
+        abort_unless($cashMemo->user_id === $request->user()->id, 403);
+        $company = $cashMemo->company;
+        $data = $this->validated($request, $cashMemo->id);
+
+        // Books-lock guards BOTH the existing date and the new date.
+        if ($company->isBooksLockedOn($cashMemo->memo_date) || $company->isBooksLockedOn($data['memo_date'])) {
+            return redirect()->back()->withInput()
+                ->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This cash memo cannot be edited.");
+        }
+
+        DB::transaction(function () use ($cashMemo, $data) {
+            $computed = $this->compute($data);
+
+            $cashMemo->update([
+                'memo_number' => ! empty($data['memo_number']) ? trim($data['memo_number']) : $cashMemo->memo_number,
+                'memo_date' => $data['memo_date'],
+                'seller_name' => $data['seller_name'],
+                'seller_address' => $data['seller_address'] ?? null,
+                'seller_gstin' => $data['seller_gstin'] ?? null,
+                'seller_phone' => $data['seller_phone'] ?? null,
+                'seller_state' => $data['seller_state'] ?? null,
+                'subtotal' => $computed['subtotal'],
+                'discount' => $computed['discount'],
+                'taxable_value' => $computed['taxable_value'],
+                'total_cgst' => $computed['total_cgst'],
+                'total_sgst' => $computed['total_sgst'],
+                'total_igst' => $computed['total_igst'],
+                'round_off' => $computed['round_off'],
+                'grand_total' => $computed['grand_total'],
+                'amount_in_words' => NumberToWords::indianRupees($computed['grand_total']),
+                'payment_mode' => $data['payment_mode'] ?? 'cash',
+                'reference_number' => $data['reference_number'] ?? null,
+                'expense_category' => $data['expense_category'] ?? 'misc',
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            // Replace line items.
+            $cashMemo->items()->delete();
+            foreach ($data['items'] as $idx => $row) {
+                $cashMemo->items()->create([
+                    'sort_order' => $idx,
+                    'description' => $row['description'],
+                    'hsn_sac' => $row['hsn_sac'] ?? null,
+                    'quantity' => $row['quantity'],
+                    'unit' => $row['unit'] ?? null,
+                    'rate' => $row['rate'],
+                    'amount' => (float) $row['quantity'] * (float) $row['rate'],
+                ]);
+            }
+
+            // Keep the linked expense in sync — memo + expense are one accounting entry.
+            if ($cashMemo->expense_id) {
+                Expense::where('id', $cashMemo->expense_id)->update([
+                    'entry_date' => $data['memo_date'],
+                    'category' => $data['expense_category'] ?? 'misc',
+                    'vendor_name' => $data['seller_name'],
+                    'description' => 'Cash purchase from ' . $data['seller_name'],
+                    'amount' => $computed['taxable_value'],
+                    'gst_amount' => $computed['total_cgst'] + $computed['total_sgst'] + $computed['total_igst'],
+                    'payment_method' => $data['payment_mode'] ?? 'cash',
+                    'reference_number' => $data['reference_number'] ?? null,
+                    'notes' => $data['notes'] ?? null,
+                ]);
+            }
+        });
+
+        AuditLog::record('cash_memo.updated',
+            "Cash Memo {$cashMemo->fresh()->memo_number} updated · ₹" . number_format($cashMemo->fresh()->grand_total, 2) . " · " . $cashMemo->seller_name,
+            $cashMemo
+        );
+
+        return redirect()->route('finance.cash-memos.show', $cashMemo)
+            ->with('status', "Cash memo {$cashMemo->fresh()->memo_number} updated.");
+    }
+
     public function pdf(Request $request, CashMemo $cashMemo): Response
     {
         abort_unless($cashMemo->user_id === $request->user()->id, 403);
@@ -340,7 +454,7 @@ class CashMemoController extends Controller
         return redirect()->route('finance.cash-memos.index')->with('status', 'Cash memo deleted.');
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?int $ignoreId = null): array
     {
         $companyId = $request->user()->ensureCompany()->id;
 
@@ -348,9 +462,10 @@ class CashMemoController extends Controller
             'memo_date' => ['required', 'date'],
             'memo_number' => [
                 'nullable', 'string', 'max:40',
-                // Per-company uniqueness when provided
+                // Per-company uniqueness when provided (ignore self on edit)
                 \Illuminate\Validation\Rule::unique('cash_memos', 'memo_number')
-                    ->where(fn ($q) => $q->where('company_id', $companyId)),
+                    ->where(fn ($q) => $q->where('company_id', $companyId))
+                    ->ignore($ignoreId),
             ],
             'seller_name' => ['required', 'string', 'max:160'],
             'seller_address' => ['nullable', 'string', 'max:500'],

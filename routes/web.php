@@ -206,6 +206,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('payments/{payment}', [InvoiceController::class, 'deletePayment'])->name('payments.destroy');
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('invoices/{invoice}/print', [InvoiceController::class, 'printView'])->name('invoices.print');
+    // Duplicate any invoice into a fresh editable draft (repeat-billing convenience).
+    Route::post('invoices/{invoice}/duplicate', [InvoiceController::class, 'duplicate'])->name('invoices.duplicate');
 
     // Share + cancel. Outbound email endpoints are rate-limited to stop a
     // compromised account from blasting customers / burning SES quota.
@@ -267,6 +269,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/finance/cash-memos/create', [CashMemoController::class, 'create'])->name('finance.cash-memos.create');
     Route::post('/finance/cash-memos', [CashMemoController::class, 'store'])->name('finance.cash-memos.store');
     Route::get('/finance/cash-memos/{cashMemo}', [CashMemoController::class, 'show'])->name('finance.cash-memos.show');
+    Route::get('/finance/cash-memos/{cashMemo}/edit', [CashMemoController::class, 'edit'])->name('finance.cash-memos.edit');
+    Route::put('/finance/cash-memos/{cashMemo}', [CashMemoController::class, 'update'])->name('finance.cash-memos.update');
     Route::get('/finance/cash-memos/{cashMemo}/pdf', [CashMemoController::class, 'pdf'])->name('finance.cash-memos.pdf');
     Route::delete('/finance/cash-memos/{cashMemo}', [CashMemoController::class, 'destroy'])->name('finance.cash-memos.destroy');
 
