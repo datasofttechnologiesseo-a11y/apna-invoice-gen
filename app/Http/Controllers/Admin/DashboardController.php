@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,7 +56,16 @@ class DashboardController extends Controller
                 'this_month_billed' => (float) Invoice::whereIn('status', ['final', 'partially_paid', 'paid'])
                     ->where('finalized_at', '>=', $monthStart)->sum('grand_total'),
             ],
+            'blog' => [
+                'total' => Post::count(),
+                'published' => Post::where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', $now)->count(),
+                'drafts' => Post::where('status', 'draft')->count(),
+                'scheduled' => Post::where('status', 'published')->whereNotNull('published_at')->where('published_at', '>', $now)->count(),
+                'views' => (int) Post::sum('view_count'),
+            ],
         ];
+
+        $recentPosts = Post::with('author')->latest('updated_at')->take(6)->get();
 
         // Daily invoice trend (last 30 days)
         $trendRows = Invoice::query()
@@ -95,7 +105,7 @@ class DashboardController extends Controller
             ->limit(12)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'trend', 'topUsers', 'recentUsers', 'gstRateUsage'));
+        return view('admin.dashboard', compact('stats', 'trend', 'topUsers', 'recentUsers', 'gstRateUsage', 'recentPosts'));
     }
 
     public function users(Request $request): View

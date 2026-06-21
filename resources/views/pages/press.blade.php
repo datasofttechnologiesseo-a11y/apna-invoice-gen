@@ -1,15 +1,15 @@
 <x-layouts.marketing
-    title="Apna Invoice Press Kit — Brand Assets, Boilerplate & India Media Contact"
+    title="Apna Invoice Press Kit, Brand Assets, Boilerplate & India Media Contact"
     eyebrow="Media"
     lead="Logos, product shots, boilerplate, and founder quotes for journalists, partners, and reviewers covering Apna Invoice and India's MSME/SaaS landscape."
-    description="Apna Invoice press kit — logos, product screenshots, boilerplate, and media contact for journalists covering Indian SaaS, GST tools, MSMEs, and startups."
+    description="Apna Invoice press kit, logos, product screenshots, boilerplate, and media contact for journalists covering Indian SaaS, GST tools, MSMEs, and startups."
     keywords="Apna Invoice press kit, Apna Invoice media, Indian SaaS press, GST software press coverage, MSME SaaS India journalist, Datasoft Technologies brand assets">
 
     <h2>Boilerplate</h2>
     <p>
         <strong>Apna Invoice</strong> is a free GST-compliant invoicing product built in India for MSMEs, SMEs, startups,
         freelancers and CAs operating below ₹5 crore turnover. Made by <strong>Datasoft Technologies</strong>, the product
-        offers unlimited invoices and customers free during beta — with auto CGST/SGST/IGST split,
+        offers unlimited invoices and customers free during beta, with auto CGST/SGST/IGST split,
         HSN/SAC codes, FY-reset numbering, UPI QR on every invoice, WhatsApp share, and Section&nbsp;34 credit notes.
         Built India-first: Indian number formatting (lakhs/crores), state-driven place of supply, and CBIC Rule 46-aligned tax invoices.
     </p>

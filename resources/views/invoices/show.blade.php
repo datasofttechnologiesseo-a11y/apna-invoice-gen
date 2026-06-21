@@ -8,18 +8,18 @@
             <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
                 @if ($invoice->isDraft())
                     <span class="text-gray-500">Draft #{{ $invoice->id }}</span>
-                    <span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
                 @elseif ($invoice->isCancelled())
                     <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
-                    <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 uppercase font-bold tracking-wider">Cancelled</span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 uppercase font-bold tracking-wider">Cancelled</span>
                 @else
                     <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
                     @if ((float) $invoice->balance <= 0)
-                        <span class="text-xs px-2 py-0.5 rounded bg-money-100 text-money-800 uppercase font-bold tracking-wider">Paid</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Paid</span>
                     @elseif ((float) $invoice->paid_amount > 0)
-                        <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase font-bold tracking-wider">Partially paid</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Partially paid</span>
                     @else
-                        <span class="text-xs px-2 py-0.5 rounded bg-brand-100 text-brand-800 uppercase font-bold tracking-wider">Issued</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 uppercase font-bold tracking-wider">Issued</span>
                     @endif
                 @endif
             </h2>

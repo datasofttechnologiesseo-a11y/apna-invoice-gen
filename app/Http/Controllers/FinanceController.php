@@ -586,6 +586,19 @@ class FinanceController extends Controller
             'sgst'    => round((float) $regular->sum('total_sgst'), 2),
         ];
 
+        // GSTR-3B 3.1(a) is reported NET of credit notes. Subtract the taxable
+        // value + tax of credit notes issued in the period (netted by CN date —
+        // that's how the portal treats them, regardless of the original invoice's
+        // period). Credit notes against reverse-charge invoices carry ₹0 tax, so
+        // they net to zero here and need no special handling.
+        $creditNotes = \App\Models\CreditNote::where('company_id', $company->id)
+            ->whereBetween('credit_note_date', [$from->toDateString(), $to->toDateString()])
+            ->get();
+        $outward['taxable'] = round($outward['taxable'] - (float) $creditNotes->sum('taxable_value'), 2);
+        $outward['igst']    = round($outward['igst'] - (float) $creditNotes->sum('total_igst'), 2);
+        $outward['cgst']    = round($outward['cgst'] - (float) $creditNotes->sum('total_cgst'), 2);
+        $outward['sgst']    = round($outward['sgst'] - (float) $creditNotes->sum('total_sgst'), 2);
+
         // 3.1(d) — Inward supplies liable to reverse charge (we report from the
         // invoice side: outgoing where the buyer pays). Tax is "would-have-been"
         // on the line items even though we set CGST/SGST/IGST to ₹0 on the invoice.

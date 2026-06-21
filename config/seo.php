@@ -6,9 +6,9 @@ return [
 
     'legal_name' => 'Datasoft Technologies',
 
-    'title_suffix' => ' — Best Free GST Invoice & Bill Generator for India | Apna Invoice',
+    'title_suffix' => ' | Best Free GST Invoice & Bill Generator for India | Apna Invoice',
 
-    'description' => 'Free GST invoice generator for India — auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Made for MSMEs, SMEs, startups, freelancers and CAs operating below ₹5 cr turnover. No card, unlimited invoices during beta.',
+    'description' => 'Free GST invoice generator for India with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Made for MSMEs, SMEs, startups, freelancers and CAs operating below ₹5 cr turnover. No card, unlimited invoices during beta.',
 
     'keywords' => implode(', ', [
         // Primary head terms — what users search for to find a tool
@@ -99,11 +99,18 @@ return [
         'Apna Invoice',
     ]),
 
-    'og_image' => '/brand/apna-invoice-logo.jpg',
+    // Search-engine ownership verification (paste the token from Google Search
+    // Console → Settings → Ownership verification → "HTML tag", and Bing too).
+    'google_site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+    'bing_site_verification' => env('BING_SITE_VERIFICATION'),
 
-    'og_image_width' => 1939,
+    // Dedicated 1200x630 social share card (the ideal OG aspect ratio).
+    // Regenerate with: php scripts/make-og-card.php
+    'og_image' => '/brand/og-card.png',
 
-    'og_image_height' => 454,
+    'og_image_width' => 1200,
+
+    'og_image_height' => 630,
 
     'locale' => 'en_IN',
 

@@ -40,6 +40,29 @@ class User extends Authenticatable
         return $this->hasMany(Product::class);
     }
 
+    public function consents(): HasMany
+    {
+        return $this->hasMany(UserConsent::class);
+    }
+
+    /**
+     * Current marketing-consent state, derived from the latest consent event.
+     * The immutable consent log is the source of truth (DPDP §6 audit trail);
+     * we never store a mutable boolean that could drift from it.
+     */
+    public function marketingConsentGiven(): bool
+    {
+        return (bool) $this->consents()
+            ->where('consent_type', 'marketing')
+            ->latest('id')
+            ->value('given');
+    }
+
+    public function isErased(): bool
+    {
+        return $this->erased_at !== null;
+    }
+
     /**
      * Return (creating if necessary) the currently selected company for this user.
      * Used by every controller that needs "the company context for this request".
@@ -91,6 +114,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
         'active_company_id',
     ];
@@ -114,6 +138,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'erased_at' => 'datetime',
             'password' => 'hashed',
             'is_super_admin' => 'boolean',
             'auto_backup_enabled' => 'boolean',

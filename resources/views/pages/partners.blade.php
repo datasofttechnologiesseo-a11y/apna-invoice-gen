@@ -1,7 +1,7 @@
 <x-layouts.marketing
-    title="Become a CA or Consultant Partner — Apna Invoice Referral Program India"
+    title="Become a CA or Consultant Partner, Apna Invoice Referral Program India"
     eyebrow="Partnerships"
-    lead="Chartered Accountants, tax consultants, and agencies — help your Indian MSME, SME and startup clients get GST invoicing right, and earn revenue share with every referral."
+    lead="Chartered Accountants, tax consultants, and agencies, help your Indian MSME, SME and startup clients get GST invoicing right, and earn revenue share with every referral."
     description="Apna Invoice partner programme for Indian Chartered Accountants, tax consultants, and agencies. Refer MSMEs, SMEs and startups, earn revenue share, and get priority support."
     keywords="CA partner programme India, Chartered Accountant referral India, invoice software affiliate India, GST tool reseller, Apna Invoice partners, CA referral revenue share, MSME consultant partnership">
 
@@ -30,7 +30,7 @@
         <li><strong>Revenue share</strong> on paid-tier referrals (post-beta).</li>
         <li><strong>Partner dashboard</strong> to track sign-ups and payouts.</li>
         <li><strong>Priority support</strong> for your clients.</li>
-        <li><strong>Co-marketing</strong> — case studies, webinars, and joint content.</li>
+        <li><strong>Co-marketing</strong>, case studies, webinars, and joint content.</li>
     </ul>
 
     <h2>Apply</h2>

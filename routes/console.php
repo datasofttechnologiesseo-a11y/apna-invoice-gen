@@ -24,6 +24,21 @@ Schedule::command('backups:send-weekly')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Activation/retention drip. Daily mid-morning send of day-1/3/7 nudges to
+// users who signed up but haven't created their first invoice yet.
+Schedule::command('emails:send-activation')
+    ->dailyAt('09:30')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// DPDP erasure completion. Daily sweep that hard-deletes depersonalised
+// accounts once their retained GST records have aged past the retention window,
+// so personal data is never kept longer than the law requires.
+Schedule::command('accounts:purge-erased')
+    ->dailyAt('03:30')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // Note: database sessions are garbage-collected automatically via the session
 // lottery in config/session.php (default 2/100 requests), so we don't schedule
 // an explicit prune command. If session volume ever becomes an issue, add

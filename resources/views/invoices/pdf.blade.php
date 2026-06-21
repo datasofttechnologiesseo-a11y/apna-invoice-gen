@@ -155,6 +155,14 @@
         }
         table.items tr:last-child td { border-bottom: 1px solid {{ $t['divider'] }}; }
 
+        /* Column HEADERS must adopt the same alignment as their cells. Without
+           this, `table.items th { text-align: left }` out-specifies the .tr/.tc
+           utility classes, so the numeric headers (Qty, Rate, GST%, Taxable) sat
+           at the left of their columns while the numbers were right-aligned —
+           making the data look like it was under the wrong heading. */
+        table.items th.tr, table.hsn-summary th.tr { text-align: right; }
+        table.items th.tc, table.hsn-summary th.tc { text-align: center; }
+
         /* HSN summary */
         table.hsn-summary { width: 100%; border-collapse: collapse; margin-top: 8px; }
         table.hsn-summary th {

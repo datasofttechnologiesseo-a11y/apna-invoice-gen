@@ -38,6 +38,56 @@
             @endforeach
         </div>
 
+        {{-- Blog: content overview + one-click authoring. Sits high up so writing
+             a post is never more than one click away from the admin home. --}}
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <h3 class="font-display font-bold text-slate-900">Blog</h3>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                        <span class="inline-flex items-center gap-1.5 text-slate-600"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span class="font-semibold tabular-nums">{{ $stats['blog']['published'] }}</span> published</span>
+                        <span class="inline-flex items-center gap-1.5 text-slate-600"><span class="w-2 h-2 rounded-full bg-slate-400"></span><span class="font-semibold tabular-nums">{{ $stats['blog']['drafts'] }}</span> drafts</span>
+                        @if ($stats['blog']['scheduled'])
+                            <span class="inline-flex items-center gap-1.5 text-slate-600"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span class="font-semibold tabular-nums">{{ $stats['blog']['scheduled'] }}</span> scheduled</span>
+                        @endif
+                        <span class="text-slate-300">·</span>
+                        <span class="text-slate-600"><span class="font-semibold tabular-nums">{{ number_format($stats['blog']['views']) }}</span> total views</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('admin.blog.index') }}" class="text-xs font-semibold text-indigo-600 hover:underline whitespace-nowrap">Manage all →</a>
+                    <a href="{{ route('admin.blog.create') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        Write new post
+                    </a>
+                </div>
+            </div>
+            <ul class="divide-y divide-slate-100">
+                @forelse ($recentPosts as $p)
+                    @php
+                        if ($p->isScheduled()) { $badge = ['Scheduled', 'bg-amber-100 text-amber-700']; }
+                        elseif ($p->isPublished()) { $badge = ['Published', 'bg-emerald-100 text-emerald-700']; }
+                        else { $badge = ['Draft', 'bg-slate-100 text-slate-600']; }
+                    @endphp
+                    <li class="px-5 py-3 flex items-center gap-3 hover:bg-slate-50">
+                        <div class="flex-1 min-w-0">
+                            <a href="{{ route('admin.blog.edit', $p) }}" class="font-medium text-slate-900 hover:text-indigo-700 truncate block">{{ $p->title ?: 'Untitled draft' }}</a>
+                            <div class="text-xs text-slate-500 truncate">
+                                {{ $p->reading_minutes ?: 1 }} min read · updated {{ $p->updated_at->diffForHumans() }}
+                            </div>
+                        </div>
+                        <span class="hidden sm:inline text-xs text-slate-500 tabular-nums whitespace-nowrap">{{ number_format($p->view_count) }} views</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded {{ $badge[1] }} whitespace-nowrap">{{ $badge[0] }}</span>
+                        <a href="{{ route('admin.blog.edit', $p) }}" class="text-xs font-semibold text-indigo-600 hover:underline whitespace-nowrap">Edit</a>
+                    </li>
+                @empty
+                    <li class="px-5 py-10 text-center text-slate-400">
+                        No posts yet. <a href="{{ route('admin.blog.create') }}" class="text-indigo-600 font-semibold hover:underline">Write your first post →</a>
+                    </li>
+                @endforelse
+            </ul>
+        </div>
+
         {{-- Revenue + Status mix --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div class="lg:col-span-2 p-6 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-xl shadow-lg text-white relative overflow-hidden">

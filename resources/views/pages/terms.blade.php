@@ -3,7 +3,7 @@
     title="Terms of Service"
     eyebrow="Legal"
     lead="The rules of the road for using Apna Invoice. Plain English where we can, precise where we must."
-    description="Apna Invoice Terms of Service — account rules, acceptable use, GST responsibility, fees, liability, and Indian jurisdiction. Plain English where possible."
+    description="Apna Invoice Terms of Service, account rules, acceptable use, GST responsibility, fees, liability, and Indian jurisdiction. Plain English where possible."
     keywords="Apna Invoice terms of service, GST invoice software terms, SaaS terms India, Datasoft Technologies legal, invoice generator terms"
     type="article">
 
@@ -71,8 +71,8 @@
     <h2>10. Governing law &amp; jurisdiction</h2>
     <p>
         These Terms are governed by and construed in accordance with the laws of India. Any dispute arising out of or
-        in connection with these Terms — including the existence, validity, interpretation, performance, breach or
-        termination — is subject to the <strong>exclusive jurisdiction of the courts of Delhi NCR, India</strong>.
+        in connection with these Terms, including the existence, validity, interpretation, performance, breach or
+        termination, is subject to the <strong>exclusive jurisdiction of the courts of Delhi NCR, India</strong>.
         For matters falling under consumer-protection legislation, the User may also approach the consumer forum
         having jurisdiction over their place of residence.
     </p>

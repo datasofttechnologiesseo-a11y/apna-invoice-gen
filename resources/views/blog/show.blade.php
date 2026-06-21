@@ -54,15 +54,18 @@
         :keywords="$post->meta_keywords"
         type="article"
         :image="$ogImage"
+        :url="route('blog.show', $post->slug)"
+        :published-time="$post->published_at?->toIso8601String()"
+        :modified-time="$post->updated_at?->toIso8601String()"
+        section="Blog"
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
-    <link rel="canonical" href="{{ route('blog.show', $post->slug) }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
-    {{-- Lora (serif) added for the article body — long-form reading typography.
+    {{-- Lora (serif) added for the article body, long-form reading typography.
          figtree stays for chrome/UI, plus-jakarta-sans stays for display headlines. --}}
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800|lora:400,500,600,700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* Article body — long-read typography. Serif body font, generous
+        /* Article body, long-read typography. Serif body font, generous
            line-height, larger size, more vertical breathing. Drop-cap on the
            first paragraph + anchor link on hover for h2/h3. */
         .article-body { font-family: 'Lora', Georgia, 'Times New Roman', serif; }
@@ -74,7 +77,7 @@
         }
         .article-body p { margin: 1.4em 0; }
 
-        /* Drop-cap on the very first paragraph — magazine touch.
+        /* Drop-cap on the very first paragraph, magazine touch.
            Skips when the first child is a heading/image (no drop-cap mid-section). */
         .article-body > p:first-of-type::first-letter {
             float: left;
@@ -86,7 +89,7 @@
             color: #075985;  /* brand-700 */
         }
 
-        /* Anchor link for headings — small § that fades in on hover, lets
+        /* Anchor link for headings, small § that fades in on hover, lets
            readers deep-link sections. JS adds the link target. */
         .article-body .heading-anchor {
             margin-left: 0.4em;
@@ -100,7 +103,7 @@
         .article-body h3:hover .heading-anchor { opacity: 1; }
         .article-body .heading-anchor:hover { color: #075985; }
 
-        /* Reading progress bar — pinned to top, brand gradient. */
+        /* Reading progress bar, pinned to top, brand gradient. */
         #reading-progress {
             position: fixed; top: 0; left: 0;
             height: 3px; width: 0%;
@@ -114,7 +117,7 @@
 </head>
 <body class="font-sans antialiased bg-white text-gray-900">
 
-{{-- Scroll-driven reading progress bar — pure JS, no library. Updates on
+{{-- Scroll-driven reading progress bar, pure JS, no library. Updates on
      scroll using requestAnimationFrame for smoothness. --}}
 <div id="reading-progress" aria-hidden="true"></div>
 
@@ -139,7 +142,7 @@
     </div>
 </header>
 
-{{-- Article hero — title, byline, meta, optional cover --}}
+{{-- Article hero, title, byline, meta, optional cover --}}
 <section class="bg-gradient-to-br from-brand-50 via-white to-accent-50 border-b border-gray-100">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
         <nav aria-label="Breadcrumb" class="text-xs uppercase tracking-wider font-bold text-gray-500 mb-3">
@@ -173,7 +176,7 @@
 @endif
 
 <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-    {{-- Markdown body — rendered server-side via league/commonmark with safe-HTML
+    {{-- Markdown body, rendered server-side via league/commonmark with safe-HTML
          escaping. `article-body` (defined in the <style> block above) drives
          the long-read typography: Lora serif for paragraphs, drop-cap on the
          first paragraph, hover anchors on headings. Tailwind utilities still
@@ -214,10 +217,10 @@
         </div>
     @endif
 
-    {{-- CTA block — drive blog traffic to product signup --}}
+    {{-- CTA block, drive blog traffic to product signup --}}
     <div class="mt-14 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 text-white">
-        <h3 class="font-display font-extrabold text-2xl sm:text-3xl">Ready to issue your first GST invoice — free?</h3>
-        <p class="mt-2 text-brand-100 max-w-xl">Apna Invoice is a free GST invoicing tool for Indian SMEs, MSMEs and freelancers. Auto CGST/SGST, HSN/SAC search, UPI QR, WhatsApp share — all in 60 seconds.</p>
+        <h3 class="font-display font-extrabold text-2xl sm:text-3xl">Ready to issue your first GST invoice, free?</h3>
+        <p class="mt-2 text-brand-100 max-w-xl">Apna Invoice is a free GST invoicing tool for Indian SMEs, MSMEs and freelancers. Auto CGST/SGST, HSN/SAC search, UPI QR, WhatsApp share, all in 60 seconds.</p>
         <div class="mt-5 flex flex-wrap gap-3">
             @auth
                 <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-saffron-500 hover:bg-saffron-600 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
@@ -254,7 +257,7 @@
 @stack('scripts')
 
 <script>
-    // Article enhancements — runs once on load. No dependencies.
+    // Article enhancements, runs once on load. No dependencies.
     (function() {
         const article = document.getElementById('article-body');
         const bar = document.getElementById('reading-progress');
@@ -285,7 +288,7 @@
             h.appendChild(a);
         });
 
-        // 2) Reading progress bar — measure how far the article body is scrolled
+        // 2) Reading progress bar, measure how far the article body is scrolled
         //    relative to its own height (not the whole page). More accurate than
         //    a window-scroll % which hits 100% before the article ends.
         function updateProgress() {

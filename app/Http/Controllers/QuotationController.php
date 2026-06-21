@@ -450,7 +450,7 @@ class QuotationController extends Controller
             'items.*.rate' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'min:0', 'max:50'],
-            'items.*.product_id' => ['nullable', 'integer'],
+            'items.*.product_id' => ['nullable', 'integer', "exists:products,id,company_id,{$companyId}"],
         ]);
     }
 }

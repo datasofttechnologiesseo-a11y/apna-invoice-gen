@@ -26,6 +26,16 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // A DPDP-erased account must never be usable again, even if someone
+        // somehow knows the scrubbed credentials.
+        if ($request->user()?->erased_at !== null) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')
+                ->withErrors(['email' => 'This account has been closed.']);
+        }
+
         $request->session()->regenerate();
 
         $user = $request->user();

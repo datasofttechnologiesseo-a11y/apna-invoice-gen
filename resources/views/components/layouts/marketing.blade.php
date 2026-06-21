@@ -10,7 +10,7 @@
 ])
 @php
     // Auto-generate a BreadcrumbList JSON-LD for every marketing page so Google
-    // shows Home › {page} breadcrumbs in SERPs — free rich-result boost.
+    // shows Home › {page} breadcrumbs in SERPs, free rich-result boost.
     $breadcrumb = [
         '@context' => 'https://schema.org',
         '@type' => 'BreadcrumbList',
@@ -44,8 +44,13 @@
         :type="$type"
         :noindex="$noindex"
         :json-ld="$allJsonLd" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
+    {{-- crossorigin is required for the font-file connection; non-blocking
+         stylesheet load pairs with display=swap (see welcome.blade.php). --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap">
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @include('partials.google-analytics')

@@ -1,11 +1,13 @@
 <x-app-layout>
-    @php $restricted = $restricted ?? false; @endphp
+    @php $restricted = $restricted ?? false; $isSample = ! $invoice->exists && request()->boolean('sample'); @endphp
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
                 @if ($restricted)
-                    <span class="ml-2 text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 uppercase font-bold tracking-wider">Limited edit</span>
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Limited edit</span>
+                @elseif ($isSample)
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Sample · edit &amp; save</span>
                 @elseif (! $invoice->exists && ! empty($templateLabel))
                     <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Using template: {{ $templateLabel }}</span>
                 @endif
@@ -32,8 +34,19 @@
         ])->toArray();
         $oldItems = old('items', $existingItems);
         if (empty($oldItems)) {
-            $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
+            if (! $invoice->exists && request()->boolean('sample')) {
+                // One-click "Try a sample invoice": prefill demo lines so a new
+                // user instantly sees a populated invoice with live GST totals.
+                // Nothing is saved until they hit Save.
+                $oldItems = [
+                    ['product_id' => null, 'description' => 'Consulting services (sample)', 'hsn_sac' => '998311', 'quantity' => 10, 'unit' => 'NOS', 'rate' => 1500, 'discount' => 0, 'gst_rate' => 18],
+                    ['product_id' => null, 'description' => 'Website design (sample)', 'hsn_sac' => '998314', 'quantity' => 1, 'unit' => 'NOS', 'rate' => 25000, 'discount' => 0, 'gst_rate' => 18],
+                ];
+            } else {
+                $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
+            }
         }
+        $isSample = ! $invoice->exists && request()->boolean('sample');
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
         $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
@@ -65,7 +78,7 @@
 
     <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }})'
          @customer-added.window="addCustomer($event.detail)"
-         {{-- Tally-style keyboard shortcuts. Listen at window level so they
+         {{-- power-user keyboard shortcuts. Listen at window level so they
               fire from anywhere on the page (combobox dropdowns, side panels
               etc.). The handler inspects $event.target so we don't hijack
               Ctrl+S while the user is typing in a textarea. --}}
@@ -134,7 +147,10 @@
             @endif
 
             {{-- Soft nudge when the company has no state set. GST place-of-supply needs it
-                 to compute CGST/SGST vs IGST correctly. Without it we fall back to IGST. --}}
+                 to compute CGST/SGST vs IGST correctly. Without it the invoice cannot tell
+                 a same-state sale from an inter-state one and defaults to intra-state
+                 (CGST/SGST), so an inter-state sale would be split incorrectly. We block
+                 finalisation of a taxed invoice until the state is set (see InvoiceController). --}}
             @if (! $company->state_id && ! $restricted)
                 <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
                     <svg class="w-5 h-5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +158,7 @@
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">Your business state is not set.</span>
-                        Until you set it, GST is computed as IGST (inter-state) by default. Set state to enable CGST/SGST for same-state customers.
+                        Until you set it, we can't tell a same-state sale from an inter-state one, so GST defaults to intra-state (CGST/SGST) and an inter-state sale would be split incorrectly. Set your state so CGST/SGST and IGST apply correctly. You'll need it set before issuing a GST invoice.
                     </div>
                     <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         Set business state
@@ -154,7 +170,7 @@
                 @csrf
                 @if ($invoice->exists) @method('PATCH') @endif
 
-                <div class="bg-white shadow sm:rounded-lg p-6 space-y-6">
+                <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="md:col-span-2">
                             <x-input-label for="customer_search" value="Customer *" />
@@ -280,7 +296,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
+                <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
                         <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked — amounts are immutable</span>@endif</h3>
                         <div class="flex items-center gap-3">
@@ -380,7 +396,7 @@
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
-                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="1" min="1" inputmode="numeric" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
@@ -506,7 +522,7 @@
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 border-gray-300 rounded text-sm font-mono" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="1" min="1" inputmode="numeric" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
@@ -735,9 +751,9 @@
                  totals inline + the FAB. --}}
             @unless ($restricted)
             <div class="hidden lg:block fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-                {{-- Tally-style keyboard shortcut strip — kept subtle so it doesn't
+                {{-- power-user keyboard shortcut strip — kept subtle so it doesn't
                      compete with the action buttons, but always visible for power
-                     users (the #1 Vyapar user complaint is missing shortcuts). --}}
+                     users (a common complaint in Indian billing apps is missing shortcuts). --}}
                 <div class="max-w-7xl mx-auto px-6 py-1 text-[11px] text-gray-500 border-b border-gray-100 flex items-center gap-x-4 gap-y-0.5 flex-wrap">
                     <span class="font-semibold text-gray-700 uppercase tracking-wider text-[10px]">Shortcuts</span>
                     <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px]">F2</kbd> add row</span>
@@ -771,7 +787,7 @@
                         </button>
                         <button type="button"
                                 @click="submitForm('pdf')"
-                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-saffron-600 hover:bg-saffron-700 text-white font-semibold rounded-lg text-sm shadow-sm transition">
+                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h11l5 5v7a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                             Save &amp; Download PDF
                         </button>
@@ -977,7 +993,7 @@
                 },
 
                 /**
-                 * Keyboard shortcuts (Tally-style — common in Indian SME billing apps).
+                 * Keyboard shortcuts (power-user — common in Indian SME billing apps).
                  *   F2          → add a new row
                  *   F9          → save & download PDF
                  *   Ctrl+S      → save draft  (overrides browser save-as)

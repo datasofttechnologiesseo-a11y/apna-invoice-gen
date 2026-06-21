@@ -97,7 +97,9 @@ class InvoiceController extends Controller
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
-                'balance' => $calc['totals']['grand_total'] - (float) ($data['paid_amount'] ?? 0),
+                // Clamp to >= 0 so an advance larger than the total can't store a
+                // negative balance (matches the web InvoiceController invariant).
+                'balance' => max(0, round($calc['totals']['grand_total'] - (float) ($data['paid_amount'] ?? 0), 2)),
                 'paid_amount' => (float) ($data['paid_amount'] ?? 0),
             ]);
 
@@ -180,7 +182,7 @@ class InvoiceController extends Controller
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
                 'paid_amount' => $paid,
-                'balance' => $calc['totals']['grand_total'] - $paid,
+                'balance' => max(0, round($calc['totals']['grand_total'] - $paid, 2)),
             ]);
 
             $invoice->items()->delete();
@@ -564,7 +566,7 @@ class InvoiceController extends Controller
             ],
             'items.*.description' => ['nullable', 'string', 'max:150'],
             'items.*.hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],

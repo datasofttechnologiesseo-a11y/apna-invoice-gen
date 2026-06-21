@@ -13,7 +13,7 @@
     // overdue → days, future → due-date language). Single source of truth on
     // the Invoice model — same text used by WhatsApp share, email default body,
     // and the WhatsApp reminder channel, so customers never see contradictory
-    // copy across channels. Fixes the Vyapar "Balance Due after paying" complaint.
+    // copy across channels. Avoids the common "Balance Due after paying" confusion.
     $defaultBody = $invoice->shareMessageText('share');
     $waLink = $invoice->whatsAppShareLink('share') ?? '';
 @endphp

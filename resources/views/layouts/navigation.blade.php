@@ -1,20 +1,14 @@
-{{-- App spine — deep teal gradient with a saffron accent stripe at the foot for
-     tricolor identity. Designed to read as the most prominent surface on the
-     page; everything below sits in lighter neutrals so the nav feels anchored. --}}
-<nav x-data="{ open: false }" class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 border-b-2 border-saffron-500 shadow-lg relative">
-    {{-- Subtle highlight at the very top of the bar — gives the gradient a hint
-         of dimensionality without making the chrome feel heavy. --}}
-    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300 to-transparent opacity-30 pointer-events-none"></div>
-    <!-- Primary Navigation Menu -->
-    {{-- Full-width container so the user dropdown pins flush to the right edge
-         of the viewport on wide screens (was capped at max-w-7xl before). --}}
+{{-- App navigation — clean, light top bar: white surface, a thin bottom border,
+     calm navy accents for the active item, and generous spacing. Sticky so it
+     stays in reach as the page scrolls. --}}
+<nav x-data="{ open: false }" class="bg-white/90 backdrop-blur-md border-b border-gray-200/80 shadow-sm sticky top-0 z-20">
     <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
-                <!-- Logo — kept on a white pill so the brand mark stays crisp on the dark bar -->
+                <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-flex items-center bg-white rounded-lg px-2 py-1 shadow-md ring-1 ring-saffron-300 hover:ring-saffron-500 transition">
-                        <x-brand-logo class="block h-9 w-auto" />
+                    <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-flex items-center">
+                        <x-brand-logo class="block h-8 w-auto" />
                     </a>
                 </div>
 
@@ -26,142 +20,143 @@
                         ['href' => route('customers.index'), 'label' => 'Customers', 'active' => request()->routeIs('customers.*'), 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
                         ['href' => route('products.index'), 'label' => 'Products', 'active' => request()->routeIs('products.*'), 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
                         ['href' => route('companies.index'), 'label' => 'Companies', 'active' => request()->routeIs('companies.*') || request()->routeIs('company.*'), 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
-                        ['href' => route('finance.index'), 'label' => 'Finance (P&L)', 'active' => request()->routeIs('finance.*'), 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
+                        ['href' => route('finance.index'), 'label' => 'Finance', 'active' => request()->routeIs('finance.*'), 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
                     ];
                     if (Auth::user()?->isSuperAdmin()) {
                         $navItems[] = ['href' => route('admin.dashboard'), 'label' => 'Admin', 'active' => request()->routeIs('admin.*'), 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'];
                     }
                 @endphp
-                <div class="hidden lg:ms-6 lg:flex lg:items-center gap-1">
+                <div class="hidden lg:ms-8 lg:flex lg:items-center lg:gap-1">
                     @foreach ($navItems as $item)
                         <a href="{{ $item['href'] }}" @class([
-                            'group inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap',
-                            'bg-gradient-to-br from-saffron-400 to-saffron-500 text-brand-900 shadow-md ring-1 ring-saffron-300' => $item['active'],
-                            'text-blue-100 hover:text-white hover:bg-brand-700' => ! $item['active'],
+                            'group relative inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-all duration-200 whitespace-nowrap',
+                            'bg-brand-50 text-brand-700 font-semibold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
+                            'text-gray-500 font-medium hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
                         ])>
-                            <svg class="w-4 h-4 {{ $item['active'] ? 'text-brand-900' : 'text-blue-200 group-hover:text-white' }} transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                             </svg>
                             {{ $item['label'] }}
                         </a>
                     @endforeach
-
-                    {{-- Active-company switcher pill — moved here so it sits next to the
-                         Finance link rather than floating on the far right of the nav. --}}
-                    @auth
-                        @php
-                            $activeCompany = Auth::user()->ensureCompany();
-                            $myCompanies = Auth::user()->companies()->orderBy('name')->get();
-                        @endphp
-                        @if ($myCompanies->count() > 1 || ! request()->routeIs('onboarding.*'))
-                            <div class="ms-2 flex items-center flex-shrink min-w-0">
-                                <x-dropdown align="left" width="64">
-                                    <x-slot name="trigger">
-                                        <button class="inline-flex items-center gap-2 px-2.5 py-1.5 ring-1 ring-saffron-300 text-sm font-medium rounded-lg text-brand-900 bg-white hover:bg-saffron-50 hover:ring-saffron-400 focus:outline-none focus:ring-2 focus:ring-saffron-400 transition w-44 shadow-md">
-                                            <svg class="w-4 h-4 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                            <div class="text-left min-w-0 flex-1">
-                                                <div class="text-[9px] text-brand-500 leading-tight uppercase tracking-wider font-bold">Active</div>
-                                                <div class="leading-tight truncate text-xs font-semibold">{{ $activeCompany->name }}</div>
-                                            </div>
-                                            <svg class="fill-current h-3.5 w-3.5 text-brand-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                            </svg>
-                                        </button>
-                                    </x-slot>
-                                    <x-slot name="content">
-                                        <div class="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-bold border-b">Switch company</div>
-                                        @foreach ($myCompanies as $c)
-                                            @if ($c->id === $activeCompany->id)
-                                                <div class="block w-full px-4 py-2 text-left text-sm leading-5 text-brand-700 font-semibold bg-brand-50">
-                                                    ✓ {{ $c->name }}
-                                                </div>
-                                            @else
-                                                <form method="POST" action="{{ route('companies.switch', $c) }}">
-                                                    @csrf
-                                                    <button type="submit" class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 transition">
-                                                        {{ $c->name }}
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        @endforeach
-                                        <div class="border-t">
-                                            <a href="{{ route('companies.index') }}" class="block px-4 py-2 text-sm leading-5 text-gray-600 hover:bg-gray-100 transition">Manage companies</a>
-                                            <a href="{{ route('companies.create') }}" class="block px-4 py-2 text-sm leading-5 text-brand-700 font-semibold hover:bg-brand-50 transition">+ Add new company</a>
-                                        </div>
-                                    </x-slot>
-                                </x-dropdown>
-                            </div>
-                        @endif
-                    @endauth
                 </div>
             </div>
 
-            <div class="flex items-center">
+            <div class="flex items-center gap-2">
 
             @auth
-                <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink-0">
+                {{-- Active-company switcher --}}
+                @php
+                    $activeCompany = Auth::user()->ensureCompany();
+                    $myCompanies = Auth::user()->companies()->orderBy('name')->get();
+                @endphp
+                @if ($myCompanies->count() > 1 || ! request()->routeIs('onboarding.*'))
+                    <div class="hidden lg:flex lg:items-center">
+                        <x-dropdown align="left" width="64">
+                            <x-slot name="trigger">
+                                <button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition w-44">
+                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    <div class="text-left min-w-0 flex-1">
+                                        <div class="text-[10px] text-gray-400 leading-tight uppercase tracking-wider font-semibold">Active company</div>
+                                        <div class="leading-tight truncate text-xs font-semibold text-gray-900">{{ $activeCompany->name }}</div>
+                                    </div>
+                                    <svg class="fill-current h-4 w-4 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <div class="px-3 py-2 text-[11px] text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-100">Switch company</div>
+                                @foreach ($myCompanies as $c)
+                                    @if ($c->id === $activeCompany->id)
+                                        <div class="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-brand-700 font-semibold bg-brand-50">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            {{ $c->name }}
+                                        </div>
+                                    @else
+                                        <form method="POST" action="{{ route('companies.switch', $c) }}">
+                                            @csrf
+                                            <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition">
+                                                {{ $c->name }}
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endforeach
+                                <div class="border-t border-gray-100">
+                                    <a href="{{ route('companies.index') }}" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition">Manage companies</a>
+                                    <a href="{{ route('companies.create') }}" class="block px-4 py-2 text-sm text-brand-700 font-semibold hover:bg-brand-50 transition">+ Add new company</a>
+                                </div>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+                @endif
+
+                {{-- Persistent "+ New" create menu — primary action, one click away
+                     on every screen. Desktop only; mobile keeps the floating button. --}}
+                <div class="hidden lg:flex lg:items-center">
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold text-white bg-brand-700 hover:bg-brand-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                New
+                                <svg class="fill-current h-3.5 w-3.5 opacity-70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </x-slot>
+                        <x-slot name="content">
+                            <div class="px-4 py-2 text-[11px] text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-100">Create new</div>
+                            <x-dropdown-link :href="route('invoices.create')">{{ __('Invoice') }}</x-dropdown-link>
+                            <x-dropdown-link :href="route('quotations.create')">{{ __('Quotation') }}</x-dropdown-link>
+                            <x-dropdown-link :href="route('customers.create')">{{ __('Customer') }}</x-dropdown-link>
+                            <x-dropdown-link :href="route('products.create')">{{ __('Product / service') }}</x-dropdown-link>
+                        </x-slot>
+                    </x-dropdown>
+                </div>
+
+                <div class="hidden lg:flex lg:items-center">
                     <x-notification-bell />
                 </div>
             @endauth
 
-            <!-- Settings Dropdown (hidden on sm/md; shown on lg+ where the primary nav is visible) -->
-            <div class="hidden lg:flex lg:items-center lg:ms-3 flex-shrink-0">
+            <!-- Settings Dropdown (lg+) -->
+            <div class="hidden lg:flex lg:items-center">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center gap-2 px-2.5 py-1.5 ring-1 ring-saffron-300 text-sm font-semibold rounded-lg text-brand-900 bg-white hover:bg-saffron-50 hover:ring-saffron-400 shadow-md focus:outline-none focus:ring-2 focus:ring-saffron-400 transition">
-                            <span class="w-7 h-7 rounded-full bg-gradient-to-br from-saffron-400 to-saffron-600 text-brand-900 font-bold flex items-center justify-center text-xs flex-shrink-0 shadow-inner ring-1 ring-saffron-200">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                            <div class="text-left hidden xl:block">
-                                <div class="text-[9px] text-brand-500 leading-tight uppercase tracking-wider font-bold">Hi,</div>
-                                <div class="leading-tight text-xs font-bold text-brand-900">{{ Str::limit(Auth::user()->name, 12) }}</div>
+                        <button class="inline-flex items-center gap-2 px-1.5 py-1 rounded-lg text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition">
+                            <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm flex-shrink-0">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                            <div class="text-left hidden xl:block pr-1">
+                                <div class="leading-tight text-xs font-semibold text-gray-900">{{ Str::limit(Auth::user()->name, 14) }}</div>
+                                <div class="text-[10px] text-gray-400 leading-tight">View account</div>
                             </div>
-                            <svg class="fill-current h-3.5 w-3.5 text-brand-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
+                            <svg class="fill-current h-4 w-4 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('settings.index')">
-                            {{ __('Settings') }}
-                        </x-dropdown-link>
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <div class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</div>
+                            <div class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</div>
+                        </div>
+                        <x-dropdown-link :href="route('settings.index')">{{ __('Settings') }}</x-dropdown-link>
+                        <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
+                        <x-dropdown-link :href="route('profile.activity')">{{ __('Activity log') }}</x-dropdown-link>
+                        <x-dropdown-link :href="route('help')">{{ __('How to use') }}</x-dropdown-link>
+                        <x-dropdown-link :href="route('referrals.index')">{{ __('Refer a friend') }}</x-dropdown-link>
+                        <x-dropdown-link :href="route('backup.index')">{{ __('Backups') }}</x-dropdown-link>
 
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <x-dropdown-link :href="route('profile.activity')">
-                            {{ __('Activity log') }}
-                        </x-dropdown-link>
-
-                        <x-dropdown-link :href="route('help')">
-                            {{ __('How to use') }}
-                        </x-dropdown-link>
-
-                        <x-dropdown-link :href="route('referrals.index')">
-                            {{ __('Refer a friend') }}
-                        </x-dropdown-link>
-
-                        <x-dropdown-link :href="route('backup.index')">
-                            {{ __('Backups') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
+                        <div class="border-t border-gray-100">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <x-dropdown-link :href="route('logout')"
+                                        onclick="event.preventDefault(); this.closest('form').submit();">
+                                    {{ __('Log Out') }}
+                                </x-dropdown-link>
+                            </form>
+                        </div>
                     </x-slot>
                 </x-dropdown>
             </div>
 
-            <!-- Hamburger — shown below lg so the collapsed menu covers sm + md -->
-            <div class="-me-2 flex items-center lg:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-blue-100 hover:text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-saffron-400 transition" aria-label="Toggle menu">
+            <!-- Hamburger (below lg) -->
+            <div class="flex items-center lg:hidden">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition" aria-label="Toggle menu">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -172,18 +167,22 @@
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu (covers sm + md; lg+ uses the primary nav).
-         Solid white background so the existing gray-on-white item styles keep
-         working without rewriting every responsive-nav-link variant. -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden bg-white border-t-2 border-saffron-500 shadow-inner">
-        <div class="px-2 py-3 space-y-1">
+    <!-- Responsive Navigation Menu (sm + md) -->
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden bg-white border-t border-gray-200">
+        <div class="px-3 py-3 space-y-1">
+            @auth
+                <a href="{{ route('invoices.create') }}" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-brand-700 hover:bg-brand-800 transition mb-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    New invoice
+                </a>
+            @endauth
             @foreach ($navItems as $item)
                 <a href="{{ $item['href'] }}" @class([
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
-                    'bg-gradient-to-br from-brand-700 to-brand-800 text-white' => $item['active'],
-                    'text-gray-700 hover:bg-brand-50 hover:text-brand-700' => ! $item['active'],
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition',
+                    'bg-brand-50 text-brand-700' => $item['active'],
+                    'text-gray-700 hover:bg-gray-100' => ! $item['active'],
                 ])>
-                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-accent-300' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                     </svg>
                     {{ $item['label'] }}
@@ -193,8 +192,8 @@
 
         <!-- Responsive company switcher -->
         @auth
-            <div class="pt-4 pb-1 border-t border-gray-200">
-                <div class="px-4 text-[10px] uppercase tracking-wider font-bold text-gray-500">Active company</div>
+            <div class="pt-3 pb-1 border-t border-gray-200">
+                <div class="px-4 text-[10px] uppercase tracking-wider font-semibold text-gray-400">Active company</div>
                 <div class="px-4 pt-1 pb-2 text-sm font-semibold text-brand-700">{{ $activeCompany->name }}</div>
                 @if ($myCompanies->count() > 1)
                     <div class="mt-1 space-y-1">
@@ -202,7 +201,7 @@
                             @if ($c->id !== $activeCompany->id)
                                 <form method="POST" action="{{ route('companies.switch', $c) }}">
                                     @csrf
-                                    <button type="submit" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-brand-50">
+                                    <button type="submit" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                                         Switch to {{ $c->name }}
                                     </button>
@@ -211,50 +210,30 @@
                         @endforeach
                     </div>
                 @endif
-                <a href="{{ route('companies.index') }}" class="block px-4 py-2 text-sm text-gray-600 hover:bg-brand-50">Manage companies</a>
+                <a href="{{ route('companies.index') }}" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Manage companies</a>
                 <a href="{{ route('companies.create') }}" class="block px-4 py-2 text-sm text-brand-700 font-semibold hover:bg-brand-50">+ Add new company</a>
             </div>
         @endauth
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+        <div class="pt-3 pb-2 border-t border-gray-200">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-semibold text-base text-gray-800">{{ Auth::user()->name }}</div>
+                <div class="text-sm text-gray-500">{{ Auth::user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('settings.index')">
-                    {{ __('Settings') }}
-                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('settings.index')">{{ __('Settings') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('profile.activity')">{{ __('Activity log') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('help')">{{ __('How to use') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('referrals.index')">{{ __('Refer a friend') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('backup.index')">{{ __('Backups') }}</x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('profile.activity')">
-                    {{ __('Activity log') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('help')">
-                    {{ __('How to use') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('referrals.index')">
-                    {{ __('Refer a friend') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('backup.index')">
-                    {{ __('Backups') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-
                     <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
+                            onclick="event.preventDefault(); this.closest('form').submit();">
                         {{ __('Log Out') }}
                     </x-responsive-nav-link>
                 </form>

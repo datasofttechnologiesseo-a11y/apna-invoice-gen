@@ -33,6 +33,8 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/',                   'priority' => '1.0', 'changefreq' => 'weekly'],
         ['loc' => $base . '/' . ltrim(route('register', [], false), '/'), 'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/' . ltrim(route('login', [], false), '/'),    'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/gst-calculator',     'priority' => '0.9', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/free-gst-invoice-format', 'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => $base . '/about',              'priority' => '0.7', 'changefreq' => 'monthly'],
         ['loc' => $base . '/press',              'priority' => '0.5', 'changefreq' => 'monthly'],
         ['loc' => $base . '/partners',           'priority' => '0.6', 'changefreq' => 'monthly'],
@@ -114,6 +116,9 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])
     ->name('blog.show');
 
 Route::prefix('/')->name('pages.')->group(function () {
+    // Free indexable tools / guides — high-intent organic landing pages.
+    Route::view('/gst-calculator', 'pages.gst-calculator')->name('gst-calculator');
+    Route::view('/free-gst-invoice-format', 'pages.gst-invoice-format')->name('gst-invoice-format');
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/press', 'pages.press')->name('press');
     Route::view('/partners', 'pages.partners')->name('partners');
@@ -282,6 +287,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/companies', [\App\Http\Controllers\Admin\DashboardController::class, 'companies'])->name('companies');
         Route::get('/customers', [\App\Http\Controllers\Admin\DashboardController::class, 'customers'])->name('customers');
 
+        // Personal-data breach register (DPDP §8(6)).
+        Route::get('/breaches', [\App\Http\Controllers\Admin\BreachController::class, 'index'])->name('breaches.index');
+        Route::get('/breaches/create', [\App\Http\Controllers\Admin\BreachController::class, 'create'])->name('breaches.create');
+        Route::post('/breaches', [\App\Http\Controllers\Admin\BreachController::class, 'store'])->name('breaches.store');
+        Route::get('/breaches/{breach}', [\App\Http\Controllers\Admin\BreachController::class, 'show'])->name('breaches.show');
+        Route::patch('/breaches/{breach}', [\App\Http\Controllers\Admin\BreachController::class, 'update'])->name('breaches.update');
+        Route::post('/breaches/{breach}/notify', [\App\Http\Controllers\Admin\BreachController::class, 'notify'])->name('breaches.notify');
+
         // Blog authoring — full CRUD + quick publish toggle.
         Route::post('/blog/{post}/toggle', [\App\Http\Controllers\Admin\BlogAdminController::class, 'togglePublish'])->name('blog.toggle');
         // AJAX preview — renders raw markdown to safe HTML using the same
@@ -299,6 +312,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
+
+    // Data & Privacy Center — DPDP data principal rights (consent, access, erasure).
+    Route::get('/profile/privacy', [ProfileController::class, 'privacy'])->name('profile.privacy');
+    Route::post('/profile/privacy/marketing', [ProfileController::class, 'updateMarketingConsent'])
+        ->name('profile.privacy.marketing');
 
     // Settings hub — single landing page that organises every existing
     // settings route (company, profile, activity, etc.) under one roof.

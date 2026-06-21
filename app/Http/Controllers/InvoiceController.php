@@ -208,8 +208,9 @@ class InvoiceController extends Controller
         // Setup is NOT a hard gate. New users land on a blank invoice and the
         // form's inline nudges + "+ New customer" modal let them fill missing
         // pieces without leaving. Missing company state shows a banner above
-        // the form (handled in the view) — the calculator falls back to
-        // interstate (IGST) when company state is null.
+        // the form (handled in the view) — the calculator defaults to
+        // intra-state (CGST/SGST) when company state is null, and finalize()
+        // blocks issuing a taxed invoice until the state is set.
 
         // Eager-load state so the combobox can show "Acme — Maharashtra" without N+1.
         $customers = $company->customers()->with('state:id,name')->orderBy('name')->get();
@@ -286,7 +287,10 @@ class InvoiceController extends Controller
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
-                'balance' => $calc['totals']['grand_total'] - (float) ($data['paid_amount'] ?? 0),
+                // Clamp to >= 0: an advance larger than the total must not record a
+                // negative balance. Payments recorded later recompute from the
+                // payments sum (see recordPayment) and clamp the same way.
+                'balance' => max(0, round($calc['totals']['grand_total'] - (float) ($data['paid_amount'] ?? 0), 2)),
                 'paid_amount' => (float) ($data['paid_amount'] ?? 0),
             ]);
 
@@ -416,7 +420,7 @@ class InvoiceController extends Controller
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
                 'paid_amount' => $paid,
-                'balance' => $calc['totals']['grand_total'] - $paid,
+                'balance' => max(0, round($calc['totals']['grand_total'] - $paid, 2)),
             ]);
 
             $invoice->items()->delete();
@@ -487,6 +491,16 @@ class InvoiceController extends Controller
             return back()->withErrors(['finalize' => 'Cannot issue a zero-amount invoice.']);
         }
 
+        // GST place-of-supply integrity. When the company's own state is unknown,
+        // the calculator cannot tell an intra-state sale (CGST/SGST) from an
+        // inter-state one (IGST) and defaults to intra-state — so a taxed invoice
+        // could be issued with the wrong tax heads. Block here. The draft is
+        // editable: once the operator sets the state and saves the invoice again,
+        // recalculate() applies the correct split, then finalisation is allowed.
+        if (! $invoice->company->state_id && ((float) $invoice->total_tax > 0 || $invoice->company->gstin)) {
+            return redirect()->back()->with('error', 'Set your business state in Company settings, then re-open and save this invoice, before issuing it. Without your state, CGST/SGST vs IGST cannot be determined correctly.');
+        }
+
         // Books-period lock: cannot issue an invoice into a closed FY.
         if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
             return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot issue an invoice dated on or before that.");
@@ -524,7 +538,10 @@ class InvoiceController extends Controller
         // Remaining also subtracts credited_amount — a credit note reduces how
         // much is actually owed, so the payment cap shouldn't let users overpay
         // into a negative balance just because paid alone hasn't hit grand_total.
-        $remaining = max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount - (float) $invoice->credited_amount);
+        // Round to paise before it becomes the "max" validation bound — an
+        // unrounded float tail (e.g. 999.9999998) would reject an exact full
+        // payment of 1000.00 by a hair.
+        $remaining = round(max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount - (float) $invoice->credited_amount), 2);
         $methods = array_keys(config('payment_methods.methods'));
 
         $data = $request->validate([
@@ -973,7 +990,7 @@ class InvoiceController extends Controller
             'items.*.description' => ['nullable', 'string', 'max:150'],
             // HSN required only when either party is GST-registered.
             'items.*.hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],

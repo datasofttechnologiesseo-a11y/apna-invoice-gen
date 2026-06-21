@@ -90,7 +90,7 @@
         <div class="mt-6 text-center text-sm text-gray-500">
             In a hurry?
             <a href="{{ route('dashboard') }}" class="text-brand-700 hover:text-brand-800 hover:underline font-medium">
-                Skip setup — take me to the dashboard
+                Skip setup, take me to the dashboard
             </a>
             <span class="block mt-0.5 text-xs">You can always fill missing details later from the dashboard or inside the invoice form.</span>
         </div>
@@ -98,7 +98,7 @@
 </main>
 
 <footer class="text-center py-6 text-xs text-gray-500">
-    © 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener noreferrer" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a> · All rights reserved.
+    © 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a> · All rights reserved.
 </footer>
 
 </body>
