@@ -16,7 +16,7 @@
             'headline' => $p->title,
             'url' => route('blog.show', $p->slug),
             'datePublished' => $p->published_at?->toIso8601String(),
-            'author' => ['@type' => 'Person', 'name' => $p->author->name ?? config('app.name')],
+            'author' => ['@type' => 'Person', 'name' => $p->author?->name ?? config('app.name')],
         ])->all(),
     ];
 @endphp

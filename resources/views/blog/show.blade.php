@@ -13,7 +13,7 @@
         'dateModified' => $post->updated_at?->toIso8601String(),
         'author' => [
             '@type' => 'Person',
-            'name' => $post->author->name ?? config('app.name', 'Apna Invoice'),
+            'name' => $post->author?->name ?? config('app.name', 'Apna Invoice'),
         ],
         'publisher' => [
             '@type' => 'Organization',
@@ -155,7 +155,7 @@
             <p class="mt-4 text-base sm:text-lg text-gray-600 leading-relaxed">{{ $post->excerpt }}</p>
         @endif
         <div class="mt-5 flex items-center gap-3 text-sm text-gray-500">
-            <span class="font-semibold text-gray-700">{{ $post->author->name ?? config('app.name') }}</span>
+            <span class="font-semibold text-gray-700">{{ $post->author?->name ?? config('app.name') }}</span>
             <span class="w-1 h-1 rounded-full bg-gray-300"></span>
             <time datetime="{{ $post->published_at?->toIso8601String() }}">{{ $post->published_at?->format('d M Y') }}</time>
             @if ($post->reading_minutes)

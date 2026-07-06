@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -206,6 +207,11 @@ class DashboardController extends Controller
         abort_if($user->isSuperAdmin(), 403, 'Cannot impersonate another super admin.');
         abort_if($user->id === $request->user()->id, 422, 'Cannot impersonate yourself.');
 
+        // Log BEFORE switching identity so the entry is attributed to the
+        // super-admin (record() reads auth()->user()), not the impersonated user.
+        AuditLog::record('admin.impersonate.start',
+            "{$request->user()->name} started impersonating {$user->name} (#{$user->id})", $user);
+
         $originalId = $request->user()->id;
         Auth::login($user);
         $request->session()->put('impersonator_id', $originalId);
@@ -226,6 +232,9 @@ class DashboardController extends Controller
 
         $user->forceFill(['password' => Hash::make($data['password'])])->save();
 
+        AuditLog::record('admin.user.password_reset',
+            "{$request->user()->name} reset the password for {$user->name} (#{$user->id})", $user);
+
         return redirect()->route('admin.users.show', $user)
             ->with('status', "Password reset for {$user->name}.");
     }
@@ -240,6 +249,9 @@ class DashboardController extends Controller
 
         Auth::login($original);
         $request->session()->forget('impersonator_id');
+
+        // Now back as the super-admin, so this entry is attributed to them.
+        AuditLog::record('admin.impersonate.stop', "{$original->name} stopped impersonating and returned to their super-admin account");
 
         return redirect()->route('admin.users')->with('status', 'Returned to your super-admin account.');
     }

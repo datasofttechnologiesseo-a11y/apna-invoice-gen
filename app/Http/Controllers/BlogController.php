@@ -22,6 +22,7 @@ class BlogController extends Controller
     public function index(Request $request): View
     {
         $posts = Post::published()
+            ->with('author:id,name')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('title', 'like', "%{$s}%")
                   ->orWhere('excerpt', 'like', "%{$s}%")
@@ -36,7 +37,7 @@ class BlogController extends Controller
 
     public function show(string $slug): View
     {
-        $post = Post::published()->where('slug', $slug)->firstOrFail();
+        $post = Post::published()->with('author:id,name')->where('slug', $slug)->firstOrFail();
 
         // Soft view counter — increment without locking; cheap.
         $post->increment('view_count');
