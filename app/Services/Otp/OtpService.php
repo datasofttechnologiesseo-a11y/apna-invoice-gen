@@ -29,10 +29,21 @@ class OtpService
      *
      * @return array{sent: bool, dev_code: ?string, channel: string}
      */
-    public function send(string $phone, string $code, ?string $email = null): array
+    public function send(?string $phone, string $code, ?string $email = null): array
     {
         $driver = config('otp.driver', 'log');
         $channel = 'sms';
+
+        // No phone to text — email is the only possible channel.
+        if (blank($phone) && filled($email)) {
+            $sent = $this->sendViaEmail($email, $code);
+
+            return [
+                'sent' => $sent,
+                'dev_code' => $this->shouldExposeCode() ? $code : null,
+                'channel' => 'email',
+            ];
+        }
 
         if ($driver === 'email') {
             $sent = $this->sendViaEmail($email, $code);
@@ -44,7 +55,7 @@ class OtpService
                 $sent = $this->sendViaEmail($email, $code);
                 $channel = 'email';
             } else {
-                $sent = $this->sendViaLog($phone, $code);
+                $sent = $this->sendViaLog((string) $phone, $code);
                 $channel = 'log';
             }
         } else {

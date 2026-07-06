@@ -49,11 +49,15 @@ class OnboardingController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
             'pan' => ['nullable', 'string', new ValidPan],
-            'address_line1' => ['required', 'string', 'max:255'],
+            // Address is mandatory on a tax invoice (Rule 46), so GST-registered
+            // businesses (GSTIN given) must provide it. Unregistered sellers can
+            // fill it in later — fewer required fields = fewer drop-offs on the
+            // way to the first bill.
+            'address_line1' => ['required_with:gstin', 'nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
+            'city' => ['required_with:gstin', 'nullable', 'string', 'max:100'],
             'state_id' => ['required', 'exists:states,id'],
-            'postal_code' => ['required', 'string', 'max:10'],
+            'postal_code' => ['nullable', 'string', 'max:10'],
             'country' => ['required', 'string', 'max:80'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -66,6 +70,9 @@ class OnboardingController extends Controller
             'bank_ifsc' => ['nullable', 'string', 'max:15'],
             'bank_branch' => ['nullable', 'string', 'max:120'],
             'upi_id' => ['nullable', 'string', 'max:60'],
+        ], [
+            'address_line1.required_with' => 'A registered address is required on GST tax invoices. Please add your address (or clear the GSTIN and add it later).',
+            'city.required_with' => 'City is required on GST tax invoices when a GSTIN is set.',
         ]);
 
         if ($request->hasFile('logo')) {
@@ -118,9 +125,12 @@ class OnboardingController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
-            'address_line1' => ['required', 'string', 'max:255'],
+            // Only name + state are needed to bill correctly (state drives the
+            // CGST/SGST vs IGST split). Address can be completed later from the
+            // customer's page — same policy as the quick-add modal.
+            'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:100'],
             'state_id' => ['required', 'exists:states,id'],
             'postal_code' => ['nullable', 'string', 'max:10'],
             'country' => ['required', 'string', 'max:80'],

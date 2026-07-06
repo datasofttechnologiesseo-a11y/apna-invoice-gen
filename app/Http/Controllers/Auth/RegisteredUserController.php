@@ -3,16 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Referral;
 use App\Models\User;
-use App\Models\UserConsent;
 use App\Rules\TurnstileValid;
 use App\Services\Otp\OtpService;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -57,7 +52,12 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            // 10-digit Indian mobile (the +91 is fixed in the UI). Leading 6-9.
+            // 10-digit Indian mobile (the +91 is fixed in the UI). Required so
+            // the team can reach every new user for onboarding help. The
+            // verification code itself is delivered to email (no SMS gateway
+            // yet), so the mobile is collected but not the OTP channel — this
+            // keeps the field mandatory without the "waiting for an SMS that
+            // never comes" drop-off.
             'phone' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -66,6 +66,7 @@ class RegisteredUserController extends Controller
             'cf-turnstile-response' => ['nullable', 'string', new TurnstileValid($request->ip())],
         ], [
             'terms_accepted.accepted' => 'Please accept the Terms of Service and Privacy Policy to continue.',
+            'phone.required' => 'Please enter your mobile number so we can help you get started.',
             'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
         ]);
 
@@ -73,7 +74,9 @@ class RegisteredUserController extends Controller
         $referralCode = strtoupper(trim((string) ($request->input('referral_code') ?? session('referral_code', ''))));
 
         $phone = $otp->normalizeIndianMobile($request->phone);
-        $result = $otp->send($phone, $code, $request->email);
+        // Deliver the code to email (works today); the mobile is stored for the
+        // team to reach out. When an SMS gateway is wired up, pass $phone here.
+        $result = $otp->send(null, $code, $request->email);
 
         // Stash the pending registration. Password is kept only for the life of
         // this server-side session and is hashed the moment the account is made.
@@ -131,22 +134,20 @@ class RegisteredUserController extends Controller
 
         $request->validate([
             'phone' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
-        ], ['phone.regex' => 'Enter a valid 10-digit Indian mobile number.']);
+        ], [
+            'phone.required' => 'Please enter your mobile number so we can help you get started.',
+            'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
+        ]);
 
-        $code = $otp->generateCode();
         $reg['phone'] = $otp->normalizeIndianMobile($request->phone);
-        $result = $otp->send($reg['phone'], $code, $reg['email'] ?? null);
-        $reg['otp_hash'] = Hash::make($code);
-        $reg['expires_at'] = now()->addMinutes((int) config('otp.ttl_minutes', 10))->timestamp;
-        $reg['attempts'] = 0;
-        $reg['resends'] = 0;
-        $reg['resend_at'] = now()->addSeconds((int) config('otp.resend_cooldown_seconds', 30))->timestamp;
-        $reg['channel'] = $result['channel'];
-        $request->session()->put(self::SESSION_KEY, $reg);
 
-        return redirect()->route('register.verify')
-            ->with('status', $this->codeSentMessage($result['channel']))
-            ->with('otp_dev_code', $result['dev_code']);
+        // This path is only reached after Google OAuth, where the email is
+        // already verified — so no OTP is needed. Create the account now with
+        // the collected (unverified) mobile and drop the user into onboarding.
+        app(\App\Services\Registration\AccountCreator::class)
+            ->create($reg, $request, ['email' => true]);
+
+        return redirect()->route('onboarding.index');
     }
 
     /** Step 2 — show the OTP entry screen. */
@@ -159,12 +160,14 @@ class RegisteredUserController extends Controller
         }
 
         // Where the code actually went — email (fallback) or the masked mobile.
-        $sentTo = ($reg['channel'] ?? 'sms') === 'email'
-            ? 'your email'
+        $channel = $reg['channel'] ?? 'sms';
+        $sentTo = $channel === 'email' || empty($reg['phone'])
+            ? ($reg['email'] ?? 'your email')
             : $otp->mask($reg['phone']);
 
         return view('auth.verify-otp', [
             'sentTo' => $sentTo,
+            'channel' => $channel === 'email' || empty($reg['phone']) ? 'email' : 'sms',
             'canResendAt' => $reg['resend_at'],
             'devCode' => session('otp_dev_code'),
         ]);
@@ -184,15 +187,21 @@ class RegisteredUserController extends Controller
         }
 
         if (now()->timestamp > $reg['expires_at']) {
-            $request->session()->forget(self::SESSION_KEY);
-            return redirect()->route('register')
-                ->withErrors(['phone' => 'The code expired. Please sign up again.']);
+            // Don't kill the sign-up — an expired code is recoverable with one
+            // tap on "Resend code". Forcing a full re-registration here was a
+            // major abandonment point.
+            return back()->withErrors([
+                'code' => 'That code has expired. Tap "Resend code" below to get a fresh one.',
+            ]);
         }
 
         if ($reg['attempts'] >= (int) config('otp.max_attempts', 5)) {
             $request->session()->forget(self::SESSION_KEY);
+            // Send them back with the form prefilled so they only re-enter
+            // their password, not everything.
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Too many incorrect attempts. Please sign up again.']);
+                ->withInput(['name' => $reg['name'], 'email' => $reg['email'], 'phone' => ltrim(str_replace('+91', '', (string) ($reg['phone'] ?? '')), '0')])
+                ->withErrors(['email' => 'Too many incorrect attempts. Please re-submit the form to get a new code.']);
         }
 
         if (! Hash::check($request->code, $reg['otp_hash'])) {
@@ -204,63 +213,22 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        // Correct code — create the verified account.
-        $referrer = $reg['referral_code'] !== ''
-            ? User::where('referral_code', $reg['referral_code'])->first()
-            : null;
+        // Correct code — create the account, stamping whichever contact point
+        // the OTP actually proved. An email-delivered code verifies the email;
+        // an SMS-delivered code verifies the phone. The dev 'log' channel
+        // behaves like SMS when a phone was given (matches historical behavior).
+        $channel = $reg['channel'] ?? 'sms';
+        $verified = $channel === 'email' || empty($reg['phone'])
+            ? ['email' => true]
+            : ['phone' => true];
 
-        $user = DB::transaction(function () use ($reg, $referrer, $request) {
-            $user = User::create([
-                'name' => $reg['name'],
-                'email' => $reg['email'],
-                'phone' => $reg['phone'],
-                // OAuth (Google) accounts have no password.
-                'password' => isset($reg['password']) && $reg['password'] !== null
-                    ? Hash::make($reg['password'])
-                    : null,
-            ]);
+        $user = app(\App\Services\Registration\AccountCreator::class)
+            ->create($reg, $request, $verified);
 
-            $forced = ['phone_verified_at' => now()];
-            if (! empty($reg['google_id'])) {
-                $forced['google_id'] = $reg['google_id'];
-                $forced['avatar'] = $reg['avatar'] ?? null;
-            }
-            // Google has already verified the email address.
-            if (! empty($reg['email_verified'])) {
-                $forced['email_verified_at'] = now();
-            }
-            $user->forceFill($forced)->save();
-
-            UserConsent::record($user->id, 'terms', true, 'signup', $request);
-            UserConsent::record($user->id, 'privacy', true, 'signup', $request);
-            UserConsent::record($user->id, 'marketing', $reg['marketing_opt_in'], 'signup', $request);
-
-            if ($referrer) {
-                $user->forceFill(['referred_by_user_id' => $referrer->id])->save();
-
-                Referral::create([
-                    'referrer_user_id' => $referrer->id,
-                    'referee_user_id' => $user->id,
-                    'referral_code' => $reg['referral_code'],
-                    'reward_status' => 'pending',
-                    'signed_up_at' => now(),
-                ]);
-            }
-
-            return $user;
-        });
-
-        $request->session()->forget(self::SESSION_KEY);
-        session()->forget('referral_code');
-
-        event(new Registered($user));
-        Auth::login($user);
-
-        // Kick off the activation sequence with a welcome email. Failures here
-        // must never block sign-up, so OnboardingMailer swallows its own errors.
-        app(\App\Services\Onboarding\OnboardingMailer::class)->send($user, 'welcome');
-
-        return redirect(route('dashboard', absolute: false));
+        // Straight into guided setup: business details → first customer →
+        // first invoice. Landing on the dashboard instead left too many new
+        // users unsure what to do next.
+        return redirect()->route('onboarding.index');
     }
 
     /** Re-send the OTP, respecting a cooldown. */
@@ -281,7 +249,8 @@ class RegisteredUserController extends Controller
         if (($reg['resends'] ?? 0) >= (int) config('otp.max_resends', 3)) {
             $request->session()->forget(self::SESSION_KEY);
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Too many code requests. Please sign up again.']);
+                ->withInput(['name' => $reg['name'], 'email' => $reg['email'], 'phone' => ltrim(str_replace('+91', '', (string) ($reg['phone'] ?? '')), '0')])
+                ->withErrors(['email' => 'Too many code requests. Please re-submit the form to start fresh.']);
         }
 
         $code = $otp->generateCode();
