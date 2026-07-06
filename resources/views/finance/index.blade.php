@@ -71,6 +71,14 @@
                         <div class="mt-1 text-xs text-gray-500">Margin: <strong class="{{ $netProfit >= 0 ? 'text-emerald-700' : 'text-red-700' }}">{{ number_format($margin, 1) }}%</strong></div>
                     </div>
                 </div>
+                {{-- Working-capital cue on the main P&L view too — profit on paper
+                     means little if it's stuck in unpaid invoices. --}}
+                @if ((float) $revenue['outstanding'] > 0)
+                    <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded hover:bg-amber-100 transition">
+                        <span><strong>Outstanding receivables:</strong> ₹{{ inr($revenue['outstanding']) }} still to be collected from customers.</span>
+                        <span class="font-semibold whitespace-nowrap">View unpaid →</span>
+                    </a>
+                @endif
             @elseif ($view === 'cash')
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-emerald-600">
@@ -89,9 +97,10 @@
                         <div class="mt-1 text-xs text-gray-500">Received − Spent</div>
                     </div>
                 </div>
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded">
-                    <strong>Outstanding receivables:</strong> ₹{{ inr($revenue['outstanding']) }} yet to be collected from customers.
-                </div>
+                <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded hover:bg-amber-100 transition">
+                    <span><strong>Outstanding receivables:</strong> ₹{{ inr($revenue['outstanding']) }} yet to be collected from customers.</span>
+                    <span class="font-semibold whitespace-nowrap">View unpaid →</span>
+                </a>
             @else {{-- gst --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-indigo-500">

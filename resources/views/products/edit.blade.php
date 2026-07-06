@@ -87,13 +87,32 @@
                             </p>
                             <x-input-error :messages="$errors->get('hsn_sac')" class="mt-2" />
                         </div>
-                        <div>
-                            <x-input-label for="unit" value="Unit (UQC) *" />
-                            <select id="unit" name="unit" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                @foreach (config('uqc_units.codes') as $u)
-                                    <option value="{{ $u['code'] }}" @selected(old('unit', $product->unit ?: 'NOS') === $u['code'])>{{ $u['label'] }}</option>
-                                @endforeach
-                            </select>
+                        {{-- Searchable UQC picker: type to filter the 30+ codes by
+                             code or name (e.g. "kg", "litre"). A hidden input submits
+                             the chosen code; only a valid code can be committed, so the
+                             server-side Rule::in still holds. --}}
+                        <div x-data='uqcPicker(@json(config("uqc_units.codes")), @json(old("unit", $product->unit ?: "NOS")))'>
+                            <x-input-label for="unit_search" value="Unit (UQC) *" />
+                            <input type="hidden" name="unit" :value="selected">
+                            <div class="relative mt-1" @click.outside="open = false">
+                                <input id="unit_search" type="text" x-model="search" autocomplete="off"
+                                       @focus="open = true" @click="open = true"
+                                       @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)"
+                                       @keydown.enter.prevent="pick(filtered[highlight])" @keydown.escape="open = false; syncLabel()"
+                                       @blur="setTimeout(() => { open = false; syncLabel() }, 150)"
+                                       placeholder="Type a unit, e.g. kg, litre, box"
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                <div x-show="open" x-cloak class="absolute z-30 mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+                                    <template x-for="(u, i) in filtered" :key="u.code">
+                                        <button type="button" @click="pick(u)" @mouseenter="highlight = i"
+                                                class="block w-full text-left px-3 py-2 text-sm"
+                                                :class="i === highlight ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-50'"
+                                                x-text="u.label"></button>
+                                    </template>
+                                    <div x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-400">No matching unit</div>
+                                </div>
+                            </div>
+                            <x-input-error :messages="$errors->get('unit')" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="rate" value="Default rate (₹, pre-tax) *" />
@@ -119,4 +138,43 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function uqcPicker(codes, initial) {
+            const labelFor = (code) => (codes.find(u => u.code === code) || {}).label || '';
+            return {
+                codes,
+                open: false,
+                highlight: 0,
+                selected: initial || 'NOS',
+                search: labelFor(initial || 'NOS'),
+                get filtered() {
+                    const q = this.search.trim().toLowerCase();
+                    // While a valid selection's label is shown verbatim, list everything.
+                    if (!q || q === labelFor(this.selected).toLowerCase()) return this.codes;
+                    return this.codes.filter(u =>
+                        u.code.toLowerCase().includes(q) || u.label.toLowerCase().includes(q));
+                },
+                move(dir) {
+                    this.open = true;
+                    const len = this.filtered.length;
+                    if (len) this.highlight = (this.highlight + dir + len) % len;
+                },
+                pick(u) {
+                    if (!u) return;
+                    this.selected = u.code;
+                    this.search = u.label;
+                    this.open = false;
+                    this.highlight = 0;
+                },
+                // On blur/escape, snap the text back to the committed code's label so
+                // a half-typed, invalid value can never be submitted.
+                syncLabel() {
+                    this.search = labelFor(this.selected);
+                },
+            };
+        }
+    </script>
+    @endpush
 </x-app-layout>
