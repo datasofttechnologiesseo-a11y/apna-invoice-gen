@@ -15,7 +15,7 @@
         $companyStateName = optional($company->state)->name;
     @endphp
 
-    <div class="py-8" x-data='cashMemoForm(@json($oldItems), {{ (int) old('is_interstate', $isInterstate ?? 0) }}, {{ (float) old('gst_rate', $gstRate ?? 0) }}, {{ (float) old('discount', $discount ?? 0) }})'>
+    <div class="py-8" x-data='cashMemoForm(@json($oldItems), {{ (int) old('is_interstate', $isInterstate ?? 0) }}, {{ (float) old('gst_rate', $gstRate ?? 0) }}, {{ (float) old('discount', $discount ?? 0) }}, @json(old('seller_state', $memo->seller_state ?? null)), @json($companyStateName))'>
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="p-6 sm:p-8 bg-white shadow sm:rounded-lg">
                 <form method="POST" action="{{ ($isEdit ?? false) ? route('finance.cash-memos.update', $memo) : route('finance.cash-memos.store') }}" class="space-y-8">
@@ -91,7 +91,7 @@
                             </div>
                             <div>
                                 <x-input-label for="seller_state" value="Seller state" />
-                                <select id="seller_state" name="seller_state"
+                                <select id="seller_state" name="seller_state" x-model="sellerState"
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                     <option value="">— Select —</option>
                                     @foreach ($states as $st)
@@ -249,6 +249,24 @@
                                            class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
                                     <label for="is_interstate" class="text-sm text-gray-700">Inter-state purchase (charge IGST instead of CGST/SGST)</label>
                                 </div>
+                                {{-- Warn (don't block) when the seller state and the inter-state
+                                     toggle disagree — catches a silently wrong tax split. --}}
+                                <div x-show="stateMismatch" x-cloak
+                                     class="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                                    <span x-text="stateMismatch"></span>
+                                </div>
+                                {{-- ITC eligibility (CGST Act §17(5)). Default ticked; untick for
+                                     blocked credits so the GSTR-3B helper excludes this GST. --}}
+                                <div x-show="gstRate > 0" class="flex items-start gap-2">
+                                    <input id="itc_eligible" type="checkbox" name="itc_eligible" value="1"
+                                           @checked(old('itc_eligible', isset($memo) ? $memo->itc_eligible : true))
+                                           class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                    <label for="itc_eligible" class="text-sm text-gray-700">
+                                        Eligible for input tax credit
+                                        <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) — motor vehicles, staff food/catering, personal-use items — so this GST isn't claimed on GSTR-3B.</span>
+                                    </label>
+                                </div>
                             </div>
 
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
@@ -322,12 +340,27 @@
         </div>
 
         <script>
-            function cashMemoForm(initialItems, initialInterstate, initialGstRate, initialDiscount) {
+            function cashMemoForm(initialItems, initialInterstate, initialGstRate, initialDiscount, initialSellerState, companyStateName) {
                 return {
                     items: initialItems,
                     isInterstate: !!initialInterstate,
                     gstRate: initialGstRate || 0,
                     discount: initialDiscount || 0,
+                    sellerState: initialSellerState || '',
+                    companyStateName: companyStateName || '',
+                    // Flags a seller-state ⇄ inter-state toggle contradiction so the
+                    // user doesn't silently book the wrong CGST/SGST vs IGST split.
+                    get stateMismatch() {
+                        if (!this.gstRate || !this.sellerState || !this.companyStateName) return null;
+                        const sameState = this.sellerState === this.companyStateName;
+                        if (sameState && this.isInterstate) {
+                            return `Seller is in ${this.sellerState}, same as your company — same-state purchases are usually CGST + SGST, not IGST. Untick "Inter-state" unless you're sure.`;
+                        }
+                        if (!sameState && !this.isInterstate) {
+                            return `Seller is in ${this.sellerState}, a different state from your company (${this.companyStateName}) — inter-state purchases are usually IGST. Tick "Inter-state purchase".`;
+                        }
+                        return null;
+                    },
                     totals: { subtotal: 0, discount: 0, taxable: 0, cgst: 0, sgst: 0, igst: 0, roundOff: 0, grandTotal: 0 },
                     amountInWords: '',
                     init() { this.recompute(); },

@@ -178,6 +178,7 @@
                 </div>
                 <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
                     ITC is the GST you paid on purchases (cash memos with seller GSTIN + expenses with GST input). Cross-verify against GSTR-2B on the portal — only matched ITC is claimable.
+                    <span class="block mt-1">Excludes purchases you marked as <strong>not eligible for ITC</strong> — blocked credits under §17(5) such as motor vehicles, staff food/catering and personal-use items. Mark those on the expense or cash-memo so they don't inflate this figure.</span>
                 </div>
             </section>
 

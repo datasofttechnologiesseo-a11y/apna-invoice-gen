@@ -232,6 +232,7 @@ class CashMemoController extends Controller
                 'description' => 'Cash purchase from ' . $data['seller_name'],
                 'amount' => $computed['taxable_value'],
                 'gst_amount' => $computed['total_cgst'] + $computed['total_sgst'] + $computed['total_igst'],
+                'itc_eligible' => $data['itc_eligible'],
                 'payment_method' => $data['payment_mode'] ?? 'cash',
                 'reference_number' => $data['reference_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
@@ -261,6 +262,7 @@ class CashMemoController extends Controller
                 'round_off' => $computed['round_off'],
                 'grand_total' => $computed['grand_total'],
                 'amount_in_words' => NumberToWords::indianRupees($computed['grand_total']),
+                'itc_eligible' => $data['itc_eligible'],
                 'payment_mode' => $data['payment_mode'] ?? 'cash',
                 'reference_number' => $data['reference_number'] ?? null,
                 'expense_category' => $data['expense_category'] ?? 'misc',
@@ -369,6 +371,7 @@ class CashMemoController extends Controller
                 'round_off' => $computed['round_off'],
                 'grand_total' => $computed['grand_total'],
                 'amount_in_words' => NumberToWords::indianRupees($computed['grand_total']),
+                'itc_eligible' => $data['itc_eligible'],
                 'payment_mode' => $data['payment_mode'] ?? 'cash',
                 'reference_number' => $data['reference_number'] ?? null,
                 'expense_category' => $data['expense_category'] ?? 'misc',
@@ -398,6 +401,7 @@ class CashMemoController extends Controller
                     'description' => 'Cash purchase from ' . $data['seller_name'],
                     'amount' => $computed['taxable_value'],
                     'gst_amount' => $computed['total_cgst'] + $computed['total_sgst'] + $computed['total_igst'],
+                    'itc_eligible' => $data['itc_eligible'],
                     'payment_method' => $data['payment_mode'] ?? 'cash',
                     'reference_number' => $data['reference_number'] ?? null,
                     'notes' => $data['notes'] ?? null,
@@ -458,7 +462,7 @@ class CashMemoController extends Controller
     {
         $companyId = $request->user()->ensureCompany()->id;
 
-        return $request->validate([
+        $data = $request->validate([
             'memo_date' => ['required', 'date'],
             'memo_number' => [
                 'nullable', 'string', 'max:40',
@@ -475,6 +479,7 @@ class CashMemoController extends Controller
             'discount' => ['nullable', 'numeric', 'min:0'],
             'gst_rate' => ['nullable', 'numeric', 'min:0', 'max:28'],
             'is_interstate' => ['nullable', 'boolean'],
+            'itc_eligible' => ['nullable', 'boolean'],
             'payment_mode' => ['required', 'string', 'in:cash,upi,card,bank,cheque,other'],
             'reference_number' => ['nullable', 'string', 'max:60'],
             'expense_category' => ['nullable', 'string', 'max:60'],
@@ -486,6 +491,12 @@ class CashMemoController extends Controller
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
         ]);
+
+        // ITC eligibility: checkbox defaults to ticked in the form, so an
+        // absent value means the user unticked it (blocked credit per §17(5)).
+        $data['itc_eligible'] = $request->boolean('itc_eligible');
+
+        return $data;
     }
 
     /**

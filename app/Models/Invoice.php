@@ -232,6 +232,21 @@ class Invoice extends Model
     }
 
     /**
+     * Whole days left before the Section 34(2) credit-note window closes.
+     * Negative once the deadline has passed, null if no invoice date. Used to
+     * warn the operator *before* the window shuts, not only when they try to
+     * issue a credit note after it has.
+     */
+    public function creditNoteDaysLeft(?\Carbon\Carbon $on = null): ?int
+    {
+        $deadline = $this->creditNoteDeadline();
+        if (! $deadline) {
+            return null;
+        }
+        return (int) ($on ?? now())->startOfDay()->diffInDays($deadline->copy()->startOfDay(), false);
+    }
+
+    /**
      * Decide what title goes on the invoice (heading + PDF + print + email).
      *
      * Three-way logic, driven entirely by the company's GST profile + tax

@@ -12,7 +12,7 @@ class Expense extends Model
 
     protected $fillable = [
         'user_id', 'entry_date', 'category', 'vendor_name', 'description',
-        'amount', 'gst_amount', 'is_interstate',
+        'amount', 'gst_amount', 'is_interstate', 'itc_eligible',
         'payment_method', 'reference_number', 'notes',
         'cash_memo_id',
     ];
@@ -22,6 +22,7 @@ class Expense extends Model
         'amount' => 'decimal:2',
         'gst_amount' => 'decimal:2',
         'is_interstate' => 'boolean',
+        'itc_eligible' => 'boolean',
     ];
 
     public function user(): BelongsTo

@@ -613,11 +613,23 @@ class FinanceController extends Controller
         // 4(A)(5) — ITC available: GST paid on expenses + cash memos in the period.
         // For sub-₹5cr regular dealers this is the bulk of their ITC claim.
         //
-        // Expenses use the `is_interstate` flag set by the user when entering each row:
-        //   - intra-state (default): GST splits 50/50 into CGST + SGST per CGST Act §9(1)
+        // Two correctness guards here:
+        //  1. whereNull('cash_memo_id') — every cash memo creates a linked
+        //     expense row carrying the same GST (see CashMemoController::store).
+        //     Cash memos are summed separately below with their exact
+        //     CGST/SGST/IGST split, so counting the linked expense too would
+        //     double-count that GST. Excluding them fixes the double count.
+        //  2. where('itc_eligible', true) — GST on "blocked credit" purchases
+        //     (motor vehicles, staff food/catering, personal-use items, etc.)
+        //     is NOT claimable under CGST Act §17(5). Users flag those rows so
+        //     the helper doesn't overstate ITC.
+        //
+        // Standalone expenses use the `is_interstate` flag set on each row:
+        //   - intra-state (default): GST splits 50/50 into CGST + SGST per §9(1)
         //   - inter-state:           GST goes entirely to IGST per IGST Act §5(1)
-        // Cash memos already store CGST/SGST/IGST separately, so we just sum those.
         $expensesInPeriod = $company->expenses()
+            ->whereNull('cash_memo_id')
+            ->where('itc_eligible', true)
             ->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])
             ->get(['gst_amount', 'is_interstate']);
 
@@ -627,11 +639,14 @@ class FinanceController extends Controller
         $cashMemos = $company->cashMemos()
             ->whereBetween('memo_date', [$from->toDateString(), $to->toDateString()])
             ->get();
+        // Only ITC-eligible memos feed the claim; all memos still count for the
+        // memo tally below.
+        $eligibleMemos = $cashMemos->where('itc_eligible', true);
 
         $itc = [
-            'igst' => round((float) $cashMemos->sum('total_igst') + $interExpenseGst, 2),
-            'cgst' => round((float) $cashMemos->sum('total_cgst') + ($intraExpenseGst / 2), 2),
-            'sgst' => round((float) $cashMemos->sum('total_sgst') + ($intraExpenseGst / 2), 2),
+            'igst' => round((float) $eligibleMemos->sum('total_igst') + $interExpenseGst, 2),
+            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + ($intraExpenseGst / 2), 2),
+            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + ($intraExpenseGst / 2), 2),
         ];
         $itc['total'] = round($itc['igst'] + $itc['cgst'] + $itc['sgst'], 2);
 
@@ -649,7 +664,9 @@ class FinanceController extends Controller
             'itc' => $itc,
             'netCash' => $netCash,
             'invoiceCount' => $invoices->count(),
-            'expenseCount' => $company->expenses()->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])->count(),
+            // Standalone expenses only — cash-memo-linked rows are tallied as
+            // cash memos below, so they'd otherwise be counted twice.
+            'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])->count(),
             'cashMemoCount' => $cashMemos->count(),
         ];
     }
@@ -804,6 +821,7 @@ class FinanceController extends Controller
             'amount' => ['required', 'numeric', 'min:0'],
             'gst_amount' => ['nullable', 'numeric', 'min:0'],
             'is_interstate' => ['nullable', 'boolean'],
+            'itc_eligible' => ['nullable', 'boolean'],
             'payment_method' => ['nullable', 'string', 'in:cash,bank,upi,card,cheque,other'],
             'reference_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -817,6 +835,10 @@ class FinanceController extends Controller
         // Same coercion for is_interstate — checkbox is absent from the request body
         // when unchecked, but DB column is NOT NULL with default false.
         $data['is_interstate'] = $request->boolean('is_interstate');
+
+        // ITC eligibility: the form ships a hidden "0" plus the checkbox, so an
+        // unticked box reads as not-eligible (blocked credit per §17(5)).
+        $data['itc_eligible'] = $request->boolean('itc_eligible');
 
         return $data;
     }

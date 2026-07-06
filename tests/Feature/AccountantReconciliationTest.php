@@ -266,6 +266,63 @@ class AccountantReconciliationTest extends TestCase
         );
     }
 
+    public function test_gstr3b_itc_counts_cash_memo_gst_once(): void
+    {
+        // A cash memo creates a linked expense carrying the same GST. ITC must
+        // count that GST once — not once via the memo and again via its expense.
+        $this->actingAs($this->user)->post(route('finance.cash-memos.store'), [
+            'memo_date' => now()->toDateString(),
+            'seller_name' => 'Wholesale Traders',
+            'seller_state' => 'Maharashtra',
+            'payment_mode' => 'cash',
+            'expense_category' => 'misc',
+            'gst_rate' => 18,
+            'itc_eligible' => '1',
+            'items' => [['description' => 'Stock', 'quantity' => 4, 'rate' => 250]],
+        ])->assertRedirect();
+
+        $resp = $this->actingAs($this->user)->get(route('finance.gstr3b', ['month' => now()->format('Y-m')]));
+        $resp->assertOk();
+        $itc = $resp->viewData('itc');
+
+        // 1,000 taxable · 18% = 180 → CGST 90 + SGST 90, counted ONCE (not 360).
+        $this->assertEqualsWithDelta(90.0, (float) $itc['cgst'], 0.011);
+        $this->assertEqualsWithDelta(90.0, (float) $itc['sgst'], 0.011);
+        $this->assertEqualsWithDelta(0.0, (float) $itc['igst'], 0.011);
+        $this->assertEqualsWithDelta(180.0, (float) $itc['total'], 0.011);
+    }
+
+    public function test_gstr3b_excludes_itc_ineligible_expense(): void
+    {
+        // Eligible business expense — GST is claimable.
+        $this->actingAs($this->user)->post(route('finance.expenses.store'), [
+            'entry_date' => now()->toDateString(),
+            'category' => 'rent',
+            'description' => 'Office rent',
+            'amount' => 1000,
+            'gst_amount' => 180,
+            'itc_eligible' => '1',
+        ])->assertRedirect();
+
+        // Blocked credit under §17(5) — GST must be excluded from ITC. The
+        // absent checkbox models an unticked "eligible" box.
+        $this->actingAs($this->user)->post(route('finance.expenses.store'), [
+            'entry_date' => now()->toDateString(),
+            'category' => 'misc',
+            'description' => 'Staff lunch (blocked credit)',
+            'amount' => 2000,
+            'gst_amount' => 360,
+        ])->assertRedirect();
+
+        $resp = $this->actingAs($this->user)->get(route('finance.gstr3b', ['month' => now()->format('Y-m')]));
+        $itc = $resp->viewData('itc');
+
+        // Only the eligible ₹180 (intra → CGST 90 + SGST 90) counts; the ₹360 is out.
+        $this->assertEqualsWithDelta(90.0, (float) $itc['cgst'], 0.011);
+        $this->assertEqualsWithDelta(90.0, (float) $itc['sgst'], 0.011);
+        $this->assertEqualsWithDelta(180.0, (float) $itc['total'], 0.011);
+    }
+
     public function test_gstr1_export_totals_tie_to_finalized_invoices(): void
     {
         $c = $this->customer();

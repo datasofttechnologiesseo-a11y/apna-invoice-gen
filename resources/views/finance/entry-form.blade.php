@@ -174,6 +174,19 @@
                                     <span class="block text-xs text-gray-500">Tick if the vendor's GSTIN is from a different state and they charged you IGST. Leave unchecked for normal local purchases (CGST + SGST).</span>
                                 </span>
                             </label>
+
+                            {{-- ITC eligibility (CGST Act §17(5)). Default TICKED — most
+                                 business purchases are claimable. Untick for blocked
+                                 credits so the GSTR-3B helper excludes them. --}}
+                            <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
+                                <input type="checkbox" name="itc_eligible" value="1"
+                                       @checked(old('itc_eligible', $expense->itc_eligible ?? true))
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                <span>
+                                    <span class="font-medium">Eligible for input tax credit</span>
+                                    <span class="block text-xs text-gray-500">Leave ticked for normal business purchases. Untick for blocked credits under §17(5) — motor vehicles, staff food/catering, personal-use or exempt-supply items — so this GST isn't claimed on GSTR-3B.</span>
+                                </span>
+                            </label>
                         </div>
 
                         <div>
