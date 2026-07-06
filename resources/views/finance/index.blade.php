@@ -145,7 +145,11 @@
                             $rh = $m['revenue'] > 0 ? max(4, round(($m['revenue'] / $maxVal) * 100)) : 1;
                             $eh = $m['expenses'] > 0 ? max(4, round(($m['expenses'] / $maxVal) * 100)) : 1;
                         @endphp
-                        <div class="flex-1 flex flex-col items-stretch" title="{{ $m['label'] }}: Revenue ₹{{ number_format($m['revenue']) }} · Expenses ₹{{ number_format($m['expenses']) }}">
+                        {{-- min-w-0: without it each month column's min-content
+                             (the label) forces the 12-bar chart wider than small
+                             phone viewports; with it flex-1 shrinks and the
+                             truncate on the label does its job. --}}
+                        <div class="flex-1 min-w-0 flex flex-col items-stretch" title="{{ $m['label'] }}: Revenue ₹{{ number_format($m['revenue']) }} · Expenses ₹{{ number_format($m['expenses']) }}">
                             <div class="flex-1 flex items-end gap-0.5">
                                 <div class="flex-1 bg-gradient-to-t from-brand-700 to-brand-500 rounded-t" style="height: {{ $rh }}%"></div>
                                 <div class="flex-1 bg-gradient-to-t from-red-600 to-red-400 rounded-t" style="height: {{ $eh }}%"></div>

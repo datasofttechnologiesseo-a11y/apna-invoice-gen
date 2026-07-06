@@ -266,7 +266,9 @@
             <!-- Quick actions + recent grid -->
             <div class="grid lg:grid-cols-3 gap-6">
                 <!-- Quick actions -->
-                <div class="lg:col-span-1 space-y-4">
+                {{-- min-w-0: grid items default to min-width:auto, letting wide
+                     content blow the single mobile column past the viewport. --}}
+                <div class="lg:col-span-1 min-w-0 space-y-4">
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
                         <h3 class="font-display font-bold text-gray-900">Quick actions</h3>
                         <div class="mt-4 space-y-2">
@@ -447,7 +449,7 @@
                 </div>
 
                 <!-- Recent invoices -->
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-2 min-w-0">
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                             <div>
