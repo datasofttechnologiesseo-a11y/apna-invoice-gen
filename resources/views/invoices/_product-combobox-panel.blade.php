@@ -18,7 +18,8 @@
 <template x-teleport="body">
 <div x-show="combo.open" x-cloak
      :style="`position: fixed; top: ${panel.top}px; left: ${panel.left}px; width: ${panel.width}px;`"
-     class="z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-72 overflow-y-auto">
+     {{-- z-30: above page content but below the sticky nav (z-40) and modals (z-50). --}}
+     class="z-30 bg-white border border-gray-200 rounded-md shadow-lg max-h-72 overflow-y-auto">
 
     {{-- Loading spinner --}}
     <div x-show="combo.loading" x-cloak class="px-3 py-3 text-xs text-gray-500 flex items-center gap-2">

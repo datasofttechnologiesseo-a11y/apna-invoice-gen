@@ -1,10 +1,12 @@
 {{-- App navigation — clean, light top bar: white surface, a thin bottom border,
      calm navy accents for the active item, and generous spacing. Sticky so it
      stays in reach as the page scrolls. --}}
-<nav x-data="{ open: false }" class="bg-white/90 backdrop-blur-md border-b border-gray-200/80 shadow-sm sticky top-0 z-20">
+{{-- z-40: above in-page popovers/comboboxes (z-30) so nothing paints over the
+     menu when scrolling, but below modals and the cookie banner (z-50). --}}
+<nav x-data="{ open: false }" class="bg-white/90 backdrop-blur-md border-b border-gray-200/80 shadow-sm sticky top-0 z-40">
     <div class="w-full px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
+        <div class="flex justify-between gap-3 h-16">
+            <div class="flex min-w-0">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-flex items-center">
@@ -22,18 +24,17 @@
                         ['href' => route('companies.index'), 'label' => 'Companies', 'active' => request()->routeIs('companies.*') || request()->routeIs('company.*'), 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
                         ['href' => route('finance.index'), 'label' => 'Finance', 'active' => request()->routeIs('finance.*'), 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
                     ];
-                    if (Auth::user()?->isSuperAdmin()) {
-                        $navItems[] = ['href' => route('admin.dashboard'), 'label' => 'Admin', 'active' => request()->routeIs('admin.*'), 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'];
-                    }
                 @endphp
-                <div class="hidden lg:ms-8 lg:flex lg:items-center lg:gap-1">
+                {{-- Compact at lg (1024–1279px, 13" laptops): labels only, tight padding.
+                     Icons return at xl. Keeps both sides of the bar from colliding. --}}
+                <div class="hidden lg:ms-3 xl:ms-6 lg:flex lg:items-center lg:gap-1">
                     @foreach ($navItems as $item)
                         <a href="{{ $item['href'] }}" @class([
-                            'group relative inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm transition-all duration-200 whitespace-nowrap',
+                            'group relative inline-flex items-center gap-2 px-2 xl:px-3 py-2 rounded-lg text-sm transition-all duration-200 whitespace-nowrap',
                             'bg-brand-50 text-brand-700 font-semibold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
                             'text-gray-500 font-medium hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
                         ])>
-                            <svg class="w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                             </svg>
                             {{ $item['label'] }}
@@ -42,7 +43,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
 
             @auth
                 {{-- Active-company switcher --}}
@@ -54,9 +55,11 @@
                     <div class="hidden lg:flex lg:items-center">
                         <x-dropdown align="left" width="64">
                             <x-slot name="trigger">
-                                <button class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition w-44">
+                                {{-- Trigger shrinks to icon+chevron below 2xl so the bar
+                                     always fits on 13"/14" screens; full label on wide monitors. --}}
+                                <button title="Active company: {{ $activeCompany->name }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition 2xl:w-44">
                                     <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                    <div class="text-left min-w-0 flex-1">
+                                    <div class="text-left min-w-0 flex-1 hidden 2xl:block">
                                         <div class="text-[10px] text-gray-400 leading-tight uppercase tracking-wider font-semibold">Active company</div>
                                         <div class="leading-tight truncate text-xs font-semibold text-gray-900">{{ $activeCompany->name }}</div>
                                     </div>
@@ -121,7 +124,7 @@
                     <x-slot name="trigger">
                         <button class="inline-flex items-center gap-2 px-1.5 py-1 rounded-lg text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition">
                             <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm flex-shrink-0">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                            <div class="text-left hidden xl:block pr-1">
+                            <div class="text-left hidden 2xl:block pr-1">
                                 <div class="leading-tight text-xs font-semibold text-gray-900">{{ Str::limit(Auth::user()->name, 14) }}</div>
                                 <div class="text-[10px] text-gray-400 leading-tight">View account</div>
                             </div>
@@ -140,6 +143,11 @@
                         <x-dropdown-link :href="route('help')">{{ __('How to use') }}</x-dropdown-link>
                         <x-dropdown-link :href="route('referrals.index')">{{ __('Refer a friend') }}</x-dropdown-link>
                         <x-dropdown-link :href="route('backup.index')">{{ __('Backups') }}</x-dropdown-link>
+                        @if (Auth::user()?->isSuperAdmin())
+                            <div class="border-t border-gray-100">
+                                <x-dropdown-link :href="route('admin.dashboard')">{{ __('Admin panel') }}</x-dropdown-link>
+                            </div>
+                        @endif
 
                         <div class="border-t border-gray-100">
                             <form method="POST" action="{{ route('logout') }}">
@@ -229,6 +237,9 @@
                 <x-responsive-nav-link :href="route('help')">{{ __('How to use') }}</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('referrals.index')">{{ __('Refer a friend') }}</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('backup.index')">{{ __('Backups') }}</x-responsive-nav-link>
+                @if (Auth::user()?->isSuperAdmin())
+                    <x-responsive-nav-link :href="route('admin.dashboard')">{{ __('Admin panel') }}</x-responsive-nav-link>
+                @endif
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
