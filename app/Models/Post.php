@@ -114,7 +114,13 @@ class Post extends Model
         $environment->addExtension(new AutolinkExtension());
 
         $converter = new MarkdownConverter($environment);
-        return $converter->convert((string) $this->body)->getContent();
+        $html = $converter->convert((string) $this->body)->getContent();
+
+        // SEO: the post title is the page's one <h1>. A "# Heading" in the
+        // body would emit a second <h1> — which also rendered as plain 16px
+        // text because nothing styled body h1s. Demote body h1 → h2 so the
+        // author's heading displays properly AND the page keeps a single H1.
+        return str_replace(['<h1>', '<h1 ', '</h1>'], ['<h2>', '<h2 ', '</h2>'], $html);
     }
 
     /** Compute reading minutes from body. ~200 wpm is the SEO industry default. */

@@ -25,6 +25,20 @@ class BlogTest extends TestCase
         $this->get('/blog')->assertOk()->assertSee('Apna Invoice Blog', false);
     }
 
+    public function test_body_h1_is_demoted_to_h2_for_single_h1_seo(): void
+    {
+        // The post title is the page's one <h1>; a "# Heading" in the body
+        // must render as <h2> — both for SEO and because nothing styles a
+        // body <h1> (it displayed as plain 16px text).
+        $post = new Post(['body' => "# Hash Heading\n\nPara with **bold**.\n\n## Real H2"]);
+        $html = $post->renderedBody();
+
+        $this->assertStringNotContainsString('<h1', $html);
+        $this->assertStringContainsString('<h2>Hash Heading</h2>', $html);
+        $this->assertStringContainsString('<h2>Real H2</h2>', $html);
+        $this->assertStringContainsString('<strong>bold</strong>', $html);
+    }
+
     public function test_blog_index_lists_only_published_posts(): void
     {
         Post::factory()->published()->create(['title' => 'Live post']);

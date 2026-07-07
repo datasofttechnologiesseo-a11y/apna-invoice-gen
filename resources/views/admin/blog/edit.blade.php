@@ -106,7 +106,7 @@
                         <div class="px-5 sm:px-6 py-3 border-b flex items-center justify-between gap-3 flex-wrap">
                             <div>
                                 <h3 class="font-medium text-gray-900">Body</h3>
-                                <p class="text-[11px] text-gray-500">Markdown — use the toolbar or type directly. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
+                                <p class="text-[11px] text-gray-500">Markdown — <code class="bg-gray-100 px-1 rounded">## Heading</code>, <code class="bg-gray-100 px-1 rounded">**bold**</code>, or use the toolbar. The post title is the page's H1; <code class="bg-gray-100 px-1 rounded">#</code> in the body renders as a section heading. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
                             </div>
                             <div class="flex items-center gap-3 text-xs text-gray-600">
                                 <span><strong x-text="wordCount"></strong> words</span>
