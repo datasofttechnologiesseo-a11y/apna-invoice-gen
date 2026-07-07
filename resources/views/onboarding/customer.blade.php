@@ -56,8 +56,8 @@
                 <p class="text-sm text-gray-500 mt-0.5">The customer's state determines whether GST is split (CGST+SGST) or consolidated (IGST)</p>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
-                        <x-input-label for="address_line1" value="Address line 1 *" />
-                        <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1')" required />
+                        <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-400">(optional)</span></x-input-label>
+                        <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1')" />
                         <x-input-error :messages="$errors->get('address_line1')" class="mt-2" />
                     </div>
                     <div class="md:col-span-2">
@@ -65,8 +65,8 @@
                         <x-text-input id="address_line2" name="address_line2" type="text" class="mt-1 block w-full" :value="old('address_line2')" />
                     </div>
                     <div>
-                        <x-input-label for="city" value="City *" />
-                        <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city')" required />
+                        <x-input-label for="city">City <span class="font-normal text-gray-400">(optional)</span></x-input-label>
+                        <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city')" />
                         <x-input-error :messages="$errors->get('city')" class="mt-2" />
                     </div>
                     <div>

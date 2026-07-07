@@ -12,10 +12,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
 /**
  * Sign up / sign in with Google (OAuth via Socialite).
  *
- * New Google users are still routed through mobile-OTP verification before the
- * account is created, so the "mobile verified at sign-up" guarantee holds for
- * every account regardless of how they registered. Returning users (matched by
- * google_id or email) log straight in.
+ * New Google users get their email verified by Google, then hand over a mobile
+ * number (mandatory, so the team can reach every new user) — that step creates
+ * the account immediately with no OTP, since the email is already proven.
+ * Returning users (matched by google_id or email) log straight in.
  */
 class SocialAuthController extends Controller
 {
@@ -69,8 +69,11 @@ class SocialAuthController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        // New user — stash the verified Google profile and collect a mobile
-        // number (with OTP) before the account is actually created.
+        // New user — stash the Google-verified profile and collect a mobile
+        // number before creating the account, so every new user is reachable.
+        // Google has already verified the email, so no OTP step is needed: the
+        // mobile screen creates the account directly on submit (one field, no
+        // "waiting for an SMS" gate).
         $request->session()->put(self::PENDING_KEY, [
             'name' => $googleUser->getName() ?: 'New user',
             'email' => $email,

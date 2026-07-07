@@ -19,7 +19,7 @@ class CashMemo extends Model
         'total_cgst', 'total_sgst', 'total_igst',
         'round_off', 'grand_total', 'amount_in_words',
         'payment_mode', 'reference_number', 'expense_category', 'notes',
-        'expense_id',
+        'expense_id', 'itc_eligible',
     ];
 
     protected $casts = [
@@ -32,6 +32,7 @@ class CashMemo extends Model
         'total_igst' => 'decimal:2',
         'round_off' => 'decimal:2',
         'grand_total' => 'decimal:2',
+        'itc_eligible' => 'boolean',
     ];
 
     public function user(): BelongsTo

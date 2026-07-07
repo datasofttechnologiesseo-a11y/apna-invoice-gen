@@ -74,9 +74,19 @@
             : $company->products()
                 ->whereIn('id', $itemProductIds)
                 ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
+
+        // Map failed line-item validation to { rowIndex: { field: message } } so
+        // the form can highlight the exact rows/fields that need fixing after a
+        // server-side validation error, instead of just listing them in a banner.
+        $itemErrors = [];
+        foreach ($errors->keys() as $key) {
+            if (preg_match('/^items\.(\d+)\.(\w+)$/', $key, $m)) {
+                $itemErrors[(int) $m[1]][$m[2]] = $errors->first($key);
+            }
+        }
     @endphp
 
-    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }})'
+    <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }}, @json((object) $itemErrors))'
          @customer-added.window="addCustomer($event.detail)"
          {{-- power-user keyboard shortcuts. Listen at window level so they
               fire from anywhere on the page (combobox dropdowns, side panels
@@ -93,7 +103,16 @@
             ]" />
             @if ($errors->any())
                 <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
-                    <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                    <div class="flex items-start gap-2">
+                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                        <div>
+                            <div class="font-semibold">Please fix {{ $errors->count() === 1 ? 'this' : 'these' }} before saving:</div>
+                            <ul class="list-disc pl-6 mt-1">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                            @if (! empty($itemErrors))
+                                <div class="mt-1.5 text-xs text-red-600">The affected {{ count($itemErrors) === 1 ? 'row is' : 'rows are' }} highlighted below.</div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -254,15 +273,30 @@
                         </div>
 
                         <div>
-                            <x-input-label value="Invoice no." />
-                            <div class="mt-1 py-2 font-mono text-sm">
-                                @if ($invoice->exists && ! $invoice->isDraft())
+                            @if ($invoice->exists && ! $invoice->isDraft())
+                                <x-input-label value="Invoice no." />
+                                <div class="mt-1 py-2 font-mono text-sm">
                                     <span class="text-gray-900 font-semibold">{{ $invoice->invoice_number }}</span>
-                                @else
-                                    <span class="text-brand-700 font-semibold">{{ $previewNumber ?? $invoice->company?->nextInvoiceNumber() }}</span>
-                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned when issued</span>
-                                @endif
-                            </div>
+                                </div>
+                            @elseif (blank($company->gstin))
+                                {{-- Non-GST business: the number series isn't bound by
+                                     Rule 46, so the operator may pick their own number.
+                                     Blank = auto. Custom numbers don't advance the counter. --}}
+                                <x-input-label for="invoice_number" value="Invoice no." />
+                                <x-text-input id="invoice_number" name="invoice_number" type="text"
+                                    class="mt-1 block w-full font-mono"
+                                    :value="old('invoice_number', $invoice->invoice_number)"
+                                    maxlength="40"
+                                    placeholder="{{ $previewNumber ?? $company->nextInvoiceNumber() }}" />
+                                <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">Leave blank to auto-number · custom numbers don't advance the counter</p>
+                                <x-input-error :messages="$errors->get('invoice_number')" class="mt-1" />
+                            @else
+                                <x-input-label value="Invoice no." />
+                                <div class="mt-1 py-2 font-mono text-sm">
+                                    <span class="text-brand-700 font-semibold">{{ $previewNumber ?? $company->nextInvoiceNumber() }}</span>
+                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned when issued (GST series)</span>
+                                </div>
+                            @endif
                         </div>
 
                         <input type="hidden" name="currency" value="INR">
@@ -316,7 +350,9 @@
                              same DOM node — and the nested productRowCombobox's
                              captured idx — for a different logical row after a splice. --}}
                         <template x-for="(item, idx) in items" :key="item._uid">
-                            <div class="p-4 space-y-3">
+                            <div class="p-4 space-y-3 transition-colors" :data-row-index="idx"
+                                 @input="clearRowError(idx)" @change="clearRowError(idx)"
+                                 :class="rowHasError(idx) && 'bg-red-50 ring-1 ring-red-300 rounded-lg'">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
                                     @if (! $restricted)
@@ -490,7 +526,9 @@
                             <tbody>
                                 {{-- Stable _uid keying — see mobile section above. --}}
                                 <template x-for="(item, idx) in items" :key="`d-${item._uid}`">
-                                    <tr class="border-t">
+                                    <tr class="border-t transition-colors" :data-row-index="idx"
+                                        @input="clearRowError(idx)" @change="clearRowError(idx)"
+                                        :class="rowHasError(idx) && 'bg-red-50'">
                                         @unless ($restricted)
                                             <td class="px-2 py-2 relative">
                                                 <div x-data="productRowCombobox(idx)" class="relative w-48" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
@@ -519,14 +557,14 @@
                                             </td>
                                         @endunless
                                         <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 border-gray-300 rounded text-sm font-mono" :required="hsnRequired"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required>
                                                 <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             {{-- Compact GST cell — just "18%". Full descriptive text + regulatory
@@ -826,7 +864,7 @@
 
     @push('scripts')
     <script>
-        function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, customerIndex, companyHasGstin) {
+        function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, customerIndex, companyHasGstin, itemErrors) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
             // Coerce ids to strings for consistent comparison (HTML inputs are strings).
@@ -840,6 +878,21 @@
             return {
                 items: initialItems.map(i => ({product_id: null, _uid: newUid(), _prevProductName: null, ...i, amount: 0, tax: 0, total: 0})),
                 _newUid: newUid,
+                // Per-row validation errors from the last server submit, keyed by
+                // the row's original index: { "2": { hsn_sac: "Row 3: …" } }.
+                itemErrors: itemErrors || {},
+                rowHasError(idx) {
+                    const e = this.itemErrors[idx];
+                    return !!e && Object.keys(e).length > 0;
+                },
+                fieldHasError(idx, field) {
+                    return !!(this.itemErrors[idx] && this.itemErrors[idx][field]);
+                },
+                // Clear a row's error highlight as soon as the user edits it, so
+                // stale red doesn't linger while they're fixing the line.
+                clearRowError(idx) {
+                    if (this.itemErrors[idx]) this.itemErrors = { ...this.itemErrors, [idx]: {} };
+                },
                 customerId: @json((string) old('customer_id', $invoice->customer_id ?? '')),
                 customerStates,
                 customerHasGstin: customerHasGstin || {},
@@ -910,6 +963,17 @@
                         if (c) this.customerCombo.search = c.name;
                     }
                     this.recompute();
+
+                    // After a server validation error, scroll the first flagged
+                    // row into view so the user isn't hunting through a long list.
+                    const firstBad = Object.keys(this.itemErrors)
+                        .map(Number).filter(i => this.rowHasError(i)).sort((a, b) => a - b)[0];
+                    if (firstBad !== undefined) {
+                        this.$nextTick(() => {
+                            const el = this.$root.querySelector(`[data-row-index="${firstBad}"]`);
+                            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        });
+                    }
                 },
                 openCustomerCombo() {
                     this.customerCombo.open = true;

@@ -11,7 +11,7 @@
         <h1 class="mt-3 font-display text-xl font-extrabold text-gray-900">
             @if ($name) Almost there, {{ \Illuminate\Support\Str::of($name)->before(' ') }}! @else Almost there! @endif
         </h1>
-        <p class="mt-1 text-sm text-gray-500">Add your mobile number so we can verify it with a one-time code.</p>
+        <p class="mt-1 text-sm text-gray-500">Add your mobile number and you're in — your email's already verified by Google.</p>
     </div>
 
     <form method="POST" action="{{ route('register.mobile.store') }}">
@@ -25,11 +25,11 @@
         <x-input-error :messages="$errors->get('phone')" class="mt-2" />
 
         <x-primary-button class="w-full justify-center mt-5 py-3">
-            {{ __('Send verification code') }}
+            {{ __('Create my free account') }}
         </x-primary-button>
     </form>
 
     <p class="mt-4 text-center text-xs text-gray-400">
-        We only use your number to secure your account and send invoice alerts. You can opt out of marketing any time.
+        So our team can reach you on WhatsApp/call to help you get set up. You can opt out of marketing any time.
     </p>
 </x-guest-layout>

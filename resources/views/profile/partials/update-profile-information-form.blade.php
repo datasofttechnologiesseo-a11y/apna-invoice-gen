@@ -47,6 +47,17 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="phone">{{ __('Mobile number') }} <span class="font-normal text-gray-400">({{ __('optional') }})</span></x-input-label>
+            <div class="mt-1 relative">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-500 text-sm font-semibold">+91</span>
+                <x-text-input id="phone" name="phone" type="tel" inputmode="numeric" maxlength="10" class="block w-full pl-10"
+                    :value="old('phone', preg_replace('/^\+?91/', '', (string) $user->phone))" autocomplete="tel-national" placeholder="98765 43210" />
+            </div>
+            <p class="mt-1 text-xs text-gray-500">{{ __('Used for support and WhatsApp features.') }}</p>
+            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

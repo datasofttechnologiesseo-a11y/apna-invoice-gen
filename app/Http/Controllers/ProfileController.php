@@ -42,10 +42,19 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+        // Store the mobile in the same +91-normalised form registration uses.
+        if (filled($data['phone'] ?? null)) {
+            $data['phone'] = '+91' . $data['phone'];
+        }
+
+        $request->user()->fill($data);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
+        }
+        if ($request->user()->isDirty('phone')) {
+            $request->user()->phone_verified_at = null;
         }
 
         $request->user()->save();

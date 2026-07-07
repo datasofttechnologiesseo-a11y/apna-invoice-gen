@@ -1,4 +1,33 @@
-@php $creditNotes = $invoice->creditNotes; @endphp
+@php
+    $creditNotes = $invoice->creditNotes;
+    $cnDeadline = $invoice->creditNoteDeadline();
+    $cnDaysLeft = $invoice->creditNoteDaysLeft();
+    $cnWindowClosed = $invoice->isCreditNoteWindowClosed();
+    // Only nudge while the invoice can still be credited (something left to credit).
+    $cnStillCreditable = (float) $invoice->grand_total > (float) $invoice->credited_amount;
+@endphp
+
+{{-- Proactive Section 34(2) deadline notice — warn the operator BEFORE the
+     window shuts (not only when they try to issue a credit note too late). --}}
+@if ($cnDeadline && $cnStillCreditable)
+    @if (! $cnWindowClosed && $cnDaysLeft !== null && $cnDaysLeft <= 60)
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 text-sm">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="text-amber-900">
+                <div class="font-semibold">Credit-note window closes {{ $cnDaysLeft === 0 ? 'today' : 'in ' . $cnDaysLeft . ' ' . \Illuminate\Support\Str::plural('day', $cnDaysLeft) }} ({{ $cnDeadline->format('d M Y') }}).</div>
+                <div class="mt-0.5">Under CGST Section 34(2), after this date a credit note against this invoice can no longer reduce your GST liability. If you expect a return or adjustment, issue the credit note before then.</div>
+            </div>
+        </div>
+    @elseif ($cnWindowClosed)
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-start gap-3 text-sm">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="text-gray-600">
+                <div class="font-semibold text-gray-700">Credit-note window closed on {{ $cnDeadline->format('d M Y') }}.</div>
+                <div class="mt-0.5">Per CGST Section 34(2), a credit note issued now can't reduce the GST on this invoice. A commercial/accounting adjustment is still possible outside GST.</div>
+            </div>
+        </div>
+    @endif
+@endif
 
 @if ($creditNotes->isNotEmpty())
     <div class="bg-white shadow sm:rounded-lg overflow-hidden">

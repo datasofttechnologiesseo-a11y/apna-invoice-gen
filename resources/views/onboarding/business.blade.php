@@ -47,16 +47,16 @@
                 <p class="text-sm text-gray-500 mt-0.5">State selection drives CGST/SGST vs IGST on invoices</p>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
-                        <x-input-label for="address_line1" value="Address line 1 *" />
-                        <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1', $company->address_line1)" required placeholder="Plot 42, Tech Park" />
+                        <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-400">(required if GST-registered)</span></x-input-label>
+                        <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1', $company->address_line1)" placeholder="Plot 42, Tech Park" />
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="address_line2" value="Address line 2" />
                         <x-text-input id="address_line2" name="address_line2" type="text" class="mt-1 block w-full" :value="old('address_line2', $company->address_line2)" placeholder="Sector 5, Powai" />
                     </div>
                     <div>
-                        <x-input-label for="city" value="City *" />
-                        <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $company->city)" required placeholder="Mumbai" />
+                        <x-input-label for="city">City <span class="font-normal text-gray-400">(required if GST-registered)</span></x-input-label>
+                        <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $company->city)" placeholder="Mumbai" />
                     </div>
                     <div>
                         <x-input-label for="state_id" value="State *" />
@@ -68,8 +68,8 @@
                         </select>
                     </div>
                     <div>
-                        <x-input-label for="postal_code" value="PIN code *" />
-                        <x-text-input id="postal_code" name="postal_code" type="text" class="mt-1 block w-full" :value="old('postal_code', $company->postal_code)" required maxlength="10" placeholder="400076" />
+                        <x-input-label for="postal_code" value="PIN code" />
+                        <x-text-input id="postal_code" name="postal_code" type="text" class="mt-1 block w-full" :value="old('postal_code', $company->postal_code)" maxlength="10" placeholder="400076" />
                     </div>
                     <div>
                         <x-input-label for="country" value="Country" />

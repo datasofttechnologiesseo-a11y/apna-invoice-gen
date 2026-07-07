@@ -177,14 +177,14 @@
                 </div>
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Category</label>
-                    <select name="category" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <select name="category" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                         <option value="">All categories</option>
                         @foreach (config('expense_categories') as $key => $cfg)
                             <option value="{{ $key }}" @selected(request('category') === $key)>{{ $cfg['label'] }}</option>
                         @endforeach
                     </select>
                 </div>
-                <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Filter</button>
+                <button class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded text-sm transition">Filter</button>
                 @if (request()->anyFilled(['search', 'category']))
                     <a href="{{ route('finance.expenses', ['period' => $periodKey]) }}" class="text-sm text-gray-500 hover:text-gray-900">Clear filters</a>
                 @endif

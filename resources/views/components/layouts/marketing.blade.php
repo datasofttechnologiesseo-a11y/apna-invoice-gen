@@ -9,11 +9,16 @@
     'jsonLd' => [],
 ])
 @php
+    $canonical = url()->current();
+    $appUrl = rtrim(config('app.url'), '/');
+
     // Auto-generate a BreadcrumbList JSON-LD for every marketing page so Google
-    // shows Home › {page} breadcrumbs in SERPs, free rich-result boost.
+    // shows Home › {page} breadcrumbs in SERPs, free rich-result boost. Given an
+    // @id so the WebPage node below can reference it (one linked entity graph).
     $breadcrumb = [
         '@context' => 'https://schema.org',
         '@type' => 'BreadcrumbList',
+        '@id' => $canonical . '#breadcrumb',
         'itemListElement' => [
             [
                 '@type' => 'ListItem',
@@ -25,11 +30,39 @@
                 '@type' => 'ListItem',
                 'position' => 2,
                 'name' => $title,
-                'item' => url()->current(),
+                'item' => $canonical,
             ],
         ],
     ];
-    $allJsonLd = array_merge([$breadcrumb], (array) $jsonLd);
+
+    // Auto-generate a WebPage node for every marketing page. Without this, pages
+    // that don't pass their own jsonLd (legal/utility pages) emit only a
+    // breadcrumb and no page-level entity. Tying each page to the site's WebSite
+    // entity via isPartOf, and to its breadcrumb, gives Google a clean graph and
+    // makes each URL an addressable entity — better than an orphan document.
+    $webPage = [
+        '@context' => 'https://schema.org',
+        '@type' => 'WebPage',
+        '@id' => $canonical . '#webpage',
+        'url' => $canonical,
+        'name' => $title,
+        'description' => $description ?: $lead ?: config('seo.description'),
+        'inLanguage' => 'en-IN',
+        'isPartOf' => [
+            '@type' => 'WebSite',
+            '@id' => $appUrl . '#website',
+            'name' => config('seo.name'),
+            'url' => $appUrl,
+        ],
+        'breadcrumb' => ['@id' => $canonical . '#breadcrumb'],
+        'publisher' => [
+            '@type' => 'Organization',
+            'name' => config('seo.organization.name'),
+            'url' => config('seo.organization.url'),
+        ],
+    ];
+
+    $allJsonLd = array_merge([$breadcrumb, $webPage], (array) $jsonLd);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">

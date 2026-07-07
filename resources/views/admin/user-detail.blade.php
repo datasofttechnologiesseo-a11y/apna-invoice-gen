@@ -71,14 +71,13 @@
                     @csrf
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">New password</label>
-                        <input type="text" name="password" required minlength="8" autocomplete="new-password"
-                               class="w-full border-slate-300 rounded-md shadow-sm text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500"
-                               value="{{ old('password') }}">
+                        <input type="password" name="password" required minlength="8" autocomplete="new-password"
+                               class="w-full border-slate-300 rounded-md shadow-sm text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500">
                         @error('password')<div class="text-xs text-rose-600 mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Confirm</label>
-                        <input type="text" name="password_confirmation" required minlength="8"
+                        <input type="password" name="password_confirmation" required minlength="8"
                                class="w-full border-slate-300 rounded-md shadow-sm text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <button type="submit" class="sm:mt-6 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded shadow-sm">Reset</button>

@@ -1,17 +1,31 @@
+@php $isEmail = ($channel ?? 'sms') === 'email'; @endphp
 <x-guest-layout
-    :title="'Verify your mobile, Apna Invoice'"
-    :description="'Confirm the one-time code sent to your mobile to finish creating your free Apna Invoice account.'">
+    :title="'Verify your account, Apna Invoice'"
+    :description="'Confirm the one-time code we sent you to finish creating your free Apna Invoice account.'">
 
     <div class="mb-6 text-center">
         <div class="mx-auto w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-1m-6-1h.01M20 4l-9 9-3-3"/>
-            </svg>
+            @if ($isEmail)
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+                </svg>
+            @else
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-1m-6-1h.01M20 4l-9 9-3-3"/>
+                </svg>
+            @endif
         </div>
-        <h1 class="mt-3 font-display text-xl font-extrabold text-gray-900">Verify your mobile</h1>
+        <h1 class="mt-3 font-display text-xl font-extrabold text-gray-900">
+            {{ $isEmail ? 'Check your email' : 'Verify your mobile' }}
+        </h1>
         <p class="mt-1 text-sm text-gray-500">
             Enter the {{ config('otp.length', 6) }}-digit code we sent to <strong class="text-gray-700">{{ $sentTo }}</strong>.
         </p>
+        @if ($isEmail)
+            <p class="mt-2 text-xs text-gray-400">
+                Not in your inbox? Check <strong>Spam</strong> or <strong>Promotions</strong> — it can take up to a minute to arrive.
+            </p>
+        @endif
     </div>
 
     @if (session('status'))
@@ -28,7 +42,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('register.verify.store') }}">
+    <form method="POST" action="{{ route('register.verify.store') }}" id="otp-form">
         @csrf
         <x-input-label for="code" :value="__('Verification code')" class="sr-only" />
         <x-text-input id="code" name="code" type="text" inputmode="numeric" maxlength="6"
@@ -45,12 +59,42 @@
     <div class="mt-5 flex items-center justify-between text-sm">
         <form method="POST" action="{{ route('register.resend') }}">
             @csrf
-            <button type="submit" class="text-brand-700 font-semibold hover:underline focus:outline-none">
+            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline focus:outline-none disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed">
                 {{ __('Resend code') }}
             </button>
         </form>
         <a href="{{ route('register') }}" class="text-gray-600 hover:text-gray-900">
-            {{ __('Change number') }}
+            {{ $isEmail ? __('Change details') : __('Change number') }}
         </a>
     </div>
+
+    <script>
+        (function () {
+            // Auto-submit the moment all 6 digits are in — one less tap.
+            var input = document.getElementById('code');
+            var form = document.getElementById('otp-form');
+            var len = {{ (int) config('otp.length', 6) }};
+            input.addEventListener('input', function () {
+                input.value = input.value.replace(/\D/g, '').slice(0, len);
+                if (input.value.length === len) form.submit();
+            });
+
+            // Resend cooldown countdown, so the button explains itself instead
+            // of erroring with "please wait Ns".
+            var btn = document.getElementById('resend-btn');
+            var readyAt = {{ (int) ($canResendAt ?? 0) }} * 1000;
+            function tick() {
+                var left = Math.ceil((readyAt - Date.now()) / 1000);
+                if (left > 0) {
+                    btn.disabled = true;
+                    btn.textContent = 'Resend code in ' + left + 's';
+                    setTimeout(tick, 1000);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Resend code';
+                }
+            }
+            tick();
+        })();
+    </script>
 </x-guest-layout>

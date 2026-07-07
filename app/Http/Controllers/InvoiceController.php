@@ -260,7 +260,9 @@ class InvoiceController extends Controller
             $invoice = $user->invoices()->create([
                 'company_id' => $company->id,
                 'customer_id' => $customer->id,
-                'invoice_number' => null,
+                // Non-GST businesses may pre-pick a custom number (kept at issue);
+                // blank/GST-registered stays null and auto-numbers at finalize.
+                'invoice_number' => ($data['invoice_number'] ?? null) ?: null,
                 'invoice_date' => $data['invoice_date'],
                 'due_date' => $data['due_date'] ?? null,
                 'place_of_supply_state_id' => $customer->state_id,
@@ -463,6 +465,9 @@ class InvoiceController extends Controller
             $paid = (float) ($data['paid_amount'] ?? 0);
             $invoice->update([
                 'customer_id' => $customer->id,
+                // Draft-only path (issued invoices take the soft-edit branch above),
+                // so the custom number is still freely editable here.
+                'invoice_number' => ($data['invoice_number'] ?? null) ?: null,
                 'invoice_date' => $data['invoice_date'],
                 'due_date' => $data['due_date'] ?? null,
                 'place_of_supply_state_id' => $customer->state_id,
@@ -575,8 +580,23 @@ class InvoiceController extends Controller
 
         DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
-            // Atomic: resets counter on FY boundary, increments, stamps format.
-            $number = $company->bumpCounterForFinalize($invoice->invoice_date?->toDateString());
+
+            if (filled($invoice->invoice_number) && blank($company->gstin)) {
+                // Non-GST business chose a custom number on the draft — keep it.
+                // The auto counter is NOT advanced (same policy as cash memos).
+                $number = $invoice->invoice_number;
+            } else {
+                // Atomic: resets counter on FY boundary, increments, stamps format.
+                // Skip past any number a custom-numbered invoice already claimed,
+                // otherwise the unique (company_id, invoice_number) index would
+                // reject the insert with a 500.
+                do {
+                    $number = $company->bumpCounterForFinalize($invoice->invoice_date?->toDateString());
+                } while (Invoice::where('company_id', $company->id)
+                    ->where('id', '!=', $invoice->id)
+                    ->where('invoice_number', $number)
+                    ->exists());
+            }
 
             $invoice->update([
                 'invoice_number' => $number,
@@ -1020,8 +1040,18 @@ class InvoiceController extends Controller
         $customer = $customerId ? $company->customers()->find($customerId) : null;
         $hsnRequired = ! empty($company->gstin) || ! empty($customer?->gstin);
 
-        return $request->validate([
+        $rules = [
             'customer_id' => ['required', Rule::exists('customers', 'id')->where('company_id', $companyId)],
+            // Custom invoice number — non-GST businesses only. Rule 46 requires a
+            // consecutive series for GST-registered suppliers, so for them the
+            // field is stripped (exclude) and the auto counter stays in charge.
+            // Unique per company; blank = auto-number at issue.
+            'invoice_number' => blank($company->gstin)
+                ? ['nullable', 'string', 'max:40',
+                    Rule::unique('invoices', 'invoice_number')
+                        ->where(fn ($q) => $q->where('company_id', $companyId))
+                        ->ignore($request->route('invoice')?->id)]
+                : ['exclude'],
             'invoice_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['nullable', 'string', 'size:3'],
@@ -1062,6 +1092,42 @@ class InvoiceController extends Controller
             'items.*.rate' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
-        ]);
+        ];
+
+        return $request->validate($rules, $this->itemErrorMessages($request));
+    }
+
+    /**
+     * Human, row-numbered messages for the per-item rules. Turns Laravel's
+     * default "The items.2.hsn_sac field is required" into "Row 3: enter the
+     * HSN/SAC code" so a user with a long invoice can see which line failed.
+     */
+    private function itemErrorMessages(Request $request): array
+    {
+        $messages = [
+            'items.required' => 'Add at least one line item to the invoice.',
+            'items.min' => 'Add at least one line item to the invoice.',
+            'invoice_number.unique' => 'You already have an invoice with this number. Pick a different one, or leave it blank to auto-number.',
+        ];
+
+        foreach (array_keys((array) $request->input('items', [])) as $i) {
+            $n = ((int) $i) + 1;
+            $messages["items.$i.hsn_sac.required"] = "Row {$n}: enter the HSN/SAC code (required because a GSTIN is present).";
+            $messages["items.$i.hsn_sac.max"] = "Row {$n}: the HSN/SAC code is too long.";
+            $messages["items.$i.quantity.required"] = "Row {$n}: enter a quantity.";
+            $messages["items.$i.quantity.numeric"] = "Row {$n}: quantity must be a number.";
+            $messages["items.$i.quantity.min"] = "Row {$n}: quantity must be more than zero.";
+            $messages["items.$i.rate.required"] = "Row {$n}: enter a rate.";
+            $messages["items.$i.rate.numeric"] = "Row {$n}: rate must be a number.";
+            $messages["items.$i.rate.min"] = "Row {$n}: rate cannot be negative.";
+            $messages["items.$i.discount.numeric"] = "Row {$n}: discount must be a number.";
+            $messages["items.$i.discount.min"] = "Row {$n}: discount cannot be negative.";
+            $messages["items.$i.gst_rate.required"] = "Row {$n}: select a GST rate.";
+            $messages["items.$i.gst_rate.in"] = "Row {$n}: choose a valid GST rate.";
+            $messages["items.$i.description.max"] = "Row {$n}: the description is too long (max 150 characters).";
+            $messages["items.$i.product_id.exists"] = "Row {$n}: the selected product is not valid.";
+        }
+
+        return $messages;
     }
 }

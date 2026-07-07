@@ -28,7 +28,15 @@
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
-        <!-- Mobile Number (verified via OTP) -->
+        <!-- Email Address (verification code goes here) -->
+        <div class="mt-4">
+            <x-input-label for="email" :value="__('Email *')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="you@example.com" />
+            <p class="mt-1 text-xs text-gray-500">We'll email you a 6-digit code to verify your account.</p>
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <!-- Mobile Number (required, so our team can help you get set up) -->
         <div class="mt-4">
             <x-input-label for="phone" :value="__('Mobile number *')" />
             <div class="mt-1 relative">
@@ -36,16 +44,8 @@
                 <x-text-input id="phone" class="block w-full pl-10" type="tel" name="phone" :value="old('phone')"
                     inputmode="numeric" maxlength="10" required autocomplete="tel-national" placeholder="98765 43210" />
             </div>
-            <p class="mt-1 text-xs text-gray-500">We'll send a one-time code to verify this number.</p>
+            <p class="mt-1 text-xs text-gray-500">So our team can reach you on WhatsApp/call to help you get set up. We won't spam you.</p>
             <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-        </div>
-
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email *')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="you@example.com" />
-            <p class="mt-1 text-xs text-gray-500">We'll send invoice copies and password resets here.</p>
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <!-- Password -->

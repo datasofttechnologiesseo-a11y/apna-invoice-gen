@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.28",
         "laravel/tinker": "^2.9",
+        "league/commonmark": "^2.4",
         "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {

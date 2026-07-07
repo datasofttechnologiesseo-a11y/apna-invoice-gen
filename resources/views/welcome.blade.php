@@ -23,9 +23,11 @@
         [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
+            '@id' => $appUrl . '#organization',
             'name' => config('seo.organization.name'),
             'legalName' => config('seo.organization.legal_name'),
             'url' => config('seo.organization.url'),
+            'sameAs' => [config('seo.organization.url')],
             'logo' => $appUrl . config('seo.organization.logo'),
             'foundingLocation' => ['@type' => 'Country', 'name' => 'India'],
             'areaServed' => 'IN',
@@ -48,9 +50,11 @@
         [
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
+            '@id' => $appUrl . '#website',
             'name' => $siteName,
             'url' => $appUrl,
             'inLanguage' => 'en-IN',
+            'publisher' => ['@id' => $appUrl . '#organization'],
             'potentialAction' => [
                 '@type' => 'SearchAction',
                 'target' => $appUrl . '/?q={search_term_string}',
@@ -270,11 +274,11 @@
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
-            <a href="#features" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
-            <a href="#how-to" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
-            <a href="#pricing" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
-            <a href="{{ route('blog.index') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
-            <a href="#faq" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
+            <a href="#features" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
+            <a href="#how-to" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
+            <a href="#pricing" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
+            <a href="{{ route('blog.index') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
+            <a href="#faq" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
             @else

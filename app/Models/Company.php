@@ -50,7 +50,12 @@ class Company extends Model
 
     public function isBusinessComplete(): bool
     {
-        return filled($this->name) && filled($this->state_id) && filled($this->address_line1);
+        // Name + state are the billing essentials (state drives CGST/SGST vs
+        // IGST). Address is only a completeness requirement for GST-registered
+        // businesses, where Rule 46 mandates it on the tax invoice.
+        return filled($this->name)
+            && filled($this->state_id)
+            && (blank($this->gstin) || filled($this->address_line1));
     }
 
     public function isOnboarded(): bool
