@@ -30,6 +30,16 @@ class MakeSuperAdmin extends Command
             ? "✓ {$user->name} ({$email}) is now a super admin."
             : "✓ {$user->name} ({$email}) is no longer a super admin.");
 
+        // The flag alone isn't enough — access also needs the email allowlist.
+        // Warn loudly if we just granted a flag that the allowlist will ignore.
+        if ($grant) {
+            $allow = config('admin.super_admin_emails', []);
+            if ($allow !== [] && ! in_array(strtolower($email), $allow, true)) {
+                $this->warn("Note: {$email} is NOT in SUPER_ADMIN_EMAILS, so admin access stays BLOCKED.");
+                $this->line('Add it to the SUPER_ADMIN_EMAILS env var to actually grant access.');
+            }
+        }
+
         return self::SUCCESS;
     }
 }
