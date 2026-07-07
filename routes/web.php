@@ -35,6 +35,9 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/' . ltrim(route('login', [], false), '/'),    'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => $base . '/gst-calculator',     'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/free-gst-invoice-format', 'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/free-billing-software', 'priority' => '0.9', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/cash-memo-format',   'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/gst-credit-note-format', 'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => $base . '/about',              'priority' => '0.7', 'changefreq' => 'monthly'],
         ['loc' => $base . '/press',              'priority' => '0.5', 'changefreq' => 'monthly'],
         ['loc' => $base . '/partners',           'priority' => '0.6', 'changefreq' => 'monthly'],
@@ -119,6 +122,9 @@ Route::prefix('/')->name('pages.')->group(function () {
     // Free indexable tools / guides — high-intent organic landing pages.
     Route::view('/gst-calculator', 'pages.gst-calculator')->name('gst-calculator');
     Route::view('/free-gst-invoice-format', 'pages.gst-invoice-format')->name('gst-invoice-format');
+    Route::view('/free-billing-software', 'pages.billing-software')->name('billing-software');
+    Route::view('/cash-memo-format', 'pages.cash-memo-format')->name('cash-memo-format');
+    Route::view('/gst-credit-note-format', 'pages.credit-note-format')->name('credit-note-format');
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/press', 'pages.press')->name('press');
     Route::view('/partners', 'pages.partners')->name('partners');
