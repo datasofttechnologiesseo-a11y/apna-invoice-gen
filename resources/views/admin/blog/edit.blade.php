@@ -36,6 +36,7 @@
         initialBody: @js($bodyVal ?? ''),
         initialMetaTitle: @js($metaTitleVal ?? ''),
         initialMetaDescription: @js($metaDescVal ?? ''),
+        initialKeywords: @js($metaKeywordsVal ?? ''),
         slugLocked: @js((bool) ($post->slug ?? null)),
     })">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -317,6 +318,7 @@
                         <div>
                             <x-input-label for="meta_keywords" value="Keywords" />
                             <input id="meta_keywords" name="meta_keywords" type="text" maxlength="255"
+                                   x-model="metaKeywords"
                                    placeholder="GST invoice, HSN SAC, GSTR-1"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500"
                                    value="{{ $metaKeywordsVal }}">
@@ -330,6 +332,25 @@
                                 <div class="text-[14px] font-medium text-blue-700 leading-tight mt-0.5 line-clamp-1" x-text="metaTitleEffective || 'Your post title'"></div>
                                 <div class="text-[12px] text-gray-700 leading-snug mt-0.5 line-clamp-2" x-text="metaDescription || 'A 150-160 character description here helps your post stand out in Google.'"></div>
                             </div>
+                        </div>
+
+                        {{-- Live SEO checklist — every check Google actually rewards,
+                             recomputed as you type. Green = done, hint tells you the fix. --}}
+                        <div class="pt-3 border-t border-gray-100 space-y-1.5 text-[11px]">
+                            <div class="font-bold uppercase tracking-wider text-gray-500">SEO checklist</div>
+                            <template x-for="check in seoChecks" :key="check.label">
+                                <div class="flex items-start gap-2 py-0.5">
+                                    <span class="mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full shrink-0"
+                                          :class="check.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'">
+                                        <svg x-show="check.ok" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        <svg x-show="!check.ok" class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <span :class="check.ok ? 'text-gray-700' : 'text-gray-900 font-medium'" x-text="check.label"></span>
+                                        <span x-show="!check.ok && check.hint" class="block text-gray-500" x-text="check.hint"></span>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -403,7 +424,7 @@
                 .substring(0, 220);
         }
 
-        function postEditor({ initialTitle, initialSlug, initialBody, initialMetaTitle, initialMetaDescription, slugLocked }) {
+        function postEditor({ initialTitle, initialSlug, initialBody, initialMetaTitle, initialMetaDescription, initialKeywords, slugLocked }) {
             // localStorage key — namespaced per post-id so different posts don't
             // clobber each other's drafts on the same browser.
             const postId = @json($post->id ?? 'new');
@@ -415,6 +436,7 @@
                 body: initialBody,
                 metaTitle: initialMetaTitle,
                 metaDescription: initialMetaDescription,
+                metaKeywords: initialKeywords || '',
                 status: document.getElementById('status')?.value || 'draft',
                 slugLocked,                              // when true, manual slug entry; when false, auto-derive from title
                 wordCount: 0,
@@ -463,17 +485,52 @@
                     return this.metaTitle || this.title;
                 },
 
-                get seoScore() {
-                    const issues = [];
-                    if (this.metaDescription.length < 80 || this.metaDescription.length > 160) issues.push('description');
-                    if (this.metaTitleEffective.length < 30 || this.metaTitleEffective.length > 60) issues.push('title');
-                    if (this.wordCount < 300) issues.push('length');
-                    if (! this.slug) issues.push('slug');
+                /**
+                 * The live, actionable SEO checklist. Each check mirrors what
+                 * Google actually rewards: intent-matched title/description
+                 * lengths, real content depth, scannable heading structure,
+                 * the focus keyword where it counts, internal links, and
+                 * accessible images.
+                 */
+                get seoChecks() {
+                    const t = this.metaTitleEffective;
+                    const d = this.metaDescription;
+                    const body = this.body || '';
+                    // Focus keyword = first entry of the Keywords field.
+                    const kw = (this.metaKeywords || '').split(',')[0]?.trim().toLowerCase() || '';
+                    const h2Count = (body.match(/^##\s/gm) || []).length;
+                    const first100 = body.replace(/[#*_`>\[\]\(\)]/g, ' ').trim().split(/\s+/).slice(0, 100).join(' ').toLowerCase();
+                    const hasInternalLink = /\]\((\/|https?:\/\/(www\.)?apnainvoice)/i.test(body);
+                    const imgs = [...body.matchAll(/!\[([^\]]*)\]\(/g)];
+                    const hasImage = imgs.length > 0;
+                    const imgsHaveAlt = hasImage && imgs.every(m => m[1].trim().length > 0);
 
-                    if (issues.length === 0) return { tone: 'good', label: 'SEO ✓ ready' };
-                    if (issues.length <= 1) return { tone: 'good', label: 'SEO mostly ready' };
-                    if (issues.length <= 2) return { tone: 'warn', label: 'SEO needs work' };
-                    return { tone: 'bad', label: 'SEO incomplete' };
+                    return [
+                        { ok: t.length >= 30 && t.length <= 60,
+                          label: 'Title 30–60 chars', hint: t.length < 30 ? 'Too short — add the benefit or year' : t.length > 60 ? 'Too long — Google truncates it' : '' },
+                        { ok: d.length >= 120 && d.length <= 160,
+                          label: 'Meta description 120–160 chars', hint: d.length === 0 ? 'Write one — it is your ad in the results page' : '' },
+                        { ok: this.wordCount >= 600,
+                          label: '600+ words (' + this.wordCount + ')', hint: 'Thin pages rarely rank; 900+ is even better' },
+                        { ok: h2Count >= 2,
+                          label: '2+ section headings (## )', hint: 'Headings make posts scannable and win featured snippets' },
+                        { ok: kw !== '' && t.toLowerCase().includes(kw),
+                          label: 'Focus keyword in title', hint: kw === '' ? 'Add keywords below — the first one is your focus keyword' : 'Use "' + kw + '" in the title' },
+                        { ok: kw !== '' && first100.includes(kw),
+                          label: 'Keyword in first 100 words', hint: 'Google weighs the opening heavily' },
+                        { ok: hasInternalLink,
+                          label: 'At least one internal link', hint: 'Link to the calculator, a guide, or another post' },
+                        { ok: imgsHaveAlt,
+                          label: hasImage ? 'Images have alt text' : 'Add an image with alt text', hint: 'Alt text ranks in Google Images and helps accessibility' },
+                    ];
+                },
+
+                get seoScore() {
+                    const failed = this.seoChecks.filter(c => !c.ok).length;
+                    if (failed === 0) return { tone: 'good', label: 'SEO ✓ ready' };
+                    if (failed <= 2) return { tone: 'good', label: failed + ' to go' };
+                    if (failed <= 4) return { tone: 'warn', label: failed + ' checks left' };
+                    return { tone: 'bad', label: failed + ' checks left' };
                 },
 
                 // ──── Formatting toolbar — wraps selection in markdown ─────────────

@@ -34,8 +34,8 @@ class BlogTest extends TestCase
         $html = $post->renderedBody();
 
         $this->assertStringNotContainsString('<h1', $html);
-        $this->assertStringContainsString('<h2>Hash Heading</h2>', $html);
-        $this->assertStringContainsString('<h2>Real H2</h2>', $html);
+        $this->assertStringContainsString('<h2 id="hash-heading">Hash Heading</h2>', $html);
+        $this->assertStringContainsString('<h2 id="real-h2">Real H2</h2>', $html);
         $this->assertStringContainsString('<strong>bold</strong>', $html);
     }
 
@@ -106,7 +106,8 @@ class BlogTest extends TestCase
 
         $response = $this->get('/blog/mark-down');
         $response->assertOk()
-            ->assertSee('<h2>Heading</h2>', false)
+            // Headings carry server-stamped slug ids (TOC / deep-link anchors).
+            ->assertSee('<h2 id="heading">Heading</h2>', false)
             ->assertSee('<strong>Bold</strong>', false)
             // <script> is escaped, not rendered
             ->assertDontSee('<script>alert', false);
