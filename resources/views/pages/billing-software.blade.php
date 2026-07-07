@@ -94,8 +94,8 @@
     <h2>Start billing in 60 seconds</h2>
     <p>
         <a href="{{ route('register') }}">Create your free account</a> — no card, no trial timer. Add your business
-        once, and your first GST bill is a minute away. Want to see the maths first? Try the free
-        <a href="{{ route('pages.gst-calculator') }}">GST calculator</a>, or read what a compliant bill must contain
+        once, and your first GST bill is a minute away. Want to see the maths first? Try the
+        <a href="{{ route('pages.gst-calculator') }}">free GST calculator</a>, or read what a compliant bill must contain
         in our <a href="{{ route('pages.gst-invoice-format') }}">GST invoice format guide</a>.
     </p>
 </x-layouts.marketing>

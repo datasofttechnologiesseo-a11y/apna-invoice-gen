@@ -63,7 +63,7 @@
     eyebrow="Free tool"
     lead="Add or remove GST at 5%, 12%, 18% or 28% in one tap. See the CGST and SGST split for same-state sales, or IGST for inter-state, with no sign up."
     description="Free online GST calculator for India. Add or remove GST at 5, 12, 18 and 28 percent with automatic CGST, SGST and IGST split. Inclusive and exclusive, intra-state and inter-state."
-    keywords="GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, GST percentage calculator"
+    keywords="free GST calculator, GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, GST percentage calculator"
     :json-ld="[$appSchema, $howToSchema, $faqSchema]">
 
     {{-- ===== The calculator widget ===== --}}

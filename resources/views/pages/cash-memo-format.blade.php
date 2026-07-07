@@ -84,8 +84,8 @@
         A GST-registered seller charging tax on a cash sale must show the rate and the correct split — CGST + SGST when
         buyer and seller are in the same state, IGST across states. For small B2C sales under ₹200, GST law permits a
         consolidated invoice at the end of the day instead of one per sale. Unregistered sellers issue plain cash memos
-        with no tax fields at all. To check the maths on any amount, use the free
-        <a href="{{ route('pages.gst-calculator') }}">GST calculator</a>.
+        with no tax fields at all. To check the maths on any amount, use the
+        <a href="{{ route('pages.gst-calculator') }}">free GST calculator</a>.
     </p>
 
     <h2>Make cash memos online, free</h2>

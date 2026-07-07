@@ -91,8 +91,8 @@
         The credit note reverses tax at the same rate and in the same heads as the original invoice — CGST + SGST for a
         same-state supply, IGST for inter-state — proportionate to the amount credited. It reduces your outward liability
         in GSTR-1 and GSTR-3B for the period you declare it, and the buyer (if registered) must reverse the matching
-        input tax credit. To sanity-check any split, use the free
-        <a href="{{ route('pages.gst-calculator') }}">GST calculator</a>.
+        input tax credit. To sanity-check any split, use the
+        <a href="{{ route('pages.gst-calculator') }}">free GST calculator</a>.
     </p>
 
     <h2>Issue compliant credit notes, free</h2>
