@@ -83,8 +83,11 @@
                         ['href' => route('login'), 'label' => 'Log in'],
                     ]],
                     ['title' => 'Resources', 'color' => 'accent', 'links' => [
-                        ['href' => route('pages.gst-calculator'), 'label' => 'GST calculator'],
+                        ['href' => route('pages.gst-calculator'), 'label' => 'Free GST calculator'],
                         ['href' => route('pages.gst-invoice-format'), 'label' => 'GST invoice format'],
+                        ['href' => route('pages.billing-software'), 'label' => 'Free billing software'],
+                        ['href' => route('pages.cash-memo-format'), 'label' => 'Cash memo format'],
+                        ['href' => route('pages.credit-note-format'), 'label' => 'Credit note format'],
                         ['href' => route('help'), 'label' => 'Help Center'],
                         ['href' => route('blog.index'), 'label' => 'Blogs'],
                         ['href' => route('invoices.templates'), 'label' => 'Invoice templates'],

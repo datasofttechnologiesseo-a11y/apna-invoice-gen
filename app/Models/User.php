@@ -149,7 +149,18 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return (bool) $this->is_super_admin;
+        if (! $this->is_super_admin) {
+            return false;
+        }
+
+        // Defence in depth: the DB flag alone is not enough. Admin access is
+        // also restricted to an explicit email allowlist (config/admin.php ←
+        // SUPER_ADMIN_EMAILS), so a flag flipped on any other account grants
+        // nothing. An empty allowlist (test env) falls back to the flag alone.
+        $allow = config('admin.super_admin_emails', []);
+
+        return $allow === []
+            || in_array(strtolower((string) $this->email), $allow, true);
     }
 
     public function referralsMade(): HasMany

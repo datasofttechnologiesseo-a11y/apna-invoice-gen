@@ -114,7 +114,65 @@ class Post extends Model
         $environment->addExtension(new AutolinkExtension());
 
         $converter = new MarkdownConverter($environment);
-        return $converter->convert((string) $this->body)->getContent();
+        $html = $converter->convert((string) $this->body)->getContent();
+
+        // SEO: the post title is the page's one <h1>. A "# Heading" in the
+        // body would emit a second <h1> — which also rendered as plain 16px
+        // text because nothing styled body h1s. Demote body h1 → h2 so the
+        // author's heading displays properly AND the page keeps a single H1.
+        $html = str_replace(['<h1>', '<h1 ', '</h1>'], ['<h2>', '<h2 ', '</h2>'], $html);
+
+        // Performance: body images lazy-load so they never block LCP; width
+        // is bounded by CSS, decoding=async keeps paint off the main thread.
+        $html = str_replace('<img ', '<img loading="lazy" decoding="async" ', $html);
+
+        // SEO: stamp slug ids on h2/h3 server-side so the table of contents
+        // and #fragment deep-links are crawlable without JavaScript. The h2
+        // entries double as the table of contents (cached for this instance).
+        $used = [];
+        $toc = [];
+        $html = preg_replace_callback('#<h([23])>(.*?)</h\1>#s', function ($m) use (&$used, &$toc) {
+            $text = trim(strip_tags($m[2]));
+            $id = static::headingSlug($text, $used);
+            if ($m[1] === '2') {
+                $toc[] = ['id' => $id, 'text' => $text];
+            }
+            return "<h{$m[1]} id=\"{$id}\">{$m[2]}</h{$m[1]}>";
+        }, $html);
+
+        $this->tocCache = $toc;
+
+        return $html;
+    }
+
+    /** Populated as a byproduct of renderedBody(); see tableOfContents(). */
+    protected ?array $tocCache = null;
+
+    /**
+     * The post's table of contents: [['id' => ..., 'text' => ...], …] for
+     * every h2 in the rendered body. Ids are stamped in the same pass as
+     * renderedBody(), so anchor links always resolve.
+     */
+    public function tableOfContents(): array
+    {
+        if ($this->tocCache === null) {
+            $this->renderedBody();
+        }
+
+        return $this->tocCache ?? [];
+    }
+
+    /** Slugify a heading for use as an anchor id, unique within one document. */
+    protected static function headingSlug(string $text, array &$used): string
+    {
+        $base = Str::slug(Str::limit(trim($text), 80, '')) ?: 'section';
+        $id = $base;
+        $i = 2;
+        while (in_array($id, $used, true)) {
+            $id = $base . '-' . $i++;
+        }
+        $used[] = $id;
+        return $id;
     }
 
     /** Compute reading minutes from body. ~200 wpm is the SEO industry default. */

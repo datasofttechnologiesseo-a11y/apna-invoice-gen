@@ -48,6 +48,13 @@ class BlogController extends Controller
             ->limit(3)
             ->get();
 
-        return view('blog.show', compact('post', 'related'));
+        // Previous / next published posts — keeps readers on the site and
+        // gives crawlers a chronological path through the whole archive.
+        $previous = Post::published()->where('published_at', '<', $post->published_at)
+            ->orderByDesc('published_at')->first(['id', 'slug', 'title']);
+        $next = Post::published()->where('published_at', '>', $post->published_at)
+            ->orderBy('published_at')->first(['id', 'slug', 'title']);
+
+        return view('blog.show', compact('post', 'related', 'previous', 'next'));
     }
 }

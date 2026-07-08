@@ -68,7 +68,8 @@
                 </tr>
                 <tr>
                     <td style="padding: 16px 32px; background: #f9fafb; color: #6b7280; font-size: 11px; text-align: center;">
-                        Sent from {{ $c->name }} · Powered by {{ config('app.name') }}
+                        Sent from {{ $c->name }} · Powered by <a href="{{ url('/') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #4b5563; font-weight: bold; text-decoration: underline;">{{ config('app.name') }}</a>
+                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses — <a href="{{ route('register') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
                     </td>
                 </tr>
             </table>

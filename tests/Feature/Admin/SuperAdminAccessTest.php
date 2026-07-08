@@ -144,4 +144,60 @@ class SuperAdminAccessTest extends TestCase
             ->post(route('admin.users.impersonate', $target))
             ->assertStatus(403);
     }
+
+    // ─── Email allowlist enforcement (defence in depth) ──────────────────
+
+    public function test_flagged_user_off_the_allowlist_is_denied(): void
+    {
+        // Only this one email is authorised.
+        config(['admin.super_admin_emails' => ['boss@datasofttechnologies.com']]);
+
+        // A DIFFERENT account with the flag flipped must still be blocked.
+        $imposter = User::factory()->create([
+            'email' => 'attacker@example.com',
+            'is_super_admin' => true,
+        ]);
+
+        $this->assertFalse($imposter->isSuperAdmin());
+        $this->actingAs($imposter)->get('/admin')->assertStatus(403);
+    }
+
+    public function test_only_the_allowlisted_email_gets_admin_access(): void
+    {
+        config(['admin.super_admin_emails' => ['boss@datasofttechnologies.com']]);
+
+        $authorised = User::factory()->create([
+            'email' => 'boss@datasofttechnologies.com',
+            'is_super_admin' => true,
+        ]);
+
+        $this->assertTrue($authorised->isSuperAdmin());
+        $this->actingAs($authorised)->get('/admin')->assertStatus(200);
+    }
+
+    public function test_allowlisted_email_without_the_flag_is_still_denied(): void
+    {
+        // Allowlist membership alone is not enough — the flag is also required.
+        config(['admin.super_admin_emails' => ['boss@datasofttechnologies.com']]);
+
+        $user = User::factory()->create([
+            'email' => 'boss@datasofttechnologies.com',
+            'is_super_admin' => false,
+        ]);
+
+        $this->assertFalse($user->isSuperAdmin());
+        $this->actingAs($user)->get('/admin')->assertStatus(403);
+    }
+
+    public function test_allowlist_is_case_insensitive(): void
+    {
+        config(['admin.super_admin_emails' => ['boss@datasofttechnologies.com']]);
+
+        $user = User::factory()->create([
+            'email' => 'BOSS@DataSoftTechnologies.com',
+            'is_super_admin' => true,
+        ]);
+
+        $this->assertTrue($user->isSuperAdmin());
+    }
 }

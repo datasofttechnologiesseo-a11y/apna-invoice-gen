@@ -65,6 +65,7 @@ return [
         'freelancer invoice India',
         // GST calculator (free home-page tool)
         'GST calculator',
+        'free GST calculator',
         'free GST calculator India',
         'online GST calculator',
         'GST calculator online India',
