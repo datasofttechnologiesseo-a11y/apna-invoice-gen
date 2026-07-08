@@ -74,11 +74,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Customers
     Route::get('customers/{customer}/ledger', [CustomerController::class, 'ledger']);
-    Route::apiResource('customers', CustomerController::class);
+    Route::apiResource('customers', CustomerController::class)->names('api.customers');
 
     // Products
     Route::get('products/search', [ProductController::class, 'search']);
-    Route::apiResource('products', ProductController::class);
+    Route::apiResource('products', ProductController::class)->names('api.products');
 
     // Invoices
     Route::get('invoices', [InvoiceController::class, 'index']);
