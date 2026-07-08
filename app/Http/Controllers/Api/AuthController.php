@@ -22,16 +22,31 @@ class AuthController extends Controller
 {
     public function register(Request $request): JsonResponse
     {
+        // Strip spaces/dashes before validating so "98765 43210" and
+        // "+91-98765-43210" pass like their compact forms do.
+        if (filled($request->phone)) {
+            $request->merge(['phone' => preg_replace('/[\s\-()]/', '', (string) $request->phone)]);
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            // Mandatory 10-digit Indian mobile — same policy as web signup, so
+            // the team can reach every new user regardless of channel. Accepts
+            // "9876543210", "+919876543210" or "09876543210" style input.
+            'phone' => ['required', 'string', 'regex:/^(\+?91|0)?[6-9]\d{9}$/'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'device_name' => ['nullable', 'string', 'max:255'],
+        ], [
+            'phone.required' => 'Please enter your mobile number so we can help you get started.',
+            'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            // Normalised to +91XXXXXXXXXX, matching the web registration flow.
+            'phone' => '+91' . substr(preg_replace('/\D/', '', $data['phone']), -10),
             'password' => $data['password'], // hashed via cast
         ]);
 
@@ -71,6 +86,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
                 'email_verified' => $user->hasVerifiedEmail(),
                 'is_super_admin' => $user->isSuperAdmin(),
                 'active_company_id' => $user->active_company_id,
@@ -105,6 +121,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
                 'email_verified' => $user->hasVerifiedEmail(),
                 'is_super_admin' => $user->isSuperAdmin(),
                 'active_company_id' => $user->active_company_id,
