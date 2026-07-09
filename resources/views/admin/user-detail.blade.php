@@ -43,21 +43,39 @@
 
         @php
             $phones = $user->companies->filter(fn ($c) => filled($c->phone));
+            $waDigits = preg_replace('/\D/', '', (string) $user->phone);
         @endphp
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-200"><h3 class="font-display font-bold text-slate-900">Phone numbers</h3></div>
-            @if ($phones->isEmpty())
-                <div class="px-5 py-6 text-sm text-slate-400">No phone numbers on file.</div>
-            @else
-                <ul class="divide-y divide-slate-100">
-                    @foreach ($phones as $co)
-                        <li class="px-5 py-3 flex items-center justify-between gap-4 text-sm">
-                            <div class="text-slate-500">{{ $co->name }}</div>
-                            <a href="tel:{{ $co->phone }}" class="font-mono text-slate-900 hover:text-indigo-600">{{ $co->phone }}</a>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
+            <ul class="divide-y divide-slate-100">
+                {{-- The personal mobile captured at signup (users.phone) — the
+                     number the team actually calls/WhatsApps for onboarding.
+                     Listed first; company phones (from settings) follow. --}}
+                <li class="px-5 py-3 flex items-center justify-between gap-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-500">Signup mobile</span>
+                        @if ($user->phone && $user->phone_verified_at)
+                            <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">Verified</span>
+                        @elseif ($user->phone)
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">Unverified</span>
+                        @endif
+                    </div>
+                    @if ($user->phone)
+                        <div class="flex items-center gap-3">
+                            <a href="tel:{{ $user->phone }}" class="font-mono text-slate-900 hover:text-indigo-600">{{ $user->phone }}</a>
+                            <a href="https://wa.me/{{ $waDigits }}" target="_blank" rel="noopener" class="text-emerald-600 hover:text-emerald-700 text-xs font-semibold">WhatsApp →</a>
+                        </div>
+                    @else
+                        <span class="text-slate-400">Not provided (pre-mandatory signup)</span>
+                    @endif
+                </li>
+                @foreach ($phones as $co)
+                    <li class="px-5 py-3 flex items-center justify-between gap-4 text-sm">
+                        <div class="text-slate-500">{{ $co->name }} <span class="text-slate-400 text-xs">(company)</span></div>
+                        <a href="tel:{{ $co->phone }}" class="font-mono text-slate-900 hover:text-indigo-600">{{ $co->phone }}</a>
+                    </li>
+                @endforeach
+            </ul>
         </div>
 
         @if (! $user->isSuperAdmin() && $user->id !== auth()->id())

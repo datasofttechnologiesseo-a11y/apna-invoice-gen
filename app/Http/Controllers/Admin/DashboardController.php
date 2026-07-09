@@ -121,6 +121,11 @@ class DashboardController extends Controller
             }, 'revenue')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('users.name', 'like', "%{$s}%")->orWhere('users.email', 'like', "%{$s}%");
+                // Phone matching: strip non-digits from the query so "98765 43210",
+                // "+91 98765-43210" and "9876543210" all find the same user.
+                if (($digits = preg_replace('/\D/', '', $s)) !== '') {
+                    $w->orWhere('users.phone', 'like', "%{$digits}%");
+                }
             }))
             ->orderByDesc('users.created_at')
             ->paginate(30)

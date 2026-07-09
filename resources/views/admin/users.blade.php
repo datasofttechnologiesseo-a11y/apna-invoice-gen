@@ -35,6 +35,9 @@
                                         @if ($u->email_verified_at)<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">✓ Verified</span>@endif
                                     </div>
                                     <div class="text-xs text-slate-500 truncate">{{ $u->email }}</div>
+                                    @if ($u->phone)
+                                        <div class="text-xs text-slate-400 font-mono">{{ $u->phone }}</div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
