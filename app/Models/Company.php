@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,25 @@ class Company extends Model
         'composition_dealer' => 'boolean',
         'books_locked_until' => 'date',
     ];
+
+    // GSTIN and PAN are statutory identifiers whose canonical form is upper
+    // case. Normalise on write and on read so every document (invoice, PDF,
+    // cash memo, GSTR-3B) shows them correctly even for pre-existing rows.
+    protected function gstin(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $v) => $v === null ? null : strtoupper($v),
+            set: fn (?string $v) => $v === null ? null : strtoupper(trim($v)),
+        );
+    }
+
+    protected function pan(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $v) => $v === null ? null : strtoupper($v),
+            set: fn (?string $v) => $v === null ? null : strtoupper(trim($v)),
+        );
+    }
 
     /**
      * True if the given date falls inside a period that has been locked
