@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,6 +35,17 @@ class CashMemo extends Model
         'grand_total' => 'decimal:2',
         'itc_eligible' => 'boolean',
     ];
+
+    // GSTINs are upper case by definition (checksum alphabet is 0-9A-Z).
+    // Normalise on write and on read so old rows saved in mixed case still
+    // print correctly on the memo.
+    protected function sellerGstin(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $v) => $v === null ? null : strtoupper($v),
+            set: fn (?string $v) => $v === null ? null : strtoupper(trim($v)),
+        );
+    }
 
     public function user(): BelongsTo
     {
