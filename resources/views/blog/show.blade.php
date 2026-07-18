@@ -1,7 +1,7 @@
 @php
     $ogImage = $post->effectiveOgImage()
         ? asset('storage/' . $post->effectiveOgImage())
-        : asset('brand/apna-invoice-logo-sm.jpg');
+        : asset('brand/apna-invoice-logo-sm.webp');
 
     $articleJsonLd = [
         '@context' => 'https://schema.org',
@@ -21,7 +21,7 @@
             'url' => url('/'),
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => asset('brand/apna-invoice-logo-sm.jpg'),
+                'url' => asset('brand/apna-invoice-logo-sm.webp'),
             ],
         ],
         'mainEntityOfPage' => [
@@ -68,6 +68,10 @@
     <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
+    @if ($post->featured_image_path)
+        {{-- Preload the cover — it's the article LCP on posts that have one. --}}
+        <link rel="preload" as="image" href="{{ asset('storage/' . $post->featured_image_path) }}" fetchpriority="high">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Article body, long-read typography. Serif body font, generous
@@ -173,10 +177,12 @@
 
 @if ($post->featured_image_path)
     <figure class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 md:-mt-4">
+        {{-- Above-the-fold cover = the article LCP. fetchpriority high +
+             eager so the preload scanner starts it immediately. --}}
         <img src="{{ asset('storage/' . $post->featured_image_path) }}"
              alt="{{ $post->featured_image_alt ?: $post->title }}"
              class="w-full rounded-xl shadow-lg ring-1 ring-gray-200 aspect-[16/9] object-cover"
-             width="1200" height="675">
+             width="1200" height="675" fetchpriority="high" loading="eager" decoding="async">
     </figure>
 @endif
 

@@ -212,7 +212,7 @@
     <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
 
     {{-- Preload the brand logo, it's the LCP element on the landing header. --}}
-    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" as="image" type="image/jpeg" fetchpriority="high">
+    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.webp') }}" as="image" type="image/webp" fetchpriority="high">
     {{-- Fonts: warm the connection (crossorigin is REQUIRED — font files are
          fetched with CORS, so a plain preconnect warms the wrong connection),
          then load the stylesheet non-render-blocking. display=swap already
@@ -674,21 +674,21 @@
          x-data='{
             slides: [
                 {
-                    src: "/brand/slider/slide-1-gst-software.jpg",
+                    src: "/brand/slider/slide-1-gst-software.webp",
                     alt: "Apna Invoice, free GST software for Indian SMEs, MSMEs and freelancers",
                     eyebrow: "Free for everyone",
                     title: "Free GST Software for Indian SMEs &amp; MSMEs",
                     sub: "Auto CGST · SGST · IGST · HSN/SAC. Unlimited invoices, built to be CA-friendly.",
                 },
                 {
-                    src: "/brand/slider/slide-2-tablet-modern.jpg",
+                    src: "/brand/slider/slide-2-tablet-modern.webp",
                     alt: "Modern entrepreneur using Apna Invoice on a tablet to send GST-compliant invoices in seconds",
                     eyebrow: "60-second invoice",
                     title: "GST invoicing made easy in seconds",
                     sub: "From phone, tablet or laptop. Send via WhatsApp, email or signed link. 100% free.",
                 },
                 {
-                    src: "/brand/slider/slide-3-freelancer.jpg",
+                    src: "/brand/slider/slide-3-freelancer.webp",
                     alt: "Freelancer using Apna Invoice to create GST invoices",
                     eyebrow: "Made for freelancers",
                     title: "फ्रीलांसर के लिए आसान GST बिलिंग",
