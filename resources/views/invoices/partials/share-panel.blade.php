@@ -51,6 +51,18 @@
                 <span x-text="copied ? 'Copied!' : 'Copy link'"></span>
             </button>
 
+            {{-- Native OS share sheet — reaches SMS, Telegram, email and ANY
+                 WhatsApp contact in one tap, so the invoice can still be shared
+                 even when the customer record has no saved phone number. --}}
+            <button type="button"
+                    x-data="{ share: { title: @js($defaultSubject), text: @js($defaultBody), url: @js($publicUrl) }, copied: false }"
+                    x-show="typeof navigator.share === 'function' || typeof navigator.clipboard === 'object'"
+                    @click="navigator.share ? navigator.share(share).catch(() => {}) : (navigator.clipboard.writeText(share.text + '\n' + share.url), copied = true, setTimeout(() => copied = false, 2000))"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-800 text-sm font-semibold rounded hover:bg-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span x-text="copied ? 'Copied!' : 'Share…'">Share…</span>
+            </button>
+
         </div>
     </div>
 

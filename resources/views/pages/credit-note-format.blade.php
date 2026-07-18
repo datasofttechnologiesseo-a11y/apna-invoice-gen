@@ -28,6 +28,8 @@
          'a' => 'Yes — that is its purpose. The tax reversed on the credit note reduces your outward liability in GSTR-1/GSTR-3B for the period, provided it is declared within the Section 34(2) window and the buyer reverses any input tax credit they claimed.'],
         ['q' => 'Can I issue a partial credit note?',
          'a' => 'Yes. A credit note can cover part of an invoice — for example one returned item out of five, or a percentage discount. The tax reversal is calculated proportionately on the credited amount at the same rate as the original supply.'],
+        ['q' => 'What is the difference between a credit note and a debit note?',
+         'a' => 'A credit note reduces the value or tax of an original invoice — you charged too much, so your GST liability goes down. A debit note does the opposite: you charged too little (higher rate, extra quantity, price revised up), so it raises the value and increases liability. The supplier issues both. A credit note lowers what the buyer owes and requires them to reverse any excess input tax credit; a debit note increases what the buyer owes and lets them claim additional credit. Both are reported in GSTR-1.'],
     ];
 
     $faqSchema = [
@@ -41,10 +43,10 @@
 @endphp
 
 <x-layouts.marketing
-    title="GST Credit Note Format: Section 34 Rules, Fields & Deadline"
+    title="GST Credit Note Format: Section 34 Rules & Deadline"
     eyebrow="Guide"
     lead="When to issue a credit note, exactly what it must contain under Section 34 of the CGST Act, the 30 November deadline that catches businesses out — and a free way to issue compliant credit notes."
-    description="GST credit note format explained: Section 34 rules, mandatory fields, the 30 November deadline, partial credit notes, and how the tax reversal works. Issue compliant credit notes free with Apna Invoice."
+    description="GST credit note format under Section 34: mandatory fields, the 30 November deadline, credit note vs debit note, and how the tax reversal works. Issue them free."
     keywords="credit note format GST, GST credit note, credit note under GST, section 34 CGST credit note, credit note format India, credit note time limit GST, credit note against invoice, sales return GST credit note"
     type="article"
     :json-ld="[$articleSchema, $faqSchema]">
@@ -66,6 +68,24 @@
     <p>
         The reverse case — you undercharged — calls for a <em>debit note</em> (a supplementary invoice), not a credit note.
     </p>
+
+    <h2>Credit note vs debit note under GST</h2>
+    <p>
+        Both are issued by the <strong>supplier</strong> and both adjust an already-issued tax invoice — they simply move
+        the liability in opposite directions.
+    </p>
+    <ul>
+        <li><strong>Who issues it &amp; why</strong> — the supplier issues a <strong>credit note</strong> when the invoice
+            value or tax was <em>too high</em> (returns, deficiency, overbilling, agreed discount), and a
+            <strong>debit note</strong> when it was <em>too low</em> (under-charged rate or quantity, upward price revision).</li>
+        <li><strong>Effect on GST liability</strong> — a credit note <strong>reduces</strong> the supplier's output tax; a
+            debit note <strong>increases</strong> it.</li>
+        <li><strong>Effect on the buyer</strong> — a credit note requires the buyer to <strong>reverse</strong> excess input
+            tax credit; a debit note lets the buyer <strong>claim additional</strong> credit.</li>
+        <li><strong>Where it appears</strong> — both are declared in <strong>GSTR-1</strong> (and flow into GSTR-3B); the
+            credit note is bound by the Section 34(2) 30&nbsp;November deadline, while a debit note has no such time limit
+            for reporting.</li>
+    </ul>
 
     <h2>Mandatory fields in a GST credit note</h2>
     <ul>

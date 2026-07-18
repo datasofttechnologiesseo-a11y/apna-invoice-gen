@@ -3,7 +3,7 @@
 @foreach ($urls as $u)
     <url>
         <loc>{{ $u['loc'] }}</loc>
-        <lastmod>{{ $today }}</lastmod>
+        <lastmod>{{ $u['lastmod'] ?? $today }}</lastmod>
         <changefreq>{{ $u['changefreq'] }}</changefreq>
         <priority>{{ $u['priority'] }}</priority>
     </url>

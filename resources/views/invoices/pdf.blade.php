@@ -654,8 +654,10 @@
 
     <div class="foot">This is a computer-generated invoice and does not require a physical signature.</div>
     {{-- Viral loop: every invoice reaches another business owner. One tasteful
-         line — the standard free-tier trade (and how invoicing tools grow). --}}
-    <div class="foot" style="margin-top: 2px; color: #9ca3af;">Made free with Apna Invoice · apnainvoice.com — free GST invoicing for Indian businesses</div>
+         line — the standard free-tier trade (and how invoicing tools grow).
+         DomPDF renders <a href> as a real clickable PDF link annotation, so the
+         recipient can tap through (and the visit is attributable via UTM). --}}
+    <div class="foot" style="margin-top: 2px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=invoice_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com — free GST invoicing for Indian businesses</a></div>
 </div>
 @endforeach
 

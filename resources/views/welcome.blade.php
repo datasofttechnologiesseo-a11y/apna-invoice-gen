@@ -55,35 +55,9 @@
             'url' => $appUrl,
             'inLanguage' => 'en-IN',
             'publisher' => ['@id' => $appUrl . '#organization'],
-            'potentialAction' => [
-                '@type' => 'SearchAction',
-                'target' => $appUrl . '/?q={search_term_string}',
-                'query-input' => 'required name=search_term_string',
-            ],
-        ],
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'SoftwareApplication',
-            'name' => $siteName,
-            'url' => $appUrl,
-            'applicationCategory' => 'BusinessApplication',
-            'applicationSubCategory' => 'InvoicingSoftware',
-            'operatingSystem' => 'Web',
-            'description' => config('seo.description'),
-            'offers' => [
-                '@type' => 'Offer',
-                'price' => '0',
-                'priceCurrency' => 'INR',
-                'availability' => 'https://schema.org/InStock',
-            ],
-            'inLanguage' => 'en-IN',
-            'audience' => ['@type' => 'BusinessAudience', 'geographicArea' => 'India'],
-            'featureList' => 'GST-compliant invoices, HSN/SAC codes, CGST/SGST/IGST auto-split, Indian number format (lakhs & crores), PDF export, payment reminders, WhatsApp sharing, customer and product management',
-            'provider' => [
-                '@type' => 'Organization',
-                'name' => config('seo.organization.legal_name'),
-                'url' => config('seo.organization.url'),
-            ],
+            // No SearchAction: the site has no internal search endpoint, and a
+            // non-functional sitelinks-searchbox target violates Google's
+            // guideline (the feature was deprecated in 2024 regardless).
         ],
         [
             '@context' => 'https://schema.org',
@@ -169,9 +143,12 @@
         // SoftwareApplication schema, declares the invoicing/billing tool
         // itself. Targets rich-result eligibility for "online invoice generator",
         // "free bill generator", "GST bill generator", "invoice generator India".
+        // Single canonical node (@id) — Google drops an entity described by two
+        // conflicting SoftwareApplication nodes, so this is the only one.
         [
             '@context' => 'https://schema.org',
             '@type' => 'SoftwareApplication',
+            '@id' => $appUrl . '#software',
             'name' => 'Apna Invoice, Free GST Invoice & Bill Generator',
             'alternateName' => [
                 'Online Invoice Generator',
@@ -223,12 +200,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
         title="Free GST Invoice Generator + GST Calculator India"
-        description="Free online invoice generator + GST calculator + bill generator for India. Make CGST/SGST/IGST invoices in 60 seconds with HSN/SAC, UPI QR and WhatsApp share. Calculate GST on any amount, inclusive or exclusive, instantly, no login needed. For SMEs, MSMEs, freelancers, shops and CAs. GSTR-1 export. CGST Rule 46/49 compliant. GST 2.0 ready. No card, unlimited invoices during beta."
+        description="Free GST invoice generator + GST calculator for India. Auto CGST/SGST/IGST, HSN/SAC, UPI QR & WhatsApp share in 60 seconds. Unlimited invoices, no card needed."
         keywords="free GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, free GST billing software India, online GST invoice generator, GST bill maker, GSTR-1 export, HSN SAC search, GST invoice format India, free invoicing app for SMEs, MSME billing software, freelancer invoice India, shop billing software, composition dealer Bill of Supply, audit defensible invoicing, GSTR-3B summary, UPI QR invoice, WhatsApp invoice share"
         type="website"
         :json-ld="$jsonLd" />
-    {{-- PWA, installable on mobile/desktop, offline-capable for assets --}}
-    <link rel="manifest" href="/manifest.json">
+    {{-- PWA manifest + theme-color now come from <x-seo>. --}}
     <meta name="theme-color" content="#1e3a8a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -472,7 +448,14 @@
                     }
                     lines.push(`*Grand Total: ₹${this.fmt(this.total)}*`);
                     lines.push('');
-                    lines.push('Calculated free on Apna Invoice, apnainvoice.com');
+                    // Deep link to the full calculator, prefilled with this exact
+                    // calculation (+ campaign tags) so the recipient sees the same
+                    // numbers — not a blank default — and the visit is attributable.
+                    const p = new URLSearchParams({
+                        amount: this.amount, rate: this.rate, mode: this.mode, supply: this.scope,
+                        utm_source: 'whatsapp', utm_medium: 'share', utm_campaign: 'gst_calculator',
+                    });
+                    lines.push(`Calculated free at {{ url('/gst-calculator') }}?${p.toString()}`);
                     return 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
                 }
              }"
@@ -667,6 +650,11 @@
                             @else
                                 Free · no card required · <a href="{{ route('login') }}" class="text-brand-700 font-semibold hover:underline">Log in</a>
                             @endauth
+                        </p>
+                        {{-- Pass authority from the home page to the dedicated calculator
+                             landing page (reverse-GST content, FAQ, embed widget). --}}
+                        <p class="text-center text-sm">
+                            <a href="{{ route('pages.gst-calculator') }}" class="text-brand-700 font-semibold hover:underline">Open the full GST calculator →</a>
                         </p>
                     </div>
                 </div>

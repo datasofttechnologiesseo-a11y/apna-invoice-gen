@@ -41,10 +41,10 @@
 @endphp
 
 <x-layouts.marketing
-    title="Cash Memo Format: Fields, GST Rules & Free Online Cash Memo Maker"
+    title="Cash Memo Format: Fields, GST Rules & Free Maker"
     eyebrow="Guide"
     lead="What a cash memo must contain, how it differs from an invoice and a receipt, when GST applies — and a free way to make printable cash memos online."
-    description="Cash memo format for Indian businesses: the fields every cash memo needs, cash memo vs invoice vs receipt, GST treatment for cash sales, and a free online cash memo maker with automatic CGST/SGST split."
+    description="Cash memo format for India: the fields every cash memo needs, cash memo vs invoice vs receipt, GST on cash sales, plus a free online cash memo maker."
     keywords="cash memo format, cash memo bill format, cash memo format in word, cash memo vs invoice, cash memo GST, cash memo maker online, cash memo format for shop, kirana cash memo, cash bill format India"
     type="article"
     :json-ld="[$articleSchema, $faqSchema]">

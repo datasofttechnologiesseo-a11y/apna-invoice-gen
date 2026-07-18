@@ -32,6 +32,11 @@ class BlogController extends Controller
             ->paginate(self::PER_PAGE)
             ->withQueryString();
 
+        // A page number past the end (e.g. /blog?page=999) otherwise returns 200
+        // with an empty grid — an infinite soft-404 URL space that wastes crawl
+        // budget. Serve a real 404 instead. Page 1 of an empty blog stays valid.
+        abort_if($posts->currentPage() > $posts->lastPage(), 404);
+
         return view('blog.index', compact('posts'));
     }
 
@@ -39,8 +44,13 @@ class BlogController extends Controller
     {
         $post = Post::published()->with('author:id,name')->where('slug', $slug)->firstOrFail();
 
-        // Soft view counter — increment without locking; cheap.
-        $post->increment('view_count');
+        // Soft view counter — increment without locking; cheap. withoutTimestamps
+        // is essential: a bare increment() would touch updated_at on every view,
+        // and that timestamp feeds article:modified_time, BlogPosting
+        // dateModified AND the sitemap <lastmod>. Bumping it per pageview makes
+        // every post look "modified today" on every crawl — noise Google learns
+        // to ignore, killing recrawl prioritisation for genuinely edited posts.
+        Post::withoutTimestamps(fn () => $post->increment('view_count'));
 
         $related = Post::published()
             ->where('id', '!=', $post->id)

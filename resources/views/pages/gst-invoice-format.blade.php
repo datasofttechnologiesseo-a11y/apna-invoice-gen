@@ -1,7 +1,11 @@
 @php
     $appName = config('seo.name', 'Apna Invoice');
     $url = url('/free-gst-invoice-format');
-    $today = now()->toAtomString();
+    // Fixed, real dates — NOT now(). A now()-based value made the Article claim
+    // it was published AND modified "today" on every single request, which
+    // Google distrusts. Bump dateModified only when this guide's content changes.
+    $datePublished = '2026-05-04';
+    $dateModified = '2026-07-18';
 
     $articleSchema = [
         '@context' => 'https://schema.org',
@@ -9,8 +13,8 @@
         'headline' => 'GST Invoice Format in India: Mandatory Fields, Rules and a Free Template',
         'inLanguage' => 'en-IN',
         'mainEntityOfPage' => $url,
-        'datePublished' => $today,
-        'dateModified' => $today,
+        'datePublished' => $datePublished,
+        'dateModified' => $dateModified,
         'author' => ['@type' => 'Organization', 'name' => config('seo.organization.name'), 'url' => config('seo.organization.url')],
         'publisher' => [
             '@type' => 'Organization',
@@ -41,6 +45,10 @@
          'a' => 'HSN for goods and SAC for services is required when either party is GST registered. The number of digits depends on turnover. For sales between two unregistered parties it is not strictly required, though it is good practice.'],
         ['q' => 'When do I charge CGST and SGST versus IGST?',
          'a' => 'When the supplier and the place of supply are in the same state, you charge CGST and SGST. When they are in different states, you charge IGST. The total tax is the same, only the split changes.'],
+        ['q' => 'What is the difference between a proforma invoice and a GST tax invoice?',
+         'a' => 'A proforma invoice is a pre-sale quote sent before a deal is confirmed. It carries no GST liability and gives the buyer no input tax credit. The tax invoice under CGST Rule 46 is the legal document raised once the supply happens, and it is what fixes your GST liability and the buyer\'s ITC.'],
+        ['q' => 'Do I need to generate an e-invoice (IRN) for my invoices?',
+         'a' => 'E-invoicing, where each invoice gets an IRN and QR code from the government portal, applies only to businesses above the notified aggregate-turnover threshold (currently Rs 5 crore; always confirm the latest notification). Below that limit a normal Rule 46 tax invoice, like the format described here, is sufficient.'],
         ['q' => 'Can I make a GST invoice for free?',
          'a' => 'Yes. You can create a fully GST-compliant invoice free with ' . $appName . '. The CGST, SGST and IGST split, HSN and SAC fields and a clean PDF are handled for you.'],
     ];

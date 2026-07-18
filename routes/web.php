@@ -50,6 +50,16 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/blog',               'priority' => '0.8', 'changefreq' => 'weekly'],
     ];
 
+    // Static marketing/legal pages change rarely. Stamp a stable content date
+    // so the sitemap doesn't claim the whole site was "modified today" on every
+    // crawl — Google distrusts and ignores an always-fresh lastmod. Bump this
+    // when the landing-page copy is meaningfully revised.
+    $siteLastmod = '2026-07-18';
+    foreach ($urls as &$u) {
+        $u['lastmod'] = $siteLastmod;
+    }
+    unset($u);
+
     // Append every published blog post to the sitemap so search engines can
     // discover and index them as soon as they're live.
     foreach (\App\Models\Post::published()->orderByDesc('published_at')->get() as $post) {
@@ -71,19 +81,36 @@ Route::get('/robots.txt', function () {
         'User-agent: *',
         'Allow: /',
         '',
+        // Blog cover + inline images live under /storage/posts — they must stay
+        // crawlable (Google Images, Discover, Article rich results need the
+        // image URL fetchable). Allow them BEFORE the blanket /storage/ block;
+        // Google's parser applies the most-specific matching rule.
+        'Allow: /storage/posts/',
+        '',
+        // Private, auth-gated app areas — no indexing value, and crawling them
+        // just burns crawl budget that should go to blog posts + landing pages.
         'Disallow: /dashboard',
         'Disallow: /invoices',
         'Disallow: /quotations',
         'Disallow: /customers',
         'Disallow: /company',
+        'Disallow: /products',
         'Disallow: /profile',
+        'Disallow: /settings',
         'Disallow: /setup',
-        'Disallow: /forgot-password',
-        'Disallow: /reset-password',
-        'Disallow: /confirm-password',
-        'Disallow: /verify-email',
+        'Disallow: /finance',
+        'Disallow: /payments',
+        'Disallow: /credit-notes',
+        'Disallow: /refer',
+        'Disallow: /backup',
+        'Disallow: /admin',
+        'Disallow: /auth/',
         'Disallow: /storage/',
         'Disallow: /build/',
+        // Note: /forgot-password, /reset-password etc. are intentionally NOT
+        // disallowed — their views carry <meta robots noindex>, and blocking
+        // crawl would stop Google ever reading that tag (letting the URL surface
+        // as a bare, description-less result linked from /login).
         '',
         'Sitemap: ' . $base . '/sitemap.xml',
     ];
@@ -97,17 +124,24 @@ Route::post('/cookie-consent', [CookieConsentController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('cookie-consent.store');
 
-// Public signed invoice link — recipient opens PDF without logging in.
-// The `signed` middleware verifies the URL signature and expiry; the `throttle`
-// limits abuse if a link gets shared in the wild.
+// Public signed invoice link — recipient opens an HTML landing page (with a
+// Download-PDF button + product CTA) without logging in. The `signed`
+// middleware verifies the URL signature and expiry; `throttle` limits abuse if
+// a link gets shared in the wild. The PDF itself streams from the /pdf child.
 Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('invoices.public');
+Route::get('i/{invoice}/pdf', [InvoiceShareController::class, 'publicPdf'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('invoices.public.pdf');
 
 // Public signed quotation link — same threat model as the invoice version.
 Route::get('q/{quotation}', [QuotationShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('quotations.public');
+Route::get('q/{quotation}/pdf', [QuotationShareController::class, 'publicPdf'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('quotations.public.pdf');
 
 // Public blog — drives SEO traffic. Open to everyone, no auth.
 // Throttle each show route to 60/min so a scraper or bot can't hammer the
@@ -121,6 +155,10 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])
 Route::prefix('/')->name('pages.')->group(function () {
     // Free indexable tools / guides — high-intent organic landing pages.
     Route::view('/gst-calculator', 'pages.gst-calculator')->name('gst-calculator');
+    // Chromeless, iframe-embeddable calculator for third-party sites — a
+    // backlink/referral surface. noindex (set in the view) keeps it out of the
+    // index so it never competes with the full page above.
+    Route::view('/gst-calculator/embed', 'pages.gst-calculator-embed')->name('gst-calculator.embed');
     Route::view('/free-gst-invoice-format', 'pages.gst-invoice-format')->name('gst-invoice-format');
     Route::view('/free-billing-software', 'pages.billing-software')->name('billing-software');
     Route::view('/cash-memo-format', 'pages.cash-memo-format')->name('cash-memo-format');

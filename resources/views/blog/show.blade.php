@@ -59,10 +59,15 @@
         :modified-time="$post->updated_at?->toIso8601String()"
         section="Blog"
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    {{-- Lora (serif) added for the article body, long-form reading typography.
-         figtree stays for chrome/UI, plus-jakarta-sans stays for display headlines. --}}
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800|lora:400,500,600,700&display=swap" rel="stylesheet">
+    {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
+         connection must match. Non-blocking load (media=print → all onload)
+         with a noscript fallback keeps fonts off the critical render path —
+         blog articles are the primary organic entry pages. Weights trimmed to
+         those actually used (lora body 400/500/700; figtree UI; jakarta display). --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Article body, long-read typography. Serif body font, generous
