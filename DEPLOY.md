@@ -146,6 +146,18 @@ For hardened deployments, replace the `'*'` in
 `bootstrap/app.php` → `$middleware->trustProxies(at: '*')` with an
 explicit list of your proxy IPs.
 
+### 11. Performance & SEO server config (nginx)
+
+`public/.htaccess` carries gzip, immutable asset caching and the
+www/http → https-apex 301, but those are **Apache-only** — this stack
+runs nginx, so they are ignored in production. Fold
+[`docs/nginx-performance-seo.conf`](docs/nginx-performance-seo.conf) into
+your `server` block to get the same wins (compression alone takes the
+~213 KB home page to ~30 KB on the wire). The app already forces every
+generated URL to `APP_URL` in production (`AppServiceProvider`), so make
+sure `APP_URL=https://apnainvoice.com` is set — canonicals, `og:url`,
+the sitemap and signed links all derive from it.
+
 ## Daily operations
 
 ### Monitoring
