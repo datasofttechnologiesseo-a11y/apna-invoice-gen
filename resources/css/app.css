@@ -6,6 +6,21 @@
 [x-cloak] { display: none !important; }
 
 /* ----------------------------------------------------------------
+ * Global heading scale
+ * Render every heading 10% smaller than its Tailwind utility class
+ * specifies. `zoom` scales the rendered size uniformly regardless of
+ * which text-* utility set it, so the responsive hierarchy (h1 > h2,
+ * md: breakpoints, etc.) is preserved and we don't have to edit the
+ * class string on every heading across the site.
+ * Note: the invoice/quotation/memo PDFs render via DomPDF with their
+ * own inline styles and do NOT load this stylesheet, so printed
+ * documents are unaffected.
+ * -------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+    zoom: 0.9;
+}
+
+/* ----------------------------------------------------------------
  * Global form-submit loading state
  * Set by resources/js/app.js on the form while a submit is in flight.
  * -------------------------------------------------------------- */
