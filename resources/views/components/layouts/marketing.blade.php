@@ -98,9 +98,11 @@
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">
-            <a href="{{ url('/#features') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
-            <a href="{{ url('/#pricing') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
-            <a href="{{ url('/#faq') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
+            <a href="{{ route('pages.features') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
+            <a href="{{ route('pages.how-to-use') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
+            <a href="{{ route('pages.pricing') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
+            <a href="{{ route('blog.index') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
+            <a href="{{ route('pages.faq') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">Go to dashboard →</a>
             @else

@@ -76,9 +76,10 @@
                 {{-- Link columns --}}
                 @foreach ([
                     ['title' => 'Product', 'color' => 'brand', 'links' => [
-                        ['href' => '/#features', 'label' => 'Features'],
-                        ['href' => '/#pricing', 'label' => 'Pricing'],
-                        ['href' => '/#faq', 'label' => 'FAQ'],
+                        ['href' => route('pages.features'), 'label' => 'Features'],
+                        ['href' => route('pages.how-to-use'), 'label' => 'How to use'],
+                        ['href' => route('pages.pricing'), 'label' => 'Pricing'],
+                        ['href' => route('pages.faq'), 'label' => 'FAQ'],
                         ['href' => route('register'), 'label' => 'Sign up'],
                         ['href' => route('login'), 'label' => 'Log in'],
                     ]],

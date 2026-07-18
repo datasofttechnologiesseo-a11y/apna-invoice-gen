@@ -59,47 +59,9 @@
             // non-functional sitelinks-searchbox target violates Google's
             // guideline (the feature was deprecated in 2024 regardless).
         ],
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'FAQPage',
-            'mainEntity' => array_map(fn ($f) => [
-                '@type' => 'Question',
-                'name' => $f['q'],
-                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
-            ], $faqs),
-        ],
-        // HowTo schema, targets "how to create GST invoice in India" rich results
-        // and reinforces the "60-second setup" ranking promise.
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'HowTo',
-            'name' => 'How to make your first GST invoice in 60 seconds with Apna Invoice',
-            'description' => 'Create a GST-compliant tax invoice online for free, with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share.',
-            'totalTime' => 'PT60S',
-            'estimatedCost' => ['@type' => 'MonetaryAmount', 'currency' => 'INR', 'value' => '0'],
-            'tool' => [['@type' => 'HowToTool', 'name' => 'Apna Invoice (web)']],
-            'step' => [
-                [
-                    '@type' => 'HowToStep',
-                    'position' => 1,
-                    'name' => 'Add your business',
-                    'text' => 'Sign up free with Google or a mobile OTP, then enter your business name, GSTIN, state and invoice prefix. Apna Invoice pre-loads 36 Indian states and UTs so place-of-supply is auto-detected.',
-                    'url' => $appUrl . '/register',
-                ],
-                [
-                    '@type' => 'HowToStep',
-                    'position' => 2,
-                    'name' => 'Add a customer',
-                    'text' => 'Save the customer\'s name, GSTIN (for B2B), address and state. Intra-state customers trigger CGST+SGST automatically; inter-state customers trigger IGST.',
-                ],
-                [
-                    '@type' => 'HowToStep',
-                    'position' => 3,
-                    'name' => 'Issue the invoice',
-                    'text' => 'Pick the customer, add one or more line items with HSN/SAC, qty, rate and GST rate, then click Issue. The system assigns the next sequential invoice number, generates a GST-compliant PDF, and lets you share via WhatsApp, email or a 30-day public link.',
-                ],
-            ],
-        ],
+        // FAQPage schema now lives on the dedicated /faq page, and HowTo on
+        // /how-to-use — those pages own that structured data so it isn't
+        // duplicated across two URLs. The home page keeps a visible FAQ.
         // WebApplication schema, declares the page hosts a free GST calculator
         // tool. Targets rich-result eligibility for "free GST calculator",
         // "GST calculator India", "CGST SGST IGST calculator" queries.
@@ -250,11 +212,11 @@
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
-            <a href="#features" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
-            <a href="#how-to" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
-            <a href="#pricing" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
+            <a href="{{ route('pages.features') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
+            <a href="{{ route('pages.how-to-use') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
+            <a href="{{ route('pages.pricing') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
             <a href="{{ route('blog.index') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
-            <a href="#faq" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
+            <a href="{{ route('pages.faq') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
             @else

@@ -33,6 +33,10 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/',                   'priority' => '1.0', 'changefreq' => 'weekly'],
         ['loc' => $base . '/' . ltrim(route('register', [], false), '/'), 'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/' . ltrim(route('login', [], false), '/'),    'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/features',           'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/how-to-use',         'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/pricing',            'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/faq',                'priority' => '0.7', 'changefreq' => 'monthly'],
         ['loc' => $base . '/gst-calculator',     'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/free-gst-invoice-format', 'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => $base . '/free-billing-software', 'priority' => '0.9', 'changefreq' => 'monthly'],
@@ -163,6 +167,12 @@ Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/free-billing-software', 'pages.billing-software')->name('billing-software');
     Route::view('/cash-memo-format', 'pages.cash-memo-format')->name('cash-memo-format');
     Route::view('/gst-credit-note-format', 'pages.credit-note-format')->name('credit-note-format');
+    // Standalone pages for the main home-page sections (previously #anchors) —
+    // each an indexable, separately-rankable page in its own right.
+    Route::view('/features', 'pages.features')->name('features');
+    Route::view('/how-to-use', 'pages.how-to-use')->name('how-to-use');
+    Route::view('/pricing', 'pages.pricing')->name('pricing');
+    Route::view('/faq', 'pages.faq')->name('faq');
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/press', 'pages.press')->name('press');
     Route::view('/partners', 'pages.partners')->name('partners');
