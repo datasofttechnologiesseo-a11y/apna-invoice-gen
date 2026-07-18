@@ -1521,7 +1521,7 @@
             <div>
                 <div class="text-xs font-bold uppercase tracking-widest text-brand-600">Built &amp; supported by</div>
                 <a href="{{ config('seo.organization.url') }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center gap-3 group">
-                    <img src="{{ asset('brand/dst-logo.svg') }}" alt="Datasoft Technologies" class="h-11 w-auto" width="480" height="180" loading="lazy">
+                    <img src="{{ asset('brand/dst-logo.webp') }}" alt="Datasoft Technologies" class="h-12 w-auto" width="932" height="320" loading="lazy">
                     <span class="font-display text-2xl font-extrabold text-gray-900 group-hover:text-brand-700 transition">Datasoft Technologies</span>
                 </a>
                 <p class="mt-4 text-gray-600 leading-relaxed">
