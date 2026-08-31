@@ -55,77 +55,13 @@
             'url' => $appUrl,
             'inLanguage' => 'en-IN',
             'publisher' => ['@id' => $appUrl . '#organization'],
-            'potentialAction' => [
-                '@type' => 'SearchAction',
-                'target' => $appUrl . '/?q={search_term_string}',
-                'query-input' => 'required name=search_term_string',
-            ],
+            // No SearchAction: the site has no internal search endpoint, and a
+            // non-functional sitelinks-searchbox target violates Google's
+            // guideline (the feature was deprecated in 2024 regardless).
         ],
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'SoftwareApplication',
-            'name' => $siteName,
-            'url' => $appUrl,
-            'applicationCategory' => 'BusinessApplication',
-            'applicationSubCategory' => 'InvoicingSoftware',
-            'operatingSystem' => 'Web',
-            'description' => config('seo.description'),
-            'offers' => [
-                '@type' => 'Offer',
-                'price' => '0',
-                'priceCurrency' => 'INR',
-                'availability' => 'https://schema.org/InStock',
-            ],
-            'inLanguage' => 'en-IN',
-            'audience' => ['@type' => 'BusinessAudience', 'geographicArea' => 'India'],
-            'featureList' => 'GST-compliant invoices, HSN/SAC codes, CGST/SGST/IGST auto-split, Indian number format (lakhs & crores), PDF export, payment reminders, WhatsApp sharing, customer and product management',
-            'provider' => [
-                '@type' => 'Organization',
-                'name' => config('seo.organization.legal_name'),
-                'url' => config('seo.organization.url'),
-            ],
-        ],
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'FAQPage',
-            'mainEntity' => array_map(fn ($f) => [
-                '@type' => 'Question',
-                'name' => $f['q'],
-                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
-            ], $faqs),
-        ],
-        // HowTo schema, targets "how to create GST invoice in India" rich results
-        // and reinforces the "60-second setup" ranking promise.
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'HowTo',
-            'name' => 'How to make your first GST invoice in 60 seconds with Apna Invoice',
-            'description' => 'Create a GST-compliant tax invoice online for free, with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share.',
-            'totalTime' => 'PT60S',
-            'estimatedCost' => ['@type' => 'MonetaryAmount', 'currency' => 'INR', 'value' => '0'],
-            'tool' => [['@type' => 'HowToTool', 'name' => 'Apna Invoice (web)']],
-            'step' => [
-                [
-                    '@type' => 'HowToStep',
-                    'position' => 1,
-                    'name' => 'Add your business',
-                    'text' => 'Sign up free with Google or a mobile OTP, then enter your business name, GSTIN, state and invoice prefix. Apna Invoice pre-loads 36 Indian states and UTs so place-of-supply is auto-detected.',
-                    'url' => $appUrl . '/register',
-                ],
-                [
-                    '@type' => 'HowToStep',
-                    'position' => 2,
-                    'name' => 'Add a customer',
-                    'text' => 'Save the customer\'s name, GSTIN (for B2B), address and state. Intra-state customers trigger CGST+SGST automatically; inter-state customers trigger IGST.',
-                ],
-                [
-                    '@type' => 'HowToStep',
-                    'position' => 3,
-                    'name' => 'Issue the invoice',
-                    'text' => 'Pick the customer, add one or more line items with HSN/SAC, qty, rate and GST rate, then click Issue. The system assigns the next sequential invoice number, generates a GST-compliant PDF, and lets you share via WhatsApp, email or a 30-day public link.',
-                ],
-            ],
-        ],
+        // FAQPage schema now lives on the dedicated /faq page, and HowTo on
+        // /how-to-use — those pages own that structured data so it isn't
+        // duplicated across two URLs. The home page keeps a visible FAQ.
         // WebApplication schema, declares the page hosts a free GST calculator
         // tool. Targets rich-result eligibility for "free GST calculator",
         // "GST calculator India", "CGST SGST IGST calculator" queries.
@@ -169,9 +105,12 @@
         // SoftwareApplication schema, declares the invoicing/billing tool
         // itself. Targets rich-result eligibility for "online invoice generator",
         // "free bill generator", "GST bill generator", "invoice generator India".
+        // Single canonical node (@id) — Google drops an entity described by two
+        // conflicting SoftwareApplication nodes, so this is the only one.
         [
             '@context' => 'https://schema.org',
             '@type' => 'SoftwareApplication',
+            '@id' => $appUrl . '#software',
             'name' => 'Apna Invoice, Free GST Invoice & Bill Generator',
             'alternateName' => [
                 'Online Invoice Generator',
@@ -223,12 +162,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
         title="Free GST Invoice Generator + GST Calculator India"
-        description="Free online invoice generator + GST calculator + bill generator for India. Make CGST/SGST/IGST invoices in 60 seconds with HSN/SAC, UPI QR and WhatsApp share. Calculate GST on any amount, inclusive or exclusive, instantly, no login needed. For SMEs, MSMEs, freelancers, shops and CAs. GSTR-1 export. CGST Rule 46/49 compliant. GST 2.0 ready. No card, unlimited invoices during beta."
+        description="Free GST invoice generator + GST calculator for India. Auto CGST/SGST/IGST, HSN/SAC, UPI QR & WhatsApp share in 60 seconds. Unlimited invoices, no card needed."
         keywords="free GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, free GST billing software India, online GST invoice generator, GST bill maker, GSTR-1 export, HSN SAC search, GST invoice format India, free invoicing app for SMEs, MSME billing software, freelancer invoice India, shop billing software, composition dealer Bill of Supply, audit defensible invoicing, GSTR-3B summary, UPI QR invoice, WhatsApp invoice share"
         type="website"
         :json-ld="$jsonLd" />
-    {{-- PWA, installable on mobile/desktop, offline-capable for assets --}}
-    <link rel="manifest" href="/manifest.json">
+    {{-- PWA manifest + theme-color now come from <x-seo>. --}}
     <meta name="theme-color" content="#1e3a8a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -236,7 +174,7 @@
     <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
 
     {{-- Preload the brand logo, it's the LCP element on the landing header. --}}
-    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.jpg') }}" as="image" type="image/jpeg" fetchpriority="high">
+    <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.webp') }}" as="image" type="image/webp" fetchpriority="high">
     {{-- Fonts: warm the connection (crossorigin is REQUIRED — font files are
          fetched with CORS, so a plain preconnect warms the wrong connection),
          then load the stylesheet non-render-blocking. display=swap already
@@ -274,11 +212,11 @@
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
-            <a href="#features" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
-            <a href="#how-to" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
-            <a href="#pricing" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
+            <a href="{{ route('pages.features') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
+            <a href="{{ route('pages.how-to-use') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
+            <a href="{{ route('pages.pricing') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
             <a href="{{ route('blog.index') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
-            <a href="#faq" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
+            <a href="{{ route('pages.faq') }}" class="hidden lg:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
             @else
@@ -472,7 +410,14 @@
                     }
                     lines.push(`*Grand Total: ₹${this.fmt(this.total)}*`);
                     lines.push('');
-                    lines.push('Calculated free on Apna Invoice, apnainvoice.com');
+                    // Deep link to the full calculator, prefilled with this exact
+                    // calculation (+ campaign tags) so the recipient sees the same
+                    // numbers — not a blank default — and the visit is attributable.
+                    const p = new URLSearchParams({
+                        amount: this.amount, rate: this.rate, mode: this.mode, supply: this.scope,
+                        utm_source: 'whatsapp', utm_medium: 'share', utm_campaign: 'gst_calculator',
+                    });
+                    lines.push(`Calculated free at {{ url('/gst-calculator') }}?${p.toString()}`);
                     return 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
                 }
              }"
@@ -668,6 +613,11 @@
                                 Free · no card required · <a href="{{ route('login') }}" class="text-brand-700 font-semibold hover:underline">Log in</a>
                             @endauth
                         </p>
+                        {{-- Pass authority from the home page to the dedicated calculator
+                             landing page (reverse-GST content, FAQ, embed widget). --}}
+                        <p class="text-center text-sm">
+                            <a href="{{ route('pages.gst-calculator') }}" class="text-brand-700 font-semibold hover:underline">Open the full GST calculator →</a>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -686,21 +636,21 @@
          x-data='{
             slides: [
                 {
-                    src: "/brand/slider/slide-1-gst-software.jpg",
+                    src: "/brand/slider/slide-1-gst-software.webp",
                     alt: "Apna Invoice, free GST software for Indian SMEs, MSMEs and freelancers",
                     eyebrow: "Free for everyone",
                     title: "Free GST Software for Indian SMEs &amp; MSMEs",
                     sub: "Auto CGST · SGST · IGST · HSN/SAC. Unlimited invoices, built to be CA-friendly.",
                 },
                 {
-                    src: "/brand/slider/slide-2-tablet-modern.jpg",
+                    src: "/brand/slider/slide-2-tablet-modern.webp",
                     alt: "Modern entrepreneur using Apna Invoice on a tablet to send GST-compliant invoices in seconds",
                     eyebrow: "60-second invoice",
                     title: "GST invoicing made easy in seconds",
                     sub: "From phone, tablet or laptop. Send via WhatsApp, email or signed link. 100% free.",
                 },
                 {
-                    src: "/brand/slider/slide-3-freelancer.jpg",
+                    src: "/brand/slider/slide-3-freelancer.webp",
                     alt: "Freelancer using Apna Invoice to create GST invoices",
                     eyebrow: "Made for freelancers",
                     title: "फ्रीलांसर के लिए आसान GST बिलिंग",
@@ -1571,7 +1521,7 @@
             <div>
                 <div class="text-xs font-bold uppercase tracking-widest text-brand-600">Built &amp; supported by</div>
                 <a href="{{ config('seo.organization.url') }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center gap-3 group">
-                    <img src="{{ asset('brand/dst-logo.svg') }}" alt="Datasoft Technologies" class="h-11 w-auto" width="480" height="180" loading="lazy">
+                    <img src="{{ asset('brand/dst-logo.webp') }}" alt="Datasoft Technologies" class="h-12 w-auto" width="932" height="320" loading="lazy">
                     <span class="font-display text-2xl font-extrabold text-gray-900 group-hover:text-brand-700 transition">Datasoft Technologies</span>
                 </a>
                 <p class="mt-4 text-gray-600 leading-relaxed">

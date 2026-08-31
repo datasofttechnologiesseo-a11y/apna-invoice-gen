@@ -1,9 +1,9 @@
 @props(['class' => 'h-10 w-auto', 'variant' => 'light'])
 
-{{-- HD logo: native 1939×454 (aspect ratio ~4.27:1). Browsers downscale via the
-     class height while preserving sharpness on retina displays. --}}
-<img src="{{ asset('brand/apna-invoice-logo-sm.jpg') }}"
+{{-- WebP logo, 960×225 (~13 KB vs the old 39 KB JPEG). Renders ~40px tall, so
+     960w still covers 2x retina. Browsers downscale via the class height. --}}
+<img src="{{ asset('brand/apna-invoice-logo-sm.webp') }}"
      alt="Apna Invoice"
-     width="1939" height="454"
+     width="960" height="225"
      decoding="async"
      {{ $attributes->merge(['class' => $class]) }}>

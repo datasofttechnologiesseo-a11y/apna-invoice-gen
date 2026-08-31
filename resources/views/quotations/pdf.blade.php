@@ -400,6 +400,11 @@
             </table>
         </div>
     </div>
+
+    {{-- Viral loop: quotations reach prospects while they're comparing vendors —
+         a high-attention reader. One tasteful, clickable byline (DomPDF renders
+         <a href> as a real PDF link annotation). --}}
+    <div style="margin-top: 6mm; text-align: center; font-size: 8px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=quotation_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com — free GST invoicing for Indian businesses</a></div>
 </div>
 </body>
 </html>

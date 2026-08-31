@@ -6,9 +6,13 @@ return [
 
     'legal_name' => 'Datasoft Technologies',
 
-    'title_suffix' => ' | Best Free GST Invoice & Bill Generator for India | Apna Invoice',
+    // Appended after the site name when a page passes no title of its own —
+    // must NOT contain the brand again (the component prepends it).
+    'title_suffix' => ' | Best Free GST Invoice & Bill Generator for India',
 
-    'description' => 'Free GST invoice generator for India with auto CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share in 60 seconds. Made for MSMEs, SMEs, startups, freelancers and CAs operating below ₹5 cr turnover. No card, unlimited invoices during beta.',
+    // Kept under ~160 chars — Google truncates around there, so the value
+    // proposition and CTA must fit inside the visible snippet.
+    'description' => 'Free GST invoice generator for India. Auto CGST/SGST/IGST, HSN/SAC, UPI QR & WhatsApp share in 60 seconds. Unlimited invoices, no card needed.',
 
     'keywords' => implode(', ', [
         // Primary head terms — what users search for to find a tool

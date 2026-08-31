@@ -9,8 +9,7 @@
             :title="$title ?? 'Dashboard'"
             :noindex="true" />
 
-        {{-- PWA — installable on mobile/desktop, offline-capable for assets --}}
-        <link rel="manifest" href="/manifest.json">
+        {{-- PWA manifest now comes from <x-seo>. --}}
         <meta name="theme-color" content="#1e3a8a">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">

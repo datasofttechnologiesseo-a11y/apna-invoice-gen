@@ -5,6 +5,16 @@
 
     RewriteEngine On
 
+    # Canonical host: force HTTPS + strip www, but only for the production
+    # domain so local/dev hosts are untouched. Keep in sync with APP_URL
+    # (https://apnainvoice.com) — canonicals, sitemap and OG URLs are built
+    # from it, and Google treats http/https/www variants as duplicates.
+    RewriteCond %{HTTP_HOST} ^www\.apnainvoice\.com$ [NC]
+    RewriteRule ^ https://apnainvoice.com%{REQUEST_URI} [L,R=301]
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} ^apnainvoice\.com$ [NC]
+    RewriteRule ^ https://apnainvoice.com%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -22,4 +32,32 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Text responses compress ~85% (the 213 KB home page becomes ~30 KB) —
+# critical for the 4G Android audience this product targets.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE application/xml application/rss+xml
+    AddOutputFilterByType DEFLATE image/svg+xml font/ttf font/otf
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType image/x-icon "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 1 year"
+    # HTML stays uncached so meta/content changes go live immediately.
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# All CSS/JS ship from /build with Vite content hashes in the filename, so
+# they can be cached forever — a new deploy changes the filename.
+<IfModule mod_headers.c>
+    <FilesMatch "-[A-Za-z0-9_\-]{8,}\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
 </IfModule>

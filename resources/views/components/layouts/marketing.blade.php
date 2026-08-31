@@ -98,9 +98,11 @@
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">
-            <a href="{{ url('/#features') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
-            <a href="{{ url('/#pricing') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
-            <a href="{{ url('/#faq') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
+            <a href="{{ route('pages.features') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Features</a>
+            <a href="{{ route('pages.how-to-use') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">How to use</a>
+            <a href="{{ route('pages.pricing') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Pricing</a>
+            <a href="{{ route('blog.index') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">Blogs</a>
+            <a href="{{ route('pages.faq') }}" class="hidden md:inline-block text-base text-gray-700 hover:text-brand-700 font-semibold tracking-tight">FAQ</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">Go to dashboard →</a>
             @else
@@ -131,8 +133,16 @@
     <div class="max-w-3xl space-y-6 text-gray-700 leading-relaxed
                 [&_h2]:font-display [&_h2]:font-extrabold [&_h2]:text-2xl [&_h2]:text-gray-900 [&_h2]:mt-10 [&_h2]:mb-3
                 [&_h3]:font-display [&_h3]:font-bold [&_h3]:text-xl [&_h3]:text-gray-900 [&_h3]:mt-6 [&_h3]:mb-2
-                [&_p]:text-gray-700
-                [&_a]:text-brand-700 [&_a]:font-medium hover:[&_a]:text-brand-800 [&_a]:underline [&_a]:decoration-brand-200 hover:[&_a]:decoration-brand-500
+                {{-- Paragraphs inherit the container's text-gray-700; we do NOT
+                     force [&_p]:text-gray-700, because that would override the
+                     colour of <p> inside dark widgets embedded in the slot (e.g.
+                     the calculator panel), turning them dark-on-dark.
+                     Prose-link styling is likewise scoped to links inside
+                     paragraphs and list items ONLY — a blanket [&_a] would
+                     restyle button <a> tags (calculator/pricing CTAs) with
+                     dark-blue underlined text on their coloured backgrounds. --}}
+                [&_p_a]:text-brand-700 [&_p_a]:font-medium hover:[&_p_a]:text-brand-800 [&_p_a]:underline [&_p_a]:decoration-brand-200 hover:[&_p_a]:decoration-brand-500
+                [&_li_a]:text-brand-700 [&_li_a]:font-medium hover:[&_li_a]:text-brand-800 [&_li_a]:underline [&_li_a]:decoration-brand-200 hover:[&_li_a]:decoration-brand-500
                 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2
                 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2
                 [&_strong]:text-gray-900 [&_strong]:font-semibold">

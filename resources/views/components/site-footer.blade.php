@@ -76,25 +76,31 @@
                 {{-- Link columns --}}
                 @foreach ([
                     ['title' => 'Product', 'color' => 'brand', 'links' => [
-                        ['href' => '/#features', 'label' => 'Features'],
-                        ['href' => '/#pricing', 'label' => 'Pricing'],
-                        ['href' => '/#faq', 'label' => 'FAQ'],
+                        ['href' => route('pages.features'), 'label' => 'Features'],
+                        ['href' => route('pages.how-to-use'), 'label' => 'How to use'],
+                        ['href' => route('pages.pricing'), 'label' => 'Pricing'],
+                        ['href' => route('pages.faq'), 'label' => 'FAQ'],
                         ['href' => route('register'), 'label' => 'Sign up'],
                         ['href' => route('login'), 'label' => 'Log in'],
                     ]],
-                    ['title' => 'Resources', 'color' => 'accent', 'links' => [
+                    ['title' => 'Resources', 'color' => 'accent', 'links' => array_values(array_filter([
                         ['href' => route('pages.gst-calculator'), 'label' => 'Free GST calculator'],
                         ['href' => route('pages.gst-invoice-format'), 'label' => 'GST invoice format'],
                         ['href' => route('pages.billing-software'), 'label' => 'Free billing software'],
                         ['href' => route('pages.cash-memo-format'), 'label' => 'Cash memo format'],
                         ['href' => route('pages.credit-note-format'), 'label' => 'Credit note format'],
-                        ['href' => route('help'), 'label' => 'Help Center'],
                         ['href' => route('blog.index'), 'label' => 'Blogs'],
-                        ['href' => route('invoices.templates'), 'label' => 'Invoice templates'],
+                        // Help Center + Invoice templates are auth-gated app pages: they
+                        // 302 to /login for anonymous crawlers, and /invoices is
+                        // robots-disallowed, so linking them on every public page just
+                        // leaks link equity into a dead end. Show them only to signed-in
+                        // users; guests/crawlers get the indexable resources only.
+                        auth()->check() ? ['href' => route('help'), 'label' => 'Help Center'] : null,
+                        auth()->check() ? ['href' => route('invoices.templates'), 'label' => 'Invoice templates'] : null,
                         // Official CBIC HSN/SAC search, authoritative and always up to date.
                         ['href' => 'https://services.gst.gov.in/services/searchhsnsac', 'label' => 'HSN/SAC finder', 'external' => true],
                         ['href' => route('pages.contact'), 'label' => 'Contact support'],
-                    ]],
+                    ]))],
                 ] as $col)
                     <div class="col-span-1 md:col-span-4">
                         <div class="flex items-center gap-2">

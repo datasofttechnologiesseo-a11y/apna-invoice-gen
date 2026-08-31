@@ -10,6 +10,10 @@
     'publishedTime' => null,
     'modifiedTime' => null,
     'section' => null,
+    // Optional richer social title/description (link unfurls) without changing
+    // the <title> shown in the browser tab / SERP. Falls back to $title/$descr.
+    'ogTitle' => null,
+    'ogDescription' => null,
 ])
 
 @php
@@ -21,9 +25,16 @@
 
     $descr = $description ?: config('seo.description');
     $kw = $keywords ?: config('seo.keywords');
-    $canonical = $url ?: url()->current();
 
     $appUrl = rtrim(config('app.url'), '/');
+    // Build the canonical from the CONFIGURED production origin, not the request
+    // host. `url()->current()` mirrors whatever Host the request arrived on
+    // (www, apex, an IP vhost, a hosting preview subdomain), so every alias
+    // would self-canonicalize and split indexing signals. Anchoring to APP_URL
+    // means one canonical host for canonical + hreflang + og:url everywhere.
+    // A page that needs a query string in its canonical (e.g. blog pagination)
+    // passes an explicit :url, which wins.
+    $canonical = $url ?: ($appUrl . (request()->path() === '/' ? '/' : '/' . request()->path()));
     $imgPath = $image ?: config('seo.og_image');
     $ogImage = $imgPath && str_starts_with($imgPath, 'http')
         ? $imgPath
@@ -32,6 +43,11 @@
 
     $locale = config('seo.locale', 'en_IN');
     $twitter = config('seo.twitter_handle');
+
+    // Social-card title/description default to the page title/description but
+    // can be overridden for a richer unfurl (e.g. "Invoice INV-042 — ₹12,500").
+    $socialTitle = $ogTitle ?: ($title ?: $siteName);
+    $socialDescr = $ogDescription ?: $descr;
 @endphp
 
 <title>{{ $fullTitle }}</title>
@@ -64,15 +80,18 @@
 <meta name="theme-color" content="#1e3a8a">
 <meta http-equiv="Content-Language" content="en-IN">
 
-{{-- Favicon / app icons --}}
+{{-- Favicon / app icons + PWA manifest. Living here means every public page
+     (landing pages, blog) gets the install prompt + icons, not just the home
+     page and the logged-in app shell. --}}
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
+<link rel="manifest" href="/manifest.json">
 
 {{-- Open Graph --}}
 <meta property="og:type" content="{{ $type }}">
 <meta property="og:site_name" content="{{ $siteName }}">
-<meta property="og:title" content="{{ $title ?: $siteName }}">
-<meta property="og:description" content="{{ $descr }}">
+<meta property="og:title" content="{{ $socialTitle }}">
+<meta property="og:description" content="{{ $socialDescr }}">
 <meta property="og:url" content="{{ $canonical }}">
 <meta property="og:locale" content="{{ $locale }}">
 <meta property="og:image" content="{{ $ogImage }}">
@@ -80,7 +99,7 @@
 <meta property="og:image:type" content="{{ $ogImageType }}">
 <meta property="og:image:width" content="{{ config('seo.og_image_width', 1200) }}">
 <meta property="og:image:height" content="{{ config('seo.og_image_height', 630) }}">
-<meta property="og:image:alt" content="{{ $title ?: $siteName }}">
+<meta property="og:image:alt" content="{{ $socialTitle }}">
 
 @if ($type === 'article')
     @if ($publishedTime)<meta property="article:published_time" content="{{ $publishedTime }}">@endif
@@ -91,10 +110,10 @@
 
 {{-- Twitter --}}
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ $title ?: $siteName }}">
-<meta name="twitter:description" content="{{ $descr }}">
+<meta name="twitter:title" content="{{ $socialTitle }}">
+<meta name="twitter:description" content="{{ $socialDescr }}">
 <meta name="twitter:image" content="{{ $ogImage }}">
-<meta name="twitter:image:alt" content="{{ $title ?: $siteName }}">
+<meta name="twitter:image:alt" content="{{ $socialTitle }}">
 @if ($twitter)
     <meta name="twitter:site" content="{{ $twitter }}">
     <meta name="twitter:creator" content="{{ $twitter }}">

@@ -27,13 +27,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="GST & Invoicing Blog, Tips for Indian Small Businesses · Apna Invoice"
+        :url="$posts->currentPage() > 1 ? $posts->url($posts->currentPage()) : route('blog.index')"
+        title="GST & Invoicing Blog, Tips for Indian Small Businesses"
         description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow, written for Indian MSMEs, freelancers and CAs."
         keywords="GST blog India, invoicing tips, HSN SAC guide, GSTR-1 filing, MSME finance, free GST invoice software"
         type="website"
-        :json-ld="$blogJsonLd" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
+        :json-ld="[$blogJsonLd]" />
+    {{-- Non-blocking font load with crossorigin preconnect (see blog/show). --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.google-analytics')
 </head>

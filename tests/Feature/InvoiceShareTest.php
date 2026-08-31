@@ -70,17 +70,39 @@ class InvoiceShareTest extends TestCase
         Mail::assertNothingSent();
     }
 
-    public function test_public_signed_url_opens_for_anyone(): void
+    public function test_public_signed_url_opens_an_html_landing_page_for_anyone(): void
     {
         $user = User::factory()->create();
         $invoice = $this->finalizedInvoice($user);
 
         $url = InvoiceShareController::makePublicUrl($invoice);
 
-        // Unauthenticated guest follows the link.
+        // Unauthenticated guest follows the link — gets the HTML wrapper, not a
+        // bare PDF, so it unfurls in WhatsApp and carries the recipient CTA.
         $response = $this->get($url);
         $response->assertStatus(200);
+        $this->assertStringContainsString('text/html', $response->headers->get('Content-Type'));
+        $response->assertSee('Download PDF', false);
+        // Private document: must never be indexed.
+        $response->assertSee('noindex', false);
+    }
+
+    public function test_public_pdf_subroute_streams_the_pdf_with_noindex_header(): void
+    {
+        $user = User::factory()->create();
+        $invoice = $this->finalizedInvoice($user);
+
+        // The landing page links to a freshly-signed PDF sub-route.
+        $pdfUrl = \Illuminate\Support\Facades\URL::signedRoute(
+            'invoices.public.pdf',
+            ['invoice' => $invoice->id],
+            now()->addDays(30)
+        );
+
+        $response = $this->get($pdfUrl);
+        $response->assertStatus(200);
         $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('noindex', $response->headers->get('X-Robots-Tag'));
     }
 
     public function test_public_url_without_signature_is_forbidden(): void

@@ -83,13 +83,35 @@ class QuotationShareController extends Controller
     }
 
     /**
-     * Public signed view — stream the PDF directly to whoever opens the link.
-     * Used by recipients who tap the WhatsApp / email link without an account.
+     * Public signed landing page — an HTML wrapper (quoted total, validity, a
+     * Download-PDF button and a "make your own" CTA) shown to whoever opens the
+     * link. Quotations reach prospects while they're comparing vendors, so this
+     * is a high-attention surface to advertise the product on. The PDF now lives
+     * at the signed `quotations.public.pdf` sub-route.
      */
     public function publicView(Request $request, Quotation $quotation): Response
     {
         // Signed URL middleware enforces signature + expiry. Once the quote is
         // declined, kill the link too so a stale forward can't re-open it.
+        abort_if($quotation->isDeclined(), 410, 'This quotation has been declined and is no longer available.');
+
+        $quotation->load(['customer:id,name', 'company:id,name']);
+
+        $pdfUrl = URL::signedRoute(
+            'quotations.public.pdf',
+            ['quotation' => $quotation->id],
+            now()->addDays(self::SHARE_TTL_DAYS)
+        );
+
+        return response()->view('quotations.public', compact('quotation', 'pdfUrl'));
+    }
+
+    /**
+     * Stream the quotation PDF for a public signed link, with X-Robots-Tag:
+     * noindex so a leaked signed URL can never be indexed by Google.
+     */
+    public function publicPdf(Request $request, Quotation $quotation): Response
+    {
         abort_if($quotation->isDeclined(), 410, 'This quotation has been declined and is no longer available.');
 
         $quotation->load(['items.product:id,name', 'customer.state', 'company.state']);
@@ -103,7 +125,11 @@ class QuotationShareController extends Controller
             ->setOption(['isRemoteEnabled' => true]);
 
         $filename = ($quotation->quote_number ?: 'quotation-draft-' . $quotation->id) . '.pdf';
-        return $pdf->stream($filename);
+
+        $response = $pdf->stream($filename);
+        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+        return $response;
     }
 
     public function publicLink(Request $request, Quotation $quotation): JsonResponse

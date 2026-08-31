@@ -1,7 +1,7 @@
 @php
     $ogImage = $post->effectiveOgImage()
         ? asset('storage/' . $post->effectiveOgImage())
-        : asset('brand/apna-invoice-logo-sm.jpg');
+        : asset('brand/apna-invoice-logo-sm.webp');
 
     $articleJsonLd = [
         '@context' => 'https://schema.org',
@@ -21,7 +21,7 @@
             'url' => url('/'),
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => asset('brand/apna-invoice-logo-sm.jpg'),
+                'url' => asset('brand/apna-invoice-logo-sm.webp'),
             ],
         ],
         'mainEntityOfPage' => [
@@ -59,10 +59,19 @@
         :modified-time="$post->updated_at?->toIso8601String()"
         section="Blog"
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    {{-- Lora (serif) added for the article body, long-form reading typography.
-         figtree stays for chrome/UI, plus-jakarta-sans stays for display headlines. --}}
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800|lora:400,500,600,700&display=swap" rel="stylesheet">
+    {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
+         connection must match. Non-blocking load (media=print → all onload)
+         with a noscript fallback keeps fonts off the critical render path —
+         blog articles are the primary organic entry pages. Weights trimmed to
+         those actually used (lora body 400/500/700; figtree UI; jakarta display). --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
+    @if ($post->featured_image_path)
+        {{-- Preload the cover — it's the article LCP on posts that have one. --}}
+        <link rel="preload" as="image" href="{{ asset('storage/' . $post->featured_image_path) }}" fetchpriority="high">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Article body, long-read typography. Serif body font, generous
@@ -168,10 +177,12 @@
 
 @if ($post->featured_image_path)
     <figure class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 md:-mt-4">
+        {{-- Above-the-fold cover = the article LCP. fetchpriority high +
+             eager so the preload scanner starts it immediately. --}}
         <img src="{{ asset('storage/' . $post->featured_image_path) }}"
              alt="{{ $post->featured_image_alt ?: $post->title }}"
              class="w-full rounded-xl shadow-lg ring-1 ring-gray-200 aspect-[16/9] object-cover"
-             width="1200" height="675">
+             width="1200" height="675" fetchpriority="high" loading="eager" decoding="async">
     </figure>
 @endif
 
