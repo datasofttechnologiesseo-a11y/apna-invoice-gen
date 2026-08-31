@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout :title="$invoice->exists ? 'Edit invoice' : 'New invoice'">
     @php $restricted = $restricted ?? false; $isSample = ! $invoice->exists && request()->boolean('sample'); @endphp
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
                 @if ($restricted)
                     <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Limited edit</span>
@@ -11,7 +11,7 @@
                 @elseif (! $invoice->exists && ! empty($templateLabel))
                     <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Using template: {{ $templateLabel }}</span>
                 @endif
-            </h2>
+            </h1>
             @unless ($invoice->exists || $restricted)
                 <a href="{{ route('invoices.templates') }}" class="text-sm text-brand-700 hover:text-brand-800 hover:underline self-start sm:self-auto inline-flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v2H4V6zM4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z"/></svg>
@@ -428,19 +428,19 @@
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Unit</label>
-                                        <input :name="`items[${idx}][unit]`" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS, HRS…">
+                                        <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS, HRS…">
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
-                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
-                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
-                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
+                                        <input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
                                         <p class="mt-0.5 text-[10px] text-gray-400">Section 15(3) — pre-tax</p>
                                     </div>
                                 </div>
@@ -473,6 +473,7 @@
                                     <div class="mt-1.5 flex items-center gap-2 text-[11px] text-gray-500">
                                         <span>Or pick a special rate:</span>
                                         <select @change="item.gst_rate = parseFloat($event.target.value); recompute()"
+                                                aria-label="Pick a special GST rate"
                                                 class="flex-1 border-gray-300 rounded text-xs py-1">
                                             <option value="">— Other —</option>
                                             @foreach ($rareRates as $r)
@@ -560,19 +561,19 @@
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required>
-                                                <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
+                                                <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required>
+                                                <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             {{-- Compact GST cell — just "18%". Full descriptive text + regulatory
                                                  note are in the option's `title` so a hover still tells the user
                                                  which slab they're picking. Was w-36 (144px) with long labels
                                                  like "18% · Standard rate" causing the table to overflow the
                                                  container at common laptop widths. --}}
-                                            <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
+                                            <select :name="`items[${idx}][gst_rate]`" aria-label="GST rate" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
                                                     <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                                 @endforeach

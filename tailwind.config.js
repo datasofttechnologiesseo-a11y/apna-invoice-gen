@@ -13,8 +13,11 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', 'Inter', ...defaultTheme.fontFamily.sans],
-                display: ['"Plus Jakarta Sans"', 'Figtree', ...defaultTheme.fontFamily.sans],
+                // Inter for every interface surface — drawn for screen UI at
+                // small sizes, with tabular numerals so money columns align.
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                // Plus Jakarta Sans stays on headings so the brand keeps its voice.
+                display: ['"Plus Jakarta Sans"', 'Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 // Apna Invoice primary — deep navy (from "Apna Invoice" wordmark)

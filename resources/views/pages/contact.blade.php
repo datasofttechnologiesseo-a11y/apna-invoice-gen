@@ -45,10 +45,10 @@
     ];
 @endphp
 <x-layouts.marketing
-    title="Contact Apna Invoice, India-based Support, Sales & Partnerships"
+    title="Contact Us: India-based Support"
     eyebrow="Contact"
     lead="Running 100+ invoices a month, managing multiple GSTINs, or just stuck on a setting? Our India-based team replies within one business day."
-    description="Contact Apna Invoice, India-based support and sales for MSMEs, SMEs, startups, freelancers and CAs. Help with GST invoicing, multi-GSTIN, custom plans, and partnerships."
+    description="Contact our India-based team for help with GST invoicing, multi-GSTIN setup, custom plans and partnerships. Support for MSMEs, startups, freelancers and CAs."
     keywords="Apna Invoice contact, GST invoice support India, invoice software help India, MSME invoicing support, Datasoft Technologies contact, CA partnership India"
     :json-ld="[$contactSchema]">
 

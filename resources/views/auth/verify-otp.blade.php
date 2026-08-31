@@ -26,6 +26,27 @@
                 Not in your inbox? Check <strong>Spam</strong> or <strong>Promotions</strong> — it can take up to a minute to arrive.
             </p>
         @endif
+
+        {{-- Waiting on a code is the loneliest moment in the whole sign-up: the
+             user has handed over their details and has no idea how much is
+             left. Showing the rest of the journey makes the wait finite. --}}
+        <ol class="mt-5 flex items-center justify-center gap-2 text-[11px] font-semibold">
+            @foreach ([
+                ['label' => 'Verify', 'state' => 'current'],
+                ['label' => 'Your business', 'state' => 'next'],
+                ['label' => 'First invoice', 'state' => 'next'],
+            ] as $i => $stepItem)
+                @if ($i > 0)
+                    <li aria-hidden="true" class="w-4 h-px bg-gray-200"></li>
+                @endif
+                <li @class([
+                    'px-2.5 py-1 rounded-full ring-1',
+                    'bg-brand-50 text-brand-700 ring-brand-200' => $stepItem['state'] === 'current',
+                    'text-gray-400 ring-gray-200' => $stepItem['state'] !== 'current',
+                ])>{{ $stepItem['label'] }}</li>
+            @endforeach
+        </ol>
+        <p class="mt-2 text-xs text-gray-400">About a minute from here to your first invoice.</p>
     </div>
 
     @if (session('status'))
@@ -67,6 +88,8 @@
             {{ $isEmail ? __('Change details') : __('Change number') }}
         </a>
     </div>
+
+    <x-signup-help note="Code not arriving, or entered the wrong number? Message us and we'll get you in — we can verify you manually." />
 
     <script>
         (function () {

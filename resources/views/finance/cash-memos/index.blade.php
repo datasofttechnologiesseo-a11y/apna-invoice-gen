@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Cash memos">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Cash Memos</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Cash Memos</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $memos->total() }} total · {{ $company->name }}</p>
             </div>
             <div class="flex items-center gap-2 print:hidden">
@@ -35,11 +35,11 @@
                     </div>
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">From</label>
-                        <input type="date" name="from" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                        <input type="date" name="from" aria-label="From date" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                     </div>
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">To</label>
-                        <input type="date" name="to" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                        <input type="date" name="to" aria-label="To date" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                     </div>
                     <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Filter</button>
                     @if (request()->anyFilled(['search', 'from', 'to']))

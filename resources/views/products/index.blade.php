@@ -1,10 +1,10 @@
-<x-app-layout>
+<x-app-layout title="Products and services">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Products & services') }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Products & services') }}</h1>
             <a href="{{ route('products.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm whitespace-nowrap transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                New product
+                Add new product
             </a>
         </div>
     </x-slot>
@@ -14,6 +14,10 @@
             <x-flash />
 
             <div class="bg-white shadow sm:rounded-lg">
+                {{-- Nothing to filter until there is something in the list. Showing an
+                     empty search bar to a new user is noise in front of the one thing
+                     they actually came here to do. --}}
+                @if (! $products->isEmpty() || request('search') || request('kind') || request('only_inactive'))
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, SKU or HSN/SAC" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm">
                     {{-- max-w-full: the long "Service (SAC …)" option otherwise sets an
@@ -33,12 +37,13 @@
                         <a href="{{ route('products.index') }}" class="text-gray-500 text-sm">clear</a>
                     @endif
                 </form>
+                @endif
 
                 @if ($products->isEmpty())
                     <x-empty-state
                         icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                         title="{{ request('search') || request('kind') ? 'No products match that filter' : 'Save the things you sell' }}"
-                        description="{{ request('search') || request('kind') ? 'Try a different search term or clear the filter.' : 'Name, HSN/SAC, unit, price, GST% — saved once, auto-filled forever. You can also create products on the fly while typing an invoice, no need to come back here.' }}"
+                        description="{{ request('search') || request('kind') ? 'Try a different search term or clear the filter.' : 'Save the name, HSN or SAC code, unit, price and GST rate once. After that, typing the first few letters on an invoice fills in the rest. You can also add a product while making an invoice, without coming back here.' }}"
                         actionHref="{{ request('search') || request('kind') ? route('products.index') : route('products.create') }}"
                         actionLabel="{{ request('search') || request('kind') ? 'Clear filters' : 'Add your first product' }}"
                     />

@@ -161,8 +161,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="Free GST Invoice Generator + GST Calculator India"
-        description="Free GST invoice generator + GST calculator for India. Auto CGST/SGST/IGST, HSN/SAC, UPI QR & WhatsApp share in 60 seconds. Unlimited invoices, no card needed."
+        title="Free GST Invoice Generator India"
+        description="Free GST invoice generator for India. Automatic CGST, SGST and IGST, HSN codes, UPI QR and WhatsApp share in 60 seconds. Unlimited invoices, no card needed."
         keywords="free GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, free GST billing software India, online GST invoice generator, GST bill maker, GSTR-1 export, HSN SAC search, GST invoice format India, free invoicing app for SMEs, MSME billing software, freelancer invoice India, shop billing software, composition dealer Bill of Supply, audit defensible invoicing, GSTR-3B summary, UPI QR invoice, WhatsApp invoice share"
         type="website"
         :json-ld="$jsonLd" />
@@ -182,9 +182,9 @@
          on load, so making the request async costs nothing and frees up FCP. --}}
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap">
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap"></noscript>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap">
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @include('partials.google-analytics')
@@ -208,7 +208,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <a href="{{ url('/') }}" class="flex items-center gap-3 py-3 min-w-0 flex-shrink" aria-label="Apna Invoice home">
             <span class="inline-block">
-                <x-brand-logo class="h-9 md:h-11 w-auto block" />
+                <x-brand-logo class="h-10 w-auto block" />
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm flex-shrink-0">
@@ -864,8 +864,8 @@
                     'steps' => [
                         ['t' => 'Sign up in seconds', 'd' => 'Continue with Google, or enter your mobile and verify it with the one-time code we send.'],
                         ['t' => 'Add your business once', 'd' => 'GSTIN, state and logo. Your letterhead is generated on every invoice automatically.'],
-                        ['t' => 'Add the line items', 'd' => 'Pick a customer, type description, HSN/SAC, quantity, rate and GST%. CGST/SGST/IGST is worked out for you.'],
-                        ['t' => 'Issue & download', 'd' => 'Tap Issue: the invoice locks, gets a permanent number, and the GST-compliant PDF is ready.'],
+                        ['t' => 'Add the line items', 'd' => 'Pick a customer, type description, HSN/SAC, quantity, rate and GST%. CGST, SGST and IGST are calculated for you.'],
+                        ['t' => 'Issue & download', 'd' => 'Tap Issue. The invoice is locked, gets a permanent number, and the GST invoice PDF is ready.'],
                     ],
                     'tip' => 'GST splits automatically: same state prints CGST + SGST, a different state prints IGST, based on the customer\'s state.'],
                 ['key' => 'share', 'label' => 'Share & get paid', 'icon' => 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',

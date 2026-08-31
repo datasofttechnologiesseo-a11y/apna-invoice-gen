@@ -18,7 +18,7 @@
             :noindex="$noindex" />
 
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -35,7 +35,7 @@
                 <div class="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-money-500/15 blur-3xl pointer-events-none"></div>
 
                 <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="relative inline-flex items-center self-start bg-white rounded-xl px-3 py-2 shadow-lg">
-                    <x-brand-logo class="h-9 w-auto block" />
+                    <x-brand-logo class="h-10 w-auto block" />
                 </a>
 
                 <div class="relative max-w-md">
@@ -84,7 +84,7 @@
                     {{-- Logo for mobile (brand panel is hidden below lg) --}}
                     <div class="lg:hidden mb-8 flex justify-center">
                         <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-block">
-                            <x-brand-logo class="h-12 w-auto block" />
+                            <x-brand-logo class="h-10 w-auto block" />
                         </a>
                     </div>
 

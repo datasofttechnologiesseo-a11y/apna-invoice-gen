@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Account activity">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Activity Log</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Activity Log</h1>
                 <p class="text-sm text-gray-500 mt-1">Who did what, when · {{ $company->name }}</p>
             </div>
             <a href="{{ route('profile.edit') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back to profile</a>

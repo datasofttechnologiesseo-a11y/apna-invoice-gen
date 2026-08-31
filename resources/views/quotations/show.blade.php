@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Quotation">
     @php
         $eff = $quotation->effectiveStatus();
         $statusColors = [
@@ -17,14 +17,14 @@
             ['label' => $quotation->displayNumber()],
         ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
                 @if ($quotation->quote_number)
                     <span>Quotation {{ $quotation->quote_number }}</span>
                 @else
                     <span class="text-gray-500">Draft #{{ $quotation->id }}</span>
                 @endif
                 <span class="text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider {{ $statusColors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
-            </h2>
+            </h1>
 
             <div class="flex flex-wrap items-center gap-2">
                 {{-- Utility group: edit/PDF — neutral grays, lowest visual priority --}}

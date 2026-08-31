@@ -7,8 +7,8 @@
             'steps' => [
                 ['t' => 'Sign up in seconds', 'd' => 'Continue with Google, or enter your mobile and verify it with the one-time code we send. No credit card.'],
                 ['t' => 'Add your business once', 'd' => 'GSTIN, state and logo. Your letterhead is generated on every invoice automatically.'],
-                ['t' => 'Add the line items', 'd' => 'Pick a customer, then type description, HSN/SAC, quantity, rate and GST%. CGST/SGST/IGST is worked out for you.'],
-                ['t' => 'Issue & download', 'd' => 'Tap Issue: the invoice locks, gets a permanent number, and the GST-compliant PDF is ready.'],
+                ['t' => 'Add the line items', 'd' => 'Pick a customer, then type description, HSN/SAC, quantity, rate and GST%. CGST, SGST and IGST are calculated for you.'],
+                ['t' => 'Issue & download', 'd' => 'Tap Issue. The invoice is locked, gets a permanent number, and the GST invoice PDF is ready.'],
             ],
             'tip' => 'GST splits automatically: the same state prints CGST + SGST, a different state prints IGST, based on the customer\'s state.',
         ],
@@ -63,18 +63,56 @@
 @endphp
 
 <x-layouts.marketing
-    title="How to Use Apna Invoice: Make a GST Invoice Free"
+    title="How to Make a GST Invoice Free"
     eyebrow="Learn the tool"
-    lead="Pick a task and follow the exact steps — create and issue a GST invoice, share it and get paid, pull month-end reports, or raise quotations and credit notes. No jargon, no manual."
-    description="How to use Apna Invoice: create & issue a GST invoice in 60 seconds, share on WhatsApp, collect via UPI, export GSTR-1/3B. Free step-by-step guide for India."
+    lead="Pick a task and follow the exact steps — create and issue a GST invoice, share it and get paid, pull month-end reports, or raise quotations and credit notes. Simple language, no jargon. You can download the full handbook too."
+    description="Make and issue a GST invoice in 60 seconds, share it on WhatsApp, collect payment by UPI and export GSTR-1 and GSTR-3B. A free step-by-step guide for India."
     keywords="how to make GST invoice, how to create GST invoice online free, how to use invoice software India, GST billing steps, GSTR-1 export how to"
     type="article"
     :json-ld="[$howToSchema]">
 
     <p>
-        {{ $appName }} is built so you never need a manual — but here's exactly how each job is done, start to finish.
-        Everything below is free during beta.
+        {{ $appName }} is built to be simple enough to use without help &mdash; but here is exactly how each job is done, start to
+        finish. Everything below is free during beta.
     </p>
+
+    <h2 id="downloads">Download the manuals</h2>
+    <p>
+        Prefer to read offline, print a copy for your shop, or send one to your accountant? Both guides are free PDFs
+        and need no sign-up.
+    </p>
+
+    <div class="not-prose my-6 grid gap-4 sm:grid-cols-2">
+        @foreach ([
+            [
+                'href'  => route('pages.manuals.handbook'),
+                'name'  => 'Apna Invoice Handbook',
+                'meta'  => 'PDF · 12 chapters',
+                'blurb' => 'The complete manual. Every feature explained in plain English, from your first bill to your GST returns, with a glossary at the back.',
+            ],
+            [
+                'href'  => route('pages.manuals.quick-start'),
+                'name'  => 'Quick Start Guide',
+                'meta'  => 'PDF · 1 page',
+                'blurb' => 'Your first GST invoice in five steps. Made to be printed and kept next to the billing counter.',
+            ],
+        ] as $doc)
+            <a href="{{ $doc['href'] }}"
+               class="group flex gap-4 p-5 rounded-2xl bg-white ring-1 ring-gray-200 hover:ring-brand-300 hover:shadow-card transition no-underline">
+                <span class="flex-shrink-0 w-11 h-11 rounded-xl bg-brand-50 ring-1 ring-brand-100 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"/>
+                    </svg>
+                </span>
+                <span class="min-w-0">
+                    <span class="block font-display font-bold text-gray-900 group-hover:text-brand-700 transition">{{ $doc['name'] }}</span>
+                    <span class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">{{ $doc['meta'] }}</span>
+                    <span class="block text-sm text-gray-600 mt-1.5 leading-relaxed">{{ $doc['blurb'] }}</span>
+                </span>
+            </a>
+        @endforeach
+    </div>
+
 
     @foreach ($tasks as $task)
         <h2>{{ $task['title'] }}</h2>

@@ -179,7 +179,7 @@ function CompanyCreateModal({
             </Text>
           </Pressable>
           <View style={{ height: 14 }} />
-          <TextField label="GSTIN" value={gstin} onChangeText={setGstin} autoCapitalize="characters" placeholder="Optional" />
+          <TextField label="GSTIN" value={gstin} onChangeText={(v) => setGstin(v.toUpperCase())} autoCapitalize="characters" placeholder="Optional" />
           <TextField label="Invoice number prefix" value={prefix} onChangeText={setPrefix} autoCapitalize="characters" />
           <Button title="Create company" onPress={save} loading={mut.isPending} style={{ marginTop: 8 }} />
         </ScrollView>

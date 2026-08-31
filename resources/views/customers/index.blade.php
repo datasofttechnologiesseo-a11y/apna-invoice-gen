@@ -1,10 +1,10 @@
-<x-app-layout>
+<x-app-layout title="Customers">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Customers') }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Customers') }}</h1>
             <a href="{{ route('customers.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm whitespace-nowrap transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                New customer
+                Add new customer
             </a>
         </div>
     </x-slot>
@@ -17,9 +17,14 @@
             @endif
 
             <div class="bg-white shadow sm:rounded-lg">
+                {{-- Nothing to filter until there is something in the list. Showing an
+                     empty search bar to a new user is noise in front of the one thing
+                     they actually came here to do. --}}
+                @if (! $customers->isEmpty() || request('search'))
                 <form method="GET" class="p-4 border-b">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                 </form>
+                @endif
 
                 @if ($customers->isEmpty())
                     <x-empty-state

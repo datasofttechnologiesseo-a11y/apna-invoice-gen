@@ -10,7 +10,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-flex items-center">
-                        <x-brand-logo class="block h-8 w-auto" />
+                        <x-brand-logo class="block h-10 w-auto" />
                     </a>
                 </div>
 
@@ -38,8 +38,8 @@
                     @foreach ($navItems as $item)
                         <a href="{{ $item['href'] }}" @class([
                             'group relative inline-flex items-center gap-2 px-2 xl:px-3 py-2 rounded-lg text-sm transition-all duration-200 whitespace-nowrap',
-                            'bg-brand-50 text-brand-700 font-semibold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
-                            'text-gray-500 font-medium hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
+                            'bg-brand-50 text-brand-700 font-bold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
+                            'text-gray-600 font-semibold hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
                         ])>
                             <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
@@ -188,7 +188,7 @@
             @endauth
             @foreach ($navItems as $item)
                 <a href="{{ $item['href'] }}" @class([
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition',
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
                     'bg-brand-50 text-brand-700' => $item['active'],
                     'text-gray-700 hover:bg-gray-100' => ! $item['active'],
                 ])>

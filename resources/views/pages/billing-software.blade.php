@@ -42,10 +42,10 @@
 @endphp
 
 <x-layouts.marketing
-    title="Free Billing Software India: GST Bills & Receipts"
+    title="Free Billing Software India"
     eyebrow="Free tool"
     lead="Run your billing on any phone or computer — GST bills with auto CGST/SGST/IGST, cash memos for counter sales, thermal receipts, UPI QR and WhatsApp share. Free, nothing to install."
-    description="Free billing software for Indian shops & MSMEs. Make GST bills with auto CGST/SGST/IGST, print receipts, issue cash memos, track dues — online, no licence fee."
+    description="Free billing software for Indian shops and MSMEs. Make GST bills with automatic CGST, SGST and IGST, print receipts, issue cash memos and track dues online."
     keywords="free billing software India, billing software for small shop, GST billing software free, online billing software, shop billing software, retail billing software India, billing app for small business, kirana billing software, billing software without installation"
     :json-ld="[$appSchema, $faqSchema]">
 

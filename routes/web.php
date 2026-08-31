@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceShareController;
+use App\Http\Controllers\ManualController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -52,6 +53,10 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/cookies',            'priority' => '0.3', 'changefreq' => 'yearly'],
         ['loc' => $base . '/security',           'priority' => '0.5', 'changefreq' => 'monthly'],
         ['loc' => $base . '/blog',               'priority' => '0.8', 'changefreq' => 'weekly'],
+        // Downloadable manuals. Free, public, and the kind of reference asset
+        // other sites link to, so they belong in the index like any other page.
+        ['loc' => $base . '/manuals/apna-invoice-handbook.pdf',    'priority' => '0.6', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/manuals/apna-invoice-quick-start.pdf', 'priority' => '0.5', 'changefreq' => 'monthly'],
     ];
 
     // Static marketing/legal pages change rarely. Stamp a stable content date
@@ -171,6 +176,12 @@ Route::prefix('/')->name('pages.')->group(function () {
     // each an indexable, separately-rankable page in its own right.
     Route::view('/features', 'pages.features')->name('features');
     Route::view('/how-to-use', 'pages.how-to-use')->name('how-to-use');
+    // Downloadable manuals. Public and unauthenticated so a prospect can read
+    // the whole thing before signing up, and so crawlers can reach them.
+    Route::get('/manuals/apna-invoice-handbook.pdf', [ManualController::class, 'handbook'])
+        ->name('manuals.handbook');
+    Route::get('/manuals/apna-invoice-quick-start.pdf', [ManualController::class, 'quickStart'])
+        ->name('manuals.quick-start');
     Route::view('/pricing', 'pages.pricing')->name('pricing');
     Route::view('/faq', 'pages.faq')->name('faq');
     Route::view('/about', 'pages.about')->name('about');

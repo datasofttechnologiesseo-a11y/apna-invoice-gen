@@ -799,7 +799,7 @@ class InvoiceController extends Controller
 
         $invoices = $company->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->with(['customer.state', 'placeOfSupply', 'items'])
             ->orderBy('invoice_date')
             ->orderBy('id')

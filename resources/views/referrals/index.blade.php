@@ -1,6 +1,6 @@
-<x-app-layout>
+<x-app-layout title="Refer a friend">
     <x-slot name="header">
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Refer a friend</h2>
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Refer a friend</h1>
     </x-slot>
 
     <div class="py-10">

@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Cash memo">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit Cash Memo' : 'New Cash Memo' }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit Cash Memo' : 'New Cash Memo' }}</h1>
             <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← All memos</a>
         </div>
     </x-slot>

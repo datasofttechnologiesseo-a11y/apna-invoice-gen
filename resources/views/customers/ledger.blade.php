@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Customer ledger">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 print:hidden">
             <div>
@@ -7,7 +7,7 @@
                     ['label' => $customer->name],
                     ['label' => 'Ledger'],
                 ]" />
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight mt-1">{{ $customer->name }} · Ledger</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight mt-1">{{ $customer->name }} · Ledger</h1>
                 @if ($customer->gstin)
                     <p class="text-xs text-gray-500 mt-1">GSTIN: <span class="font-mono">{{ $customer->gstin }}</span></p>
                 @endif

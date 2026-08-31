@@ -1,9 +1,9 @@
-<x-app-layout>
+<x-app-layout title="Company settings">
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $company->exists ? 'Edit ' . $company->name : 'New company' }}
-            </h2>
+            </h1>
             <a href="{{ route('companies.index') }}" class="text-sm text-gray-500 hover:text-gray-700">All companies</a>
         </div>
     </x-slot>

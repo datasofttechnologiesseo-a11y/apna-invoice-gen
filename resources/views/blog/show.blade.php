@@ -63,11 +63,11 @@
          connection must match. Non-blocking load (media=print → all onload)
          with a noscript fallback keeps fonts off the critical render path —
          blog articles are the primary organic entry pages. Weights trimmed to
-         those actually used (lora body 400/500/700; figtree UI; jakarta display). --}}
+         those actually used (lora body 400/500/700; inter UI; jakarta display). --}}
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
     @if ($post->featured_image_path)
         {{-- Preload the cover — it's the article LCP on posts that have one. --}}
         <link rel="preload" as="image" href="{{ asset('storage/' . $post->featured_image_path) }}" fetchpriority="high">
@@ -134,7 +134,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <a href="{{ url('/') }}" class="flex items-center gap-3 py-4" aria-label="Apna Invoice home">
             <span class="inline-block bg-white rounded">
-                <x-brand-logo class="h-12 md:h-14 w-auto block" />
+                <x-brand-logo class="h-10 w-auto block" />
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">

@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Help">
     <x-slot name="header">
         <div class="min-w-0">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">How to use Apna Invoice</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">How to use Apna Invoice</h1>
             <p class="text-sm text-gray-500 mt-1">A quick tour of every feature, in the order you'll actually use them.</p>
         </div>
     </x-slot>

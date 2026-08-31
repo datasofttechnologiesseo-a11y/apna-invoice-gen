@@ -47,7 +47,7 @@
         <div class="relative max-w-7xl mx-auto px-6 lg:px-8 pb-16">
             <div class="grid grid-cols-2 md:grid-cols-12 gap-y-10 gap-x-8">
                 {{-- Brand column --}}
-                <div class="col-span-2 md:col-span-4">
+                <div class="col-span-2 md:col-span-3">
                     <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" aria-label="Apna Invoice" class="inline-block bg-white rounded-lg p-2 ring-1 ring-white/10 hover:ring-white/30 transition">
                         <x-brand-logo class="h-10 w-auto" />
                     </a>
@@ -79,30 +79,39 @@
                         ['href' => route('pages.features'), 'label' => 'Features'],
                         ['href' => route('pages.how-to-use'), 'label' => 'How to use'],
                         ['href' => route('pages.pricing'), 'label' => 'Pricing'],
-                        ['href' => route('pages.faq'), 'label' => 'FAQ'],
                         ['href' => route('register'), 'label' => 'Sign up'],
                         ['href' => route('login'), 'label' => 'Log in'],
                     ]],
-                    ['title' => 'Resources', 'color' => 'accent', 'links' => array_values(array_filter([
-                        ['href' => route('pages.gst-calculator'), 'label' => 'Free GST calculator'],
+                    // Split by what the reader is looking for, and kept to six
+                    // links a column. Resources previously carried ten while the
+                    // others held six, so three of the four columns ended early
+                    // and the block was a third empty.
+                    ['title' => 'Free tools', 'color' => 'accent', 'links' => [
+                        ['href' => route('pages.gst-calculator'), 'label' => 'GST calculator'],
                         ['href' => route('pages.gst-invoice-format'), 'label' => 'GST invoice format'],
                         ['href' => route('pages.billing-software'), 'label' => 'Free billing software'],
                         ['href' => route('pages.cash-memo-format'), 'label' => 'Cash memo format'],
                         ['href' => route('pages.credit-note-format'), 'label' => 'Credit note format'],
-                        ['href' => route('blog.index'), 'label' => 'Blogs'],
-                        // Help Center + Invoice templates are auth-gated app pages: they
-                        // 302 to /login for anonymous crawlers, and /invoices is
-                        // robots-disallowed, so linking them on every public page just
-                        // leaks link equity into a dead end. Show them only to signed-in
-                        // users; guests/crawlers get the indexable resources only.
-                        auth()->check() ? ['href' => route('help'), 'label' => 'Help Center'] : null,
-                        auth()->check() ? ['href' => route('invoices.templates'), 'label' => 'Invoice templates'] : null,
                         // Official CBIC HSN/SAC search, authoritative and always up to date.
                         ['href' => 'https://services.gst.gov.in/services/searchhsnsac', 'label' => 'HSN/SAC finder', 'external' => true],
-                        ['href' => route('pages.contact'), 'label' => 'Contact support'],
+                    ]],
+                    // Company, support and trust. Several of these had no internal
+                    // link anywhere on the site before, which left them orphaned
+                    // for crawlers and unreachable for anyone checking who we are.
+                    ['title' => 'Company', 'color' => 'money', 'links' => array_values(array_filter([
+                        ['href' => route('pages.about'), 'label' => 'About us'],
+                        ['href' => route('blog.index'), 'label' => 'Blog'],
+                        ['href' => route('pages.faq'), 'label' => 'FAQ'],
+                        ['href' => route('pages.partners'), 'label' => 'For CAs & partners'],
+                        ['href' => route('pages.security'), 'label' => 'Security'],
+                        // Auth-gated app pages: they 302 to /login for anonymous
+                        // crawlers and /invoices is robots-disallowed, so linking
+                        // them publicly just leaks link equity into a dead end.
+                        auth()->check() ? ['href' => route('help'), 'label' => 'Help Centre'] : null,
+                        auth()->check() ? ['href' => route('invoices.templates'), 'label' => 'Invoice templates'] : null,
                     ]))],
                 ] as $col)
-                    <div class="col-span-1 md:col-span-4">
+                    <div class="col-span-1 md:col-span-3">
                         <div class="flex items-center gap-2">
                             <div class="w-1 h-4 rounded-full bg-{{ $col['color'] }}-500"></div>
                             <h4 class="text-white font-bold tracking-wide text-sm uppercase">{{ $col['title'] }}</h4>
@@ -143,6 +152,21 @@
                     <span>All rights reserved</span>
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>Jurisdiction: Delhi NCR, India</span>
+                </div>
+
+                {{-- Legal links. These previously appeared only in the app-side
+                     footer, so a public visitor (and every crawler) had no route
+                     to the Terms at all and only the cookie banner reached the
+                     Privacy Policy. --}}
+                <div class="flex flex-wrap items-center justify-center gap-x-1 gap-y-1">
+                    @foreach ([
+                        [route('pages.terms'), 'Terms'],
+                        [route('pages.privacy'), 'Privacy'],
+                        [route('pages.refund'), 'Refunds'],
+                        [route('pages.cookies'), 'Cookies'],
+                    ] as $legal)
+                        <a href="{{ $legal[0] }}" class="px-2.5 py-1 rounded-md text-gray-300 hover:text-white hover:bg-white/10 transition">{{ $legal[1] }}</a>
+                    @endforeach
                 </div>
                 <div class="flex items-center gap-2">
                     <span>Built with</span>

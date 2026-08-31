@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Finance">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Finance · P&amp;L</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Finance · P&amp;L</h1>
                 <p class="text-sm text-gray-500 mt-1 truncate">{{ $company->name }} · {{ $periodLabel }}</p>
             </div>
             <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center justify-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm text-sm whitespace-nowrap">
@@ -23,7 +23,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 bg-white rounded-xl border border-gray-200 p-4">
                 <form method="GET" class="flex items-center gap-2 flex-wrap">
                     <label class="text-xs uppercase tracking-wider font-bold text-gray-500">Period</label>
-                    <select name="period" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <select name="period" aria-label="Choose reporting period" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                         @foreach ([
                             'today' => 'Today',
                             'yesterday' => 'Yesterday',

@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Quotations">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Quotations') }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Quotations') }}</h1>
             <a href="{{ route('quotations.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 New quotation
@@ -35,7 +35,7 @@
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by quote # or customer" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
-                    <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
+                    <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         @foreach (['draft','sent','accepted','declined','converted','expired'] as $s)
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst($s) }}</option>

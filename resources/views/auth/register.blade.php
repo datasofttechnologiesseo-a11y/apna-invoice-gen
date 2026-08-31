@@ -103,4 +103,6 @@
     </form>
 
     <x-google-auth-button label="Sign up with Google" :show-terms="true" />
+
+    <x-signup-help note="New to GST billing? Message us and we'll walk you through your first invoice, free." />
 </x-guest-layout>

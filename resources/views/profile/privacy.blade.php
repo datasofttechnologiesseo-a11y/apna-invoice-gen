@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Privacy & data">
     <x-slot name="header">
         <div class="min-w-0">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Data & Privacy') }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Data & Privacy') }}</h1>
             <p class="text-sm text-gray-500 mt-1">Your rights under the Digital Personal Data Protection Act, 2023.</p>
         </div>
     </x-slot>

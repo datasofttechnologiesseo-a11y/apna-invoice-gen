@@ -41,7 +41,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="Cash Memo Format: Fields, GST Rules & Free Maker"
+    title="Cash Memo Format & Free Maker"
     eyebrow="Guide"
     lead="What a cash memo must contain, how it differs from an invoice and a receipt, when GST applies — and a free way to make printable cash memos online."
     description="Cash memo format for India: the fields every cash memo needs, cash memo vs invoice vs receipt, GST on cash sales, plus a free online cash memo maker."

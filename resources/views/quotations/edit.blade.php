@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout :title="$quotation->exists ? 'Edit quotation' : 'New quotation'">
     <x-slot name="header">
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
             {{ $quotation->exists ? 'Edit ' . $quotation->displayNumber() : 'New quotation' }}
-        </h2>
+        </h1>
     </x-slot>
 
     @php

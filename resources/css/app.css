@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ----------------------------------------------------------------
+ * Typography
+ *
+ * Inter is the interface face. These three settings are what separate
+ * software-grade type from default web type:
+ *
+ *  - Crisper rasterisation, so Inter's thin strokes hold at 14px.
+ *  - Tighter tracking on large headings. Inter is spaced for body copy,
+ *    so display sizes look loose unless pulled in.
+ *  - Tabular figures in tables and on anything tagged as a number, so
+ *    currency columns line up digit-for-digit down an invoice instead of
+ *    drifting. This is the detail that reads as "accounting software".
+ * -------------------------------------------------------------- */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1 { letter-spacing: -0.022em; }
+h2 { letter-spacing: -0.018em; }
+h3, h4 { letter-spacing: -0.011em; }
+
+table th,
+table td,
+input[type="number"],
+.font-mono {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Money should never re-flow as digits change (a total ticking from
+   9 to 10 must not shift the column). */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
 /* Alpine.js: hide elements tagged with x-cloak until Alpine initialises. */
 [x-cloak] { display: none !important; }
 

@@ -6,6 +6,11 @@
     keywords="Apna Invoice cookies, cookie preferences India, GDPR cookies, DPDP cookies, SaaS cookie settings"
     type="article">
 
+    {{-- The three category cards below are h3s. Without a section heading the
+         document jumped h1 -> h3, which breaks the outline for screen readers
+         and for search engines reading page structure. --}}
+    <h2>Your cookie preferences</h2>
+
     <div class="not-prose mt-4 space-y-4" x-data="cookiePrefs()" x-init="load()">
 
         <div class="p-5 rounded-xl ring-1 ring-gray-200 bg-gray-50">

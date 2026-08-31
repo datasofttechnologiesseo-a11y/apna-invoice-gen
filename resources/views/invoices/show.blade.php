@@ -1,11 +1,11 @@
-<x-app-layout>
+<x-app-layout title="Invoice">
     <x-slot name="header">
         <x-breadcrumbs :items="[
             ['label' => 'Invoices', 'href' => route('invoices.index')],
             ['label' => $invoice->displayNumber()],
         ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
                 @if ($invoice->isDraft())
                     <span class="text-gray-500">Draft #{{ $invoice->id }}</span>
                     <span class="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
@@ -22,7 +22,7 @@
                         <span class="text-xs px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 uppercase font-bold tracking-wider">Issued</span>
                     @endif
                 @endif
-            </h2>
+            </h1>
             <div class="flex flex-wrap items-center gap-2">
                 @if ($invoice->isSoftEditable())
                     <a href="{{ route('invoices.edit', $invoice) }}" class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300" title="{{ $invoice->isEditable() ? 'Edit draft' : 'Edit notes, terms, due date, transporter (amounts are locked)' }}">Edit</a>

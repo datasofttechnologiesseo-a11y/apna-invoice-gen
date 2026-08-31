@@ -32,4 +32,5 @@
     <p class="mt-4 text-center text-xs text-gray-400">
         So our team can reach you on WhatsApp/call to help you get set up. You can opt out of marketing any time.
     </p>
+    <x-signup-help />
 </x-guest-layout>

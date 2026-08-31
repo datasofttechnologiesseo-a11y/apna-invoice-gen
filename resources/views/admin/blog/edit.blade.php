@@ -1,13 +1,13 @@
-<x-app-layout>
+<x-app-layout title="Edit post">
     <x-slot name="header">
         <x-breadcrumbs :items="[
             ['label' => 'Blogs · Admin', 'href' => route('admin.blog.index')],
             ['label' => $post->exists ? $post->title : 'New post'],
         ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $post->exists ? 'Edit post' : 'New post' }}
-            </h2>
+            </h1>
             @if ($post->exists && $post->isPublished())
                 <a href="{{ route('blog.show', $post->slug) }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
                     Preview live

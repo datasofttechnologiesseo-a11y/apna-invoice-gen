@@ -1,13 +1,13 @@
-<x-app-layout>
+<x-app-layout title="Credit note">
     <x-slot name="header">
         <x-breadcrumbs :items="[
             ['label' => 'Invoices', 'href' => route('invoices.index')],
             ['label' => $invoice->displayNumber(), 'href' => route('invoices.show', $invoice)],
             ['label' => 'Issue credit note'],
         ]" />
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
             Issue credit note against <span class="font-mono">{{ $invoice->invoice_number }}</span>
-        </h2>
+        </h1>
     </x-slot>
 
     <div class="py-8">

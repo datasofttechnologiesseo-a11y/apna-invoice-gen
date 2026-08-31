@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Expenses">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Expenses</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Expenses</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $expenses->total() }} entries · {{ $periodLabel }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -70,11 +70,11 @@
                         @if (request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
                         <div>
                             <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">From</label>
-                            <input type="date" name="from" value="{{ request('from', $periodStart->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input type="date" name="from" aria-label="From date" value="{{ request('from', $periodStart->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                         </div>
                         <div>
                             <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">To</label>
-                            <input type="date" name="to" value="{{ request('to', $periodEnd->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input type="date" name="to" aria-label="To date" value="{{ request('to', $periodEnd->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                         </div>
                         <button class="px-3 py-2 bg-gray-800 text-white rounded text-sm">Apply custom</button>
                     </form>
@@ -177,7 +177,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Category</label>
-                    <select name="category" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <select name="category" aria-label="Filter by category" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
                         <option value="">All categories</option>
                         @foreach (config('expense_categories') as $key => $cfg)
                             <option value="{{ $key }}" @selected(request('category') === $key)>{{ $cfg['label'] }}</option>

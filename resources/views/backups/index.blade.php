@@ -1,6 +1,6 @@
-<x-app-layout>
+<x-app-layout title="Backup your data">
     <x-slot name="header">
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Backups</h2>
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Backups</h1>
     </x-slot>
 
     <div class="py-10">

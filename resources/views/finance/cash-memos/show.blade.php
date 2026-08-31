@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Cash memo">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 print:hidden">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ $memo->memo_number }}</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ $memo->memo_number }}</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $memo->memo_date->format('d M Y') }} · ₹{{ inr($memo->grand_total) }}</p>
             </div>
             @php

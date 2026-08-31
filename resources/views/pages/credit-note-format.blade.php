@@ -43,7 +43,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="GST Credit Note Format: Section 34 Rules & Deadline"
+    title="GST Credit Note Format & Rules"
     eyebrow="Guide"
     lead="When to issue a credit note, exactly what it must contain under Section 34 of the CGST Act, the 30 November deadline that catches businesses out — and a free way to issue compliant credit notes."
     description="GST credit note format under Section 34: mandatory fields, the 30 November deadline, credit note vs debit note, and how the tax reversal works. Issue them free."

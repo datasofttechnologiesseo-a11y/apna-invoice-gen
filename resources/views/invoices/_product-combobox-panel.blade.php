@@ -70,7 +70,7 @@
 
         <div>
             <label class="block text-[10px] font-bold uppercase text-gray-500">Name *</label>
-            <input type="text" x-model="quickAdd.name" required maxlength="255"
+            <input type="text" aria-label="New product name" x-model="quickAdd.name" required maxlength="255"
                    class="mt-0.5 block w-full text-sm border-gray-300 rounded"
                    :class="quickAdd.errors.name && '!border-red-400 !ring-red-400'">
             <p x-show="quickAdd.errors.name" x-cloak class="text-[10px] text-red-600" x-text="quickAdd.errors.name"></p>
@@ -79,14 +79,14 @@
         <div class="grid grid-cols-2 gap-2">
             <div>
                 <label class="block text-[10px] font-bold uppercase text-gray-500">Price (₹) *</label>
-                <input type="number" step="any" min="0" inputmode="decimal" x-model.number="quickAdd.rate" required
+                <input type="number" aria-label="New product rate" step="any" min="0" inputmode="decimal" x-model.number="quickAdd.rate" required
                        class="mt-0.5 block w-full text-sm border-gray-300 rounded text-right"
                        :class="quickAdd.errors.rate && '!border-red-400 !ring-red-400'">
                 <p x-show="quickAdd.errors.rate" x-cloak class="text-[10px] text-red-600" x-text="quickAdd.errors.rate"></p>
             </div>
             <div>
                 <label class="block text-[10px] font-bold uppercase text-gray-500">GST % *</label>
-                <select x-model.number="quickAdd.gst_rate" class="mt-0.5 block w-full text-sm border-gray-300 rounded"
+                <select aria-label="New product GST rate" x-model.number="quickAdd.gst_rate" class="mt-0.5 block w-full text-sm border-gray-300 rounded"
                         :class="quickAdd.errors.gst_rate && '!border-red-400 !ring-red-400'">
                     @foreach (config('gst.rates') as $r)
                         <option value="{{ $r['value'] }}">{{ $r['label'] }}</option>

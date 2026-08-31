@@ -1,17 +1,17 @@
-<x-app-layout>
+<x-app-layout title="Dashboard">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
                 {{-- Personalised greeting, first name + honorific "ji" (polite,
                      pan-Indian, age-neutral). Time-of-day verb keeps it warm.
                      Falls back to plain "Hello" if we didn't capture a name. --}}
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                     @if ($firstName)
                         {{ $greeting }}, {{ $firstName }} ji
                     @else
                         {{ $greeting }}
                     @endif
-                </h2>
+                </h1>
                 <p class="text-sm text-gray-500 mt-1">
                     {{ now()->format('l, d M Y') }}
                     @if ($todayIssued > 0 || $todayCollected > 0)
@@ -27,7 +27,7 @@
                         @endif
                     @else
                         <span class="text-gray-300 mx-1">·</span>
-                        <span>Ready when you are, let's get this billed.</span>
+                        <span>No bills yet today. Ready when you are.</span>
                     @endif
                 </p>
                 @if ($festival)
@@ -60,11 +60,53 @@
                      in-form nudges, so nothing is permanently lost. --}}
                 <div x-data="{ show: !localStorage.getItem('hideSetupChecklist') }" x-show="show" x-cloak
                      class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                    @php
+                        // Built for Indian SMEs, MSMEs, startups and freelancers:
+                        // plain language, no accounting jargon, and one obvious
+                        // next action rather than three competing buttons.
+                        $steps = [
+                            [
+                                'done'  => $setup['business'],
+                                'title' => 'Your business details',
+                                'sub'   => 'Just your business name and state — nothing else needed to start.',
+                                'time'  => '30 sec',
+                                'href'  => route('company.edit'),
+                                'cta'   => 'Start',
+                            ],
+                            [
+                                'done'  => $setup['customer'],
+                                'title' => 'Add your first customer',
+                                'sub'   => 'Save their details once, reuse on every bill.',
+                                'time'  => '20 sec',
+                                'href'  => route('customers.create'),
+                                'cta'   => 'Add customer',
+                            ],
+                            [
+                                'done'  => $setup['first_invoice'],
+                                'title' => 'Make your first invoice',
+                                'sub'   => 'CGST, SGST and IGST calculated for you. Share on WhatsApp in one tap.',
+                                'time'  => '1 min',
+                                'href'  => route('invoices.create'),
+                                'cta'   => 'Create invoice',
+                            ],
+                        ];
+                        // Only the first unfinished step gets the solid button. Three
+                        // identical CTAs made the user choose; one makes them act.
+                        $currentStep = collect($steps)->search(fn ($step) => ! $step['done']);
+                        $stepsLeft = collect($steps)->reject(fn ($step) => $step['done'])->count();
+                    @endphp
+
                     <div class="p-6 bg-brand-50/60 border-b border-gray-100 flex items-center justify-between">
                         <div class="flex-1 min-w-0">
                             <div class="text-xs uppercase font-semibold tracking-widest text-brand-600">Getting started</div>
-                            <h3 class="mt-1 font-display text-xl font-extrabold text-gray-900">You're {{ $setupProgress }}% set up.</h3>
-                            <p class="mt-1 text-gray-600 text-sm">Optional, finish these to unlock automatic GST detection and faster invoicing.</p>
+                            <h3 class="mt-1 font-display text-xl font-extrabold text-gray-900">
+                                {{ $stepsLeft === 1 ? 'One last step to your first invoice.' : "Your first invoice is {$stepsLeft} steps away." }}
+                            </h3>
+                            <p class="mt-1 text-gray-600 text-sm">
+                                <span class="text-gray-700">सिर्फ़ {{ $stepsLeft }} आसान कदम</span>
+                                <span class="text-gray-300 mx-1">·</span>
+                                under two minutes, start to finish.
+                            </p>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 ml-4">
                             {{-- Progress circle, mobile shows a smaller inline version so the % is always visible --}}
@@ -81,35 +123,53 @@
                         </div>
                     </div>
                     <div class="divide-y divide-gray-100">
-                        @php
-                            $checklist = [
-                                ['done' => $setup['business'], 'title' => 'Complete your business profile', 'sub' => 'Business name, GSTIN, address, state, logo', 'href' => route('company.edit'), 'cta' => $setup['business'] ? 'Edit' : 'Complete →'],
-                                ['done' => $setup['customer'], 'title' => 'Add your first customer', 'sub' => 'Save details once, reuse on every invoice', 'href' => route('customers.create'), 'cta' => $setup['customer'] ? 'Manage' : 'Add customer →'],
-                                ['done' => $setup['first_invoice'], 'title' => 'Issue your first invoice', 'sub' => 'Create a draft, issue, download PDF', 'href' => route('invoices.create'), 'cta' => $setup['first_invoice'] ? 'Create another' : 'Create invoice →'],
-                            ];
-                        @endphp
-                        @foreach ($checklist as $item)
-                            <div class="flex items-center gap-4 p-5 {{ $item['done'] ? 'bg-money-50/40' : '' }}">
+                        @foreach ($steps as $index => $item)
+                            @php $isCurrent = $index === $currentStep; @endphp
+                            <div @class([
+                                'flex items-center gap-4 p-5 transition',
+                                'bg-money-50/40' => $item['done'],
+                                'opacity-60' => ! $item['done'] && ! $isCurrent,
+                            ])>
+                                {{-- Numbered, so the sequence reads at a glance. The
+                                     numeral becomes a tick once the step is done. --}}
                                 <div @class([
-                                    'w-10 h-10 rounded-full flex items-center justify-center shrink-0 ring-4',
+                                    'w-11 h-11 rounded-full flex items-center justify-center shrink-0 ring-4 font-display font-extrabold',
                                     'bg-money-500 text-white ring-money-100' => $item['done'],
-                                    'bg-white text-gray-400 ring-gray-100 border border-gray-200' => ! $item['done'],
+                                    'bg-brand-700 text-white ring-brand-100' => ! $item['done'] && $isCurrent,
+                                    'bg-white text-gray-400 ring-gray-100 border border-gray-200' => ! $item['done'] && ! $isCurrent,
                                 ])>
                                     @if ($item['done'])
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                     @else
-                                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                                        {{ $index + 1 }}
                                     @endif
                                 </div>
-                                <div class="flex-1">
-                                    <div @class(['font-semibold', 'text-money-800 line-through' => $item['done'], 'text-gray-900' => ! $item['done']])>{{ $item['title'] }}</div>
-                                    <div class="text-sm text-gray-500">{{ $item['sub'] }}</div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span @class([
+                                            'text-[10px] uppercase font-bold tracking-widest',
+                                            'text-money-700' => $item['done'],
+                                            'text-brand-600' => ! $item['done'],
+                                        ])>Step {{ $index + 1 }}</span>
+                                        @unless ($item['done'])
+                                            <span class="text-[10px] font-semibold text-gray-500 px-1.5 py-0.5 rounded bg-gray-100">{{ $item['time'] }}</span>
+                                        @endunless
+                                    </div>
+                                    <div @class([
+                                        'font-semibold mt-0.5',
+                                        'text-money-800 line-through' => $item['done'],
+                                        'text-gray-900' => ! $item['done'],
+                                    ])>{{ $item['title'] }}</div>
+                                    @unless ($item['done'])
+                                        <div class="text-sm text-gray-500 mt-0.5">{{ $item['sub'] }}</div>
+                                    @endunless
                                 </div>
                                 <a href="{{ $item['href'] }}" @class([
                                     'text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap',
                                     'text-gray-600 hover:text-gray-900 hover:bg-gray-100' => $item['done'],
-                                    'text-white bg-brand-700 hover:bg-brand-800 shadow-sm' => ! $item['done'],
-                                ])>{{ $item['cta'] }}</a>
+                                    'text-white bg-brand-700 hover:bg-brand-800 shadow-sm' => ! $item['done'] && $isCurrent,
+                                    'text-brand-700 hover:bg-brand-50 ring-1 ring-brand-200' => ! $item['done'] && ! $isCurrent,
+                                ])>{{ $item['done'] ? 'Edit' : $item['cta'] }}@unless ($item['done']) &rarr;@endunless</a>
                             </div>
                         @endforeach
                     </div>
@@ -171,12 +231,33 @@
                     <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-money-100 text-money-700 text-xl">✨</span>
                     <div class="flex-1">
                         <div class="font-semibold text-gray-900">All clear, nothing pending</div>
-                        <div class="text-sm text-gray-600">No overdue invoices, no stale drafts. Carry on!</div>
+                        <div class="text-sm text-gray-600">No overdue invoices and no old drafts. Everything is up to date.</div>
                     </div>
                     <a href="{{ route('invoices.create') }}" class="text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline whitespace-nowrap">+ New invoice</a>
                 </div>
             @endif
 
+            @if ($isFirstRun)
+                {{-- Nothing billed yet. The numbered checklist above is already
+                     telling the user what to do, so this must not repeat it —
+                     it only reassures them what this page becomes once they
+                     have billed something. No heading, no second button. --}}
+                <div class="rounded-2xl border border-dashed border-gray-200 bg-white/60 px-6 py-5">
+                    <div class="text-xs uppercase font-bold tracking-wider text-gray-400">Once you start billing, this page tracks</div>
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        @foreach ([
+                            ['t' => 'Money owed to you', 'd' => 'Outstanding balance, grouped by how late it is'],
+                            ['t' => 'Payments received', 'd' => 'Receipts, part payments and a 30-day trend'],
+                            ['t' => 'GST returns', 'd' => 'GSTR-1 and GSTR-3B, ready for your CA'],
+                        ] as $preview)
+                            <div class="rounded-xl bg-gray-50/80 px-4 py-3">
+                                <div class="text-sm font-semibold text-gray-600">{{ $preview['t'] }}</div>
+                                <div class="mt-0.5 text-xs text-gray-500 leading-relaxed">{{ $preview['d'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
             <!-- Headline KPIs: Bills issued + Payments received -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="relative p-6 bg-gradient-to-br from-brand-50 to-white rounded-2xl shadow-card ring-1 ring-brand-100 overflow-hidden">
@@ -225,7 +306,7 @@
                         <svg class="w-4 h-4 text-accent-700 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
                     <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums" title="₹{{ inr($stats['outstanding']) }}"><x-inr-compact :amount="$stats['outstanding']" /></div>
-                    <div class="mt-3 text-xs text-accent-700 group-hover:text-accent-900 transition">{{ $stats['outstanding'] > 0 ? 'click to chase →' : 'awaiting payment' }}</div>
+                    <div class="mt-3 text-xs text-accent-700 group-hover:text-accent-900 transition">{{ $stats['outstanding'] > 0 ? 'click to follow up →' : 'payment not received yet' }}</div>
                 </a>
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
@@ -241,7 +322,7 @@
                 <div class="flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <div class="text-xs uppercase font-bold tracking-wider text-gray-500">This month's P&amp;L</div>
-                        <div class="text-sm text-gray-500 mt-0.5">{{ now()->format('F Y') }} · accrual basis (excl. GST)</div>
+                        <div class="text-sm text-gray-500 mt-0.5">{{ now()->format('F Y') }} · counts invoices raised, not payments received · GST not included</div>
                     </div>
                     <div class="flex items-center gap-6 sm:gap-8 flex-wrap">
                         <div>
@@ -262,7 +343,14 @@
                     </div>
                 </div>
             </a>
+            @endif
 
+            {{-- Quick actions, referral and the recent-invoice list are all
+                 hidden until the three setup steps are done. A user who has
+                 never billed anything cannot act on any of them, and eight
+                 extra choices on day one is how people end up doing nothing.
+                 They appear together the moment the first invoice is issued. --}}
+            @if ($setupComplete)
             <!-- Quick actions + recent grid -->
             <div class="grid lg:grid-cols-3 gap-6">
                 <!-- Quick actions -->
@@ -345,13 +433,16 @@
                         </div>
                     </div>
 
-                    {{-- Reports & exports, surfaced on the dashboard so CAs landing here at month-end can grab the GSTR-1 CSV without hunting --}}
+                    {{-- Reports & exports, surfaced on the dashboard so CAs landing here at month-end can grab the GSTR-1 CSV without hunting.
+                         Hidden on a brand-new account: six exports of an empty
+                         ledger is noise before the first bill exists. --}}
+                    @if (! $isFirstRun)
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
                         <div class="flex items-center justify-between gap-2">
                             <h3 class="font-display font-bold text-gray-900">Reports & exports</h3>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 ring-1 ring-brand-200">For your CA</span>
                         </div>
-                        <p class="mt-1 text-xs text-gray-500">CSV exports ready for the GST portal or Excel.</p>
+                        <p class="mt-1 text-xs text-gray-500">CSV files you can upload to the GST portal or open in Excel.</p>
                         <div class="mt-4 space-y-2">
                             <a href="{{ route('finance.aging') }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent-50 transition group">
@@ -360,7 +451,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">Receivables aging</div>
-                                    <div class="text-xs text-gray-500 truncate">Who owes you what · 0-30 / 30-60 / 60-90 / 90+ days</div>
+                                    <div class="text-xs text-gray-500 truncate">Who owes you money, and for how long · 0-30 / 30-60 / 60-90 / 90+ days</div>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-accent-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
@@ -371,7 +462,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">GSTR-3B · last month</div>
-                                    <div class="text-xs text-gray-500 truncate">Outward, ITC, net cash payable, return-form layout</div>
+                                    <div class="text-xs text-gray-500 truncate">Sales, input tax credit and net GST to pay · same layout as the return form</div>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-money-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
@@ -382,7 +473,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">GSTR-1 · this month</div>
-                                    <div class="text-xs text-gray-500 truncate">{{ now()->format('F Y') }} · B2B + B2C split, place of supply</div>
+                                    <div class="text-xs text-gray-500 truncate">{{ now()->format('F Y') }} · split into B2B and B2C, with place of supply</div>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                             </a>
@@ -421,6 +512,7 @@
                             </a>
                         </div>
                     </div>
+                    @endif
 
                     <!-- Refer a friend card -->
                     <a href="{{ route('referrals.index') }}" class="block bg-gradient-to-br from-brand-900 to-accent-900 rounded-2xl p-6 text-white shadow-brand hover:shadow-xl transition">
@@ -501,6 +593,24 @@
                     </div>
                 </div>
             </div>
+            @else
+                {{-- The one thing a brand-new user genuinely may need. --}}
+                <div class="rounded-2xl bg-white ring-1 ring-gray-100 shadow-card p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-money-50 ring-1 ring-money-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-money-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-4.3-.96L3 20l1.4-3.7A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="font-display font-bold text-gray-900">Need a hand getting started?</div>
+                        <p class="text-sm text-gray-600 mt-0.5">We help new businesses set up every day. Ask us anything, however small.</p>
+                    </div>
+                    <a href="{{ route('pages.contact') }}"
+                       class="flex-shrink-0 inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 transition">
+                        Talk to us
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
 

@@ -35,26 +35,39 @@
             padding: 0;
             background: #fff;
             color: #000;
+            /* Without this the browser strips the dashed dividers and the
+               DRAFT box when printing. */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
+        /* 80mm paper, but the print head only reaches ~72mm. border-box makes
+           the declared width the real outer width: 76mm outer - 2mm padding
+           each side = 72mm of content, sitting inside a 2mm safe margin. */
         .receipt {
+            box-sizing: border-box;
             width: 76mm;
             padding: 2mm 2mm 6mm 2mm;
             margin: 0 auto;
             font-family: 'Courier New', 'Liberation Mono', monospace;
-            font-size: 11px;
-            line-height: 1.35;
+            font-size: 12px;
+            line-height: 1.4;
             color: #000;
         }
+        .receipt * { box-sizing: border-box; }
 
         .center { text-align: center; }
         .right  { text-align: right; }
         .bold   { font-weight: 700; }
-        .small  { font-size: 10px; }
-        .xs     { font-size: 9px; color: #333; }
-        .biz    { font-size: 13px; font-weight: 700; letter-spacing: 0.4px; }
-        .docnum { font-size: 12px; font-weight: 700; }
-        .total  { font-size: 14px; font-weight: 700; }
+        /* Thermal heads print one bit per dot: any grey is dithered and comes
+           out faint. Every class here is pure black, and nothing is smaller
+           than 10px (~1.25mm at 203dpi), which is the floor for reliable
+           reading on receipt paper. */
+        .small  { font-size: 11px; color: #000; }
+        .xs     { font-size: 10px; color: #000; }
+        .biz    { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; }
+        .docnum { font-size: 13px; font-weight: 700; }
+        .total  { font-size: 15px; font-weight: 700; }
 
         hr.dash {
             border: 0;
@@ -80,9 +93,14 @@
         .no-print { display: none; }
         @media screen {
             body { background: #f3f4f6; padding: 16px; }
+            /* Zoom the on-screen proof only. The printed output is unchanged:
+               this rule never applies inside @media print. */
             .receipt {
                 background: #fff;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+                box-shadow: 0 1px 6px rgba(0,0,0,0.14);
+                transform: scale(1.5);
+                transform-origin: top center;
+                border-radius: 2px;
             }
             .no-print {
                 display: block;
@@ -110,11 +128,26 @@
                 margin-left: 6px;
             }
         }
+
+        @media print {
+            /* Belt and braces: no zoom, no shadow, no stray page margin. */
+            body { background: #fff; padding: 0; }
+            .receipt {
+                transform: none;
+                box-shadow: none;
+                margin: 0;
+                width: 76mm;
+            }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
 
 <div class="no-print">
+    <div style="font-size:11px; color:#4b5563; margin-bottom:6px;">
+        Preview shown enlarged &mdash; prints at true 80&nbsp;mm width.
+    </div>
     <button onclick="window.print()">Print receipt</button>
     <a href="{{ route('invoices.show', $invoice) }}">Back</a>
     <a href="{{ route('invoices.print', $invoice) }}">A4 view</a>
@@ -198,7 +231,7 @@
                 @if ($disc > 0) − ₹{{ number_format($disc, 2) }} @endif
                 @if (! $reverseCharge && $gst > 0) @ {{ (float) $gst }}% GST @endif
             </span>
-            <span class="bold" style="color:#000; font-size:11px;">₹{{ number_format($amt, 2) }}</span>
+            <span class="bold" style="color:#000; font-size:12px;">₹{{ number_format($amt, 2) }}</span>
         </div>
     @endforeach
 

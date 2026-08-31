@@ -165,7 +165,7 @@ class CashMemoController extends Controller
                 $w->where('memo_number', 'like', "%{$s}%")
                     ->orWhere('seller_name', 'like', "%{$s}%");
             }))
-            ->whereBetween('memo_date', [$from->toDateString(), $to->toDateString()]);
+            ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
     }
 
     /**

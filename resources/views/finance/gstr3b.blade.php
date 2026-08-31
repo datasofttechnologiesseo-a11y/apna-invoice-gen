@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="GSTR-3B summary">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-3B Summary</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-3B Summary</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $periodLabel }} · {{ $company->name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">

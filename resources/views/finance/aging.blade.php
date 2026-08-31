@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Receivables aging">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Receivables Aging</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Receivables Aging</h1>
                 <p class="text-sm text-gray-500 mt-1">As on {{ $today->format('d M Y') }} · {{ $company->name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">
