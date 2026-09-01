@@ -156,7 +156,10 @@ class WorkflowAuditPartTwoTest extends TestCase
         $quotedTotal = (float) $quotation->grand_total;
         $this->assertEqualsWithDelta(17700.0, $quotedTotal, 0.01);
 
+        $this->actingAs($this->user)->post(route('quotations.send', $quotation))->assertRedirect();
         $this->actingAs($this->user)->post(route('quotations.accept', $quotation))->assertRedirect();
+        $this->assertSame('accepted', $quotation->fresh()->status);
+
         $this->actingAs($this->user)->post(route('quotations.convert', $quotation))->assertRedirect();
 
         $invoice = Invoice::latest('id')->firstOrFail();
@@ -182,9 +185,13 @@ class WorkflowAuditPartTwoTest extends TestCase
         ]);
         $quotation = Quotation::latest('id')->firstOrFail();
 
+        $this->actingAs($this->user)->post(route('quotations.send', $quotation));
         $this->actingAs($this->user)->post(route('quotations.accept', $quotation));
         $this->actingAs($this->user)->post(route('quotations.convert', $quotation));
+
         $countAfterFirst = Invoice::count();
+        $this->assertSame(1, $countAfterFirst,
+            'the first conversion must actually produce an invoice, or this test proves nothing');
 
         $this->actingAs($this->user)->post(route('quotations.convert', $quotation));
 
@@ -231,8 +238,13 @@ class WorkflowAuditPartTwoTest extends TestCase
 
     public function test_an_expense_with_input_credit_reaches_gstr_3b(): void
     {
+        // GSTR-3B is filed for the PREVIOUS month - August's return goes in
+        // September - so the screen defaults to last month. An expense dated
+        // today belongs to a return that is not due yet.
+        $lastMonth = now()->subMonthNoOverflow()->startOfMonth()->addDays(9);
+
         $this->actingAs($this->user)->post(route('finance.expenses.store'), [
-            'entry_date' => now()->toDateString(),
+            'entry_date' => $lastMonth->toDateString(),
             'category' => 'rent',
             'description' => 'Office rent for the month',
             'amount' => 20000,
@@ -243,9 +255,30 @@ class WorkflowAuditPartTwoTest extends TestCase
         $res = $this->actingAs($this->user)->get(route('finance.gstr3b'));
         $res->assertOk();
 
-        // 18% of 20,000 = 3,600 claimable as input tax credit.
-        $this->assertStringContainsString('3,600', $res->getContent(),
+        // 3,600 of input tax on an intra-state purchase splits 50/50 into
+        // CGST and SGST per s.9(1), so the screen shows 1,800 twice.
+        $this->assertStringContainsString('1,800', $res->getContent(),
             'an ITC-eligible expense should show as claimable credit in GSTR-3B');
+    }
+
+    public function test_ineligible_input_credit_is_left_out_of_the_return(): void
+    {
+        // s.17(5) blocks credit on things like staff catering and motor
+        // vehicles. Claiming it would overstate the refund and invite a notice.
+        $lastMonth = now()->subMonthNoOverflow()->startOfMonth()->addDays(9);
+
+        $this->actingAs($this->user)->post(route('finance.expenses.store'), [
+            'entry_date' => $lastMonth->toDateString(),
+            'category' => 'food',
+            'description' => 'Team lunch',
+            'amount' => 20000,
+            'gst_amount' => 3600,
+            'itc_eligible' => '0',
+        ])->assertRedirect();
+
+        $body = $this->actingAs($this->user)->get(route('finance.gstr3b'))->getContent();
+        $this->assertStringNotContainsString('1,800', $body,
+            'blocked credit under s.17(5) must not be claimed');
     }
 
     // ================================================ Two businesses, one login
