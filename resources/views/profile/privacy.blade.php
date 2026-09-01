@@ -12,7 +12,7 @@
 
             {{-- Marketing consent --}}
             <section class="bg-white shadow sm:rounded-lg p-6">
-                <h3 class="font-semibold text-gray-900">Communication preferences</h3>
+                <h2 class="font-semibold text-gray-900">Communication preferences</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Account, security and billing emails are essential and are always sent. Marketing
                     emails (product news and offers) are optional - you can withdraw consent any time.
@@ -36,7 +36,7 @@
 
             {{-- Right to access --}}
             <section class="bg-white shadow sm:rounded-lg p-6">
-                <h3 class="font-semibold text-gray-900">Access &amp; portability</h3>
+                <h2 class="font-semibold text-gray-900">Access &amp; portability</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Download a complete copy of your account, invoices, customers and products as a ZIP
                     archive - yours to keep or move elsewhere.
@@ -50,7 +50,7 @@
 
             {{-- Consent history --}}
             <section class="bg-white shadow sm:rounded-lg p-6">
-                <h3 class="font-semibold text-gray-900">Consent history</h3>
+                <h2 class="font-semibold text-gray-900">Consent history</h2>
                 <p class="text-sm text-gray-500 mt-1">Every consent decision, time-stamped with the policy version in force. This log is append-only.</p>
 
                 <div class="mt-4 overflow-x-auto">
@@ -87,7 +87,7 @@
 
             {{-- Right to erasure --}}
             <section class="bg-white shadow sm:rounded-lg p-6 border-l-4 border-danger-300">
-                <h3 class="font-semibold text-gray-900">Delete my account</h3>
+                <h2 class="font-semibold text-gray-900">Delete my account</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Permanently delete your account and personal data. Note: where Indian GST law requires
                     invoice records to be kept (up to {{ intdiv(config('legal.gst_retention_months', 72), 12) }} years),
@@ -102,7 +102,7 @@
 
             {{-- Grievance officer --}}
             <section class="bg-gray-50 ring-1 ring-gray-200 sm:rounded-lg p-6">
-                <h3 class="font-semibold text-gray-900">Grievance Officer</h3>
+                <h2 class="font-semibold text-gray-900">Grievance Officer</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Operated by {{ config('legal.operator') }}. For any data protection concern, contact our
                     Grievance Officer - we respond within {{ config('legal.request_response_days', 30) }} days.

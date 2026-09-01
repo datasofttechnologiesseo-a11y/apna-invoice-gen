@@ -19,7 +19,7 @@
                      they actually came here to do. --}}
                 @if (! $products->isEmpty() || request('search') || request('kind') || request('only_inactive'))
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, SKU or HSN/SAC" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, SKU or HSN/SAC" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm" aria-label="Search name, SKU or HSN/SAC">
                     {{-- max-w-full: the long "Service (SAC …)" option otherwise sets an
                          intrinsic width wider than small phone viewports. --}}
                     <select name="kind" class="border-gray-300 rounded-md shadow-sm max-w-full" onchange="this.form.submit()">

@@ -42,7 +42,7 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <h3 class="font-display font-bold text-gray-900">Blog</h3>
+                    <h2 class="font-display font-bold text-gray-900">Blog</h2>
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                         <span class="inline-flex items-center gap-1.5 text-gray-600"><span class="w-2 h-2 rounded-full bg-money-500"></span><span class="font-semibold tabular-nums">{{ $stats['blog']['published'] }}</span> published</span>
                         <span class="inline-flex items-center gap-1.5 text-gray-600"><span class="w-2 h-2 rounded-full bg-gray-400"></span><span class="font-semibold tabular-nums">{{ $stats['blog']['drafts'] }}</span> drafts</span>
@@ -173,7 +173,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 class="font-display font-bold text-gray-900">Top users by invoices</h3>
+                    <h2 class="font-display font-bold text-gray-900">Top users by invoices</h2>
                     <a href="{{ route('admin.users') }}" class="text-xs font-semibold text-brand-600 hover:underline">View all users →</a>
                 </div>
                 <table class="w-full text-sm">
@@ -203,7 +203,7 @@
 
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 class="font-display font-bold text-gray-900">Recent signups</h3>
+                    <h2 class="font-display font-bold text-gray-900">Recent signups</h2>
                     <a href="{{ route('admin.users') }}" class="text-xs font-semibold text-brand-600 hover:underline">View all users →</a>
                 </div>
                 <ul class="divide-y divide-gray-100">
@@ -229,7 +229,7 @@
         {{-- GST rate usage --}}
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-200">
-                <h3 class="font-display font-bold text-gray-900">GST rate usage across all line items</h3>
+                <h2 class="font-display font-bold text-gray-900">GST rate usage across all line items</h2>
                 <p class="text-xs text-gray-500 mt-0.5">What rates businesses are actually billing at</p>
             </div>
             <table class="w-full text-sm">

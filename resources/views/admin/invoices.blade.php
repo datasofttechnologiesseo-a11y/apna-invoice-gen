@@ -7,7 +7,7 @@
                     <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
                 @endforeach
             </select>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search number" class="w-48 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search number" class="w-48 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Search number">
             @if (request('search') || request('status'))
                 <a href="{{ route('admin.invoices') }}" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900">Clear</a>
             @endif

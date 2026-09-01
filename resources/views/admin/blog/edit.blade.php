@@ -106,7 +106,7 @@
                     <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                         <div class="px-5 sm:px-6 py-3 border-b flex items-center justify-between gap-3 flex-wrap">
                             <div>
-                                <h3 class="font-medium text-gray-900">Body</h3>
+                                <h2 class="font-medium text-gray-900">Body</h2>
                                 <p class="text-[11px] text-gray-500">Markdown - <code class="bg-gray-100 px-1 rounded">## Heading</code>, <code class="bg-gray-100 px-1 rounded">**bold**</code>, or use the toolbar. The post title is the page's H1; <code class="bg-gray-100 px-1 rounded">#</code> in the body renders as a section heading. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
                             </div>
                             <div class="flex items-center gap-3 text-xs text-gray-600">
@@ -210,7 +210,7 @@
                         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" @click.outside="previewOpen = false">
                             <div class="px-5 py-3 border-b flex items-center justify-between bg-gray-50">
                                 <div>
-                                    <h3 class="font-semibold text-gray-900">Live preview</h3>
+                                    <h2 class="font-semibold text-gray-900">Live preview</h2>
                                     <p class="text-xs text-gray-500">Same renderer as the public blog. Press Esc to close.</p>
                                 </div>
                                 <button type="button" @click="previewOpen = false"
@@ -241,7 +241,7 @@
 
                     {{-- Publish controls --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-4">
-                        <h3 class="font-display font-bold text-gray-900">Publish</h3>
+                        <h2 class="font-display font-bold text-gray-900">Publish</h2>
                         <div>
                             <x-input-label for="status" value="Status" />
                             <select id="status" name="status" x-model="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
@@ -279,7 +279,7 @@
                     {{-- SEO panel - the heart of the "smart" editor --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-4">
                         <div class="flex items-center justify-between">
-                            <h3 class="font-display font-bold text-gray-900">SEO</h3>
+                            <h2 class="font-display font-bold text-gray-900">SEO</h2>
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
                                   :class="seoScore.tone === 'good' ? 'bg-money-100 text-money-800' :
                                           seoScore.tone === 'warn' ? 'bg-accent-100 text-accent-800' :
@@ -358,7 +358,7 @@
                          picked (not waiting until form submit). URL.createObjectURL
                          is revoked on the next pick to avoid memory leaks. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
-                        <h3 class="font-display font-bold text-gray-900">Featured image</h3>
+                        <h2 class="font-display font-bold text-gray-900">Featured image</h2>
                         {{-- Preview: shows the picked-but-not-saved file first; falls back
                              to whatever's saved on the server. --}}
                         <template x-if="featuredPreview">
@@ -388,7 +388,7 @@
 
                     {{-- Social card override - same instant-preview pattern. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
-                        <h3 class="font-display font-bold text-gray-900">Social-card image</h3>
+                        <h2 class="font-display font-bold text-gray-900">Social-card image</h2>
                         <template x-if="ogPreview">
                             <img :src="ogPreview" alt="New OG image preview"
                                  class="w-full rounded-lg ring-1 ring-gray-200 aspect-[1200/630] object-cover">

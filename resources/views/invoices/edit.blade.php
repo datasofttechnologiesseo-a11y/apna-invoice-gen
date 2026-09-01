@@ -212,6 +212,7 @@
                                         <div class="relative flex-1">
                                             <input id="customer_search"
                                                    type="text"
+                                                   aria-label="Search customers by name, phone or GSTIN"
                                                    x-model="customerCombo.search"
                                                    @focus="openCustomerCombo()"
                                                    @input="onCustomerComboInput()"
@@ -332,7 +333,7 @@
 
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
-                        <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-accent-700 font-normal">🔒 Locked - amounts are immutable</span>@endif</h3>
+                        <h2 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-accent-700 font-normal">🔒 Locked - amounts are immutable</span>@endif</h2>
                         <div class="flex items-center gap-3">
                             @if (! $restricted)
                                 <span class="hidden md:inline text-xs text-gray-500">Tip: type a product name in the row - pick existing or save a new one inline.</span>
@@ -370,6 +371,7 @@
                                         <div class="relative">
                                             <input type="text"
                                                    x-ref="comboInput"
+                                                   :aria-label="`Product or service for line item ${idx + 1}`"
                                                    x-model="combo.search"
                                                    @focus="openCombo()"
                                                    @input.debounce.250ms="onInput()"
@@ -394,7 +396,7 @@
                                     {{-- Description is optional. If left blank and a product is picked,
                                          the server backfills it from the product's name. The user can also
                                          leave it blank entirely for a one-line custom charge. --}}
-                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                    <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -411,7 +413,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                                             </a>
                                         </div>
-                                        <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" :required="hsnRequired">
+                                        <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" :required="hsnRequired">
                                         <p class="mt-1 text-[10px]" :class="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4 ? 'text-accent-700 font-semibold' : 'text-gray-500'">
                                             <template x-if="!item.hsn_sac || item.hsn_sac.length === 0">
                                                 <span x-text="hsnRequired
@@ -456,7 +458,7 @@
                                         $commonRates = [0, 5, 12, 18, 28];
                                         $rareRates = collect(config('gst.rates'))->whereNotIn('value', $commonRates)->values();
                                     @endphp
-                                    <input type="hidden" :name="`items[${idx}][gst_rate]`" :value="item.gst_rate">
+                                    <input type="hidden" :name="`items[${idx}][gst_rate]`" :aria-label="`GST rate for line item ${idx + 1}`" :value="item.gst_rate">
                                     <div class="mt-1 grid grid-cols-5 gap-1 p-1 bg-gray-100 rounded-lg">
                                         @foreach ($commonRates as $r)
                                             <button type="button"
@@ -537,6 +539,7 @@
                                                     <div class="relative">
                                                         <input type="text"
                                                                x-ref="comboInput"
+                                                               :aria-label="`Product or service for line item ${idx + 1}`"
                                                                x-model="combo.search"
                                                                @focus="openCombo()"
                                                                @input.debounce.250ms="onInput()"
@@ -557,8 +560,8 @@
                                                 </div>
                                             </td>
                                         @endunless
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
                                                 <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required>

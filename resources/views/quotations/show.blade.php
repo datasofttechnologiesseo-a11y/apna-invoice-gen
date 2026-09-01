@@ -125,7 +125,7 @@
         <dialog id="decline-quote-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100vh-3rem)]">
             <form method="POST" action="{{ route('quotations.decline', $quotation) }}" class="p-5 sm:p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
-                <h3 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h3>
+                <h2 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h2>
                 <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why - useful for follow-ups.</p>
                 <div>
                     <x-input-label for="decline_reason" value="Reason (optional)" />
@@ -267,7 +267,7 @@
 
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                 <div class="px-6 py-4 border-b">
-                    <h3 class="font-medium text-gray-900">Line items</h3>
+                    <h2 class="font-medium text-gray-900">Line items</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">

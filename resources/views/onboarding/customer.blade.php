@@ -21,7 +21,7 @@
             @endif
 
             <div>
-                <h3 class="font-display font-bold text-gray-900 text-lg">Customer basics</h3>
+                <h2 class="font-display font-bold text-gray-900 text-lg">Customer basics</h2>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
                         <x-input-label for="name" value="Customer name *" />
@@ -52,7 +52,7 @@
             </div>
 
             <div class="border-t pt-6">
-                <h3 class="font-display font-bold text-gray-900 text-lg">Billing address</h3>
+                <h2 class="font-display font-bold text-gray-900 text-lg">Billing address</h2>
                 <p class="text-sm text-gray-500 mt-0.5">The customer's state determines whether GST is split (CGST+SGST) or consolidated (IGST)</p>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">

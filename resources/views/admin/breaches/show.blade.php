@@ -15,7 +15,7 @@
         ])>
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="font-bold text-gray-900">Statutory notifications (DPDP §8(6))</h3>
+                    <h2 class="font-bold text-gray-900">Statutory notifications (DPDP §8(6))</h2>
                     <p class="text-sm text-gray-600 mt-1">
                         Notify the Data Protection Board and affected data principals by
                         <strong>{{ $deadline->format('d M Y, H:i') }}</strong>
@@ -92,7 +92,7 @@
         <form method="POST" action="{{ route('admin.breaches.update', $breach) }}" class="bg-white rounded-xl border border-gray-200 p-6">
             @csrf
             @method('PATCH')
-            <h3 class="font-semibold text-gray-900 mb-3">Update record</h3>
+            <h2 class="font-semibold text-gray-900 mb-3">Update record</h2>
             {{-- Resend the immutable fields so validation passes; only status/severity/remediation change in practice. --}}
             <input type="hidden" name="title" value="{{ $breach->title }}">
             <input type="hidden" name="description" value="{{ $breach->description }}">

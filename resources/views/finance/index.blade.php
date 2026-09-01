@@ -165,7 +165,7 @@
                 {{-- By category --}}
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                        <h3 class="font-display font-bold text-gray-900">Expenses by category</h3>
+                        <h2 class="font-display font-bold text-gray-900">Expenses by category</h2>
                         <span class="text-xs text-gray-500">{{ $byCategory->count() }} categor{{ $byCategory->count() === 1 ? 'y' : 'ies' }}</span>
                     </div>
                     @if ($byCategory->isEmpty())
@@ -197,7 +197,7 @@
                 {{-- Top expenses --}}
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                        <h3 class="font-display font-bold text-gray-900">Top expenses this period</h3>
+                        <h2 class="font-display font-bold text-gray-900">Top expenses this period</h2>
                         <a href="{{ route('finance.expenses') }}" class="text-xs font-semibold text-brand-700 hover:underline">View all →</a>
                     </div>
                     @if ($topExpenses->isEmpty())

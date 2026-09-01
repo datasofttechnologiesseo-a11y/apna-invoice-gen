@@ -35,6 +35,8 @@
                     <p class="mt-1 text-sm text-gray-600">Helps us understand which features are used so we can improve the product. Aggregated, never sold.</p>
                 </div>
                 <button type="button" @click="prefs.analytics = !prefs.analytics"
+                    role="switch" :aria-checked="prefs.analytics ? 'true' : 'false'"
+                    aria-label="Analytics cookies"
                     :class="prefs.analytics ? 'bg-brand-600' : 'bg-gray-300'"
                     class="inline-flex items-center h-6 w-11 rounded-full transition flex-shrink-0">
                     <span :class="prefs.analytics ? 'ml-5' : 'ml-0.5'" class="h-5 w-5 rounded-full bg-white shadow transition-all"></span>
@@ -49,6 +51,8 @@
                     <p class="mt-1 text-sm text-gray-600">Measure effectiveness of campaigns and show relevant content on other sites.</p>
                 </div>
                 <button type="button" @click="prefs.marketing = !prefs.marketing"
+                    role="switch" :aria-checked="prefs.marketing ? 'true' : 'false'"
+                    aria-label="Marketing cookies"
                     :class="prefs.marketing ? 'bg-brand-600' : 'bg-gray-300'"
                     class="inline-flex items-center h-6 w-11 rounded-full transition flex-shrink-0">
                     <span :class="prefs.marketing ? 'ml-5' : 'ml-0.5'" class="h-5 w-5 rounded-full bg-white shadow transition-all"></span>

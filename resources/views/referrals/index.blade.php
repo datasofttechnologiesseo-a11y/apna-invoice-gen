@@ -59,7 +59,7 @@
             {{-- Referrals list --}}
             <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-3 border-b">
-                    <h3 class="font-semibold text-gray-900">People you've referred</h3>
+                    <h2 class="font-semibold text-gray-900">People you've referred</h2>
                 </div>
                 @if ($referrals->isEmpty())
                     <div class="p-8 text-center text-gray-500 text-sm">

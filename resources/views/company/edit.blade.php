@@ -34,7 +34,7 @@
 
                 {{-- Business identity --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Business identity</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Business identity</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Appears on your invoice letterhead and drives GST place-of-supply detection.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -69,7 +69,7 @@
 
                 {{-- Contact --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Contact</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Contact</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Shown on the invoice so customers can reach you.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -92,7 +92,7 @@
 
                 {{-- Registered address --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Registered address</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Registered address</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Your state sets the GST origin for every invoice.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -130,7 +130,7 @@
 
                 {{-- Branding --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Branding</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Branding</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Your logo and signature print on every invoice PDF.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -154,7 +154,7 @@
 
                 {{-- Invoice numbering --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Invoice numbering</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Invoice numbering</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Set a GST-friendly, financial-year series for your invoices.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -211,7 +211,7 @@
 
                 {{-- Invoice defaults --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Invoice defaults</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Invoice defaults</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Boilerplate that prints at the foot of every invoice.</p>
                     <div class="mt-5 space-y-5">
                         <div>
@@ -228,7 +228,7 @@
 
                 {{-- Bank / payment --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Bank &amp; payment details</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Bank &amp; payment details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Printed on the invoice PDF so customers know how to pay.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -257,7 +257,7 @@
 
                 {{-- Financial-year lock --}}
                 <section class="p-6 sm:p-8">
-                    <h3 class="text-sm font-bold text-gray-900">Financial-year lock</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Financial-year lock</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Protect closed-year books from accidental edits.</p>
                     <div class="mt-5">
                         <x-input-label for="books_locked_until" value="Lock books up to (optional)" />

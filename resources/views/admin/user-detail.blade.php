@@ -46,7 +46,7 @@
             $waDigits = preg_replace('/\D/', '', (string) $user->phone);
         @endphp
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-200"><h3 class="font-display font-bold text-gray-900">Phone numbers</h3></div>
+            <div class="px-5 py-4 border-b border-gray-200"><h2 class="font-display font-bold text-gray-900">Phone numbers</h2></div>
             <ul class="divide-y divide-gray-100">
                 {{-- The personal mobile captured at signup (users.phone) - the
                      number the team actually calls/WhatsApps for onboarding.
@@ -81,7 +81,7 @@
         @if (! $user->isSuperAdmin() && $user->id !== auth()->id())
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-200">
-                    <h3 class="font-display font-bold text-gray-900">Reset password</h3>
+                    <h2 class="font-display font-bold text-gray-900">Reset password</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Set a new password for this user. Share it securely - they should change it on next login.</p>
                 </div>
                 <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="p-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-start"
@@ -104,7 +104,7 @@
         @endif
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-200"><h3 class="font-display font-bold text-gray-900">Companies ({{ $user->companies->count() }})</h3></div>
+            <div class="px-5 py-4 border-b border-gray-200"><h2 class="font-display font-bold text-gray-900">Companies ({{ $user->companies->count() }})</h2></div>
             @if ($user->companies->isEmpty())
                 <div class="px-5 py-10 text-center text-gray-400">No companies.</div>
             @else
@@ -134,7 +134,7 @@
 
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="font-display font-bold text-gray-900">Recent invoices</h3>
+                <h2 class="font-display font-bold text-gray-900">Recent invoices</h2>
                 <a href="{{ route('admin.invoices') }}" class="text-xs font-semibold text-brand-600 hover:underline">View all →</a>
             </div>
             @if ($recentInvoices->isEmpty())

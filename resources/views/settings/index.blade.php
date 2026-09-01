@@ -114,7 +114,7 @@
 
             @foreach ($sections as $section)
                 <section>
-                    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 px-1">{{ $section['group'] }}</h3>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 px-1">{{ $section['group'] }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach ($section['cards'] as $card)
                             @php $t = $tones[$card['tone']]; @endphp

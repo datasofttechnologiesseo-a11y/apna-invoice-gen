@@ -39,7 +39,7 @@
                     <div class="w-16 h-16 mx-auto rounded-full bg-money-100 text-money-700 flex items-center justify-center">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <h3 class="mt-4 font-display text-xl font-extrabold text-gray-900">All clear - nothing outstanding!</h3>
+                    <h2 class="mt-4 font-display text-xl font-extrabold text-gray-900">All clear - nothing outstanding!</h2>
                     <p class="mt-2 text-gray-500 max-w-md mx-auto">Every issued invoice is fully paid. When customers fall behind, this page will show you who and by how much.</p>
                     <a href="{{ route('invoices.index') }}" class="mt-6 inline-flex items-center gap-1.5 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg">View all invoices →</a>
                 </div>
@@ -91,7 +91,7 @@
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden hidden md:block printable">
                     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
                         <div>
-                            <h3 class="font-display font-bold text-gray-900">By customer</h3>
+                            <h2 class="font-display font-bold text-gray-900">By customer</h2>
                             <p class="text-xs text-gray-500 mt-0.5">Sorted by total outstanding (chase the biggest first)</p>
                         </div>
                         <span class="text-xs text-gray-500">{{ $byCustomer->count() }} {{ Str::plural('customer', $byCustomer->count()) }}</span>

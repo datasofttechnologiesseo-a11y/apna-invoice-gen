@@ -15,7 +15,7 @@
             @endif
 
             <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 p-6">
-                <h3 class="font-display text-lg font-bold text-gray-900">Weekly auto-backup</h3>
+                <h2 class="font-display text-lg font-bold text-gray-900">Weekly auto-backup</h2>
                 <p class="mt-1 text-sm text-gray-600 leading-relaxed">
                     Every Sunday morning, we zip up your business data - invoices, customers, products, payments, expenses - as CSV files and email it to your registered address, <strong class="font-mono">{{ $user->email }}</strong>.
                 </p>
@@ -40,7 +40,7 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 p-6">
-                <h3 class="font-display text-lg font-bold text-gray-900">Manual backup</h3>
+                <h2 class="font-display text-lg font-bold text-gray-900">Manual backup</h2>
                 <p class="mt-1 text-sm text-gray-600 leading-relaxed">
                     Download or email a backup right now. Useful before big changes, at tax filing time, or if you need a clean CSV export for your CA.
                 </p>
@@ -66,7 +66,7 @@
             </div>
 
             <div class="bg-white rounded-xl ring-1 ring-gray-100 p-5 text-sm text-gray-600">
-                <h4 class="font-semibold text-gray-900 mb-2">How long do we keep your data?</h4>
+                <h3 class="font-semibold text-gray-900 mb-2">How long do we keep your data?</h3>
                 <ul class="space-y-1.5 list-disc pl-5">
                     <li><strong>Your invoices, customers, payments and ledger</strong> stay in your account for as long as it's active - you control the data.</li>
                     <li><strong>Emailed backup ZIPs</strong> sit in your own inbox; we don't keep a server-side copy after sending.</li>

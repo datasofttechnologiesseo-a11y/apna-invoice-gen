@@ -15,17 +15,20 @@
 <body class="font-sans antialiased text-gray-900">
 
 <div class="max-w-md mx-auto p-4" x-data="gstEmbed()" x-init="recompute()">
+    {{-- Visually hidden: the widget has no visible title by design, but a
+         document still needs one h1 to be navigable. --}}
+    <h1 class="sr-only">GST calculator</h1>
     <div class="rounded-xl ring-1 ring-gray-200 bg-white shadow-sm overflow-hidden">
         <div class="p-4 space-y-3">
             <div>
                 <label class="block text-xs font-semibold text-gray-500 mb-1">Amount (₹)</label>
-                <input type="number" min="0" x-model="amount" @input="recompute()" inputmode="decimal"
+                <input type="number" min="0" x-model="amount" @input="recompute()" aria-label="Amount in rupees" inputmode="decimal"
                        class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600 text-lg font-semibold">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">GST rate</label>
-                    <select x-model="rate" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
+                    <select x-model="rate" @change="recompute()" aria-label="GST rate" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
                         @foreach ([0, 5, 12, 18, 28] as $r)
                             <option value="{{ $r }}">{{ $r }}%</option>
                         @endforeach
@@ -33,7 +36,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Supply</label>
-                    <select x-model="supply" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
+                    <select x-model="supply" @change="recompute()" aria-label="Supply type, within state or between states" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
                         <option value="intra">Intra-state</option>
                         <option value="inter">Inter-state</option>
                     </select>

@@ -1,4 +1,6 @@
 <x-guest-layout :title="'Confirm your password'" :noindex="true">
+    <h1 class="font-display text-xl font-extrabold text-gray-900 mb-2">Confirm your password</h1>
+
     <div class="mb-4 text-sm text-gray-600">
         {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
     </div>

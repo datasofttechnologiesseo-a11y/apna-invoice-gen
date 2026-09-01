@@ -99,9 +99,9 @@
                     <div class="p-6 bg-brand-50/60 border-b border-gray-100 flex items-center justify-between">
                         <div class="flex-1 min-w-0">
                             <div class="text-xs uppercase font-semibold tracking-widest text-brand-700">Getting started</div>
-                            <h3 class="mt-1 font-display text-xl font-extrabold text-gray-900">
+                            <h2 class="mt-1 font-display text-xl font-extrabold text-gray-900">
                                 {{ $stepsLeft === 1 ? 'One last step to your first invoice.' : "Your first invoice is {$stepsLeft} steps away." }}
-                            </h3>
+                            </h2>
                             <p class="mt-1 text-gray-600 text-sm">
                                 <span class="text-gray-700">सिर्फ़ {{ $stepsLeft }} आसान कदम</span>
                                 <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
@@ -358,7 +358,7 @@
                      content blow the single mobile column past the viewport. --}}
                 <div class="lg:col-span-1 min-w-0 space-y-4">
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
-                        <h3 class="font-display font-bold text-gray-900">Quick actions</h3>
+                        <h2 class="font-display font-bold text-gray-900">Quick actions</h2>
                         <div class="mt-4 space-y-2">
                             <a href="{{ route('invoices.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center group-hover:bg-brand-700 group-hover:text-white transition">
@@ -439,7 +439,7 @@
                     @if (! $isFirstRun)
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
                         <div class="flex items-center justify-between gap-2">
-                            <h3 class="font-display font-bold text-gray-900">Reports & exports</h3>
+                            <h2 class="font-display font-bold text-gray-900">Reports & exports</h2>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-50 text-brand-700 ring-1 ring-brand-200">For your CA</span>
                         </div>
                         <p class="mt-1 text-xs text-gray-500">CSV files you can upload to the GST portal or open in Excel.</p>
@@ -534,7 +534,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             New here?
                         </div>
-                        <h3 class="mt-3 font-display font-bold text-gray-900">How to use Apna Invoice</h3>
+                        <h2 class="mt-3 font-display font-bold text-gray-900">How to use Apna Invoice</h2>
                         <p class="mt-1 text-gray-500 text-sm">A 5-minute tour of every feature in the order you'll need them.</p>
                         <div class="mt-3 text-sm font-semibold text-brand-700">Read the guide →</div>
                     </a>
@@ -545,7 +545,7 @@
                     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                             <div>
-                                <h3 class="font-display font-bold text-gray-900">Recent invoices</h3>
+                                <h2 class="font-display font-bold text-gray-900">Recent invoices</h2>
                                 <p class="text-xs text-gray-500">Your latest activity</p>
                             </div>
                             <a href="{{ route('invoices.index') }}" class="text-sm text-brand-700 hover:text-brand-800 font-medium">View all →</a>
@@ -555,7 +555,7 @@
                                 <div class="w-16 h-16 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center mx-auto">
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
-                                <h4 class="mt-4 font-semibold text-gray-900">No invoices yet</h4>
+                                <h3 class="mt-4 font-semibold text-gray-900">No invoices yet</h3>
                                 <p class="mt-1 text-sm text-gray-500">Create your first invoice to see it here.</p>
                                 <a href="{{ route('invoices.create') }}" class="mt-5 inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg transition">+ Create invoice</a>
                             </div>

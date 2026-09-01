@@ -14,7 +14,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $icon }}"/>
         </svg>
     </div>
-    <h3 class="mt-5 font-display text-lg font-bold text-gray-900">{{ $title }}</h3>
+    <h2 class="mt-5 font-display text-lg font-bold text-gray-900">{{ $title }}</h2>
     @if ($description)
         <p class="mt-1 text-sm text-gray-500 max-w-md mx-auto leading-relaxed">{{ $description }}</p>
     @endif

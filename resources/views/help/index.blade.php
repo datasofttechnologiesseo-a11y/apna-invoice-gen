@@ -17,7 +17,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="text-[11px] font-bold uppercase tracking-widest text-accent-300">Quick start</div>
-                    <h3 class="mt-0.5 font-display text-lg font-extrabold">Download the 17-slide getting-started deck</h3>
+                    <h2 class="mt-0.5 font-display text-lg font-extrabold">Download the 17-slide getting-started deck</h2>
                     <p class="mt-1 text-sm text-brand-100">A step-by-step PowerPoint walkthrough, sign up to first paid invoice, perfect for sharing with your team or your CA.</p>
                 </div>
                 <a href="{{ asset('downloads/apna-invoice-getting-started.pptx') }}" download
@@ -244,7 +244,7 @@
                             <div class="flex items-start gap-4">
                                 <div class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-brand-700 to-accent-600 text-white font-display font-extrabold flex items-center justify-center">{{ $s['n'] }}</div>
                                 <div class="flex-1 min-w-0">
-                                    <h3 class="font-display text-xl sm:text-2xl font-extrabold text-gray-900">{{ $s['title'] }}</h3>
+                                    <h2 class="font-display text-xl sm:text-2xl font-extrabold text-gray-900">{{ $s['title'] }}</h2>
                                     @if (! empty($s['time']))
                                         <div class="text-xs uppercase tracking-wider text-gray-500 mt-0.5 font-semibold">{{ $s['time'] }}</div>
                                     @endif
@@ -295,7 +295,7 @@
                         <div class="flex items-start gap-4">
                             <div class="w-10 h-10 shrink-0 rounded-full bg-accent-100 text-accent-700 font-display font-extrabold flex items-center justify-center">12</div>
                             <div class="flex-1 min-w-0">
-                                <h3 class="font-display text-xl sm:text-2xl font-extrabold text-accent-900">What Apna Invoice doesn't (yet) cover</h3>
+                                <h2 class="font-display text-xl sm:text-2xl font-extrabold text-accent-900">What Apna Invoice doesn't (yet) cover</h2>
                                 <p class="mt-2 text-accent-800 leading-relaxed">
                                     We're built for small-to-mid Indian businesses doing domestic GST-taxable supplies.
                                     A few Indian GST scenarios are <strong>intentionally out of scope</strong> today, if any
@@ -344,7 +344,7 @@
                 </section>
 
                 <div class="bg-gradient-to-br from-brand-900 to-accent-900 text-white rounded-2xl p-6 sm:p-8 shadow-brand">
-                    <h3 class="font-display text-xl font-extrabold">Still stuck?</h3>
+                    <h2 class="font-display text-xl font-extrabold">Still stuck?</h2>
                     <p class="mt-2 text-brand-100 text-sm leading-relaxed">
                         WhatsApp or call us, fastest way to get unstuck during business hours (9.30 am – 7 pm IST, Mon–Sat).
                         We reply to every support email too, usually within a business day.

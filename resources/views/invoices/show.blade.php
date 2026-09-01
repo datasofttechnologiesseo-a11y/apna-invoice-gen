@@ -148,7 +148,7 @@
             <form method="POST" action="{{ route('invoices.cancel', $invoice) }}" class="p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
                 <div>
-                    <h3 class="font-display font-bold text-lg text-gray-900">Cancel this invoice?</h3>
+                    <h2 class="font-display font-bold text-lg text-gray-900">Cancel this invoice?</h2>
                     <p class="mt-1 text-sm text-gray-600">
                         Cancelling <strong class="font-mono">{{ $invoice->invoice_number }}</strong> preserves the record
                         for GST audit but stops further payments. The invoice number is NOT reused.
@@ -196,9 +196,9 @@
                         <div class="text-4xl leading-none">🎉</div>
                         <div class="flex-1 min-w-0">
                             <div class="text-xs uppercase font-bold tracking-widest text-accent-700">First invoice issued - welcome aboard!</div>
-                            <h3 class="font-display text-xl font-extrabold text-gray-900 mt-1">
+                            <h2 class="font-display text-xl font-extrabold text-gray-900 mt-1">
                                 Mubarak ho, {{ Str::limit(explode(' ', auth()->user()->name)[0] ?? 'friend', 20) }} ji!
-                            </h3>
+                            </h2>
                             <p class="text-sm text-gray-700 mt-1">
                                 You're officially running paperless GST billing. Share this invoice on WhatsApp,
                                 record the payment when it arrives, and we'll keep your GSTR-1 ready every month.
@@ -243,7 +243,7 @@
                 <form id="record-payment" method="POST" action="{{ route('invoices.payments', $invoice) }}" class="bg-white shadow sm:rounded-lg p-5 space-y-4 scroll-mt-20">
                     @csrf
                     <div class="flex items-center justify-between">
-                        <h3 class="font-semibold text-gray-900">Record a payment</h3>
+                        <h2 class="font-semibold text-gray-900">Record a payment</h2>
                         <div class="text-sm text-gray-500">Balance due: <span class="font-mono font-semibold text-gray-900">₹{{ inr($invoice->balance) }}</span></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -375,10 +375,10 @@
                 <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                     <div class="px-5 py-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                         <div>
-                            <h3 class="font-display font-bold text-gray-900 text-base flex items-center gap-2">
+                            <h2 class="font-display font-bold text-gray-900 text-base flex items-center gap-2">
                                 <svg class="w-5 h-5 text-money-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 Payment Receipts
-                            </h3>
+                            </h2>
                             <p class="text-xs text-gray-500 mt-0.5">Click <strong>PDF</strong> on any row to download the official receipt issued for that payment.</p>
                         </div>
                         <div class="text-xs text-gray-500 sm:text-right">{{ $payments->count() }} receipt{{ $payments->count() > 1 ? 's' : '' }} issued</div>

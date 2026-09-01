@@ -31,7 +31,7 @@
                 <form method="GET" class="flex flex-wrap items-end gap-3">
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Search</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Memo number or seller" class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Memo number or seller" class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Memo number or seller">
                     </div>
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">From</label>

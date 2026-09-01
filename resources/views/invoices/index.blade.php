@@ -29,7 +29,7 @@
                      they actually came here to do. --}}
                 @if (! $invoices->isEmpty() || request('search') || request('status') || request('from') || request('to'))
                 <form method="GET" class="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80" aria-label="Search by invoice #, customer name or mobile">
                     <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         <option value="outstanding" @selected(request('status') === 'outstanding')>⚠ Outstanding (unpaid)</option>

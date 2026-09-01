@@ -173,7 +173,7 @@
                 @endif
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Search</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, vendor, ref no." class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, vendor, ref no." class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Description, vendor, ref no.">
                 </div>
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Category</label>

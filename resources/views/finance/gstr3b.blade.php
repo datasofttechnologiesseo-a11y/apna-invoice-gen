@@ -32,7 +32,7 @@
             <form method="GET" class="bg-white rounded-xl ring-1 ring-gray-200 p-4 flex flex-wrap items-end gap-3 print:hidden">
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Filing month</label>
-                    <input type="month" name="month" value="{{ $periodStart->format('Y-m') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" max="{{ now()->format('Y-m') }}">
+                    <input type="month" name="month" aria-label="Return period (month and year)" value="{{ $periodStart->format('Y-m') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" max="{{ now()->format('Y-m') }}">
                 </div>
                 <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Recalculate</button>
                 <div class="text-xs text-gray-500 ml-auto">
@@ -71,7 +71,7 @@
             <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-brand-700 to-brand-800 text-white">
                     <div class="text-[10px] uppercase tracking-widest font-bold text-accent-300">Section 3.1</div>
-                    <h3 class="font-display text-lg font-extrabold">Details of outward supplies and inward supplies liable to reverse charge</h3>
+                    <h2 class="font-display text-lg font-extrabold">Details of outward supplies and inward supplies liable to reverse charge</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[700px]">
@@ -138,7 +138,7 @@
             <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-money-700 to-money-800 text-white">
                     <div class="text-[10px] uppercase tracking-widest font-bold text-money-200">Section 4</div>
-                    <h3 class="font-display text-lg font-extrabold">Eligible ITC</h3>
+                    <h2 class="font-display text-lg font-extrabold">Eligible ITC</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[600px]">
@@ -186,7 +186,7 @@
             <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-accent-700 to-accent-800 text-white">
                     <div class="text-[10px] uppercase tracking-widest font-bold text-accent-200">Section 6.1</div>
-                    <h3 class="font-display text-lg font-extrabold">Payment of tax</h3>
+                    <h2 class="font-display text-lg font-extrabold">Payment of tax</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[500px]">

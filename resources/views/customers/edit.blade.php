@@ -30,7 +30,7 @@
 
                 {{-- Section: Customer details --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Customer details</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Customer details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">How this customer appears on your invoices.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
@@ -50,7 +50,7 @@
 
                 {{-- Section: Contact --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Contact</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Contact</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Where we send invoices and payment reminders.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -70,7 +70,7 @@
 
                 {{-- Section: Billing address --}}
                 <section class="p-6 sm:p-8">
-                    <h3 class="text-sm font-bold text-gray-900">Billing address</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Billing address</h2>
                     <p class="text-xs text-gray-500 mt-0.5">The state determines the GST place of supply.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">

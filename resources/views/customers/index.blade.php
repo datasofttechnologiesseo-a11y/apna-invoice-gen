@@ -22,7 +22,7 @@
                      they actually came here to do. --}}
                 @if (! $customers->isEmpty() || request('search'))
                 <form method="GET" class="p-4 border-b">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Search by name or email">
                 </form>
                 @endif
 

@@ -68,7 +68,7 @@
                                 </div>
                                 <span class="px-2.5 py-1 rounded-full bg-white/20 ring-1 ring-white/30 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{{ $tpl['tag'] }}</span>
                             </div>
-                            <h3 class="mt-3 font-display font-extrabold text-lg leading-tight">{{ $tpl['label'] }}</h3>
+                            <h2 class="mt-3 font-display font-extrabold text-lg leading-tight">{{ $tpl['label'] }}</h2>
                             <p class="mt-1 text-white/85 text-sm leading-snug">{{ $tpl['tagline'] }}</p>
                         </div>
 

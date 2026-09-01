@@ -23,7 +23,7 @@
                 {{-- ─── Chooser: which kind of expense are you recording? ─── --}}
                 <div>
                     <div class="mb-3">
-                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">How was this paid?</h3>
+                        <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider">How was this paid?</h2>
                         <p class="text-xs text-gray-500 mt-0.5">Choose the option that matches the bill you have. Both update your P&amp;L the same way.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -38,7 +38,7 @@
                                     </svg>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-bold text-gray-900">Standard Expense</h4>
+                                    <h3 class="font-bold text-gray-900">Standard Expense</h3>
                                     <p class="text-xs text-gray-500 mt-0.5">Bank · UPI · Card · Cheque</p>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                     </svg>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-bold text-gray-900 group-hover:text-accent-700">Cash Memo <span class="text-[10px] font-semibold text-accent-700 bg-accent-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h4>
+                                    <h3 class="font-bold text-gray-900 group-hover:text-accent-700">Cash Memo <span class="text-[10px] font-semibold text-accent-700 bg-accent-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h3>
                                     <p class="text-xs text-gray-500 mt-0.5">Cash purchase without proper bill</p>
                                 </div>
                             </div>

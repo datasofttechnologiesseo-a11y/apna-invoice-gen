@@ -104,7 +104,7 @@
 
     {{-- ─── Category breakdown ─── --}}
     @if ($byCategory->isNotEmpty())
-        <h3>Category-wise summary</h3>
+        <h2>Category-wise summary</h2>
         <table class="cat-table">
             <thead>
                 <tr>
@@ -140,7 +140,7 @@
     @endif
 
     {{-- ─── Detailed entries ─── --}}
-    <h3>Detailed entries ({{ $summary['count'] }})</h3>
+    <h2>Detailed entries ({{ $summary['count'] }})</h2>
     @if ($rows->isEmpty())
         <div style="text-align: center; padding: 30px; color: #888; border: 1px dashed #ccc;">No expenses recorded for this period.</div>
     @else

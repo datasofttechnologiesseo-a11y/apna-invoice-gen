@@ -122,7 +122,7 @@
                     </template>
 
                     <div>
-                        <h3 class="font-display font-bold text-gray-900">Registered address</h3>
+                        <h2 class="font-display font-bold text-gray-900">Registered address</h2>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
                                 <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-500">(required if GST-registered)</span></x-input-label>
@@ -155,7 +155,7 @@
                     </div>
 
                     <div class="border-t pt-6">
-                        <h3 class="font-display font-bold text-gray-900">Contact</h3>
+                        <h2 class="font-display font-bold text-gray-900">Contact</h2>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <x-input-label for="email" value="Email" />
@@ -175,7 +175,7 @@
                     </div>
 
                     <div class="border-t pt-6">
-                        <h3 class="font-display font-bold text-gray-900">Letterhead logo</h3>
+                        <h2 class="font-display font-bold text-gray-900">Letterhead logo</h2>
                         <p class="text-sm text-gray-500 mt-0.5">Shown at the top of every invoice PDF</p>
                         @if ($company->logo_path)
                             <img src="{{ Storage::url($company->logo_path) }}" alt="Current logo" class="mt-4 h-20 border rounded-lg bg-white p-2">
@@ -186,7 +186,7 @@
                     </div>
 
                     <div class="border-t pt-6">
-                        <h3 class="font-display font-bold text-gray-900">Invoice numbering</h3>
+                        <h2 class="font-display font-bold text-gray-900">Invoice numbering</h2>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <x-input-label for="invoice_prefix" value="Prefix" />
@@ -201,7 +201,7 @@
                     </div>
 
                     <div class="border-t pt-6">
-                        <h3 class="font-display font-bold text-gray-900">Payment details</h3>
+                        <h2 class="font-display font-bold text-gray-900">Payment details</h2>
                         <p class="text-sm text-gray-500 mt-0.5">
                             Shown in the "Payment details" block on every invoice. Add a UPI ID to auto-generate a Scan-to-Pay QR on bills.
                         </p>

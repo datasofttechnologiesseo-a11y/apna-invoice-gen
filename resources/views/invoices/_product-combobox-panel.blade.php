@@ -102,14 +102,14 @@
                     <label class="block text-[10px] font-bold uppercase text-gray-500">HSN/SAC (optional)</label>
                     @include('partials.hsn-search-link', ['size' => 'w-3 h-3'])
                 </div>
-                <input type="text" x-model="quickAdd.hsn_sac" maxlength="8" inputmode="numeric" placeholder="e.g. 998314"
+                <input type="text" aria-label="HSN or SAC code for the new item" x-model="quickAdd.hsn_sac" maxlength="8" inputmode="numeric" placeholder="e.g. 998314"
                        class="mt-0.5 block w-full text-sm border-gray-300 rounded font-mono"
                        :class="quickAdd.errors.hsn_sac && '!border-danger-400 !ring-danger-400'">
                 <p x-show="quickAdd.errors.hsn_sac" x-cloak class="text-[10px] text-danger-600" x-text="quickAdd.errors.hsn_sac"></p>
             </div>
             <div>
                 <label class="block text-[10px] font-bold uppercase text-gray-500">Unit (optional)</label>
-                <input type="text" x-model="quickAdd.unit" maxlength="6" placeholder="NOS, KGS, HRS…"
+                <input type="text" aria-label="Unit for the new item" x-model="quickAdd.unit" maxlength="6" placeholder="NOS, KGS, HRS…"
                        class="mt-0.5 block w-full text-sm border-gray-300 rounded uppercase">
                 <p x-show="quickAdd.errors.unit" x-cloak class="text-[10px] text-danger-600" x-text="quickAdd.errors.unit"></p>
             </div>

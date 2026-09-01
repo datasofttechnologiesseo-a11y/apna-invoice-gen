@@ -32,7 +32,7 @@
 
                 {{-- Section: Item details --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Item details</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Item details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">What you're selling. Reused across invoices via autocomplete.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
@@ -69,7 +69,7 @@
 
                 {{-- Section: Tax & pricing --}}
                 <section class="p-6 sm:p-8">
-                    <h3 class="text-sm font-bold text-gray-900">Tax &amp; pricing</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Tax &amp; pricing</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Defaults pre-fill the invoice line; you can still tweak per invoice.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>

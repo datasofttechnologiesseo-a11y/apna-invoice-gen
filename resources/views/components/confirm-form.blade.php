@@ -46,7 +46,7 @@
                             </svg>
                         </div>
                         <div class="flex-1">
-                            <h3 id="{{ $id }}-title" class="font-display text-lg font-bold text-gray-900">{{ $title }}</h3>
+                            <h2 id="{{ $id }}-title" class="font-display text-lg font-bold text-gray-900">{{ $title }}</h2>
                             @if ($message)
                                 <p class="mt-1 text-sm text-gray-600 leading-relaxed">{{ $message }}</p>
                             @endif
