@@ -136,7 +136,10 @@ return [
     'prohibited_unless' => 'The :attribute field is prohibited unless :other is in :values.',
     'prohibits' => 'The :attribute field prohibits :other from being present.',
     'regex' => 'The :attribute field format is invalid.',
-    'required' => 'Please enter a :attribute to continue.',
+    // "a :attribute" produced "a Email", "a Invoice prefix", "a IFSC
+    // code" and "a UPI ID". "the" agrees with every attribute name, so the
+    // message stays friendly without needing per-field wording.
+    'required' => 'Please enter the :attribute to continue.',
     'required_array_keys' => 'The :attribute field must contain entries for: :values.',
     'required_if' => 'The :attribute field is required when :other is :value.',
     'required_if_accepted' => 'The :attribute field is required when :other is accepted.',

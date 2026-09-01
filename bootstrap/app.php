@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // limits work correctly behind Cloudflare / load balancers.
         // In a fully locked-down deployment, swap '*' for an explicit allowlist.
         $middleware->trustProxies(at: '*');
+
+        // Security response headers on every HTML document.
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
