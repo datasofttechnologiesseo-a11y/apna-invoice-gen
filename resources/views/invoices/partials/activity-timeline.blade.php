@@ -118,7 +118,7 @@
             <div class="absolute left-[33px] top-7 bottom-7 w-px bg-gray-200" aria-hidden="true"></div>
 
             @foreach ($events as $i => $e)
-                @php $t = $tones[$e['tone']]; @endphp
+                @php $t = $tones[$e['tone']] ?? $tones['gray']; @endphp
                 <li class="relative flex items-start gap-4">
                     <div class="relative z-10 shrink-0 w-10 h-10 rounded-full flex items-center justify-center {{ $t['bg'] }} ring-4 ring-white">
                         <svg class="w-5 h-5 {{ $t['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">

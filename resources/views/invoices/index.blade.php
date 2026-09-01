@@ -155,7 +155,7 @@
                                                 'draft' => 'bg-gray-100 text-gray-700',
                                                 'final' => 'bg-brand-100 text-brand-800',
                                                 'partially_paid' => 'bg-accent-100 text-accent-800',
-                                                'paid' => 'bg-green-100 text-green-800',
+                                                'paid' => 'bg-money-100 text-money-800',
                                                 'cancelled' => 'bg-danger-100 text-danger-800',
                                             ];
                                         @endphp

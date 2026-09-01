@@ -47,7 +47,7 @@
                 <div class="text-lg font-bold text-gray-900">{{ $number }}</div>
             </div>
             @if ($isPaid)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800 ring-1 ring-green-200">PAID</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-money-100 text-money-800 ring-1 ring-money-200">PAID</span>
             @else
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-accent-100 text-accent-800 ring-1 ring-accent-200">DUE</span>
             @endif
@@ -86,7 +86,7 @@
             </a>
             @if ($upiLink)
                 <a href="{{ $upiLink }}"
-                   class="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm transition">
+                   class="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-money-600 hover:bg-money-700 text-white font-semibold shadow-sm transition">
                     Pay {{ $symbol . number_format($balance, 2) }} via UPI
                 </a>
                 <p class="text-center text-xs text-gray-500">Opens your UPI app (GPay, PhonePe, Paytm…)</p>

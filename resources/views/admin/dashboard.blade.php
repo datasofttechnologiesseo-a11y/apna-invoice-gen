@@ -20,7 +20,7 @@
                 ];
             @endphp
             @foreach ($tiles as $t)
-                @php $c = $colors[$t['color']]; @endphp
+                @php $c = $colors[$t['color']] ?? $colors['brand']; @endphp
                 <a href="{{ $t['href'] }}" class="group relative p-5 bg-white rounded-xl border {{ $c['border'] }} {{ $c['hover'] }} hover:shadow-md transition-all block">
                     <div class="flex items-start justify-between">
                         <div>

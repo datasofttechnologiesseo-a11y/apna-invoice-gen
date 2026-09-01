@@ -35,7 +35,7 @@
             @endphp
             @foreach ($tiles as $t)
                 <div class="p-5 bg-white rounded-xl border border-gray-200">
-                    <div class="text-xs font-bold uppercase tracking-wider {{ $bgColors[$t['color']] }} inline-block px-2 py-0.5 rounded">{{ $t['label'] }}</div>
+                    <div class="text-xs font-bold uppercase tracking-wider {{ $bgColors[$t['color']] ?? 'bg-gray-100 text-gray-700' }} inline-block px-2 py-0.5 rounded">{{ $t['label'] }}</div>
                     <div class="mt-2 font-display text-2xl font-extrabold text-gray-900 tabular-nums">{{ $t['value'] }}</div>
                 </div>
             @endforeach
