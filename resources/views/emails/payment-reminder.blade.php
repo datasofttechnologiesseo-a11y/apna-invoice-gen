@@ -5,7 +5,7 @@
     $overdueLabel = $daysPastDue <= 0
         ? 'due today'
         : ($daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue');
-    $accent = $daysPastDue >= 15 ? '#b91c1c' : ($daysPastDue >= 7 ? '#c2410c' : '#0f766e');
+    $accent = $daysPastDue >= 15 ? '#b91c1c' : ($daysPastDue >= 7 ? '#b45309' : '#0f766e');
 @endphp
 <!DOCTYPE html>
 <html>

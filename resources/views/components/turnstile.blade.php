@@ -6,7 +6,7 @@
     <div class="mt-4">
         <div class="cf-turnstile" data-sitekey="{{ $siteKey }}" data-theme="light" data-size="flexible"></div>
         @error('cf-turnstile-response')
-            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            <p class="mt-1 text-sm text-danger-600">{{ $message }}</p>
         @enderror
     </div>
     @once

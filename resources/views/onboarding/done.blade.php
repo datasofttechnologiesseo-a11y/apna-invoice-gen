@@ -36,13 +36,13 @@
                     <h3 class="mt-3 font-semibold text-gray-900">Ready to invoice</h3>
                     <p class="text-sm text-gray-600 mt-0.5">Bill customers in seconds</p>
                 </div>
-                <div class="p-4 rounded-xl bg-amber-50 ring-1 ring-amber-100">
-                    <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                <div class="p-4 rounded-xl bg-accent-50 ring-1 ring-accent-100">
+                    <div class="w-10 h-10 rounded-lg bg-accent-100 text-accent-700 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 16l4-4 3 3 5-7"/></svg>
                     </div>
                     <h3 class="mt-3 font-semibold text-gray-900">Track P&amp;L</h3>
                     <p class="text-sm text-gray-600 mt-0.5">Log expenses &amp; cash sales to see profit</p>
-                    <a href="{{ route('finance.index') }}" class="mt-2 inline-block text-xs text-amber-700 hover:underline font-semibold">Open Finance →</a>
+                    <a href="{{ route('finance.index') }}" class="mt-2 inline-block text-xs text-accent-700 hover:underline font-semibold">Open Finance →</a>
                 </div>
             </div>
 

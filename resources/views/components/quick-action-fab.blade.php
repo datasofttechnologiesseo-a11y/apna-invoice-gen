@@ -16,7 +16,7 @@
 --}}
 <a href="{{ $href }}"
    aria-label="{{ $label }}"
-   class="lg:hidden fixed bottom-5 right-5 z-30 inline-flex items-center justify-center w-14 h-14 rounded-full bg-saffron-700 hover:bg-saffron-800 text-white shadow-lg ring-4 ring-white/60 active:scale-95 transition transform">
+   class="lg:hidden fixed bottom-5 right-5 z-30 inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-700 hover:bg-accent-800 text-white shadow-lg ring-4 ring-white/60 active:scale-95 transition transform">
     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
     </svg>

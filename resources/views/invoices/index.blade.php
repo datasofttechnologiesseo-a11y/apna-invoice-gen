@@ -62,9 +62,9 @@
                                 $colors = [
                                     'draft' => 'bg-gray-100 text-gray-600',
                                     'final' => 'bg-brand-50 text-brand-700',
-                                    'partially_paid' => 'bg-amber-50 text-amber-700',
+                                    'partially_paid' => 'bg-accent-50 text-accent-700',
                                     'paid' => 'bg-money-50 text-money-700',
-                                    'cancelled' => 'bg-rose-50 text-rose-700',
+                                    'cancelled' => 'bg-danger-50 text-danger-700',
                                 ];
                             @endphp
                             <li class="p-4 flex flex-col gap-2">
@@ -85,7 +85,7 @@
                                 <div class="flex items-baseline justify-between text-sm">
                                     <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($inv->grand_total) }}</span></span>
                                     @if ((float) $inv->balance > 0)
-                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-amber-700 ml-1">₹{{ inr($inv->balance) }}</span></span>
+                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-accent-700 ml-1">₹{{ inr($inv->balance) }}</span></span>
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-3 pt-1 text-sm">
@@ -98,9 +98,9 @@
                                             title="Delete draft #{{ $inv->id }}?"
                                             message="This draft and all its line items are permanently deleted. This cannot be undone."
                                             confirm-label="Delete draft"
-                                            confirm-class="bg-red-600 hover:bg-red-700"
+                                            confirm-class="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="inline-flex items-center min-h-[36px] text-red-600">Delete</button>
+                                            <button type="button" class="inline-flex items-center min-h-[36px] text-danger-600">Delete</button>
                                         </x-confirm-form>
                                     @endif
                                 </div>
@@ -138,7 +138,7 @@
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <span>{{ $inv->customer?->name }}</span>
                                             @if ($inv->customer?->gstin)
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" title="Customer has GSTIN - B2B reportable in GSTR-1">B2B</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-money-50 text-money-700 font-bold uppercase tracking-wider" title="Customer has GSTIN - B2B reportable in GSTR-1">B2B</span>
                                             @else
                                                 <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer - B2C">B2C</span>
                                             @endif
@@ -153,29 +153,29 @@
                                         @php
                                             $colors = [
                                                 'draft' => 'bg-gray-100 text-gray-700',
-                                                'final' => 'bg-blue-100 text-blue-800',
-                                                'partially_paid' => 'bg-amber-100 text-amber-800',
+                                                'final' => 'bg-brand-100 text-brand-800',
+                                                'partially_paid' => 'bg-accent-100 text-accent-800',
                                                 'paid' => 'bg-green-100 text-green-800',
-                                                'cancelled' => 'bg-red-100 text-red-800',
+                                                'cancelled' => 'bg-danger-100 text-danger-800',
                                             ];
                                         @endphp
                                         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         <a href="{{ route('invoices.show', $inv) }}" class="text-brand-700 hover:underline">View</a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
                                         @if ($inv->isEditable())
-                                            <span class="text-gray-300 mx-1">·</span>
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                             <x-confirm-form
                                                 :action="route('invoices.destroy', $inv)"
                                                 method="DELETE"
                                                 title="Delete draft #{{ $inv->id }}?"
                                                 message="This draft and all its line items are permanently deleted. This cannot be undone."
                                                 confirm-label="Delete draft"
-                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                confirm-class="bg-danger-600 hover:bg-danger-700"
                                                 tone="danger">
-                                                <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                                <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                             </x-confirm-form>
                                         @endif
                                     </td>

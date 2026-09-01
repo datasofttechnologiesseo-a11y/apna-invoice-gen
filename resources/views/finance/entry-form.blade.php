@@ -13,8 +13,8 @@
             @include('finance.partials.tabs')
 
             @if (session('error'))
-                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm flex items-start gap-2" role="alert">
-                    <svg class="w-4 h-4 mt-0.5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
+                <div class="p-3 bg-danger-50 border border-danger-200 text-danger-800 rounded text-sm flex items-start gap-2" role="alert">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
@@ -46,9 +46,9 @@
                                 Use this when you have a <strong>proper bill or tax invoice</strong> from the vendor - paid via bank transfer, UPI, card, or cheque.
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
-                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>GST input credit (ITC) claimable if vendor is GST-registered</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Just fill amount, date &amp; category - fast entry</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Best for office rent, salaries, SaaS, utilities</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>GST input credit (ITC) claimable if vendor is GST-registered</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>Just fill amount, date &amp; category - fast entry</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>Best for office rent, salaries, SaaS, utilities</span></li>
                             </ul>
                             <div class="mt-4 text-xs text-brand-700 font-semibold inline-flex items-center gap-1">
                                 ↓ Continue with the form below
@@ -56,15 +56,15 @@
                         </div>
 
                         {{-- Card 2: Cash Memo --}}
-                        <a href="{{ route('finance.cash-memos.create') }}" class="group relative bg-white border-2 border-gray-200 hover:border-amber-500 hover:shadow-md transition-all rounded-xl p-5 shadow-sm block">
+                        <a href="{{ route('finance.cash-memos.create') }}" class="group relative bg-white border-2 border-gray-200 hover:border-accent-500 hover:shadow-md transition-all rounded-xl p-5 shadow-sm block">
                             <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                                <div class="flex-shrink-0 w-11 h-11 rounded-lg bg-accent-50 text-accent-700 flex items-center justify-center">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                                 </div>
                                 <div class="flex-1">
-                                    <h4 class="font-bold text-gray-900 group-hover:text-amber-700">Cash Memo <span class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h4>
+                                    <h4 class="font-bold text-gray-900 group-hover:text-accent-700">Cash Memo <span class="text-[10px] font-semibold text-accent-700 bg-accent-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Cash purchase without proper bill</p>
                                 </div>
                             </div>
@@ -72,11 +72,11 @@
                                 Use this when paying <strong>cash to a small or unregistered vendor</strong> who doesn't issue a tax invoice. Common for petty cash, repairs, stationery, food, etc.
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
-                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Generates a printable A4 Cash Memo as your purchase voucher</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Auto-creates the matching expense entry - no double work</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>FY-based memo number (e.g. CM/26-27/0001) for proper records</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Generates a printable A4 Cash Memo as your purchase voucher</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Auto-creates the matching expense entry - no double work</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>FY-based memo number (e.g. CM/26-27/0001) for proper records</span></li>
                             </ul>
-                            <div class="mt-4 text-xs text-amber-700 font-semibold inline-flex items-center gap-1 group-hover:underline">
+                            <div class="mt-4 text-xs text-accent-700 font-semibold inline-flex items-center gap-1 group-hover:underline">
                                 Create Cash Memo →
                             </div>
                         </a>
@@ -91,7 +91,7 @@
                     @if ($expense->exists) @method('PATCH') @endif
 
                     @if ($errors->any())
-                        <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                        <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
                             <div class="font-semibold mb-1">Please fix the following:</div>
                             <ul class="list-disc pl-5 space-y-0.5">
                                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
@@ -108,7 +108,7 @@
                         </div>
                         <div>
                             <x-input-label for="category" value="Category *" />
-                            <select id="category" name="category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500" required>
+                            <select id="category" name="category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600" required>
                                 <option value="">- Select -</option>
                                 @foreach (config('expense_categories') as $key => $cfg)
                                     <option value="{{ $key }}" @selected(old('category', $expense->category) === $key) title="{{ $cfg['desc'] }}">{{ $cfg['label'] }}</option>
@@ -134,7 +134,7 @@
                         </div>
                         <div>
                             <x-input-label for="payment_method" value="Payment method" />
-                            <select id="payment_method" name="payment_method" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <select id="payment_method" name="payment_method" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 @foreach (['bank' => 'Bank transfer / NEFT', 'upi' => 'UPI', 'card' => 'Card', 'cash' => 'Cash', 'cheque' => 'Cheque', 'other' => 'Other'] as $v => $label)
                                     <option value="{{ $v }}" @selected(old('payment_method', $expense->payment_method ?? 'bank') === $v)>{{ $label }}</option>
                                 @endforeach
@@ -168,7 +168,7 @@
                             <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
                                 <input type="checkbox" name="is_interstate" value="1"
                                        @checked(old('is_interstate', $expense->is_interstate ?? false))
-                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Inter-state purchase (IGST)</span>
                                     <span class="block text-xs text-gray-500">Tick if the vendor's GSTIN is from a different state and they charged you IGST. Leave unchecked for normal local purchases (CGST + SGST).</span>
@@ -181,7 +181,7 @@
                             <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
                                 <input type="checkbox" name="itc_eligible" value="1"
                                        @checked(old('itc_eligible', $expense->itc_eligible ?? true))
-                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Eligible for input tax credit</span>
                                     <span class="block text-xs text-gray-500">Leave ticked for normal business purchases. Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use or exempt-supply items - so this GST isn't claimed on GSTR-3B.</span>
@@ -200,7 +200,7 @@
                         <div class="md:col-span-2">
                             <x-input-label for="notes" value="Notes" />
                             <textarea id="notes" name="notes" rows="3" maxlength="1000"
-                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ old('notes', $expense->notes) }}</textarea>
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">{{ old('notes', $expense->notes) }}</textarea>
                         </div>
                     </div>
 
@@ -214,9 +214,9 @@
                                     title="Delete this expense?"
                                     message="This expense entry will be permanently removed. This cannot be undone."
                                     confirmLabel="Delete expense"
-                                    confirmClass="bg-red-600 hover:bg-red-700"
+                                    confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
-                                    <button type="button" class="px-3 py-2 text-red-600 hover:bg-red-50 rounded text-sm font-semibold">Delete</button>
+                                    <button type="button" class="px-3 py-2 text-danger-600 hover:bg-danger-50 rounded text-sm font-semibold">Delete</button>
                                 </x-confirm-form>
                             @endif
                             <x-primary-button>{{ $expense->exists ? 'Save changes' : 'Add expense' }}</x-primary-button>

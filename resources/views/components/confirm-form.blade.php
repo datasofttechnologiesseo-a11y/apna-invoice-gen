@@ -10,8 +10,8 @@
 
 @php
     $toneIcon = [
-        'danger' => ['bg' => 'bg-red-100', 'color' => 'text-red-600', 'path' => 'M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z'],
-        'warning' => ['bg' => 'bg-amber-100', 'color' => 'text-amber-600', 'path' => 'M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z'],
+        'danger' => ['bg' => 'bg-danger-100', 'color' => 'text-danger-600', 'path' => 'M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z'],
+        'warning' => ['bg' => 'bg-accent-100', 'color' => 'text-accent-600', 'path' => 'M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z'],
         'default' => ['bg' => 'bg-brand-100', 'color' => 'text-brand-700', 'path' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
     ][$tone] ?? null;
 

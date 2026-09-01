@@ -48,11 +48,11 @@
     </p>
 
     <div class="not-prose my-8 rounded-2xl ring-1 ring-gray-200 shadow-sm overflow-hidden md:grid md:grid-cols-2">
-        <div class="p-8 bg-gradient-to-br from-brand-900 to-brand-700 text-white">
+        <div class="p-8 bg-gradient-to-br from-brand-900 to-brand-800 text-white">
             <div class="text-xs font-bold tracking-widest uppercase text-accent-300">Early-bird plan</div>
             {{-- !text-white: the marketing layout sets [&_h2]:text-gray-900 on its content
                  wrapper, and that descendant selector outranks a plain text-white utility,
-                 so this heading rendered near-black on the navy card. --}}
+                 so this heading rendered near-black on the teal card. --}}
             <h2 class="mt-2 font-display text-2xl font-extrabold !text-white">DST Invoice · Free</h2>
             <div class="mt-6 flex items-baseline gap-2">
                 <span class="text-6xl font-black">₹0</span>

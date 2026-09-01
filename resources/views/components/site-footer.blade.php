@@ -77,7 +77,7 @@
 
                 {{-- Link columns --}}
                 @foreach ([
-                    ['title' => 'Product', 'color' => 'brand', 'links' => [
+                    ['title' => 'Product', 'links' => [
                         ['href' => route('pages.features'), 'label' => 'Features'],
                         ['href' => route('pages.how-to-use'), 'label' => 'How to use'],
                         ['href' => route('pages.pricing'), 'label' => 'Pricing'],
@@ -88,7 +88,7 @@
                     // links a column. Resources previously carried ten while the
                     // others held six, so three of the four columns ended early
                     // and the block was a third empty.
-                    ['title' => 'Free tools', 'color' => 'accent', 'links' => [
+                    ['title' => 'Free tools', 'links' => [
                         ['href' => route('pages.gst-calculator'), 'label' => 'Free GST calculator'],
                         ['href' => route('pages.gst-invoice-format'), 'label' => 'GST invoice format'],
                         ['href' => route('pages.billing-software'), 'label' => 'Free billing software'],
@@ -100,11 +100,18 @@
                     // Company, support and trust. Several of these had no internal
                     // link anywhere on the site before, which left them orphaned
                     // for crawlers and unreachable for anyone checking who we are.
-                    ['title' => 'Company', 'color' => 'money', 'links' => array_values(array_filter([
+                    ['title' => 'Company', 'links' => array_values(array_filter([
                         ['href' => route('pages.about'), 'label' => 'About us'],
                         ['href' => route('blog.index'), 'label' => 'Blog'],
                         ['href' => route('pages.faq'), 'label' => 'FAQ'],
                         ['href' => route('pages.partners'), 'label' => 'For CAs & partners'],
+                        // Refund and Press had no inbound internal link anywhere
+                        // on the site after the legal chips came out of the
+                        // sub-footer, so they were crawlable only via the
+                        // sitemap. They sit in the column they belong to rather
+                        // than back in the single-line bar.
+                        ['href' => route('pages.press'), 'label' => 'Press kit'],
+                        ['href' => route('pages.refund'), 'label' => 'Refund policy'],
                         // Auth-gated app pages: they 302 to /login for anonymous
                         // crawlers and /invoices is robots-disallowed, so linking
                         // them publicly just leaks link equity into a dead end.
@@ -193,8 +200,8 @@
                             @endif
                         @endforeach
                     </div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-saffron-500/15 text-saffron-200 text-[11px] font-bold ring-1 ring-saffron-500/40 whitespace-nowrap">
-                        <span class="w-1.5 h-1.5 rounded-full bg-saffron-400"></span> Made in India
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-500/15 text-accent-200 text-[11px] font-bold ring-1 ring-accent-500/40 whitespace-nowrap">
+                        <span class="w-1.5 h-1.5 rounded-full bg-accent-400"></span> Made in India
                     </span>
                 </div>
             </div>
@@ -253,8 +260,8 @@
                         @endif
                     @endforeach
 
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-saffron-500/15 text-saffron-200 text-[11px] font-bold ring-1 ring-saffron-500/40">
-                        <span class="w-1.5 h-1.5 rounded-full bg-saffron-400 animate-shimmer"></span> Made in India
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-500/15 text-accent-200 text-[11px] font-bold ring-1 ring-accent-500/40">
+                        <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-shimmer"></span> Made in India
                     </span>
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/15 text-brand-200 text-[11px] font-bold ring-1 ring-brand-500/40">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1L3 4v6c0 4.5 3 8.3 7 9 4-.7 7-4.5 7-9V4l-7-3zm-.7 12.3L6 10l1.4-1.4 1.9 1.9 4.4-4.4L15 7.5l-5.7 5.8z" clip-rule="evenodd"/></svg>
@@ -272,7 +279,7 @@
                  native compose sheet on mobile. --}}
             <div class="rounded-xl bg-white/5 ring-1 ring-white/10 px-4 py-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
                 <div class="flex items-center gap-3 text-gray-200">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-saffron-500/15 ring-1 ring-saffron-500/40 text-saffron-200">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent-500/15 ring-1 ring-accent-500/40 text-accent-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10c0 3.866-3.582 7-8 7a8.84 8.84 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
                     </span>
                     <div class="leading-tight">
@@ -285,7 +292,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         support@datasofttechnologies.com
                     </a>
-                    <a href="{{ route('help') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-saffron-500/15 hover:bg-saffron-500/25 ring-1 ring-saffron-500/40 text-saffron-100 text-xs font-semibold transition">
+                    <a href="{{ route('help') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-500/15 hover:bg-accent-500/25 ring-1 ring-accent-500/40 text-accent-100 text-xs font-semibold transition">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         Help &amp; FAQ
                     </a>
@@ -301,7 +308,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span>Built with</span>
-                    <svg class="w-4 h-4 text-red-400 animate-shimmer" fill="currentColor" viewBox="0 0 20 20"><path d="M3.2 5.3a5.3 5.3 0 017.5 0l.3.3.3-.3a5.3 5.3 0 017.5 7.5L10.9 17.6a1.3 1.3 0 01-1.8 0L3.2 12.8a5.3 5.3 0 010-7.5z"/></svg>
+                    <svg class="w-4 h-4 text-danger-400 animate-shimmer" fill="currentColor" viewBox="0 0 20 20"><path d="M3.2 5.3a5.3 5.3 0 017.5 0l.3.3.3-.3a5.3 5.3 0 017.5 7.5L10.9 17.6a1.3 1.3 0 01-1.8 0L3.2 12.8a5.3 5.3 0 010-7.5z"/></svg>
                     <span>in India by</span>
                     <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-bold hover:text-accent-400 transition">DST</a>
                 </div>

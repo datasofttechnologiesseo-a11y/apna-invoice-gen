@@ -10,7 +10,7 @@
 
         /* ---- cover ---- */
         .cover { text-align: center; padding-top: 55mm; page-break-after: always; }
-        .cover .kicker { font-size: 8.5px; letter-spacing: 3px; text-transform: uppercase; color: #c2410c; font-weight: bold; }
+        .cover .kicker { font-size: 8.5px; letter-spacing: 3px; text-transform: uppercase; color: #b45309; font-weight: bold; }
         .cover h1 { font-size: 32px; color: #134e4a; margin: 10px 0 0; letter-spacing: -0.5px; }
         .cover .sub { font-size: 12px; color: #6b7490; margin-top: 10px; }
         .cover .rule { width: 60px; height: 3px; background: #f97316; margin: 22px auto; }
@@ -20,14 +20,14 @@
         .toc-h { font-size: 16px; color: #134e4a; margin: 0 0 12px; }
         table.toc { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         table.toc td { padding: 5px 0; border-bottom: 1px solid #edf0f7; font-size: 10.5px; vertical-align: top; }
-        table.toc td.n { width: 26px; color: #c2410c; font-weight: bold; }
+        table.toc td.n { width: 26px; color: #b45309; font-weight: bold; }
 
         /* ---- chapters ---- */
         h2 {
             font-size: 15px; color: #134e4a; margin: 0 0 8px;
             padding-bottom: 5px; border-bottom: 2px solid #0f766e;
         }
-        h2 .cn { color: #c2410c; font-size: 11px; }
+        h2 .cn { color: #b45309; font-size: 11px; }
         .chapter { page-break-before: always; }
         p { margin: 0 0 7px; }
         ul { margin: 0 0 8px; padding-left: 14px; }

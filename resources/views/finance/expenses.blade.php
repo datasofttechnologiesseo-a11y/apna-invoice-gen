@@ -33,11 +33,11 @@
     <div class="py-8 print:py-0">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4 print:max-w-none print:px-0">
             @if (session('status'))
-                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-sm print:hidden">{{ session('status') }}</div>
+                <div class="p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm print:hidden">{{ session('status') }}</div>
             @endif
             @if (session('error'))
-                <div class="p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm flex items-start gap-2 print:hidden" role="alert">
-                    <svg class="w-4 h-4 mt-0.5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
+                <div class="p-3 bg-danger-50 border border-danger-200 text-danger-800 rounded text-sm flex items-start gap-2 print:hidden" role="alert">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6V8m0 13a9 9 0 110-18 9 9 0 010 18z"/></svg>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
@@ -54,7 +54,7 @@
                         <div>
                             <label for="period" class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Period</label>
                             <select id="period" name="period" onchange="this.form.submit()"
-                                    class="min-w-[220px] border-gray-300 rounded-md shadow-sm text-sm font-semibold focus:border-brand-500 focus:ring-brand-500">
+                                    class="min-w-[220px] border-gray-300 rounded-md shadow-sm text-sm font-semibold focus:border-brand-600 focus:ring-brand-600">
                                 @foreach ($presets as $p)
                                     <option value="{{ $p['key'] }}" @selected($periodKey === $p['key'])>{{ $p['label'] }}</option>
                                 @endforeach
@@ -70,11 +70,11 @@
                         @if (request('search'))<input type="hidden" name="search" value="{{ request('search') }}">@endif
                         <div>
                             <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">From</label>
-                            <input type="date" name="from" aria-label="From date" value="{{ request('from', $periodStart->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input type="date" name="from" aria-label="From date" value="{{ request('from', $periodStart->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                         </div>
                         <div>
                             <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">To</label>
-                            <input type="date" name="to" aria-label="To date" value="{{ request('to', $periodEnd->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                            <input type="date" name="to" aria-label="To date" value="{{ request('to', $periodEnd->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                         </div>
                         <button class="px-3 py-2 bg-gray-800 text-white rounded text-sm">Apply custom</button>
                     </form>
@@ -89,7 +89,7 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('finance.expenses.export.pdf', $exportQuery) }}"
-                           class="inline-flex items-center justify-center gap-1.5 min-h-[36px] px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded">
+                           class="inline-flex items-center justify-center gap-1.5 min-h-[36px] px-3 py-1.5 bg-money-600 hover:bg-money-700 text-white text-xs font-semibold rounded">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Download PDF
                         </a>
@@ -118,11 +118,11 @@
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">GST (Input Tax Credit)</div>
-                    <div class="mt-1 text-2xl font-bold text-emerald-700 font-mono tabular-nums">₹{{ inr($summary['gst']) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-money-700 font-mono tabular-nums">₹{{ inr($summary['gst']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Total cash out</div>
-                    <div class="mt-1 text-2xl font-bold text-red-700 font-mono tabular-nums">₹{{ inr($summary['cash_out']) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-danger-700 font-mono tabular-nums">₹{{ inr($summary['cash_out']) }}</div>
                 </div>
             </div>
 
@@ -153,7 +153,7 @@
                                         </td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums">{{ $cat['count'] }}</td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums">{{ inr($cat['taxable']) }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-emerald-700">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '-' }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-money-700">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '-' }}</td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold">{{ inr($cat['taxable'] + $cat['gst']) }}</td>
                                         <td class="px-4 py-2 text-right text-xs text-gray-500">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '-' }}</td>
                                     </tr>
@@ -173,11 +173,11 @@
                 @endif
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Search</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, vendor, ref no." class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, vendor, ref no." class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                 </div>
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Category</label>
-                    <select name="category" aria-label="Filter by category" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                    <select name="category" aria-label="Filter by category" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                         <option value="">All categories</option>
                         @foreach (config('expense_categories') as $key => $cfg)
                             <option value="{{ $key }}" @selected(request('category') === $key)>{{ $cfg['label'] }}</option>
@@ -222,13 +222,13 @@
                             <div class="text-right flex-shrink-0">
                                 <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ inr($e->amount) }}</div>
                                 @if ((float) $e->gst_amount > 0)
-                                    <div class="text-[10px] text-emerald-700 font-mono">+ ₹{{ inr($e->gst_amount) }} GST</div>
+                                    <div class="text-[10px] text-money-700 font-mono">+ ₹{{ inr($e->gst_amount) }} GST</div>
                                 @endif
                             </div>
                         </div>
                         <div class="mt-3 pt-2 border-t border-gray-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                             <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">View</a>
-                            <a href="{{ route('finance.expenses.pdf', $e) }}" class="text-emerald-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
+                            <a href="{{ route('finance.expenses.pdf', $e) }}" class="text-money-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
                             <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
                             <span class="ml-auto">
                                 <x-confirm-form
@@ -237,9 +237,9 @@
                                     title="Delete this expense?"
                                     message="This expense entry will be permanently removed. This cannot be undone."
                                     confirmLabel="Delete expense"
-                                    confirmClass="bg-red-600 hover:bg-red-700"
+                                    confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
-                                    <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                    <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                 </x-confirm-form>
                             </span>
                         </div>
@@ -293,23 +293,23 @@
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             View
                                         </a>
-                                        <span class="text-gray-300 mx-1">·</span>
-                                        <a href="{{ route('finance.expenses.pdf', $e) }}" class="inline-flex items-center gap-1 text-emerald-700 hover:underline font-medium" title="Download voucher PDF">
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                                        <a href="{{ route('finance.expenses.pdf', $e) }}" class="inline-flex items-center gap-1 text-money-700 hover:underline font-medium" title="Download voucher PDF">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                             PDF
                                         </a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <x-confirm-form
                                             :action="route('finance.expenses.destroy', $e)"
                                             method="DELETE"
                                             title="Delete this expense?"
                                             message="This expense entry will be permanently removed. This cannot be undone."
                                             confirmLabel="Delete expense"
-                                            confirmClass="bg-red-600 hover:bg-red-700"
+                                            confirmClass="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                            <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                         </x-confirm-form>
                                     </td>
                                 </tr>
@@ -330,8 +330,8 @@
                                 <tr class="font-bold border-t-2 border-gray-300">
                                     <td colspan="3" class="px-5 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Total ({{ number_format($summary['count']) }} entries)</td>
                                     <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ inr($summary['taxable']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-emerald-700">₹{{ inr($summary['gst']) }}</td>
-                                    <td class="px-5 py-3" colspan="2"><span class="text-xs text-gray-500 uppercase tracking-wider">Cash out:</span> <span class="font-mono tabular-nums text-red-700">₹{{ inr($summary['cash_out']) }}</span></td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">₹{{ inr($summary['gst']) }}</td>
+                                    <td class="px-5 py-3" colspan="2"><span class="text-xs text-gray-500 uppercase tracking-wider">Cash out:</span> <span class="font-mono tabular-nums text-danger-700">₹{{ inr($summary['cash_out']) }}</span></td>
                                 </tr>
                             </tfoot>
                         @endif

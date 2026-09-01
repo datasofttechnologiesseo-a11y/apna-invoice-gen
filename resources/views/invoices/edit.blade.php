@@ -5,7 +5,7 @@
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
                 @if ($restricted)
-                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Limited edit</span>
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-accent-50 text-accent-700 uppercase font-bold tracking-wider">Limited edit</span>
                 @elseif ($isSample)
                     <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Sample · edit &amp; save</span>
                 @elseif (! $invoice->exists && ! empty($templateLabel))
@@ -102,14 +102,14 @@
                 ['label' => $invoice->exists ? $invoice->displayNumber() : 'New invoice'],
             ]" />
             @if ($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">
                     <div class="flex items-start gap-2">
-                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                         <div>
                             <div class="font-semibold">Please fix {{ $errors->count() === 1 ? 'this' : 'these' }} before saving:</div>
                             <ul class="list-disc pl-6 mt-1">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                             @if (! empty($itemErrors))
-                                <div class="mt-1.5 text-xs text-red-600">The affected {{ count($itemErrors) === 1 ? 'row is' : 'rows are' }} highlighted below.</div>
+                                <div class="mt-1.5 text-xs text-danger-600">The affected {{ count($itemErrors) === 1 ? 'row is' : 'rows are' }} highlighted below.</div>
                             @endif
                         </div>
                     </div>
@@ -117,8 +117,8 @@
             @endif
 
             @if ($restricted)
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded flex items-start gap-3">
-                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded flex items-start gap-3">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                     <div class="text-sm">
                         <div class="font-semibold">This invoice is issued - limited editing only.</div>
                         <div class="mt-0.5">You can update <strong>notes, terms, due date, and transporter details</strong>. Amounts, line items, customer, and invoice number are legally locked per GST rules. To change those, cancel this invoice and issue a credit note / revised invoice.</div>
@@ -143,7 +143,7 @@
                         </ol>
                         <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to fields are optional - open them only if needed.</div>
                     </div>
-                    <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-500 hover:text-brand-800 hover:bg-brand-100 rounded-lg text-2xl leading-none" aria-label="Dismiss tip">×</button>
+                    <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-700 hover:text-brand-900 hover:bg-brand-100 rounded-lg text-2xl leading-none" aria-label="Dismiss tip">×</button>
                 </div>
             @endunless
 
@@ -151,15 +151,15 @@
                  the customer picker is empty, but the "+ New" button opens the inline
                  modal so the user never has to leave this page. --}}
             @if ($customers->isEmpty() && ! $restricted)
-                <div class="p-4 bg-saffron-50 border border-saffron-200 text-saffron-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
-                    <svg class="w-5 h-5 flex-shrink-0 text-saffron-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">No customers yet.</span>
                         Click <strong>+ New</strong> next to the Customer field below - takes 10 seconds, no need to leave this page.
                     </div>
-                    <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center px-3 py-1.5 bg-saffron-600 hover:bg-saffron-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
+                    <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         + Add customer
                     </button>
                 </div>
@@ -171,15 +171,15 @@
                  (CGST/SGST), so an inter-state sale would be split incorrectly. We block
                  finalisation of a taxed invoice until the state is set (see InvoiceController). --}}
             @if (! $company->state_id && ! $restricted)
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
-                    <svg class="w-5 h-5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/>
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">Your business state is not set.</span>
                         Until you set it, we can't tell a same-state sale from an inter-state one, so GST defaults to intra-state (CGST/SGST) and an inter-state sale would be split incorrectly. Set your state so CGST/SGST and IGST apply correctly. You'll need it set before issuing a GST invoice.
                     </div>
-                    <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
+                    <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         Set business state
                     </a>
                 </div>
@@ -255,7 +255,7 @@
                                                 <button type="button"
                                                         x-show="customerCombo.search.trim()"
                                                         @click="quickAddCustomer(customerCombo.search.trim())"
-                                                        class="block w-full text-left px-3 py-2 text-sm bg-saffron-50 hover:bg-saffron-100 text-saffron-900 font-semibold border-t border-saffron-200 sticky bottom-0">
+                                                        class="block w-full text-left px-3 py-2 text-sm bg-accent-50 hover:bg-accent-100 text-accent-900 font-semibold border-t border-accent-200 sticky bottom-0">
                                                     + Use new customer: "<span x-text="customerCombo.search.trim()"></span>"
                                                 </button>
                                             </div>
@@ -265,7 +265,7 @@
                                                 title="Add a new customer without leaving this page">+ New</button>
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500" x-show="customerId && selectedCustomerLabel">
-                                        <span class="text-emerald-700 font-medium">✓ Selected:</span>
+                                        <span class="text-money-700 font-medium">✓ Selected:</span>
                                         <span x-text="selectedCustomerLabel"></span>
                                     </p>
                                 </div>
@@ -315,12 +315,12 @@
                             <x-input-label value="Tax mode (auto)" />
                             <div class="mt-2 text-sm">
                                 <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
-                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
-                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
+                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded">Inter-state (IGST)</span>
+                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + SGST)</span>
                             </div>
                             <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
                                 <input type="checkbox" name="reverse_charge" value="1" x-model="reverseCharge" @change="recompute()"
-                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Reverse charge applicable</span>
                                     <span class="block text-xs text-gray-500">Section 9(3)/9(4) - recipient pays GST. CGST/SGST/IGST will be set to ₹0 on the invoice; the recipient self-assesses.</span>
@@ -332,7 +332,7 @@
 
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
-                        <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked - amounts are immutable</span>@endif</h3>
+                        <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-accent-700 font-normal">🔒 Locked - amounts are immutable</span>@endif</h3>
                         <div class="flex items-center gap-3">
                             @if (! $restricted)
                                 <span class="hidden md:inline text-xs text-gray-500">Tip: type a product name in the row - pick existing or save a new one inline.</span>
@@ -352,13 +352,13 @@
                         <template x-for="(item, idx) in items" :key="item._uid">
                             <div class="p-4 space-y-3 transition-colors" :data-row-index="idx"
                                  @input="clearRowError(idx)" @change="clearRowError(idx)"
-                                 :class="rowHasError(idx) && 'bg-red-50 ring-1 ring-red-300 rounded-lg'">
+                                 :class="rowHasError(idx) && 'bg-danger-50 ring-1 ring-danger-300 rounded-lg'">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
                                     @if (! $restricted)
                                         <button type="button" @click="removeRow(idx)"
                                                 :disabled="items.length <= 1"
-                                                :class="items.length <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'"
+                                                :class="items.length <= 1 ? 'text-gray-400 cursor-not-allowed' : 'text-danger-600'"
                                                 class="text-sm font-medium transition"
                                                 aria-label="Remove row">Remove</button>
                                     @endif
@@ -412,7 +412,7 @@
                                             </a>
                                         </div>
                                         <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" :required="hsnRequired">
-                                        <p class="mt-1 text-[10px]" :class="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4 ? 'text-amber-700 font-semibold' : 'text-gray-500'">
+                                        <p class="mt-1 text-[10px]" :class="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4 ? 'text-accent-700 font-semibold' : 'text-gray-500'">
                                             <template x-if="!item.hsn_sac || item.hsn_sac.length === 0">
                                                 <span x-text="hsnRequired
                                                     ? 'Required. 4 digits if turnover < ₹5 Cr · 6 if > ₹5 Cr · 8 for exports.'
@@ -422,7 +422,7 @@
                                                 <span>⚠ HSN should be at least 4 digits per Rule 46(g).</span>
                                             </template>
                                             <template x-if="item.hsn_sac && item.hsn_sac.length >= 4">
-                                                <span class="text-emerald-700">✓ <span x-text="item.hsn_sac.length"></span>-digit HSN - valid format.</span>
+                                                <span class="text-money-700">✓ <span x-text="item.hsn_sac.length"></span>-digit HSN - valid format.</span>
                                             </template>
                                         </p>
                                     </div>
@@ -529,7 +529,7 @@
                                 <template x-for="(item, idx) in items" :key="`d-${item._uid}`">
                                     <tr class="border-t transition-colors" :data-row-index="idx"
                                         @input="clearRowError(idx)" @change="clearRowError(idx)"
-                                        :class="rowHasError(idx) && 'bg-red-50'">
+                                        :class="rowHasError(idx) && 'bg-danger-50'">
                                         @unless ($restricted)
                                             <td class="px-2 py-2 relative">
                                                 <div x-data="productRowCombobox(idx)" class="relative w-48" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
@@ -558,14 +558,14 @@
                                             </td>
                                         @endunless
                                         <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" :required="hsnRequired"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required>
+                                                <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required>
                                                 <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             {{-- Compact GST cell - just "18%". Full descriptive text + regulatory
@@ -589,8 +589,8 @@
                                                         :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
                                                         class="inline-flex items-center justify-center w-9 h-9 rounded-md ring-1 transition"
                                                         :class="items.length <= 1
-                                                            ? 'text-gray-300 ring-gray-200 bg-gray-50 cursor-not-allowed'
-                                                            : 'text-red-600 ring-red-200 bg-red-50 hover:text-white hover:bg-red-600 hover:ring-red-600'"
+                                                            ? 'text-gray-400 ring-gray-200 bg-gray-50 cursor-not-allowed'
+                                                            : 'text-danger-600 ring-danger-200 bg-danger-50 hover:text-white hover:bg-danger-600 hover:ring-danger-600'"
                                                         aria-label="Remove row">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 </button>
@@ -727,9 +727,9 @@
                     </div>
 
                     {{-- B2C > ₹2.5L warning (Rule 46(e) requires recipient name/address/state) --}}
-                    <div x-show="showB2cWarning" x-cloak class="border-t bg-amber-50 px-6 py-3">
-                        <div class="flex items-start gap-2 text-sm text-amber-900">
-                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                    <div x-show="showB2cWarning" x-cloak class="border-t bg-accent-50 px-6 py-3">
+                        <div class="flex items-start gap-2 text-sm text-accent-900">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
                                 <div class="font-semibold">B2C invoice over ₹2.5 lakh - Rule 46(e) applies</div>
                                 <div class="mt-0.5">The customer has no GSTIN and the invoice total exceeds ₹2,50,000. Per CGST Rule 46(e), you must include the recipient's <strong>name, full delivery address, and state</strong>. Double-check the customer record has those filled in.</div>
@@ -751,7 +751,7 @@
 
                         <div class="md:pl-6 space-y-2 text-sm">
                             <div class="flex justify-between"><span>Subtotal</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
-                            <div x-show="reverseCharge" class="p-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                            <div x-show="reverseCharge" class="p-2 rounded bg-accent-50 border border-accent-200 text-xs text-accent-900">
                                 🛈 <strong>Reverse charge:</strong> CGST/SGST/IGST set to ₹0 on this invoice - recipient pays GST directly (Section 9(3)/9(4)).
                             </div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
@@ -803,7 +803,7 @@
                 <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
                     <div class="text-xs text-gray-500">
                         Subtotal <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.subtotal)"></span>
-                        <span class="mx-1 text-gray-300">·</span>
+                        <span class="mx-1 text-gray-400" aria-hidden="true">·</span>
                         <span x-show="!isInterstate">CGST <span class="font-mono text-gray-900" x-text="fmt(totals.cgst)"></span> · SGST <span class="font-mono text-gray-900" x-text="fmt(totals.sgst)"></span></span>
                         <span x-show="isInterstate">IGST <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.igst)"></span></span>
                     </div>
@@ -838,10 +838,10 @@
             @endunless
 
             @if ($invoice->exists && $invoice->isEditable() && ! $restricted)
-                <div class="mt-6 p-5 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                <div class="mt-6 p-5 bg-danger-50 border border-danger-200 rounded-lg flex items-center justify-between">
                     <div class="text-sm">
-                        <div class="font-semibold text-red-800">Delete this draft</div>
-                        <div class="text-red-700">Once deleted, the draft and its line items are gone permanently.</div>
+                        <div class="font-semibold text-danger-800">Delete this draft</div>
+                        <div class="text-danger-700">Once deleted, the draft and its line items are gone permanently.</div>
                     </div>
                     <x-confirm-form
                         :action="route('invoices.destroy', $invoice)"
@@ -849,9 +849,9 @@
                         title="Delete this draft?"
                         message="This draft and all its line items are permanently removed. This cannot be undone."
                         confirm-label="Delete draft"
-                        confirm-class="bg-red-600 hover:bg-red-700"
+                        confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
-                        <button type="button" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold text-sm">Delete draft</button>
+                        <button type="button" class="px-4 py-2 bg-danger-600 text-white rounded hover:bg-danger-700 font-semibold text-sm">Delete draft</button>
                     </x-confirm-form>
                 </div>
             @endif

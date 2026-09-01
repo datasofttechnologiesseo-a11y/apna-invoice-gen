@@ -11,13 +11,13 @@
                     <span class="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
                 @elseif ($invoice->isCancelled())
                     <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
-                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 uppercase font-bold tracking-wider">Cancelled</span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-danger-50 text-danger-700 uppercase font-bold tracking-wider">Cancelled</span>
                 @else
                     <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
                     @if ((float) $invoice->balance <= 0)
                         <span class="text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Paid</span>
                     @elseif ((float) $invoice->paid_amount > 0)
-                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Partially paid</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-accent-50 text-accent-700 uppercase font-bold tracking-wider">Partially paid</span>
                     @else
                         <span class="text-xs px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 uppercase font-bold tracking-wider">Issued</span>
                     @endif
@@ -98,13 +98,13 @@
                     @if ($invoice->isCreditNoteWindowClosed())
                         {{-- Section 34(2) window closed - disable the action with a tooltip
                              explaining the legal cut-off so the operator knows why. --}}
-                        <span class="px-3 py-1.5 bg-gray-100 text-gray-500 border border-gray-200 rounded text-sm cursor-not-allowed"
+                        <span class="px-3 py-1.5 bg-gray-100 text-gray-600 border border-gray-200 rounded text-sm cursor-not-allowed"
                               title="Section 34(2) credit-note window closed on {{ $invoice->creditNoteDeadline()->format('d M Y') }}. Issue a commercial refund instead.">
                             Issue credit note
                         </span>
                     @else
                         <a href="{{ route('credit-notes.create', $invoice) }}"
-                           class="px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-sm hover:bg-amber-200"
+                           class="px-3 py-1.5 bg-accent-100 text-accent-900 border border-accent-300 rounded text-sm hover:bg-accent-200"
                            title="Issue a credit note - for returns, post-sale discounts, rate corrections. Section 34(2) deadline: {{ $invoice->creditNoteDeadline()->format('d M Y') }}">
                             Issue credit note
                         </a>
@@ -117,9 +117,9 @@
                         title="Delete this draft?"
                         message="This draft and all its line items are permanently removed. This cannot be undone."
                         confirm-label="Delete draft"
-                        confirm-class="bg-red-600 hover:bg-red-700"
+                        confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
-                        <button type="button" class="px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700 shadow-sm">Delete draft</button>
+                        <button type="button" class="px-3 py-1.5 bg-danger-600 text-white rounded text-sm hover:bg-danger-700 shadow-sm">Delete draft</button>
                     </x-confirm-form>
                 @elseif ($invoice->isCancelled())
                     {{-- Cancelled invoices can be deleted, but the invoice number stays
@@ -131,13 +131,13 @@
                         title="Delete cancelled invoice {{ $invoice->invoice_number }}?"
                         :message="'This permanently removes the cancelled invoice from your books. The invoice number ' . $invoice->invoice_number . ' will stay as a gap in your series (it is NOT reused). The deletion is recorded in your activity log so a GST auditor can see why the gap exists. Skip this if you might need the document later.'"
                         confirm-label="Yes, delete it"
-                        confirm-class="bg-red-600 hover:bg-red-700"
+                        confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
-                        <button type="button" class="px-3 py-1.5 bg-white border border-red-300 text-red-700 rounded text-sm hover:bg-red-50" title="Permanently delete this cancelled invoice">Delete invoice</button>
+                        <button type="button" class="px-3 py-1.5 bg-white border border-danger-300 text-danger-700 rounded text-sm hover:bg-danger-50" title="Permanently delete this cancelled invoice">Delete invoice</button>
                     </x-confirm-form>
                 @endif
                 @if ($invoice->canBeCancelled())
-                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').showModal()" class="px-3 py-1.5 bg-white border border-red-300 text-red-700 rounded text-sm hover:bg-red-50">Cancel invoice</button>
+                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').showModal()" class="px-3 py-1.5 bg-white border border-danger-300 text-danger-700 rounded text-sm hover:bg-danger-50">Cancel invoice</button>
                 @endif
             </div>
         </div>
@@ -162,7 +162,7 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-2 border-t">
                     <button type="button" onclick="document.getElementById('cancel-invoice-modal').close()" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Keep invoice</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700">Yes, cancel it</button>
+                    <button type="submit" class="px-4 py-2 bg-danger-600 text-white text-sm font-semibold rounded hover:bg-danger-700">Yes, cancel it</button>
                 </div>
             </form>
         </dialog>
@@ -183,9 +183,9 @@
                  Together: fires once, never again. --}}
             @if (! empty($isFirstFinalized) && $isFirstFinalized)
                 <div x-data="{ show: !localStorage.getItem('hideFirstInvoiceCelebration') }" x-show="show" x-cloak
-                     class="relative bg-gradient-to-r from-saffron-50 via-white to-money-50 ring-1 ring-saffron-200 rounded-xl p-5 overflow-hidden">
+                     class="relative bg-gradient-to-r from-accent-50 via-white to-money-50 ring-1 ring-accent-200 rounded-xl p-5 overflow-hidden">
                     {{-- Subtle Indian-flag stripe accent on top edge --}}
-                    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron-500 via-white to-money-600"></div>
+                    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-accent-500 via-white to-money-600"></div>
                     <button type="button"
                             @click="localStorage.setItem('hideFirstInvoiceCelebration','1'); show=false"
                             class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 text-gray-500 hover:text-gray-700 hover:bg-white/60 rounded"
@@ -195,7 +195,7 @@
                     <div class="flex items-start gap-4 pt-1">
                         <div class="text-4xl leading-none">🎉</div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-xs uppercase font-bold tracking-widest text-saffron-700">First invoice issued - welcome aboard!</div>
+                            <div class="text-xs uppercase font-bold tracking-widest text-accent-700">First invoice issued - welcome aboard!</div>
                             <h3 class="font-display text-xl font-extrabold text-gray-900 mt-1">
                                 Mubarak ho, {{ Str::limit(explode(' ', auth()->user()->name)[0] ?? 'friend', 20) }} ji!
                             </h3>
@@ -203,7 +203,7 @@
                                 You're officially running paperless GST billing. Share this invoice on WhatsApp,
                                 record the payment when it arrives, and we'll keep your GSTR-1 ready every month.
                             </p>
-                            <div class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white ring-1 ring-saffron-200 text-xs font-medium text-saffron-800">
+                            <div class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white ring-1 ring-accent-200 text-xs font-medium text-accent-800">
                                 <span class="text-base leading-none">🇮🇳</span>
                                 <span>Made in India for Indian businesses · Apnainvoice by Datasoft Technologies</span>
                             </div>
@@ -228,9 +228,9 @@
             @endif
 
             @if ($invoice->isCancelled())
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm">
-                    <div class="font-semibold text-red-800">This invoice is cancelled.</div>
-                    <div class="text-red-700 mt-1">
+                <div class="bg-danger-50 border border-danger-200 rounded-lg p-4 text-sm">
+                    <div class="font-semibold text-danger-800">This invoice is cancelled.</div>
+                    <div class="text-danger-700 mt-1">
                         Cancelled on {{ $invoice->cancelled_at?->format('d M Y, h:i A') }}.
                         @if ($invoice->cancellation_reason)
                             <br>Reason: <span class="italic">"{{ $invoice->cancellation_reason }}"</span>
@@ -270,8 +270,8 @@
                     </div>
                     {{-- TDS section: collapsed by default. Indian B2B service providers
                          frequently have TDS deducted by corporate customers under Sections 194-x. --}}
-                    <details x-data="{ open: false }" :open="open" @toggle="open = $event.target.open" class="border border-amber-200 bg-amber-50/30 rounded p-3">
-                        <summary class="cursor-pointer text-sm font-semibold text-amber-900 select-none">
+                    <details x-data="{ open: false }" :open="open" @toggle="open = $event.target.open" class="border border-accent-200 bg-accent-50/30 rounded p-3">
+                        <summary class="cursor-pointer text-sm font-semibold text-accent-900 select-none">
                             🧾 Customer deducted TDS? <span class="text-xs font-normal text-gray-500">(click to expand)</span>
                         </summary>
                         <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3" x-data="{
@@ -405,7 +405,7 @@
                                         <td class="px-4 py-2 text-right font-mono font-semibold">
                                             ₹{{ inr($p->amount) }}
                                             @if ((float) $p->tds_amount > 0)
-                                                <div class="text-[10px] font-normal text-amber-700 mt-0.5" title="TDS deducted at source">
+                                                <div class="text-[10px] font-normal text-accent-700 mt-0.5" title="TDS deducted at source">
                                                     incl. TDS {{ $p->tds_section }} ₹{{ inr($p->tds_amount) }}<br>
                                                     <span class="text-gray-500">Net to bank: ₹{{ inr($p->netReceived()) }}</span>
                                                 </div>
@@ -413,16 +413,16 @@
                                         </td>
                                         <td class="px-4 py-2 text-right whitespace-nowrap">
                                             <a href="{{ route('payments.receipt', $p) }}" class="text-brand-700 hover:underline text-sm">PDF</a>
-                                            <span class="text-gray-300 mx-1">·</span>
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                             <x-confirm-form
                                                 :action="route('payments.destroy', $p)"
                                                 method="DELETE"
                                                 title="Reverse this payment?"
                                                 message="Receipt {{ $p->receipt_number }} (₹{{ inr($p->amount) }}) will be removed. The receipt number stays reserved in the log for audit, but the invoice balance is restored."
                                                 confirm-label="Reverse payment"
-                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                confirm-class="bg-danger-600 hover:bg-danger-700"
                                                 tone="warning">
-                                                <button type="button" class="text-red-600 hover:underline text-sm">Reverse</button>
+                                                <button type="button" class="text-danger-600 hover:underline text-sm">Reverse</button>
                                             </x-confirm-form>
                                         </td>
                                     </tr>

@@ -9,7 +9,7 @@
                 <div class="p-4 bg-money-50 border border-money-200 text-money-800 rounded">{{ session('status') }}</div>
             @endif
             @if ($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">
                     <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                 </div>
             @endif
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900">
+            <div class="bg-accent-50 border border-accent-200 rounded-xl p-5 text-sm text-accent-900">
                 <div class="font-semibold">Keep your backup ZIPs secure.</div>
                 <p class="mt-1">They contain customer GSTINs and payment history. Store them on an encrypted drive or password-protected cloud folder, and never share them publicly.</p>
             </div>

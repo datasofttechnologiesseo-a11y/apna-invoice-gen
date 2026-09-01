@@ -399,7 +399,7 @@ class QuotationController extends Controller
         $amountInWords = NumberToWords::indianRupees((float) $quotation->grand_total, $quotation->currency);
 
         // Default to ink-saver ($print=true). Pass ?color=1 to get the
-        // full-colour navy/saffron version for digital sharing.
+        // full-colour teal/amber version for digital sharing.
         $print = ! $request->boolean('color');
 
         $pdf = Pdf::loadView('quotations.pdf', compact('quotation', 'amountInWords', 'print'))

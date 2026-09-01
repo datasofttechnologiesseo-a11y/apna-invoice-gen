@@ -135,7 +135,7 @@ form[data-submitting] button[type="submit"]::after {
  * element. Uses :focus-visible so mouse clicks don't get a ring.
  * -------------------------------------------------------------- */
 :focus-visible {
-    outline: 2px solid theme('colors.brand.500', #3b82f6);
+    outline: 2px solid theme('colors.brand.700', #0f766e);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -295,7 +295,7 @@ html {
     [class*="rounded"] { border-radius: 0 !important; }
     [class*="bg-gray-50"], [class*="bg-gray-100"],
     [class*="bg-white"], [class*="bg-brand-"],
-    [class*="bg-saffron-"], [class*="bg-amber-"],
+    [class*="bg-accent-"],
     [class*="bg-emerald-"], [class*="bg-blue-"],
     [class*="bg-red-"], [class*="bg-purple-"] {
         background: #fff !important;
@@ -304,7 +304,7 @@ html {
 
     /* Coloured text labels — drop to grey/black so colour ink isn't burnt.
        Status badges still keep a thin border so they remain legible. */
-    [class*="text-brand-"], [class*="text-saffron-"],
+    [class*="text-brand-"], [class*="text-accent-"],
     [class*="text-amber-"], [class*="text-emerald-"],
     [class*="text-blue-"], [class*="text-red-"],
     [class*="text-purple-"], [class*="text-money-"] {

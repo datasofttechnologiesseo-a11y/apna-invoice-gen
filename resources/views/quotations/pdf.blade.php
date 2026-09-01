@@ -7,11 +7,11 @@
     $number = $quotation->quote_number ?: 'DRAFT · ' . ($c->nextQuoteNumber() ?? 'preview');
 
     // Ink-saver mode is the DEFAULT. The PDF is mostly downloaded to print and
-    // sign, so we should not burn toner on a navy/saffron design unless the
+    // sign, so we should not burn toner on a teal/amber design unless the
     // operator explicitly asked for color (?color=1).
     //
     // Palette: in print mode everything resolves to greys + a single dark
-    // accent. In color mode we use the brand navy + saffron stripe.
+    // accent. In color mode we use the brand teal + amber stripe.
     $print = $print ?? true;
     $palette = $print ? [
         'accent'        => '#111111',
@@ -32,22 +32,22 @@
         'disc_color'    => '#444444',
         'sig_line'      => '#999999',
     ] : [
-        'accent'        => '#1f3061',
-        'accent_soft'   => '#f5f7fc',
-        'title'         => '#1f3061',
+        'accent'        => '#0f766e',
+        'accent_soft'   => '#f0fdfa',
+        'title'         => '#0f766e',
         'rule'          => '#d4d4d4',
-        'rule_strong'   => '#1f3061',
-        'tbl_head_bg'   => '#1f3061',
+        'rule_strong'   => '#0f766e',
+        'tbl_head_bg'   => '#0f766e',
         'tbl_head_color'=> '#ffffff',
-        'grand_bg'      => '#1f3061',
+        'grand_bg'      => '#0f766e',
         'grand_color'   => '#ffffff',
-        'subject_bar'   => '#1f3061',
-        'subject_bg'    => '#f5f7fc',
-        'bank_border'   => '#1f3061',
-        'bank_bg'       => '#f5f7fc',
-        'disc_border'   => '#b8860b',
-        'disc_bg'       => '#fff8e6',
-        'disc_color'    => '#8a5b00',
+        'subject_bar'   => '#0f766e',
+        'subject_bg'    => '#f0fdfa',
+        'bank_border'   => '#0f766e',
+        'bank_bg'       => '#f0fdfa',
+        'disc_border'   => '#b45309',
+        'disc_bg'       => '#fffbeb',
+        'disc_color'    => '#78350f',
         'sig_line'      => '#999999',
     ];
 

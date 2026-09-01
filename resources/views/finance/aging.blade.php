@@ -7,7 +7,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <a href="{{ route('finance.aging.export.pdf') }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded shadow-sm"
+                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-money-600 hover:bg-money-700 text-white text-sm font-semibold rounded shadow-sm"
                    title="Download a landscape A4 aging report - perfect for sending to a recovery team or your CA">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download PDF
@@ -47,7 +47,7 @@
 
                 {{-- ─── Headline summary tiles ─── --}}
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                    <div class="p-5 rounded-xl bg-gradient-to-br from-accent-50 to-saffron-50 ring-1 ring-accent-200">
+                    <div class="p-5 rounded-xl bg-gradient-to-br from-accent-50 to-accent-50 ring-1 ring-accent-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">Total outstanding</div>
                         <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['total']) }}</div>
                         <div class="mt-1 text-xs text-accent-700">{{ $summary['invoices'] }} {{ Str::plural('invoice', $summary['invoices']) }} · {{ $summary['customers'] }} {{ Str::plural('customer', $summary['customers']) }}</div>
@@ -57,28 +57,28 @@
                         <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-money-900 tabular-nums">₹{{ inr($summary['current']) }}</div>
                         <div class="mt-1 text-xs text-money-700">{{ $summary['total'] > 0 ? round(($summary['current'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
-                    <div class="p-5 rounded-xl bg-amber-50 ring-1 ring-amber-200">
-                        <div class="text-[10px] uppercase tracking-wider font-bold text-amber-800">31 – 60 days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-amber-900 tabular-nums">₹{{ inr($summary['b30_60']) }}</div>
-                        <div class="mt-1 text-xs text-amber-700">{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</div>
+                    <div class="p-5 rounded-xl bg-accent-50 ring-1 ring-accent-200">
+                        <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">31 – 60 days</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['b30_60']) }}</div>
+                        <div class="mt-1 text-xs text-accent-700">{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
-                    <div class="p-5 rounded-xl bg-orange-50 ring-1 ring-orange-200">
-                        <div class="text-[10px] uppercase tracking-wider font-bold text-orange-800">61 – 90 days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-orange-900 tabular-nums">₹{{ inr($summary['b60_90']) }}</div>
-                        <div class="mt-1 text-xs text-orange-700">{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</div>
+                    <div class="p-5 rounded-xl bg-accent-50 ring-1 ring-accent-200">
+                        <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">61 – 90 days</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['b60_90']) }}</div>
+                        <div class="mt-1 text-xs text-accent-700">{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
-                    <div class="p-5 rounded-xl bg-red-50 ring-1 ring-red-200">
-                        <div class="text-[10px] uppercase tracking-wider font-bold text-red-800">91+ days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-red-900 tabular-nums">₹{{ inr($summary['b90_plus']) }}</div>
-                        <div class="mt-1 text-xs text-red-700">{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% - chase / write-off</div>
+                    <div class="p-5 rounded-xl bg-danger-50 ring-1 ring-danger-200">
+                        <div class="text-[10px] uppercase tracking-wider font-bold text-danger-800">91+ days</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-danger-900 tabular-nums">₹{{ inr($summary['b90_plus']) }}</div>
+                        <div class="mt-1 text-xs text-danger-700">{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% - chase / write-off</div>
                     </div>
                 </div>
 
                 {{-- ─── Action context (hidden in print) ─── --}}
                 @if ($summary['b90_plus'] > 0)
-                    <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-900 print:hidden">
+                    <div class="p-4 rounded-xl bg-danger-50 border border-danger-200 text-sm text-danger-900 print:hidden">
                         <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 shrink-0 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                            <svg class="w-5 h-5 shrink-0 text-danger-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
                                 <strong>You have ₹{{ inr($summary['b90_plus']) }} overdue by 90+ days.</strong>
                                 These need urgent follow-up - beyond 90 days, recovery probability drops sharply. Consider sending payment reminders or an issuing-credit-note conversation.
@@ -104,9 +104,9 @@
                                     <th class="px-5 py-3 text-right font-semibold">Invoices</th>
                                     <th class="px-5 py-3 text-right font-semibold">Oldest</th>
                                     <th class="px-5 py-3 text-right font-semibold text-money-700">Current</th>
-                                    <th class="px-5 py-3 text-right font-semibold text-amber-700">31–60</th>
-                                    <th class="px-5 py-3 text-right font-semibold text-orange-700">61–90</th>
-                                    <th class="px-5 py-3 text-right font-semibold text-red-700">91+</th>
+                                    <th class="px-5 py-3 text-right font-semibold text-accent-700">31–60</th>
+                                    <th class="px-5 py-3 text-right font-semibold text-accent-700">61–90</th>
+                                    <th class="px-5 py-3 text-right font-semibold text-danger-700">91+</th>
                                     <th class="px-5 py-3 text-right font-semibold">Total Outstanding</th>
                                     <th class="px-5 py-3 text-right font-semibold print:hidden"></th>
                                 </tr>
@@ -121,13 +121,13 @@
                                             @endif
                                         </td>
                                         <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-700">{{ $c['invoice_count'] }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums {{ $c['oldest_days'] > 90 ? 'text-red-700 font-semibold' : ($c['oldest_days'] > 60 ? 'text-orange-700' : ($c['oldest_days'] > 30 ? 'text-amber-700' : 'text-gray-600')) }}">
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums {{ $c['oldest_days'] > 90 ? 'text-danger-700 font-semibold' : ($c['oldest_days'] > 60 ? 'text-accent-700' : ($c['oldest_days'] > 30 ? 'text-accent-700' : 'text-gray-600')) }}">
                                             {{ $c['oldest_days'] }}d
                                         </td>
                                         <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ $c['current'] > 0 ? '₹' . inr($c['current']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-amber-700">{{ $c['b30_60'] > 0 ? '₹' . inr($c['b30_60']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-orange-700">{{ $c['b60_90'] > 0 ? '₹' . inr($c['b60_90']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-red-700 font-semibold">{{ $c['b90_plus'] > 0 ? '₹' . inr($c['b90_plus']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-accent-700">{{ $c['b30_60'] > 0 ? '₹' . inr($c['b30_60']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-accent-700">{{ $c['b60_90'] > 0 ? '₹' . inr($c['b60_90']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-danger-700 font-semibold">{{ $c['b90_plus'] > 0 ? '₹' . inr($c['b90_plus']) : '-' }}</td>
                                         <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900">₹{{ inr($c['total']) }}</td>
                                         <td class="px-5 py-3 text-right whitespace-nowrap print:hidden">
                                             <a href="{{ route('customers.ledger', $c['customer_id']) }}" class="text-money-700 hover:underline text-xs font-semibold">Ledger →</a>
@@ -139,9 +139,9 @@
                                 <tr>
                                     <td class="px-5 py-3 font-bold uppercase text-xs text-gray-700" colspan="3">TOTAL</td>
                                     <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-money-700">₹{{ inr($summary['current']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-amber-700">₹{{ inr($summary['b30_60']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-orange-700">₹{{ inr($summary['b60_90']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-red-700">₹{{ inr($summary['b90_plus']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-accent-700">₹{{ inr($summary['b30_60']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-accent-700">₹{{ inr($summary['b60_90']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-danger-700">₹{{ inr($summary['b90_plus']) }}</td>
                                     <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900 text-base">₹{{ inr($summary['total']) }}</td>
                                     <td class="px-5 py-3 print:hidden"></td>
                                 </tr>
@@ -171,15 +171,15 @@
                                     <div class="font-semibold">≤30d</div>
                                     <div class="font-mono mt-0.5">{{ $c['current'] > 0 ? '₹' . number_format($c['current']) : '-' }}</div>
                                 </div>
-                                <div class="px-2 py-1 rounded bg-amber-50 text-amber-800 text-center">
+                                <div class="px-2 py-1 rounded bg-accent-50 text-accent-800 text-center">
                                     <div class="font-semibold">31–60</div>
                                     <div class="font-mono mt-0.5">{{ $c['b30_60'] > 0 ? '₹' . number_format($c['b30_60']) : '-' }}</div>
                                 </div>
-                                <div class="px-2 py-1 rounded bg-orange-50 text-orange-800 text-center">
+                                <div class="px-2 py-1 rounded bg-accent-50 text-accent-800 text-center">
                                     <div class="font-semibold">61–90</div>
                                     <div class="font-mono mt-0.5">{{ $c['b60_90'] > 0 ? '₹' . number_format($c['b60_90']) : '-' }}</div>
                                 </div>
-                                <div class="px-2 py-1 rounded bg-red-50 text-red-800 text-center">
+                                <div class="px-2 py-1 rounded bg-danger-50 text-danger-800 text-center">
                                     <div class="font-semibold">91+</div>
                                     <div class="font-mono mt-0.5">{{ $c['b90_plus'] > 0 ? '₹' . number_format($c['b90_plus']) : '-' }}</div>
                                 </div>
@@ -213,9 +213,9 @@
                                     @php
                                         $bucketColor = match($r['bucket']) {
                                             'current' => 'bg-money-100 text-money-800',
-                                            '30-60'   => 'bg-amber-100 text-amber-800',
-                                            '60-90'   => 'bg-orange-100 text-orange-800',
-                                            '90+'     => 'bg-red-100 text-red-800',
+                                            '30-60'   => 'bg-accent-100 text-accent-800',
+                                            '60-90'   => 'bg-accent-100 text-accent-800',
+                                            '90+'     => 'bg-danger-100 text-danger-800',
                                         };
                                         $bucketLabel = match($r['bucket']) {
                                             'current' => '≤ 30 days',

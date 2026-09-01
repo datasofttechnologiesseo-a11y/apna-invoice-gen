@@ -7,7 +7,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <a href="{{ route('finance.gstr3b.export.pdf', ['month' => $periodStart->format('Y-m')]) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded shadow-sm">
+                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-money-600 hover:bg-money-700 text-white text-sm font-semibold rounded shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download PDF
                 </a>
@@ -32,7 +32,7 @@
             <form method="GET" class="bg-white rounded-xl ring-1 ring-gray-200 p-4 flex flex-wrap items-end gap-3 print:hidden">
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Filing month</label>
-                    <input type="month" name="month" value="{{ $periodStart->format('Y-m') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500" max="{{ now()->format('Y-m') }}">
+                    <input type="month" name="month" value="{{ $periodStart->format('Y-m') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" max="{{ now()->format('Y-m') }}">
                 </div>
                 <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Recalculate</button>
                 <div class="text-xs text-gray-500 ml-auto">
@@ -41,9 +41,9 @@
             </form>
 
             {{-- Notice - what this is, and what it isn't --}}
-            <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-900 leading-relaxed">
+            <div class="p-4 rounded-xl bg-brand-50 border border-brand-200 text-sm text-brand-900 leading-relaxed">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 shrink-0 text-blue-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg class="w-5 h-5 shrink-0 text-brand-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div>
                         <strong>What this is:</strong> a return-ready summary computed from your invoices, expenses, and cash sales for the selected month - laid out to mirror the GSTR-3B form on the GST portal.
                         <br><strong>What this is not:</strong> a filing tool. We don't submit to GSTN. Verify against your GSTR-1 and ITC ledgers before you (or your CA) file on the portal. The figures are accurate as far as your books go.
@@ -110,7 +110,7 @@
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
                             </tr>
-                            <tr class="bg-amber-50/40">
+                            <tr class="bg-accent-50/40">
                                 <td class="px-5 py-3"><strong>(d)</strong> Inward supplies <span class="text-xs text-gray-500">(liable to reverse charge)</span></td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ inr($rcm_outward['taxable']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['igst']) }}</td>
@@ -222,7 +222,7 @@
                 </div>
 
                 {{-- Big total --}}
-                <div class="px-5 py-5 bg-gradient-to-r from-accent-100 to-saffron-50 border-t border-accent-200 flex items-center justify-between flex-wrap gap-4">
+                <div class="px-5 py-5 bg-gradient-to-r from-accent-100 to-accent-50 border-t border-accent-200 flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <div class="text-[11px] uppercase tracking-widest font-bold text-accent-800">Total cash to deposit</div>
                         <div class="text-xs text-accent-700 mt-0.5">Sum of IGST + CGST + SGST · Pay via PMT-06 challan on the GST portal</div>
@@ -232,9 +232,9 @@
             </section>
 
             {{-- Filing reminder --}}
-            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-900 print:hidden">
+            <div class="p-4 rounded-xl bg-accent-50 border border-accent-200 text-sm text-accent-900 print:hidden">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div>
                         <strong>Filing window:</strong> GSTR-3B for {{ $periodLabel }} is due by <strong>{{ $periodEnd->copy()->addMonth()->day(20)->format('d M Y') }}</strong> (20th of the next month). Late filing attracts ₹50/day late fee per Act + 18% p.a. interest on unpaid tax under Section 50 CGST.
                     </div>

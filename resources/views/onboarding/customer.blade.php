@@ -1,6 +1,6 @@
 <x-onboarding-layout step="customer">
     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-        <div class="p-6 md:p-8 bg-gradient-to-br from-saffron-600 to-accent-700 text-white">
+        <div class="p-6 md:p-8 bg-gradient-to-br from-accent-600 to-accent-700 text-white">
             <div class="text-xs font-bold uppercase tracking-widest text-accent-100">Step 2 of 3</div>
             <h1 class="mt-2 font-display text-2xl md:text-3xl font-extrabold">Add your first customer</h1>
             <p class="mt-2 text-accent-100">Save customer details once, we'll auto-fill them on every future invoice. You can add more any time.</p>
@@ -10,7 +10,7 @@
             @csrf
 
             @if ($errors->any())
-                <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
                     <div class="font-semibold mb-1">Please fix the following before saving:</div>
                     <ul class="list-disc pl-5 space-y-0.5">
                         @foreach ($errors->all() as $error)

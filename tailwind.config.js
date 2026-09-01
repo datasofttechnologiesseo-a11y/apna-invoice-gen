@@ -48,20 +48,6 @@ export default {
                     900:  '#78350f',
                     950:  '#451a03',
                 },
-                // Kept as an alias of accent for the festive / India-cue spots.
-                saffron: {
-                    50:   '#fffbeb',
-                    100:  '#fef3c7',
-                    200:  '#fde68a',
-                    300:  '#fcd34d',
-                    400:  '#fbbf24',
-                    500:  '#f59e0b',
-                    600:  '#d97706',
-                    700:  '#b45309',
-                    800:  '#92400e',
-                    900:  '#78350f',
-                    950:  '#451a03',
-                },
                 // Money / success. A truer green than emerald so "paid" never
                 money: {
                     50:   '#f0fdf4',
@@ -74,6 +60,21 @@ export default {
                     700:  '#15803d',
                     800:  '#166534',
                     900:  '#14532d',
+                },
+                // Danger / overdue / destructive. A state colour, never decorative -
+                // if something is this colour it means money is late or an action
+                // cannot be undone.
+                danger: {
+                    50:  '#fef2f2',
+                    100: '#fee2e2',
+                    200: '#fecaca',
+                    300: '#fca5a5',
+                    400: '#f87171',
+                    500: '#ef4444',
+                    600: '#dc2626',
+                    700: '#b91c1c',
+                    800: '#991b1b',
+                    900: '#7f1d1d',
                 },
             },
             boxShadow: {

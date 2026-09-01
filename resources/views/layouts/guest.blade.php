@@ -27,11 +27,11 @@
     <body class="font-sans text-gray-900 antialiased bg-white">
         <div class="min-h-screen lg:grid lg:grid-cols-2">
 
-            {{-- Brand panel (lg+): premium first impression. Deep navy with soft
+            {{-- Brand panel (lg+): premium first impression. Deep teal with soft
                  blurred brand orbs for depth; logo, value proposition, trust cues. --}}
             <aside class="hidden lg:flex lg:flex-col lg:justify-between relative overflow-hidden p-12 xl:p-16 text-white bg-gradient-to-br from-brand-800 via-brand-900 to-brand-950">
                 <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-500/25 blur-3xl pointer-events-none"></div>
-                <div class="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-saffron-500/20 blur-3xl pointer-events-none"></div>
+                <div class="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-accent-500/20 blur-3xl pointer-events-none"></div>
                 <div class="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-money-500/15 blur-3xl pointer-events-none"></div>
 
                 <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="relative inline-flex items-center self-start bg-white rounded-xl px-3 py-2 shadow-lg">
@@ -40,7 +40,7 @@
 
                 <div class="relative max-w-md">
                     <h2 class="font-display font-extrabold text-3xl xl:text-4xl leading-tight tracking-tight">
-                        GST invoicing, done in <span class="text-saffron-400">60 seconds</span>.
+                        GST invoicing, done in <span class="text-accent-400">60 seconds</span>.
                     </h2>
                     <p class="mt-4 text-brand-100 text-base leading-relaxed">
                         Create GST-compliant invoices, share them on WhatsApp, and get paid faster. Built for Indian businesses, free during beta.
@@ -53,7 +53,7 @@
                             'Your data stays in India',
                         ] as $point)
                             <li class="flex items-center gap-3 text-sm text-brand-50">
-                                <span class="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-saffron-400/20 text-saffron-300">
+                                <span class="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-400/20 text-accent-300">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                 </span>
                                 {!! $point !!}

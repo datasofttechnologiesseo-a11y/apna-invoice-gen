@@ -18,7 +18,7 @@
                 @if ($customer->exists) @method('PATCH') @endif
 
                 @if ($errors->any())
-                    <div class="m-6 mb-0 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" role="alert">
+                    <div class="m-6 mb-0 p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
                         <div class="font-semibold mb-1">Please fix the following before saving:</div>
                         <ul class="list-disc pl-5 space-y-0.5">
                             @foreach ($errors->all() as $error)
@@ -90,7 +90,7 @@
                         </div>
                         <div>
                             <x-input-label for="state_id" value="State *" />
-                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 <option value="">- Select state -</option>
                                 @foreach ($states as $s)
                                     <option value="{{ $s->id }}" @selected(old('state_id', $customer->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>

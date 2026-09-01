@@ -24,7 +24,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit
                 </a>
-                <a href="{{ route('finance.cash-memos.pdf', $memo) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm" title="Download as PDF file">
+                <a href="{{ route('finance.cash-memos.pdf', $memo) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-money-600 hover:bg-money-700 text-white font-semibold rounded-lg text-sm" title="Download as PDF file">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     PDF
                 </a>
@@ -38,7 +38,7 @@
 
     @if (session('status'))
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 print:hidden">
-            <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-sm">{{ session('status') }}</div>
+            <div class="p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm">{{ session('status') }}</div>
         </div>
     @endif
 
@@ -160,7 +160,7 @@
                             <tbody>
                                 <tr><td class="py-1 text-gray-600">Subtotal</td><td class="py-1 text-right font-mono">₹ {{ inr($memo->subtotal) }}</td></tr>
                                 @if ((float) $memo->discount > 0)
-                                    <tr><td class="py-1 text-gray-600">Discount</td><td class="py-1 text-right font-mono text-red-700">− ₹ {{ inr($memo->discount) }}</td></tr>
+                                    <tr><td class="py-1 text-gray-600">Discount</td><td class="py-1 text-right font-mono text-danger-700">− ₹ {{ inr($memo->discount) }}</td></tr>
                                 @endif
                                 <tr class="border-t border-gray-200"><td class="py-1 font-medium">Taxable value</td><td class="py-1 text-right font-mono font-medium">₹ {{ inr($memo->taxable_value) }}</td></tr>
                                 @if ((float) $memo->total_cgst > 0)

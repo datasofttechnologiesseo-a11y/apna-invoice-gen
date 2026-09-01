@@ -1,5 +1,5 @@
 {{-- App navigation - clean, light top bar: white surface, a thin bottom border,
-     calm navy accents for the active item, and generous spacing. Sticky so it
+     calm teal accents for the active item, and generous spacing. Sticky so it
      stays in reach as the page scrolls. --}}
 {{-- z-40: above in-page popovers/comboboxes (z-30) so nothing paints over the
      menu when scrolling, but below modals and the cookie banner (z-50). --}}

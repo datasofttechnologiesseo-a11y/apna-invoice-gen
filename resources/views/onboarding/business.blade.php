@@ -38,7 +38,7 @@
         }"
         class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden"
     >
-        <div class="p-6 md:p-8 bg-gradient-to-br from-brand-900 to-brand-700 text-white">
+        <div class="p-6 md:p-8 bg-gradient-to-br from-brand-900 to-brand-800 text-white">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <div class="text-xs font-bold uppercase tracking-widest text-accent-300">Step 1 of 3</div>
@@ -56,7 +56,7 @@
             @csrf
 
             @if ($errors->any())
-                <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
                     <div class="font-semibold mb-1">Please fix the following before saving:</div>
                     <ul class="list-disc pl-5 space-y-0.5">
                         @foreach ($errors->all() as $error)
@@ -77,7 +77,7 @@
 
                 <div>
                     <x-input-label for="state_id" value="State *" />
-                    <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" required>
+                    <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm" required>
                         <option value="">Select your state</option>
                         @foreach ($states as $s)
                             <option value="{{ $s->id }}" @selected(old('state_id', $company->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
@@ -116,7 +116,7 @@
 
                 <div x-show="advanced" x-cloak class="mt-6 space-y-6">
                     <template x-if="gstin.trim().length > 0">
-                        <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm">
+                        <div class="p-3 rounded-lg bg-accent-50 border border-accent-200 text-accent-900 text-sm">
                             You have entered a GSTIN, so a registered address is required on your tax invoices (GST Rule 46).
                         </div>
                     </template>

@@ -15,25 +15,25 @@
                 <p class="text-sm text-gray-500 mt-1">
                     {{ now()->format('l, d M Y') }}
                     @if ($todayIssued > 0 || $todayCollected > 0)
-                        <span class="text-gray-300 mx-1">·</span>
+                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                         @if ($todayIssued > 0)
                             <span class="text-gray-700"><strong>{{ $todayIssued }}</strong> invoice{{ $todayIssued > 1 ? 's' : '' }} issued today</span>
                         @endif
                         @if ($todayIssued > 0 && $todayCollected > 0)
-                            <span class="text-gray-300 mx-1">·</span>
+                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                         @endif
                         @if ($todayCollected > 0)
                             <span class="text-money-700"><strong>₹{{ inr($todayCollected) }}</strong> collected today</span>
                         @endif
                     @else
-                        <span class="text-gray-300 mx-1">·</span>
+                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                         <span>No bills yet today. Ready when you are.</span>
                     @endif
                 </p>
                 @if ($festival)
                     {{-- Festival/national-day microbanner. Single line, small, never blocks.
                          Hard-coded date list in DashboardController, refresh annually. --}}
-                    <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-saffron-50 via-white to-money-50 ring-1 ring-saffron-200 text-saffron-800 text-xs font-medium">
+                    <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-accent-50 via-white to-money-50 ring-1 ring-accent-200 text-accent-800 text-xs font-medium">
                         <span class="text-base leading-none">{{ $festival['emoji'] }}</span>
                         <span>{{ $festival['name'] }} from all of us at {{ $company->name ?: 'Apnainvoice' }}!</span>
                     </div>
@@ -104,7 +104,7 @@
                             </h3>
                             <p class="mt-1 text-gray-600 text-sm">
                                 <span class="text-gray-700">सिर्फ़ {{ $stepsLeft }} आसान कदम</span>
-                                <span class="text-gray-300 mx-1">·</span>
+                                <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                 under two minutes, start to finish.
                             </p>
                         </div>
@@ -152,7 +152,7 @@
                                             'text-brand-700' => ! $item['done'],
                                         ])>Step {{ $index + 1 }}</span>
                                         @unless ($item['done'])
-                                            <span class="text-[10px] font-semibold text-gray-500 px-1.5 py-0.5 rounded bg-gray-100">{{ $item['time'] }}</span>
+                                            <span class="text-[10px] font-semibold text-gray-600 px-1.5 py-0.5 rounded bg-gray-100">{{ $item['time'] }}</span>
                                         @endunless
                                     </div>
                                     <div @class([
@@ -184,7 +184,7 @@
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-saffron-100 text-saffron-700">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-accent-100 text-accent-700">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </span>
                             <div>
@@ -192,15 +192,15 @@
                                 <div class="text-xs text-gray-500">Things that need a minute of your time</div>
                             </div>
                         </div>
-                        <span class="text-xs px-2 py-1 rounded-full bg-saffron-50 text-saffron-700 font-bold">{{ count($actionItems) }}</span>
+                        <span class="text-xs px-2 py-1 rounded-full bg-accent-50 text-accent-700 font-bold">{{ count($actionItems) }}</span>
                     </div>
                     <ul class="divide-y divide-gray-100">
                         @foreach ($actionItems as $item)
                             @php
                                 $toneClasses = [
-                                    'red'   => ['ring' => 'ring-red-200',   'bg' => 'bg-red-50',   'text' => 'text-red-700',   'cta' => 'bg-red-600 hover:bg-red-700'],
-                                    'amber' => ['ring' => 'ring-amber-200', 'bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'cta' => 'bg-amber-600 hover:bg-amber-700'],
-                                    'blue'  => ['ring' => 'ring-brand-200', 'bg' => 'bg-brand-50', 'text' => 'text-brand-700', 'cta' => 'bg-brand-700 hover:bg-brand-800'],
+                                    'danger'   => ['ring' => 'ring-danger-200',   'bg' => 'bg-danger-50',   'text' => 'text-danger-700',   'cta' => 'bg-danger-600 hover:bg-danger-700'],
+                                    'accent' => ['ring' => 'ring-accent-200', 'bg' => 'bg-accent-50', 'text' => 'text-accent-700', 'cta' => 'bg-accent-600 hover:bg-accent-700'],
+                                    'brand'  => ['ring' => 'ring-brand-200', 'bg' => 'bg-brand-50', 'text' => 'text-brand-700', 'cta' => 'bg-brand-700 hover:bg-brand-800'],
                                 ][$item['tone']];
                                 $iconPath = [
                                     'overdue' => 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
@@ -300,7 +300,7 @@
                     <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['drafts'] }}</div>
                     <div class="mt-3 text-xs text-gray-500">ready to issue</div>
                 </div>
-                <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="group relative block p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 hover:ring-accent-300 hover:shadow-lg transition overflow-hidden" title="View invoices awaiting payment">
+                <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="group relative block p-6 bg-gradient-to-br from-accent-50 to-accent-50 rounded-2xl shadow-card ring-1 ring-accent-100 hover:ring-accent-300 hover:shadow-lg transition overflow-hidden" title="View invoices awaiting payment">
                     <div class="flex items-start justify-between gap-2">
                         <div class="text-xs uppercase font-bold tracking-wider text-accent-800">Outstanding</div>
                         <svg class="w-4 h-4 text-accent-700 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -329,15 +329,15 @@
                             <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Income</div>
                             <div class="font-display text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($pnl['income'], 0) }}</div>
                         </div>
-                        <div class="text-gray-300 font-light text-xl">−</div>
+                        <div class="text-gray-500 font-light text-xl">−</div>
                         <div>
                             <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Expenses</div>
                             <div class="font-display text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($pnl['expense'], 0) }}</div>
                         </div>
-                        <div class="text-gray-300 font-light text-xl">=</div>
+                        <div class="text-gray-500 font-light text-xl">=</div>
                         <div>
                             <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Net profit</div>
-                            <div class="font-display text-xl sm:text-2xl font-extrabold tabular-nums {{ $pnl['profit'] >= 0 ? 'text-money-700' : 'text-red-700' }}">₹{{ number_format($pnl['profit'], 0) }}</div>
+                            <div class="font-display text-xl sm:text-2xl font-extrabold tabular-nums {{ $pnl['profit'] >= 0 ? 'text-money-700' : 'text-danger-700' }}">₹{{ number_format($pnl['profit'], 0) }}</div>
                         </div>
                         <div class="text-brand-700 text-sm font-semibold">View analytics →</div>
                     </div>
@@ -370,25 +370,25 @@
                                 </div>
                                 <svg class="w-4 h-4 text-gray-500 group-hover:text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
-                            <a href="{{ route('quotations.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-purple-50 transition group">
-                                <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition">
+                            <a href="{{ route('quotations.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                 </div>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-900">Send Quotation</div>
                                     <div class="text-xs text-gray-500">Price proposal · convert to invoice later</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
-                            <a href="{{ route('customers.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-saffron-50 transition group">
-                                <div class="w-10 h-10 rounded-lg bg-saffron-100 text-saffron-700 flex items-center justify-center group-hover:bg-saffron-600 group-hover:text-white transition">
+                            <a href="{{ route('customers.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-accent-100 text-accent-700 flex items-center justify-center group-hover:bg-accent-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 </div>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-900">Add customer</div>
                                     <div class="text-xs text-gray-500">Save for future invoices</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-saffron-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('company.edit') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center group-hover:bg-gray-800 group-hover:text-white transition">
@@ -400,25 +400,25 @@
                                 </div>
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
-                            <a href="{{ route('finance.expenses.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-red-50 transition group">
-                                <div class="w-10 h-10 rounded-lg bg-red-100 text-red-700 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition">
+                            <a href="{{ route('finance.expenses.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-danger-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-danger-100 text-danger-700 flex items-center justify-center group-hover:bg-danger-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                                 </div>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-900">Add expense</div>
                                     <div class="text-xs text-gray-500">Bank · UPI · Card · Cheque</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-danger-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
-                            <a href="{{ route('finance.cash-memos.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-amber-50 transition group">
-                                <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition">
+                            <a href="{{ route('finance.cash-memos.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-accent-100 text-accent-700 flex items-center justify-center group-hover:bg-accent-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-900">Cash memo</div>
                                     <div class="text-xs text-gray-500">Cash purchase · printable voucher</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('invoices.index') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-money-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-money-100 text-money-700 flex items-center justify-center group-hover:bg-money-600 group-hover:text-white transition">
@@ -467,26 +467,26 @@
                                 <svg class="w-4 h-4 text-gray-500 group-hover:text-money-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
-                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
-                                <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">GSTR-1 · this month</div>
                                     <div class="text-xs text-gray-500 truncate">{{ now()->format('F Y') }} · split into B2B and B2C, with place of supply</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-brand-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                             </a>
                             <a href="{{ route('invoices.gstr1', ['from' => now()->subMonthNoOverflow()->startOfMonth()->toDateString(), 'to' => now()->subMonthNoOverflow()->endOfMonth()->toDateString()]) }}"
-                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
-                                <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+                               class="flex items-center gap-3 p-3 rounded-lg hover:bg-brand-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-brand-50 text-brand-700 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="font-medium text-gray-900">GSTR-1 · last month</div>
                                     <div class="text-xs text-gray-500 truncate">{{ now()->subMonthNoOverflow()->format('F Y') }} · for the {{ now()->day < 11 ? '11th' : 'next' }} filing window</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-500 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-brand-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                             </a>
                             <a href="{{ route('finance.expenses.export.csv') }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
@@ -568,7 +568,7 @@
                                             'final' => ['bg' => 'bg-brand-100', 'text' => 'text-brand-800', 'label' => 'Issued'],
                                             'partially_paid' => ['bg' => 'bg-accent-100', 'text' => 'text-accent-800', 'label' => 'Partially paid'],
                                             'paid' => ['bg' => 'bg-money-100', 'text' => 'text-money-800', 'label' => 'Paid'],
-                                            'cancelled' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Cancelled'],
+                                            'cancelled' => ['bg' => 'bg-danger-100', 'text' => 'text-danger-800', 'label' => 'Cancelled'],
                                         ][$inv->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => ucfirst($inv->status)];
                                     @endphp
                                     <a href="{{ route('invoices.show', $inv) }}" class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition">

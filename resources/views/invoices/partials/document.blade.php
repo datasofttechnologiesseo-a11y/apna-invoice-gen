@@ -45,7 +45,7 @@
         <div class="text-right">
             <h2 class="text-2xl font-bold tracking-wide uppercase">{{ $documentTitle }}</h2>
             @if ($c->composition_dealer)
-                <div class="mt-2 inline-block text-left px-2.5 py-1.5 bg-amber-50 border border-amber-300 rounded text-[11px] leading-snug text-amber-900 max-w-xs">
+                <div class="mt-2 inline-block text-left px-2.5 py-1.5 bg-accent-50 border border-accent-300 rounded text-[11px] leading-snug text-accent-900 max-w-xs">
                     <strong>Composition taxable person, not eligible to collect tax on supplies.</strong>
                 </div>
             @elseif ($isBillOfSupply)
@@ -59,7 +59,7 @@
                 @endif
                 <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '-' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
                 @if ($invoice->reverse_charge)
-                    <div class="text-amber-700"><strong>Reverse charge applicable</strong> - Section 9(3)/9(4)</div>
+                    <div class="text-accent-700"><strong>Reverse charge applicable</strong> - Section 9(3)/9(4)</div>
                 @endif
             </div>
         </div>
@@ -196,7 +196,7 @@
             @if ($invoice->reverse_charge)
                 {{-- Section 9(3)/9(4) CGST + Rule 46(p): mandatory declaration that
                      the recipient is liable for tax on RCM supply. --}}
-                <div class="mt-3 p-3 bg-amber-50 border border-amber-300 rounded text-xs leading-relaxed text-amber-900">
+                <div class="mt-3 p-3 bg-accent-50 border border-accent-300 rounded text-xs leading-relaxed text-accent-900">
                     <div class="font-bold uppercase tracking-wide mb-1">Tax payable on reverse charge basis</div>
                     GST on this supply is to be paid by the recipient directly to the government under
                     <strong>Section 9(3)/9(4) of the CGST Act 2017</strong>. The supplier is not collecting

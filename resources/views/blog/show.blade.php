@@ -95,7 +95,7 @@
             line-height: 0.85;
             padding: 0.08em 0.12em 0 0;
             font-weight: 800;
-            color: #075985;  /* brand-700 */
+            color: #0f766e;  /* brand-700 */
         }
 
         /* Anchor link for headings, small § that fades in on hover, lets
@@ -110,7 +110,7 @@
         }
         .article-body h2:hover .heading-anchor,
         .article-body h3:hover .heading-anchor { opacity: 1; }
-        .article-body .heading-anchor:hover { color: #075985; }
+        .article-body .heading-anchor:hover { color: #0f766e; }
 
         /* Reading progress bar, pinned to top, brand gradient. */
         #reading-progress {
@@ -156,7 +156,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
         <nav aria-label="Breadcrumb" class="text-xs uppercase tracking-wider font-bold text-gray-500 mb-3">
             <a href="{{ url('/') }}" class="hover:text-brand-700">Home</a>
-            <span class="mx-1.5 text-gray-300">/</span>
+            <span class="mx-1.5 text-gray-400" aria-hidden="true">/</span>
             <a href="{{ route('blog.index') }}" class="hover:text-brand-700">Blogs</a>
         </nav>
         <h1 class="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">{{ $post->title }}</h1>
@@ -221,7 +221,7 @@
                 [&_ol]:list-decimal [&_ol]:pl-7 [&_ol]:my-6 [&_ol]:space-y-3
                 [&_strong]:text-gray-900 [&_strong]:font-bold
                 [&_em]:italic
-                [&_blockquote]:border-l-4 [&_blockquote]:border-saffron-400 [&_blockquote]:pl-6 [&_blockquote]:my-8 [&_blockquote]:italic [&_blockquote]:text-gray-700 [&_blockquote]:bg-saffron-50/40 [&_blockquote]:py-2 [&_blockquote]:rounded-r
+                [&_blockquote]:border-l-4 [&_blockquote]:border-accent-400 [&_blockquote]:pl-6 [&_blockquote]:my-8 [&_blockquote]:italic [&_blockquote]:text-gray-700 [&_blockquote]:bg-accent-50/40 [&_blockquote]:py-2 [&_blockquote]:rounded-r
                 [&_code]:bg-gray-100 [&_code]:text-brand-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_code]:font-mono
                 [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-5 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:my-8 [&_pre]:text-sm [&_pre]:leading-relaxed
                 [&_pre_code]:bg-transparent [&_pre_code]:text-gray-100 [&_pre_code]:p-0 [&_pre_code]:text-inherit
@@ -305,9 +305,9 @@
         <p class="mt-2 text-brand-100 max-w-xl">Apna Invoice is a free GST invoicing tool for Indian SMEs, MSMEs and freelancers. Auto CGST/SGST, HSN/SAC search, UPI QR, WhatsApp share, all in 60 seconds.</p>
         <div class="mt-5 flex flex-wrap gap-3">
             @auth
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-saffron-700 hover:bg-saffron-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-accent-700 hover:bg-accent-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
             @else
-                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-saffron-700 hover:bg-saffron-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
+                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-accent-700 hover:bg-accent-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
                 <a href="{{ route('login') }}" class="inline-flex items-center px-5 py-3 bg-white/10 hover:bg-white/20 ring-1 ring-white/30 text-white rounded-lg font-semibold transition">Log in</a>
             @endauth
         </div>

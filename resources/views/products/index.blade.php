@@ -29,7 +29,7 @@
                         @endforeach
                     </select>
                     <label class="text-sm flex items-center gap-1.5 text-gray-600">
-                        <input type="checkbox" name="only_inactive" value="1" @checked(request('only_inactive')) onchange="this.form.submit()" class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                        <input type="checkbox" name="only_inactive" value="1" @checked(request('only_inactive')) onchange="this.form.submit()" class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                         Show archived
                     </label>
                     <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
@@ -86,9 +86,9 @@
                                             title="{{ $willArchive ? 'Archive' : 'Delete' }} {{ $p->name }}?"
                                             message="{{ $willArchive ? 'This product has invoice history so it will be archived (hidden from the autocomplete) - the records stay intact for GST audit.' : 'This product has never been invoiced so it will be permanently deleted.' }}"
                                             confirm-label="{{ $willArchive ? 'Archive' : 'Delete' }} product"
-                                            confirm-class="{{ $willArchive ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700' }}"
+                                            confirm-class="{{ $willArchive ? 'bg-accent-600 hover:bg-accent-700' : 'bg-danger-600 hover:bg-danger-700' }}"
                                             tone="{{ $willArchive ? 'warning' : 'danger' }}">
-                                            <button type="button" class="{{ $willArchive ? 'text-amber-600' : 'text-red-600' }} hover:underline text-sm">{{ $willArchive ? 'Archive' : 'Delete' }}</button>
+                                            <button type="button" class="{{ $willArchive ? 'text-accent-600' : 'text-danger-600' }} hover:underline text-sm">{{ $willArchive ? 'Archive' : 'Delete' }}</button>
                                         </x-confirm-form>
                                     </td>
                                 </tr>

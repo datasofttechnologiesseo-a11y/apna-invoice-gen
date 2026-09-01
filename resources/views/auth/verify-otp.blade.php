@@ -56,10 +56,10 @@
     @endif
 
     @if (! empty($devCode))
-        <div class="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+        <div class="mb-4 p-3 rounded-md bg-accent-50 border border-accent-200 text-accent-800 text-sm">
             <strong>Dev mode:</strong> your code is
             <span class="font-mono font-bold tracking-widest text-base">{{ $devCode }}</span>
-            <div class="text-xs mt-1 text-amber-700">Shown only because no SMS gateway is configured yet. This never appears in production.</div>
+            <div class="text-xs mt-1 text-accent-700">Shown only because no SMS gateway is configured yet. This never appears in production.</div>
         </div>
     @endif
 
@@ -80,7 +80,7 @@
     <div class="mt-5 flex items-center justify-between text-sm">
         <form method="POST" action="{{ route('register.resend') }}">
             @csrf
-            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline focus:outline-none disabled:text-gray-500 disabled:no-underline disabled:cursor-not-allowed">
+            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline disabled:text-gray-500 disabled:no-underline disabled:cursor-not-allowed">
                 {{ __('Resend code') }}
             </button>
         </form>

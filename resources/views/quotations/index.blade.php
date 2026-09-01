@@ -59,11 +59,11 @@
                     @php
                         $colors = [
                             'draft' => 'bg-gray-100 text-gray-700',
-                            'sent' => 'bg-blue-100 text-blue-800',
-                            'accepted' => 'bg-emerald-100 text-emerald-800',
-                            'declined' => 'bg-red-100 text-red-800',
-                            'converted' => 'bg-purple-100 text-purple-800',
-                            'expired' => 'bg-amber-100 text-amber-800',
+                            'sent' => 'bg-brand-100 text-brand-800',
+                            'accepted' => 'bg-money-100 text-money-800',
+                            'declined' => 'bg-danger-100 text-danger-800',
+                            'converted' => 'bg-brand-100 text-brand-800',
+                            'expired' => 'bg-accent-100 text-accent-800',
                         ];
                     @endphp
 
@@ -91,7 +91,7 @@
                                             @if ($q->valid_until)
                                                 · valid till {{ $q->valid_until->format('d M Y') }}
                                                 @if ($showCountdown && $daysLeft < 7)
-                                                    <span class="ml-1 inline-block text-[10px] font-bold uppercase tracking-wider {{ $daysLeft < 0 ? 'text-red-700' : 'text-amber-700' }}">
+                                                    <span class="ml-1 inline-block text-[10px] font-bold uppercase tracking-wider {{ $daysLeft < 0 ? 'text-danger-700' : 'text-accent-700' }}">
                                                         @if ($daysLeft < 0) Expired @else ({{ $daysLeft }}d left) @endif
                                                     </span>
                                                 @endif
@@ -113,9 +113,9 @@
                                             title="Delete draft quotation #{{ $q->id }}?"
                                             message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable - they're kept for record."
                                             confirm-label="Delete draft"
-                                            confirm-class="bg-red-600 hover:bg-red-700"
+                                            confirm-class="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="inline-flex items-center min-h-[36px] text-red-600">Delete</button>
+                                            <button type="button" class="inline-flex items-center min-h-[36px] text-danger-600">Delete</button>
                                         </x-confirm-form>
                                     @endif
                                 </div>
@@ -158,11 +158,11 @@
                                                 <div>{{ $q->valid_until->format('d M Y') }}</div>
                                                 @if ($showCountdown)
                                                     @if ($daysLeft < 0)
-                                                        <div class="text-[10px] font-bold text-red-700 uppercase tracking-wider">Expired</div>
+                                                        <div class="text-[10px] font-bold text-danger-700 uppercase tracking-wider">Expired</div>
                                                     @elseif ($daysLeft < 3)
-                                                        <div class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Expires in {{ $daysLeft }}d</div>
+                                                        <div class="text-[10px] font-bold text-accent-700 uppercase tracking-wider">Expires in {{ $daysLeft }}d</div>
                                                     @elseif ($daysLeft < 7)
-                                                        <div class="text-[10px] font-medium text-amber-600 uppercase tracking-wider">Expires in {{ $daysLeft }}d</div>
+                                                        <div class="text-[10px] font-medium text-accent-600 uppercase tracking-wider">Expires in {{ $daysLeft }}d</div>
                                                     @endif
                                                 @endif
                                             @else
@@ -176,19 +176,19 @@
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                             <a href="{{ route('quotations.show', $q) }}" class="text-brand-700 hover:underline">View</a>
-                                            <span class="text-gray-300 mx-1">·</span>
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                             <a href="{{ route('quotations.pdf', $q) }}" class="text-gray-600 hover:underline">PDF</a>
                                             @if ($q->isDraft())
-                                                <span class="text-gray-300 mx-1">·</span>
+                                                <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                                 <x-confirm-form
                                                     :action="route('quotations.destroy', $q)"
                                                     method="DELETE"
                                                     title="Delete draft quotation #{{ $q->id }}?"
                                                     message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable - they're kept for record."
                                                     confirm-label="Delete draft"
-                                                    confirm-class="bg-red-600 hover:bg-red-700"
+                                                    confirm-class="bg-danger-600 hover:bg-danger-700"
                                                     tone="danger">
-                                                    <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                                    <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                                 </x-confirm-form>
                                             @endif
                                         </td>

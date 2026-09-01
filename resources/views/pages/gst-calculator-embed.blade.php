@@ -20,12 +20,12 @@
             <div>
                 <label class="block text-xs font-semibold text-gray-500 mb-1">Amount (₹)</label>
                 <input type="number" min="0" x-model="amount" @input="recompute()" inputmode="decimal"
-                       class="w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500 text-lg font-semibold">
+                       class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600 text-lg font-semibold">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">GST rate</label>
-                    <select x-model="rate" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                    <select x-model="rate" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
                         @foreach ([0, 5, 12, 18, 28] as $r)
                             <option value="{{ $r }}">{{ $r }}%</option>
                         @endforeach
@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Supply</label>
-                    <select x-model="supply" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-500 focus:ring-brand-500">
+                    <select x-model="supply" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
                         <option value="intra">Intra-state</option>
                         <option value="inter">Inter-state</option>
                     </select>

@@ -34,7 +34,7 @@
             ]" />
 
             @if ($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">
                     <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                 </div>
             @endif
@@ -114,8 +114,8 @@
                             <x-input-label value="Tax mode (auto)" />
                             <div class="mt-2 text-sm">
                                 <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
-                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
-                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
+                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded">Inter-state (IGST)</span>
+                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + SGST)</span>
                             </div>
                             <p class="mt-1 text-[10px] text-gray-500">Mode is decided by your state vs. customer's state.</p>
                         </div>
@@ -166,7 +166,7 @@
                                     <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
                                     <button type="button" @click="removeRow(idx)"
                                             :disabled="items.length <= 1"
-                                            :class="items.length <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'"
+                                            :class="items.length <= 1 ? 'text-gray-400 cursor-not-allowed' : 'text-danger-600'"
                                             class="text-sm font-medium transition"
                                             aria-label="Remove row">Remove</button>
                                 </div>
@@ -290,8 +290,8 @@
                                                     :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
                                                     class="inline-flex items-center justify-center w-8 h-8 rounded-md text-lg leading-none transition"
                                                     :class="items.length <= 1
-                                                        ? 'text-gray-300 cursor-not-allowed'
-                                                        : 'text-red-500 hover:text-white hover:bg-red-500'"
+                                                        ? 'text-gray-400 cursor-not-allowed'
+                                                        : 'text-danger-500 hover:text-white hover:bg-danger-500'"
                                                     aria-label="Remove row">×</button>
                                         </td>
                                     </tr>

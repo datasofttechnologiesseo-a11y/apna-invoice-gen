@@ -38,10 +38,10 @@
                         // Map style → Tailwind classes for the mini preview header - sober tones
                         $styleTheme = [
                             'classic' => ['bg' => 'bg-white', 'border' => 'border-b-2 border-[#0f766e]', 'text' => 'text-gray-900', 'accent' => 'text-[#0f766e]'],
-                            'bold'    => ['bg' => 'bg-white', 'border' => 'border-b-[3px] border-[#c2410c]', 'text' => 'text-[#c2410c]', 'accent' => 'text-[#c2410c]'],
-                            'minimal' => ['bg' => 'bg-white', 'border' => 'border-b border-emerald-200', 'text' => 'text-gray-900', 'accent' => 'text-emerald-700'],
-                            'retail'  => ['bg' => 'bg-white', 'border' => 'border-b-2 border-slate-900', 'text' => 'text-slate-900 font-mono', 'accent' => 'text-slate-700 font-mono'],
-                            'warm'    => ['bg' => 'bg-white', 'border' => 'border-b-2 border-double border-red-700', 'text' => 'text-red-700', 'accent' => 'text-red-700'],
+                            'bold'    => ['bg' => 'bg-white', 'border' => 'border-b-[3px] border-[#b45309]', 'text' => 'text-[#b45309]', 'accent' => 'text-[#b45309]'],
+                            'minimal' => ['bg' => 'bg-white', 'border' => 'border-b border-money-200', 'text' => 'text-gray-900', 'accent' => 'text-money-700'],
+                            'retail'  => ['bg' => 'bg-white', 'border' => 'border-b-2 border-gray-900', 'text' => 'text-gray-900 font-mono', 'accent' => 'text-gray-700 font-mono'],
+                            'warm'    => ['bg' => 'bg-white', 'border' => 'border-b-2 border-double border-danger-700', 'text' => 'text-danger-700', 'accent' => 'text-danger-700'],
                         ][$styleKey] ?? null;
                         $styleTheme ??= ['bg' => 'bg-white', 'border' => 'border-b border-gray-200', 'text' => 'text-gray-900', 'accent' => 'text-brand-700'];
                     @endphp

@@ -24,7 +24,7 @@
                 @if ($product->exists) @method('PATCH') @endif
 
                 @if ($errors->any())
-                    <div class="m-6 mb-0 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" role="alert">
+                    <div class="m-6 mb-0 p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
                         <div class="font-semibold mb-1">Please fix the following before saving:</div>
                         <ul class="list-disc pl-5 space-y-0.5">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                     </div>
@@ -42,7 +42,7 @@
                         </div>
                         <div>
                             <x-input-label for="kind" value="Kind *" />
-                            <select id="kind" name="kind" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <select id="kind" name="kind" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 @foreach (config('uqc_units.kinds') as $value => $label)
                                     <option value="{{ $value }}" @selected(old('kind', $product->kind) === $value)>{{ $label }}</option>
                                 @endforeach
@@ -55,12 +55,12 @@
                         </div>
                         <div class="md:col-span-2">
                             <x-input-label for="description" value="Description (optional, shown on invoice)" />
-                            <textarea id="description" name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500" maxlength="1000">{{ old('description', $product->description) }}</textarea>
+                            <textarea id="description" name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600" maxlength="1000">{{ old('description', $product->description) }}</textarea>
                         </div>
                         <div class="md:col-span-2">
                             <label class="inline-flex items-center gap-2">
                                 <input type="hidden" name="is_active" value="0">
-                                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span class="text-sm text-gray-700">Active, available in invoice autocomplete</span>
                             </label>
                         </div>
@@ -101,7 +101,7 @@
                                        @keydown.enter.prevent="pick(filtered[highlight])" @keydown.escape="open = false; syncLabel()"
                                        @blur="setTimeout(() => { open = false; syncLabel() }, 150)"
                                        placeholder="Type a unit, e.g. kg, litre, box"
-                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                       class="block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 <div x-show="open" x-cloak class="absolute z-30 mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
                                     <template x-for="(u, i) in filtered" :key="u.code">
                                         <button type="button" @click="pick(u)" @mouseenter="highlight = i"
@@ -121,7 +121,7 @@
                         </div>
                         <div>
                             <x-input-label for="gst_rate" value="Default GST% *" />
-                            <select id="gst_rate" name="gst_rate" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <select id="gst_rate" name="gst_rate" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 @foreach (config('gst.rates') as $r)
                                     <option value="{{ $r['value'] }}" @selected((float) old('gst_rate', $product->gst_rate ?? 18) === (float) $r['value']) title="{{ $r['note'] }}">{{ $r['label'] }}</option>
                                 @endforeach

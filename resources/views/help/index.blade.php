@@ -291,45 +291,45 @@
 
                 {{-- OUT OF SCOPE, honesty about what we don't do, so users self-select correctly. --}}
                 <section id="scope" class="scroll-mt-24">
-                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 sm:p-8">
+                    <div class="bg-accent-50 border border-accent-200 rounded-2xl p-6 sm:p-8">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-700 font-display font-extrabold flex items-center justify-center">12</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-accent-100 text-accent-700 font-display font-extrabold flex items-center justify-center">12</div>
                             <div class="flex-1 min-w-0">
-                                <h3 class="font-display text-xl sm:text-2xl font-extrabold text-amber-900">What Apna Invoice doesn't (yet) cover</h3>
-                                <p class="mt-2 text-amber-800 leading-relaxed">
+                                <h3 class="font-display text-xl sm:text-2xl font-extrabold text-accent-900">What Apna Invoice doesn't (yet) cover</h3>
+                                <p class="mt-2 text-accent-800 leading-relaxed">
                                     We're built for small-to-mid Indian businesses doing domestic GST-taxable supplies.
                                     A few Indian GST scenarios are <strong>intentionally out of scope</strong> today, if any
                                     describe your workflow, we probably aren't the right tool yet.
                                 </p>
-                                <ul class="mt-4 space-y-3 text-sm text-amber-900">
+                                <ul class="mt-4 space-y-3 text-sm text-accent-900">
                                     <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>E-invoicing (IRN / signed QR via NIC IRP).</strong> Mandatory since Aug 2023 for businesses with aggregate turnover above <strong>₹5 crore</strong>. We don't generate IRNs, if you're in this bracket you'll need a GSP/ASP integration too.</span>
                                     </li>
                                     <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>Auto-filing to the GSTN portal.</strong> We don't submit returns directly. We <em>do</em> compute and export both <strong>GSTR-1</strong> (B2B/B2C CSV with HSN summary, Table 12 format) and <strong>GSTR-3B</strong> (sections 3.1 / 4 / 6.1 as PDF + CSV), your CA imports / transcribes the figures and submits on the GST portal. No GSP/ASP integration.</span>
                                     </li>
                                     <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>Exports, SEZ supplies, multi-currency.</strong> Invoices meant for export under LUT / Bond, SEZ unit supplies, or billing in USD/EUR/AED etc. We hard-code INR and the standard domestic tax-invoice format.</span>
                                     </li>
                                     <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>Compensation cess.</strong> Demerit goods (tobacco, aerated drinks, luxury automobiles) attract GST + a separate compensation cess. We support the GST part but don't have a cess line today.</span>
                                     </li>
                                     <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>E-way bill auto-generation.</strong> We capture the E-way bill number if you have one, but we don't call the ewaybillgst.gov.in API to generate it. For goods movement above ₹50,000 you'll still need to generate the EWB there.</span>
                                     </li>
                                     <li class="flex gap-3">
-                                        <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span><strong>TCS under Section 52 (e-commerce operators).</strong> We support <strong>TDS deducted by your customers</strong> (Section 194-x &amp; 51) on incoming payments, but not TCS that you'd collect as an e-commerce platform.</span>
                                     </li>
                                 </ul>
-                                <div class="mt-5 p-4 bg-white/60 rounded-lg border border-amber-200">
-                                    <div class="text-xs uppercase tracking-wider font-bold text-amber-800">What we DO cover</div>
-                                    <p class="mt-2 text-sm text-amber-900 leading-relaxed">
+                                <div class="mt-5 p-4 bg-white/60 rounded-lg border border-accent-200">
+                                    <div class="text-xs uppercase tracking-wider font-bold text-accent-800">What we DO cover</div>
+                                    <p class="mt-2 text-sm text-accent-900 leading-relaxed">
                                         Domestic tax invoices with CGST+SGST / IGST auto-split · HSN/SAC with UQC units ·
                                         FY-reset invoice numbering · <strong>Composition scheme + auto Bill of Supply</strong> · <strong>Per-line discount (Section 15(3))</strong> · <strong>TDS deduction tracking (Section 194-x &amp; 51)</strong> ·
                                         Credit notes (Section 34) · Reverse charge ·

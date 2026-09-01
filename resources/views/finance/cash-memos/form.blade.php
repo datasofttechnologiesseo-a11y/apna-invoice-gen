@@ -23,7 +23,7 @@
                     @if ($isEdit ?? false) @method('PUT') @endif
 
                     @if ($errors->any())
-                        <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                        <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
                             <div class="font-semibold mb-1">Please fix the following:</div>
                             <ul class="list-disc pl-5 space-y-0.5">
                                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
@@ -54,19 +54,19 @@
                                        :readonly="locked"
                                        :class="locked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'"
                                        value="{{ old('memo_number', $nextMemoNumber) }}"
-                                       class="mt-1 block w-full font-mono text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                       class="mt-1 block w-full font-mono text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 <p class="mt-1 text-[11px] text-gray-500">
                                     <span x-show="locked">Auto-generated · FY-based sequence. Click <em>Edit manually</em> to override.</span>
-                                    <span x-show="!locked" class="text-amber-700">Custom number - must be unique within your company. Auto counter will <strong>not</strong> advance.</span>
+                                    <span x-show="!locked" class="text-accent-700">Custom number - must be unique within your company. Auto counter will <strong>not</strong> advance.</span>
                                 </p>
-                                @error('memo_number')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                                @error('memo_number')<p class="mt-1 text-xs text-danger-600">{{ $message }}</p>@enderror
                             </div>
                         </div>
                     </section>
 
                     {{-- ─── Purchased From ─── --}}
                     <section>
-                        <h3 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Purchased From <span class="text-red-500">*</span></h3>
+                        <h3 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Purchased From <span class="text-danger-600">*</span></h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
                                 <x-input-label for="seller_name" value="Seller / Vendor name *" />
@@ -77,7 +77,7 @@
                                 <x-input-label for="seller_address" value="Address" />
                                 <textarea id="seller_address" name="seller_address" rows="2" maxlength="500"
                                           placeholder="Shop / street, city, pin code"
-                                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ old('seller_address', $memo->seller_address) }}</textarea>
+                                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">{{ old('seller_address', $memo->seller_address) }}</textarea>
                             </div>
                             <div>
                                 <x-input-label for="seller_gstin" value="GSTIN (if any)" />
@@ -92,7 +92,7 @@
                             <div>
                                 <x-input-label for="seller_state" value="Seller state" />
                                 <select id="seller_state" name="seller_state" x-model="sellerState"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     <option value="">- Select -</option>
                                     @foreach ($states as $st)
                                         <option value="{{ $st->name }}" @selected(old('seller_state', $memo->seller_state) === $st->name)>{{ $st->name }}</option>
@@ -118,7 +118,7 @@
                                 <div class="border rounded-lg p-3 bg-gray-50 space-y-2">
                                     <div class="flex items-center justify-between text-xs text-gray-500">
                                         <span>Item <span x-text="idx + 1"></span></span>
-                                        <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-red-600 text-xs">Remove</button>
+                                        <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-danger-600 text-xs">Remove</button>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Description</label>
@@ -208,7 +208,7 @@
                                             </td>
                                             <td class="px-3 py-2 text-right font-mono tabular-nums" x-text="fmt(item.quantity * item.rate)"></td>
                                             <td class="px-2 py-2 text-right">
-                                                <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-red-600 hover:text-red-800 text-lg leading-none" title="Remove">×</button>
+                                                <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-danger-600 hover:text-danger-800 text-lg leading-none" title="Remove">×</button>
                                             </td>
                                         </tr>
                                     </template>
@@ -228,13 +228,13 @@
                                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
                                         <input id="discount" name="discount" type="number" step="any" min="0"
                                                x-model.number="discount" @input="recompute()"
-                                               class="block w-full pl-8 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                               class="block w-full pl-8 border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     </div>
                                 </div>
                                 <div>
                                     <x-input-label for="gst_rate" value="GST rate" />
                                     <select id="gst_rate" name="gst_rate" x-model.number="gstRate" @change="recompute()"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                         <option value="0">No GST (most cash sales)</option>
                                         <option value="5">5%</option>
                                         <option value="12">12%</option>
@@ -246,14 +246,14 @@
                                 <div x-show="gstRate > 0" class="flex items-center gap-2">
                                     <input id="is_interstate" type="checkbox" x-model="isInterstate" @change="recompute()"
                                            name="is_interstate" value="1"
-                                           class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                           class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                     <label for="is_interstate" class="text-sm text-gray-700">Inter-state purchase (charge IGST instead of CGST/SGST)</label>
                                 </div>
                                 {{-- Warn (don't block) when the seller state and the inter-state
                                      toggle disagree - catches a silently wrong tax split. --}}
                                 <div x-show="stateMismatch" x-cloak
-                                     class="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
-                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                                     class="flex items-start gap-2 rounded-md bg-accent-50 border border-accent-200 px-3 py-2 text-xs text-accent-800">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                                     <span x-text="stateMismatch"></span>
                                 </div>
                                 {{-- ITC eligibility (CGST Act §17(5)). Default ticked; untick for
@@ -261,7 +261,7 @@
                                 <div x-show="gstRate > 0" class="flex items-start gap-2">
                                     <input id="itc_eligible" type="checkbox" name="itc_eligible" value="1"
                                            @checked(old('itc_eligible', isset($memo) ? $memo->itc_eligible : true))
-                                           class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                           class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                     <label for="itc_eligible" class="text-sm text-gray-700">
                                         Eligible for input tax credit
                                         <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use items - so this GST isn't claimed on GSTR-3B.</span>
@@ -271,7 +271,7 @@
 
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
                                 <div class="flex justify-between"><span class="text-gray-600">Subtotal</span><span class="font-mono tabular-nums" x-text="'₹ ' + fmt(totals.subtotal)"></span></div>
-                                <div class="flex justify-between"><span class="text-gray-600">Discount</span><span class="font-mono tabular-nums text-red-600" x-text="'− ₹ ' + fmt(totals.discount)"></span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">Discount</span><span class="font-mono tabular-nums text-danger-600" x-text="'− ₹ ' + fmt(totals.discount)"></span></div>
                                 <div class="flex justify-between font-medium"><span>Taxable value</span><span class="font-mono tabular-nums" x-text="'₹ ' + fmt(totals.taxable)"></span></div>
                                 <template x-if="!isInterstate && gstRate > 0">
                                     <div>
@@ -299,7 +299,7 @@
                             <div>
                                 <x-input-label for="payment_mode" value="Payment mode *" />
                                 <select id="payment_mode" name="payment_mode" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     @foreach (['cash' => 'Cash', 'upi' => 'UPI', 'card' => 'Card', 'bank' => 'Bank transfer', 'cheque' => 'Cheque', 'other' => 'Other'] as $v => $label)
                                         <option value="{{ $v }}" @selected(old('payment_mode', $memo->payment_mode ?? 'cash') === $v)>{{ $label }}</option>
                                     @endforeach
@@ -313,7 +313,7 @@
                             <div>
                                 <x-input-label for="expense_category" value="Expense category" />
                                 <select id="expense_category" name="expense_category"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     @foreach (config('expense_categories') as $key => $cfg)
                                         <option value="{{ $key }}" @selected(old('expense_category', $memo->expense_category ?? 'misc') === $key)>{{ $cfg['label'] }}</option>
                                     @endforeach
@@ -327,7 +327,7 @@
                     <section>
                         <x-input-label for="notes" value="Notes" />
                         <textarea id="notes" name="notes" rows="2" maxlength="1000"
-                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600"
                                   placeholder="Any additional remarks, terms, etc.">{{ old('notes', $memo->notes) }}</textarea>
                     </section>
 

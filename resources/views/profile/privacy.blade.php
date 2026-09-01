@@ -22,7 +22,7 @@
                     @csrf
                     <div class="text-sm">
                         <span class="font-medium text-gray-900">Marketing emails</span>
-                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $marketingConsent ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600' }}">
+                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $marketingConsent ? 'bg-money-100 text-money-800' : 'bg-gray-100 text-gray-600' }}">
                             {{ $marketingConsent ? 'Opted in' : 'Opted out' }}
                         </span>
                     </div>
@@ -69,7 +69,7 @@
                                 <tr>
                                     <td class="py-2 pr-4 capitalize text-gray-900">{{ str_replace('_', ' ', $c->consent_type) }}</td>
                                     <td class="py-2 pr-4">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $c->given ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700' }}">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $c->given ? 'bg-money-100 text-money-800' : 'bg-danger-100 text-danger-700' }}">
                                             {{ $c->given ? 'Given' : 'Withdrawn' }}
                                         </span>
                                     </td>
@@ -86,7 +86,7 @@
             </section>
 
             {{-- Right to erasure --}}
-            <section class="bg-white shadow sm:rounded-lg p-6 border-l-4 border-rose-300">
+            <section class="bg-white shadow sm:rounded-lg p-6 border-l-4 border-danger-300">
                 <h3 class="font-semibold text-gray-900">Delete my account</h3>
                 <p class="text-sm text-gray-500 mt-1">
                     Permanently delete your account and personal data. Note: where Indian GST law requires
@@ -95,7 +95,7 @@
                     period ends - everything else is erased immediately.
                 </p>
                 <a href="{{ route('profile.edit') }}#delete-account"
-                   class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 transition">
+                   class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-danger-600 text-white hover:bg-danger-700 transition">
                     Continue to delete account
                 </a>
             </section>

@@ -76,7 +76,7 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-800 mb-1.5">Amount (₹)</label>
                     <input type="number" min="0" step="0.01" x-model.number="amount" @input="recompute()"
-                           class="w-full text-lg border-gray-300 rounded-lg shadow-sm focus:ring-brand-500 focus:border-brand-500 font-mono"
+                           class="w-full text-lg border-gray-300 rounded-lg shadow-sm focus:ring-brand-600 focus:border-brand-600 font-mono"
                            placeholder="1000" inputmode="decimal">
                 </div>
 

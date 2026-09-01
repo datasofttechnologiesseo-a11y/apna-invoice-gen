@@ -12,7 +12,7 @@
     <div class="py-8">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-4">
 
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+            <div class="bg-brand-50 border border-brand-200 rounded-lg p-4 text-sm text-brand-900">
                 <div class="font-semibold mb-1">Audit trail (Section 128, Companies Act 2013)</div>
                 <p>Every meaningful change to your books - invoices, payments, credit notes, expenses, cash sales - is recorded here with the user, timestamp, and IP address. This is your defensibility record for GST audit, income-tax assessment, or any inquiry by a Chartered Accountant.</p>
             </div>
@@ -40,9 +40,9 @@
                                     <td class="px-4 py-2">
                                         @php
                                             $tone = match (true) {
-                                                str_contains($log->action, 'deleted') => 'bg-red-100 text-red-800',
-                                                str_contains($log->action, 'updated') => 'bg-amber-100 text-amber-800',
-                                                str_contains($log->action, 'created') => 'bg-emerald-100 text-emerald-800',
+                                                str_contains($log->action, 'deleted') => 'bg-danger-100 text-danger-800',
+                                                str_contains($log->action, 'updated') => 'bg-accent-100 text-accent-800',
+                                                str_contains($log->action, 'created') => 'bg-money-100 text-money-800',
                                                 default => 'bg-gray-100 text-gray-700',
                                             };
                                         @endphp

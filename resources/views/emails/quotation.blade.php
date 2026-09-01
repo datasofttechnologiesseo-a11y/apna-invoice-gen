@@ -14,7 +14,7 @@
         <td align="center">
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                 <tr>
-                    <td style="padding: 24px 32px; background: #1f3061; color: #fff;">
+                    <td style="padding: 24px 32px; background: #0f766e; color: #fff;">
                         <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ $c->name }}</div>
                         <div style="font-size: 22px; font-weight: 700; margin-top: 4px;">
                             Quotation {{ $number }}
@@ -46,7 +46,7 @@
 
                         @if ($publicUrl)
                             <div style="text-align: center; margin-top: 24px;">
-                                <a href="{{ $publicUrl }}" style="display: inline-block; padding: 12px 24px; background: #1f3061; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">View quotation online</a>
+                                <a href="{{ $publicUrl }}" style="display: inline-block; padding: 12px 24px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">View quotation online</a>
                             </div>
                         @endif
 

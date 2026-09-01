@@ -56,9 +56,9 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         @if ($p->isPublished())
-                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">Published</span>
+                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-money-100 text-money-800">Published</span>
                                         @elseif ($p->isScheduled())
-                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Scheduled</span>
+                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-brand-100 text-brand-800">Scheduled</span>
                                         @else
                                             <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">Draft</span>
                                         @endif
@@ -68,10 +68,10 @@
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         @if ($p->isPublished())
                                             <a href="{{ route('blog.show', $p->slug) }}" target="_blank" class="text-gray-600 hover:underline">View</a>
-                                            <span class="text-gray-300 mx-1">·</span>
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         @endif
                                         <a href="{{ route('admin.blog.edit', $p) }}" class="text-brand-700 hover:underline">Edit</a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <form method="POST" action="{{ route('admin.blog.toggle', $p) }}" class="inline">
                                             @csrf
                                             <button class="text-gray-600 hover:underline">{{ $p->isDraft() ? 'Publish' : 'Unpublish' }}</button>

@@ -22,7 +22,7 @@
         .summary-grid td.v { font-size: 13px; font-weight: bold; color: #111; padding-top: 0; }
         .summary-grid td.v small { font-size: 8px; color: #555; font-weight: normal; }
         .summary-grid td.bucket-total { background: #fff7ed; }
-        .summary-grid td.bucket-current { background: #ecfdf5; }
+        .summary-grid td.bucket-current { background: #f0fdf4; }
         .summary-grid td.bucket-30 { background: #fffbeb; }
         .summary-grid td.bucket-60 { background: #fff7ed; }
         .summary-grid td.bucket-90 { background: #fef2f2; }

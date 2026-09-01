@@ -228,7 +228,7 @@
                 <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
             @else
                 <a href="{{ route('login') }}" class="text-base text-gray-800 hover:text-brand-700 font-semibold tracking-tight px-2 py-2 md:px-3 whitespace-nowrap">Log in</a>
-                <a href="{{ route('register') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-saffron-700 hover:bg-saffron-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Signup for Free</a>
+                <a href="{{ route('register') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-accent-700 hover:bg-accent-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Signup for Free</a>
             @endauth
         </nav>
     </div>
@@ -264,7 +264,7 @@
                  subtle but unmissable India cue without being kitsch. --}}
             <div class="flex items-center gap-2.5 flex-wrap mb-6">
                 {{-- 1. Saffron band → Namaste pill --}}
-                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-saffron-100 ring-1 ring-saffron-400 text-saffron-900 text-sm font-bold tracking-wide shadow-sm" aria-label="Namaste, welcome">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-100 ring-1 ring-accent-400 text-accent-900 text-sm font-bold tracking-wide shadow-sm" aria-label="Namaste, welcome">
                     <span class="text-base leading-none" aria-hidden="true">🙏</span>
                     <span>नमस्ते · Welcome</span>
                 </span>
@@ -290,7 +290,7 @@
             <h1 class="font-display font-extrabold tracking-tight text-gray-900 leading-[1.05]">
                 <span class="block text-2xl sm:text-3xl md:text-4xl whitespace-nowrap">Free GST <span class="text-brand-700">Invoicing</span> Software</span>
                 <span class="block mt-2 text-xl sm:text-2xl md:text-3xl font-extrabold text-brand-700 leading-tight">
-                    Built for <span class="text-saffron-700">Indian</span> Businesses
+                    Built for <span class="text-accent-700">Indian</span> Businesses
                 </span>
             </h1>
 
@@ -302,7 +302,7 @@
 
             {{-- Hindi tagline, small, restrained, signals India-first without dominating --}}
             <p class="mt-4 text-base sm:text-lg font-bold text-brand-900 leading-snug" lang="hi">
-                आपका अपना <span class="text-saffron-700">GST बिलिंग साथी</span>। हर invoice
+                आपका अपना <span class="text-accent-700">GST बिलिंग साथी</span>। हर invoice
                 <span class="px-1.5 rounded text-money-800 bg-money-100">सिर्फ़&nbsp;60 सेकंड</span> में।
             </p>
 
@@ -310,7 +310,7 @@
             {{-- Four feature rows, clean icon + bold title + caption pattern from the brief --}}
             <ul class="mt-6 space-y-3 max-w-2xl" role="list">
                 <li class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full bg-orange-100 ring-1 ring-orange-200 text-orange-600 flex items-center justify-center" aria-hidden="true">
+                    <div class="shrink-0 w-12 h-12 rounded-full bg-accent-100 ring-1 ring-accent-200 text-accent-600 flex items-center justify-center" aria-hidden="true">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </div>
                     <div class="min-w-0 pt-1">
@@ -319,7 +319,7 @@
                     </div>
                 </li>
                 <li class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full bg-saffron-100 ring-1 ring-saffron-200 text-saffron-700 flex items-center justify-center" aria-hidden="true">
+                    <div class="shrink-0 w-12 h-12 rounded-full bg-accent-100 ring-1 ring-accent-200 text-accent-700 flex items-center justify-center" aria-hidden="true">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div class="min-w-0 pt-1">
@@ -437,7 +437,7 @@
                 <div class="absolute top-4 left-1/2 -translate-x-1/2 z-30 w-24 h-6 bg-black rounded-full ring-1 ring-white/10" aria-hidden="true"></div>
                 <div class="relative bg-white rounded-[2.25rem] overflow-hidden">
                     {{-- Dark header --}}
-                    <div class="relative p-6 md:p-7 pt-9 md:pt-10 bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 text-white overflow-hidden">
+                    <div class="relative p-6 md:p-7 pt-9 md:pt-10 bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 text-white overflow-hidden">
                         <div class="absolute inset-0 bg-grid-soft opacity-[0.08]"></div>
                         <div class="absolute -top-16 -right-16 w-40 h-40 bg-accent-400 rounded-full blur-3xl opacity-30"></div>
                         <div class="relative flex justify-between items-start">
@@ -471,11 +471,11 @@
                             </label>
                             <div class="relative group">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-700 font-bold pointer-events-none text-lg leading-none">₹</span>
-                                {{-- Heavier border + saffron focus ring makes it obvious this is the
+                                {{-- Heavier border + amber focus ring makes it obvious this is the
                                      primary input. Group-hover shows the field comes alive on hover. --}}
                                 <input id="gst-amount" type="number" min="0" step="any" inputmode="decimal" x-model.number="amount"
                                        placeholder="0"
-                                       class="w-full pl-12 pr-12 py-3 text-xl font-mono font-extrabold tabular-nums bg-white border-2 border-brand-200 hover:border-brand-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-4 focus:ring-brand-200/60 focus:outline-none transition cursor-text">
+                                       class="w-full pl-12 pr-12 py-3 text-xl font-mono font-extrabold tabular-nums bg-white border-2 border-brand-200 hover:border-brand-300 rounded-lg shadow-sm focus:border-brand-600 focus:ring-4 focus:ring-brand-200/60 focus:outline-none transition cursor-text">
                                 {{-- Clear button, appears only when there's a value. Quick reset
                                      so users can swap amounts without selecting + deleting. --}}
                                 <button type="button" @click="amount = 0; $nextTick(() => document.getElementById('gst-amount')?.focus())"
@@ -551,9 +551,9 @@
 
                              Consistent colour semantics across the panel:
                                • GREEN (money) = your retained value (taxable amount)
-                               • SAFFRON       = tax going to government (CGST / SGST / IGST)
+                               • AMBER (accent) = tax going to government (CGST / SGST / IGST)
 
-                             CGST and SGST share the same saffron family (just different
+                             CGST and SGST share the same amber family (just different
                              shades) because they're equal twin taxes, same rate, same
                              amount, only different recipient (Centre vs State). Using
                              two unrelated colours implied they were different kinds. --}}
@@ -565,18 +565,18 @@
                             <template x-if="scope === 'intra'">
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>CGST @ <span x-text="halfRate"></span>% <span class="text-gray-500">(to Centre)</span></span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-accent-500"></span>CGST @ <span x-text="halfRate"></span>% <span class="text-gray-500">(to Centre)</span></span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(cgst)"></span></span>
                                     </div>
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-400"></span>SGST @ <span x-text="halfRate"></span>% <span class="text-gray-500">(to State)</span></span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-accent-400"></span>SGST @ <span x-text="halfRate"></span>% <span class="text-gray-500">(to State)</span></span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(sgst)"></span></span>
                                     </div>
                                 </div>
                             </template>
                             <template x-if="scope === 'inter'">
                                 <div class="flex justify-between text-gray-600 text-xs">
-                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>IGST @ <span x-text="rate"></span>% <span class="text-gray-500">(to Centre, split later)</span></span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-accent-500"></span>IGST @ <span x-text="rate"></span>% <span class="text-gray-500">(to Centre, split later)</span></span>
                                     <span class="font-mono tabular-nums">₹<span x-text="fmt(igst)"></span></span>
                                 </div>
                             </template>
@@ -584,7 +584,7 @@
                         </div>
 
                         {{-- Grand Total --}}
-                        <div class="mt-4 p-4 rounded-xl bg-gradient-to-br from-brand-50 via-accent-50 to-saffron-50 ring-1 ring-brand-100">
+                        <div class="mt-4 p-4 rounded-xl bg-gradient-to-br from-brand-50 via-accent-50 to-accent-50 ring-1 ring-brand-100">
                             <div class="flex items-baseline justify-between gap-3">
                                 <div>
                                     <div class="text-[10px] uppercase tracking-widest text-brand-700 font-extrabold">Grand Total</div>
@@ -637,9 +637,9 @@
 {{-- ─── Marketing slider, 4 hero posters that rotate every 5 s with prev/next
      controls, dot indicators, keyboard arrow nav, touch swipe, and the
      standard pause-on-hover behaviour. Uses the existing brand palette
-     (navy gradient backing, saffron accent on active dot, tricolor blur
+     (teal gradient backing, amber accent on active dot, tricolor blur
      orbs). HD source images live at /brand/slider/. --}}
-<section class="relative py-12 sm:py-16 bg-gradient-to-br from-brand-50/40 via-white to-saffron-50/40 border-y border-gray-100 overflow-hidden"
+<section class="relative py-12 sm:py-16 bg-gradient-to-br from-brand-50/40 via-white to-accent-50/40 border-y border-gray-100 overflow-hidden"
          x-data='{
             slides: [
                 {
@@ -686,7 +686,7 @@
          @keydown.window.arrow-right="next(); start()">
 
     {{-- Decorative tricolor blur orbs, keep section visually anchored to brand. --}}
-    <div class="absolute -top-32 -left-24 w-[420px] h-[420px] bg-saffron-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
+    <div class="absolute -top-32 -left-24 w-[420px] h-[420px] bg-accent-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
     <div class="absolute -bottom-32 -right-24 w-[420px] h-[420px] bg-money-200 rounded-full blur-3xl opacity-30 hidden md:block" aria-hidden="true"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -694,11 +694,11 @@
         {{-- Section eyebrow --}}
         <div class="text-center mb-8 sm:mb-10">
             <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 ring-1 ring-brand-200 text-brand-800 text-xs font-bold uppercase tracking-widest">
-                <span class="w-1.5 h-1.5 rounded-full bg-saffron-500 animate-pulse"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-accent-500 animate-pulse"></span>
                 See Apna Invoice in action
             </span>
             <h2 class="mt-3 font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
-                Loved by <span class="text-brand-700">freelancers</span>, <span class="text-saffron-700">shopkeepers</span>, <span class="text-money-700">consultants</span> &amp; CAs across India
+                Loved by <span class="text-brand-700">freelancers</span>, <span class="text-accent-700">shopkeepers</span>, <span class="text-money-700">consultants</span> &amp; CAs across India
             </h2>
         </div>
 
@@ -719,8 +719,8 @@
                  (16:9) crop a few px from the sides; their key content
                  (faces + dashboards) is centered so nothing important is lost.
                  Fixed aspect = zero layout shift on slide change. --}}
-            <div class="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-300/40 via-saffron-300/40 to-money-300/40 p-[2px] shadow-xl sm:shadow-2xl">
-                <div class="relative rounded-[calc(1rem-2px)] sm:rounded-[calc(1.5rem-2px)] overflow-hidden aspect-[3/2] bg-gradient-to-br from-brand-50 via-white to-saffron-50">
+            <div class="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-300/40 via-accent-300/40 to-money-300/40 p-[2px] shadow-xl sm:shadow-2xl">
+                <div class="relative rounded-[calc(1rem-2px)] sm:rounded-[calc(1.5rem-2px)] overflow-hidden aspect-[3/2] bg-gradient-to-br from-brand-50 via-white to-accent-50">
 
                     <template x-for="(slide, i) in slides" :key="i">
                         <div class="absolute inset-0 transition-opacity duration-700 ease-in-out"
@@ -737,12 +737,12 @@
                     {{-- Prev / next buttons, smaller, less intrusive on mobile;
                          full-size on sm+. Larger tap target via padding-box. --}}
                     <button type="button" @click="prev(); start()"
-                            class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-saffron-400 transition"
+                            class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-accent-400 transition"
                             aria-label="Previous slide">
                         <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                     </button>
                     <button type="button" @click="next(); start()"
-                            class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-saffron-400 transition"
+                            class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 inline-flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white/90 hover:bg-white text-brand-900 shadow-md sm:shadow-lg ring-1 ring-brand-200 hover:ring-accent-400 transition"
                             aria-label="Next slide">
                         <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -752,7 +752,7 @@
             {{-- Active slide caption, sits BELOW the image so it doesn't fight
                  with the poster's own text. Updates reactively as slides change. --}}
             <div class="mt-5 text-center min-h-[80px]" x-show="slides[current]" x-cloak>
-                <span class="inline-block px-2.5 py-0.5 rounded-full bg-saffron-100 text-saffron-800 ring-1 ring-saffron-200 text-[10px] font-bold uppercase tracking-widest" x-text="slides[current].eyebrow"></span>
+                <span class="inline-block px-2.5 py-0.5 rounded-full bg-accent-100 text-accent-800 ring-1 ring-accent-200 text-[10px] font-bold uppercase tracking-widest" x-text="slides[current].eyebrow"></span>
                 <p class="mt-2 font-display text-lg sm:text-xl font-bold text-gray-900 leading-snug max-w-2xl mx-auto" x-html="slides[current].title"></p>
                 <p class="mt-1 text-sm text-gray-600 max-w-2xl mx-auto" x-html="slides[current].sub"></p>
             </div>
@@ -762,7 +762,7 @@
                 <template x-for="(slide, i) in slides" :key="`dot-${i}`">
                     <button type="button" @click="goTo(i)"
                             :class="current === i
-                                ? 'w-8 h-2.5 bg-gradient-to-r from-saffron-500 to-brand-700 ring-2 ring-saffron-200'
+                                ? 'w-8 h-2.5 bg-gradient-to-r from-accent-500 to-brand-700 ring-2 ring-accent-200'
                                 : 'w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400'"
                             class="rounded-full transition-all"
                             :aria-label="'Go to slide ' + (i + 1)"
@@ -794,14 +794,14 @@
              Higher-contrast than the previous text-dot line to signal national reach. --}}
         <div class="mt-10 pt-8 border-t border-gray-200">
             <div class="text-center">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-saffron-50 ring-1 ring-saffron-200">
-                    <svg class="w-3.5 h-3.5 text-saffron-700" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
-                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-saffron-800">Serving businesses across Bharat</span>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-50 ring-1 ring-accent-200">
+                    <svg class="w-3.5 h-3.5 text-accent-700" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                    <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-accent-800">Serving businesses across Bharat</span>
                 </div>
                 <div class="mt-5 flex flex-wrap items-center justify-center gap-2 md:gap-2.5">
                     @foreach (['Delhi','Mumbai','Bengaluru','Chennai','Hyderabad','Pune','Kolkata','Ahmedabad','Jaipur','Lucknow','Surat','Kochi'] as $city)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white ring-1 ring-gray-200 shadow-sm text-sm font-semibold text-gray-800 hover:ring-saffron-300 hover:text-saffron-800 transition">
-                            <svg class="w-3 h-3 text-saffron-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white ring-1 ring-gray-200 shadow-sm text-sm font-semibold text-gray-800 hover:ring-accent-300 hover:text-accent-800 transition">
+                            <svg class="w-3 h-3 text-accent-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
                             {{ $city }}
                         </span>
                     @endforeach
@@ -828,7 +828,7 @@
 
             @foreach ([
                 ['n' => '01', 'title' => 'Sign up', 'desc' => 'Continue with Google, or use your mobile, email and a password. A quick OTP verifies your number. No credit card, no company docs.', 'gradient' => 'from-brand-500 to-brand-700', 'ring' => 'ring-brand-200', 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
-                ['n' => '02', 'title' => 'Add your business (one-time)', 'desc' => 'Paste GSTIN, pick state, upload logo. Letterhead auto-generates on every invoice.', 'gradient' => 'from-accent-500 to-saffron-500', 'ring' => 'ring-accent-200', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
+                ['n' => '02', 'title' => 'Add your business (one-time)', 'desc' => 'Paste GSTIN, pick state, upload logo. Letterhead auto-generates on every invoice.', 'gradient' => 'from-accent-500 to-accent-500', 'ring' => 'ring-accent-200', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
                 ['n' => '03', 'title' => 'Issue invoice in 60 seconds', 'desc' => 'Pick a customer, type one line item, tap Issue. PDF is ready to WhatsApp.', 'gradient' => 'from-money-500 to-money-700', 'ring' => 'ring-money-200', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
             ] as $step)
                 <div class="relative bg-white rounded-2xl p-6 md:p-8 ring-1 {{ $step['ring'] }} shadow-sm hover:shadow-card transition-all duration-300 hover:-translate-y-1 z-10">
@@ -847,7 +847,7 @@
         </div>
 
         <div class="mt-12 text-center">
-            <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-saffron-700 hover:bg-saffron-800 text-white font-semibold rounded-xl shadow-brand transition">
+            <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-accent-700 hover:bg-accent-800 text-white font-semibold rounded-xl shadow-brand transition">
                 Signup for Free, no card needed
                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
             </a>
@@ -961,9 +961,9 @@
      positioned as the rule-aware alternative, actual CGST sections cited,
      audit-defensible by design. This section is the strongest reason a
      CA-using SME picks us over "easy and free" alternatives. --}}
-<section class="relative py-24 bg-gradient-to-br from-white via-brand-50/30 to-saffron-50/40 border-y border-gray-100 overflow-hidden">
+<section class="relative py-24 bg-gradient-to-br from-white via-brand-50/30 to-accent-50/40 border-y border-gray-100 overflow-hidden">
     {{-- Subtle decorative orbs in tricolour --}}
-    <div class="absolute -top-40 -left-32 w-[400px] h-[400px] bg-saffron-200 rounded-full blur-3xl opacity-25" aria-hidden="true"></div>
+    <div class="absolute -top-40 -left-32 w-[400px] h-[400px] bg-accent-200 rounded-full blur-3xl opacity-25" aria-hidden="true"></div>
     <div class="absolute -bottom-40 -right-32 w-[400px] h-[400px] bg-money-200 rounded-full blur-3xl opacity-25" aria-hidden="true"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -982,7 +982,7 @@
 
         {{-- 6-card grid of regulation-backed differentiators. Each card cites
              the actual section / rule so the credibility is verifiable, not
-             marketing fluff. Saffron / brand / money tones rotate so the row
+             marketing fluff. Accent / brand / money tones rotate so the row
              keeps the tricolour identity. --}}
         <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
             @foreach ([
@@ -994,7 +994,7 @@
                     'body'  => 'Title is decided by your data, not a dropdown. No GSTIN → "Invoice". Composition dealer → "Bill of Supply" + Rule 49 footer note. Regular registered → "Tax Invoice". Always legally correct.',
                 ],
                 [
-                    'tone'  => 'saffron',
+                    'tone'  => 'accent',
                     'icon'  => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                     'title' => 'Auto CGST · SGST · IGST split',
                     'rule'  => 'IGST Act §5 · CGST §9',
@@ -1015,7 +1015,7 @@
                     'body'  => 'Credit notes can only reduce GST liability if issued by 30 Nov of the FY following the supply. We compute the deadline per invoice and block late issuance, politely, so you never file a worthless CN.',
                 ],
                 [
-                    'tone'  => 'saffron',
+                    'tone'  => 'accent',
                     'icon'  => 'M13 10V3L4 14h7v7l9-11h-7z',
                     'title' => 'Reverse-charge ready',
                     'rule'  => 'CGST §9(3)/(4) · Rule 46(p)',
@@ -1033,7 +1033,7 @@
                     $tone = $card['tone'];
                     $palette = [
                         'brand'   => ['ring' => 'ring-brand-200', 'icon_bg' => 'from-brand-600 to-brand-800', 'badge_bg' => 'bg-brand-50', 'badge_text' => 'text-brand-700', 'hover' => 'hover:ring-brand-400'],
-                        'saffron' => ['ring' => 'ring-saffron-200', 'icon_bg' => 'from-saffron-500 to-accent-600', 'badge_bg' => 'bg-saffron-50', 'badge_text' => 'text-saffron-800', 'hover' => 'hover:ring-saffron-400'],
+                        'accent' => ['ring' => 'ring-accent-200', 'icon_bg' => 'from-accent-500 to-accent-600', 'badge_bg' => 'bg-accent-50', 'badge_text' => 'text-accent-800', 'hover' => 'hover:ring-accent-400'],
                         'money'   => ['ring' => 'ring-money-200', 'icon_bg' => 'from-money-500 to-money-700', 'badge_bg' => 'bg-money-50', 'badge_text' => 'text-money-800', 'hover' => 'hover:ring-money-400'],
                     ][$tone];
                 @endphp
@@ -1055,13 +1055,13 @@
              the legal exposure of trademark parity claims. --}}
         <div class="mt-14 max-w-4xl mx-auto p-6 md:p-8 rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-900 text-white text-center shadow-xl">
             <p class="font-display text-lg md:text-xl font-bold leading-snug">
-                Your CA loves the <span class="text-saffron-300">established billing tools</span>?
+                Your CA loves the <span class="text-accent-300">established billing tools</span>?
             </p>
             <p class="mt-2 text-sm md:text-base text-brand-100 leading-relaxed">
-                They'll love this too, same audit defensibility, same CGST-Rule-46 compliance, for <span class="text-saffron-300 font-bold">₹0 during beta</span>. Export GSTR-1 CSV, hand over the books, file in minutes.
+                They'll love this too, same audit defensibility, same CGST-Rule-46 compliance, for <span class="text-accent-300 font-bold">₹0 during beta</span>. Export GSTR-1 CSV, hand over the books, file in minutes.
             </p>
             <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-saffron-500 hover:bg-saffron-600 text-accent-950 font-bold shadow-md transition">
+                <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent-500 hover:bg-accent-600 text-accent-950 font-bold shadow-md transition">
                     Try the free GST invoicing app
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
                 </a>
@@ -1087,12 +1087,12 @@
         <div class="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ([
                 ['gr' => 'from-brand-500 to-brand-800', 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', 'title' => 'GST auto-detection', 'body' => "CGST+SGST for intra-state, IGST for inter-state. Picks up from customer's state automatically, no manual math."],
-                ['gr' => 'from-accent-500 to-saffron-600', 'icon' => 'M9 17v-2a4 4 0 014-4h2m-4-4V3m0 0L8 6m3-3l3 3M4 19h16a1 1 0 001-1v-7a1 1 0 00-1-1h-3.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H9.414a1 1 0 01-.707-.293L7.293 10.293A1 1 0 006.586 10H3a1 1 0 00-1 1v7a1 1 0 001 1z', 'title' => 'One-click PDF', 'body' => 'Letterhead, logo, signature, HSN/SAC, amount in words (Indian format). Download or print, always pixel-perfect.'],
+                ['gr' => 'from-accent-500 to-accent-600', 'icon' => 'M9 17v-2a4 4 0 014-4h2m-4-4V3m0 0L8 6m3-3l3 3M4 19h16a1 1 0 001-1v-7a1 1 0 00-1-1h-3.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H9.414a1 1 0 01-.707-.293L7.293 10.293A1 1 0 006.586 10H3a1 1 0 00-1 1v7a1 1 0 001 1z', 'title' => 'One-click PDF', 'body' => 'Letterhead, logo, signature, HSN/SAC, amount in words (Indian format). Download or print, always pixel-perfect.'],
                 ['gr' => 'from-money-500 to-money-700', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'title' => 'Draft → Issued flow', 'body' => 'Edit drafts as much as you want. Issue to lock the number and make it legally final. Atomic numbering, no duplicates.'],
                 ['gr' => 'from-brand-600 to-accent-500', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'title' => 'Partial payments', 'body' => 'Record advance payments, track balance at a glance. Status moves from Final → Partially paid → Paid as you go.'],
-                ['gr' => 'from-saffron-500 to-accent-700', 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 'title' => 'Customer book', 'body' => 'Save customer details once, GSTIN, address, state. Reuse across invoices. Auto-fills the GST tax mode based on state.'],
+                ['gr' => 'from-accent-500 to-accent-700', 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', 'title' => 'Customer book', 'body' => 'Save customer details once, GSTIN, address, state. Reuse across invoices. Auto-fills the GST tax mode based on state.'],
                 ['gr' => 'from-brand-700 to-money-600', 'icon' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'title' => 'Payment reminders', 'body' => 'Auto-email nudges at 0 / 3 / 7 / 15 / 30 days past due, or send a one-tap WhatsApp follow-up. Receipts are generated the moment payment is recorded.'],
-                ['gr' => 'from-red-500 to-saffron-600', 'icon' => 'M19 14l-7 7m0 0l-7-7m7 7V3', 'title' => 'Credit notes (GST Section 34)', 'body' => 'Issue credit notes against an issued invoice with reason codes. Compliant with CBIC Section 34 format for returns, adjustments, and disputes.'],
+                ['gr' => 'from-danger-500 to-accent-600', 'icon' => 'M19 14l-7 7m0 0l-7-7m7 7V3', 'title' => 'Credit notes (GST Section 34)', 'body' => 'Issue credit notes against an issued invoice with reason codes. Compliant with CBIC Section 34 format for returns, adjustments, and disputes.'],
                 ['gr' => 'from-accent-600 to-brand-700', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', 'title' => 'Multi-GSTIN / multi-branch', 'body' => 'Run multiple companies or state branches from one login. Each entity gets its own GSTIN, logo, numbering series, one click to switch.'],
                 ['gr' => 'from-money-600 to-brand-700', 'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'title' => 'One-click backups', 'body' => 'Download a full ZIP of your invoices, customers, and PDFs anytime, or schedule it to email itself monthly. Your data, your move.'],
             ] as $f)
@@ -1112,11 +1112,11 @@
 <section class="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold uppercase tracking-wider ring-1 ring-red-100">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> The Excel Tax
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-danger-50 text-danger-700 text-xs font-bold uppercase tracking-wider ring-1 ring-danger-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-danger-500"></span> The Excel Tax
             </span>
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-                Still billing in <span class="line-through decoration-red-400 decoration-4">Excel</span>? <br class="hidden md:block">
+                Still billing in <span class="line-through decoration-danger-400 decoration-4">Excel</span>? <br class="hidden md:block">
                 There's a faster way.
             </h2>
             <p class="mt-5 text-lg text-gray-600">Most Indian SMEs still copy-paste an old invoice, fiddle with GST math, and email the file. Here's what you're losing every month.</p>
@@ -1124,8 +1124,8 @@
 
         <div class="mt-14 grid md:grid-cols-2 gap-6 md:gap-8 items-stretch">
             {{-- Excel column --}}
-            <div class="relative bg-white rounded-2xl p-7 md:p-9 ring-1 ring-red-100 shadow-sm">
-                <div class="absolute -top-3 left-7 inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">
+            <div class="relative bg-white rounded-2xl p-7 md:p-9 ring-1 ring-danger-100 shadow-sm">
+                <div class="absolute -top-3 left-7 inline-flex items-center gap-1.5 px-3 py-1 bg-danger-600 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                     Excel / WhatsApp PDFs
                 </div>
@@ -1140,7 +1140,7 @@
                         'Can\'t WhatsApp the file directly, customers get a broken .xlsx preview',
                     ] as $pain)
                         <li class="flex items-start gap-3">
-                            <div class="mt-0.5 w-5 h-5 rounded-full bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0 ring-1 ring-red-100">
+                            <div class="mt-0.5 w-5 h-5 rounded-full bg-danger-50 text-danger-500 flex items-center justify-center flex-shrink-0 ring-1 ring-danger-100">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </div>
                             <span class="text-sm text-gray-700 leading-relaxed">{{ $pain }}</span>
@@ -1224,7 +1224,7 @@
 <section class="py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
-            <span class="inline-block px-3 py-1 rounded-full bg-saffron-50 text-saffron-700 text-xs font-bold uppercase tracking-wider">What users say</span>
+            <span class="inline-block px-3 py-1 rounded-full bg-accent-50 text-accent-700 text-xs font-bold uppercase tracking-wider">What users say</span>
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Loved by India's SMEs & Startups.</h2>
             <p class="mt-4 text-lg text-gray-600">From Mumbai consultancies to Bengaluru agencies, business owners use DST's invoice tool to close the month in hours, not days.</p>
             <p class="mt-3 text-xs text-gray-500">Representative scenarios from early private-beta users. Full case studies coming post-launch.</p>
@@ -1243,7 +1243,7 @@
                     'city' => 'Kochi', 'industry' => 'Tax · Advisory',
                     'q' => 'Indian-format amount-in-words (lakhs, crores), correct CGST/SGST/IGST logic, FY-reset numbering. This is built by people who actually know Indian compliance.',
                     'metric' => '100% audit-ready', 'metric_icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                    'i' => 'AM', 'c' => 'from-accent-500 to-saffron-600',
+                    'i' => 'AM', 'c' => 'from-accent-500 to-accent-600',
                 ],
                 [
                     'n' => 'Rohit Patel', 'r' => 'Director', 'company' => 'Patel Trading Co.',
@@ -1256,7 +1256,7 @@
                 <div class="group relative bg-white rounded-2xl p-6 md:p-8 ring-1 ring-gray-100 shadow-sm hover:shadow-card hover:ring-brand-200 transition-all duration-300 flex flex-col">
                     {{-- Rating stars + metric pill --}}
                     <div class="flex items-center justify-between">
-                        <div class="flex gap-0.5 text-saffron-500" aria-label="5 out of 5 stars">
+                        <div class="flex gap-0.5 text-accent-500" aria-label="5 out of 5 stars">
                             @for ($s = 0; $s < 5; $s++)
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.17c.969 0 1.371 1.24.588 1.81l-3.373 2.455a1 1 0 00-.363 1.118l1.287 3.967c.3.922-.755 1.688-1.54 1.118L10.488 15.6a1 1 0 00-1.176 0l-3.37 2.451c-.784.57-1.838-.196-1.539-1.118l1.287-3.967a1 1 0 00-.363-1.118L1.954 9.394c-.783-.57-.38-1.81.588-1.81h4.17a1 1 0 00.95-.69l1.287-3.967z"/></svg>
                             @endfor
@@ -1279,7 +1279,7 @@
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     {{ $t['city'] }}
                                 </span>
-                                <span class="text-gray-300">·</span>
+                                <span class="text-gray-400" aria-hidden="true">·</span>
                                 <span>{{ $t['industry'] }}</span>
                             </div>
                         </div>
@@ -1302,7 +1302,7 @@
         <div class="mt-12 relative">
             <div class="absolute -inset-4 bg-gradient-to-br from-brand-300 to-accent-300 rounded-3xl blur-3xl opacity-30"></div>
             <div class="relative bg-white rounded-2xl shadow-brand ring-1 ring-gray-100 overflow-hidden md:grid md:grid-cols-2">
-                <div class="p-8 md:p-10 bg-gradient-to-br from-brand-900 to-brand-700 text-white">
+                <div class="p-8 md:p-10 bg-gradient-to-br from-brand-900 to-brand-800 text-white">
                     <div class="text-xs font-bold tracking-widest uppercase text-accent-300">Early-bird plan</div>
                     <h3 class="mt-2 font-display text-3xl font-extrabold">DST Invoice · Free</h3>
                     <div class="mt-6 flex items-baseline gap-2">
@@ -1341,7 +1341,7 @@
 
 <!-- Built for India, trust & compliance strip -->
 <section class="py-20 bg-white relative overflow-hidden">
-    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-saffron-200 to-transparent"></div>
+    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-200 to-transparent"></div>
     <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-money-200 to-transparent"></div>
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
@@ -1355,7 +1355,7 @@
                 Made in India · Built for Bharat
             </span>
             <h2 class="mt-4 font-display text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Your data stays in India. <span class="bg-gradient-to-r from-saffron-500 via-brand-600 to-money-600 bg-clip-text text-transparent">Always.</span>
+                Your data stays in India. <span class="bg-gradient-to-r from-accent-500 via-brand-600 to-money-600 bg-clip-text text-transparent">Always.</span>
             </h2>
             <p class="mt-4 text-gray-600">Hosted on Indian servers, built under the DPDP Act, designed for GST 2.0. Zero offshore data transfers.</p>
         </div>
@@ -1383,8 +1383,8 @@
                 [
                     'label' => '₹ in Lakhs & Crores', 'sub' => 'Indian number system',
                     'icon' => 'M11 11V9a2 2 0 00-2-2h-2M9 13h6m-3-7v1m0 8v1m-6-1h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2z',
-                    'card' => 'hover:ring-saffron-200',
-                    'tile' => 'bg-saffron-50 text-saffron-700 ring-saffron-100',
+                    'card' => 'hover:ring-accent-200',
+                    'tile' => 'bg-accent-50 text-accent-700 ring-accent-100',
                 ],
             ] as $badge)
                 <div class="group relative bg-white rounded-2xl p-5 md:p-6 ring-1 ring-gray-100 {{ $badge['card'] }} hover:shadow-card transition-all duration-300 hover:-translate-y-0.5 text-center">
@@ -1435,7 +1435,7 @@
                                  loading="lazy" width="800" height="450">
                         </a>
                     @else
-                        <a href="{{ route('blog.show', $fp->slug) }}" class="block aspect-[16/9] bg-gradient-to-br from-brand-100 via-brand-50 to-saffron-50 flex items-center justify-center p-6">
+                        <a href="{{ route('blog.show', $fp->slug) }}" class="block aspect-[16/9] bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50 flex items-center justify-center p-6">
                             <span class="font-display font-extrabold text-2xl text-brand-700/30 text-center">{{ \Illuminate\Support\Str::limit($fp->title, 28) }}</span>
                         </a>
                     @endif
@@ -1491,7 +1491,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div class="flex-1 min-w-0">
-                <div class="text-[11px] font-bold uppercase tracking-widest text-saffron-700">Free guide · No signup</div>
+                <div class="text-[11px] font-bold uppercase tracking-widest text-accent-700">Free guide · No signup</div>
                 <h3 class="mt-0.5 font-display text-lg font-extrabold text-gray-900">17-slide getting-started deck</h3>
                 <p class="mt-1 text-sm text-gray-600">A complete walkthrough, from sign-up to your first paid GST invoice, in 17 slides. Share with your team or your CA.</p>
             </div>

@@ -15,7 +15,7 @@
                 <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded">{{ session('status') }}</div>
             @endif
             @if ($errors->has('company'))
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">{{ $errors->first('company') }}</div>
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">{{ $errors->first('company') }}</div>
             @endif
 
             <div class="p-4 rounded-lg bg-brand-50 border border-brand-100 text-sm text-brand-900">
@@ -80,9 +80,9 @@
                                             title="Delete {{ $company->name }}?"
                                             message="Its customers will also be removed. This cannot be undone."
                                             confirmLabel="Delete company"
-                                            confirmClass="bg-red-600 hover:bg-red-700"
+                                            confirmClass="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded">Delete</button>
+                                            <button type="button" class="px-3 py-1.5 bg-danger-50 hover:bg-danger-100 text-danger-700 text-sm font-semibold rounded">Delete</button>
                                         </x-confirm-form>
                                     @endif
                                 </div>

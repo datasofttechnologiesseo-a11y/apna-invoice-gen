@@ -49,7 +49,7 @@
             @if ($isPaid)
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800 ring-1 ring-green-200">PAID</span>
             @else
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-amber-100 text-amber-800 ring-1 ring-amber-200">DUE</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-accent-100 text-accent-800 ring-1 ring-accent-200">DUE</span>
             @endif
         </div>
 

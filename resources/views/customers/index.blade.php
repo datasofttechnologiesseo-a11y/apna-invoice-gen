@@ -22,7 +22,7 @@
                      they actually came here to do. --}}
                 @if (! $customers->isEmpty() || request('search'))
                 <form method="GET" class="p-4 border-b">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                 </form>
                 @endif
 
@@ -55,7 +55,7 @@
                                     <td class="px-4 py-3 text-gray-600 text-sm">
                                         @if ($c->email)<div class="truncate max-w-[200px]" title="{{ $c->email }}">{{ $c->email }}</div>@endif
                                         @if ($c->phone)<div class="text-gray-500 font-mono text-xs">{{ $c->phone }}</div>@endif
-                                        @if (! $c->email && ! $c->phone)<span class="text-gray-300">-</span>@endif
+                                        @if (! $c->email && ! $c->phone)<span class="text-gray-500">-</span>@endif
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="inline-flex items-center gap-1.5 whitespace-nowrap">
@@ -72,9 +72,9 @@
                                                 title="Delete {{ $c->name }}?"
                                                 message="Customers with issued invoices can't be deleted for GST audit reasons - we'll show a friendly error if that happens."
                                                 confirm-label="Delete customer"
-                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                confirm-class="bg-danger-600 hover:bg-danger-700"
                                                 tone="danger">
-                                                <button type="button" class="text-red-600 hover:underline text-sm px-2 py-1.5">Delete</button>
+                                                <button type="button" class="text-danger-600 hover:underline text-sm px-2 py-1.5">Delete</button>
                                             </x-confirm-form>
                                         </div>
                                     </td>

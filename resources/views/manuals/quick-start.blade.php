@@ -9,7 +9,7 @@
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; line-height: 1.55; color: #23262f; margin: 0; }
 
         .head { border-bottom: 3px solid #0f766e; padding-bottom: 9px; margin-bottom: 14px; }
-        .kicker { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: #c2410c; font-weight: bold; }
+        .kicker { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: #b45309; font-weight: bold; }
         h1 { font-size: 24px; color: #134e4a; margin: 6px 0 3px; letter-spacing: -0.4px; }
         .sub { font-size: 11px; color: #6b7490; }
 
@@ -30,7 +30,7 @@
 
         table.help { width: 100%; border-collapse: collapse; margin-top: 4px; }
         table.help td {
-            background: #e7f6ef; border-left: 3px solid #047857;
+            background: #e7f6ef; border-left: 3px solid #15803d;
             padding: 8px 10px; font-size: 10px;
         }
         .foot { margin-top: 12px; font-size: 8.5px; color: #6b7490; text-align: center; }

@@ -15,14 +15,14 @@
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))
-                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded text-sm">{{ session('status') }}</div>
+                <div class="p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm">{{ session('status') }}</div>
             @endif
 
             <div class="print:hidden">
                 @include('finance.partials.tabs')
             </div>
 
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900 print:hidden">
+            <div class="bg-brand-50 border border-brand-200 rounded-lg p-4 text-sm text-brand-900 print:hidden">
                 <div class="font-semibold mb-1">What is a Cash Memo?</div>
                 <p>A self-prepared purchase voucher used when you buy something for cash and the seller doesn't issue a formal tax invoice - common with small / unregistered vendors. Each memo also auto-creates a matching Expense entry so it flows into your P&amp;L.</p>
             </div>
@@ -31,15 +31,15 @@
                 <form method="GET" class="flex flex-wrap items-end gap-3">
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Search</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Memo number or seller" class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Memo number or seller" class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                     </div>
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">From</label>
-                        <input type="date" name="from" aria-label="From date" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                        <input type="date" name="from" aria-label="From date" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                     </div>
                     <div>
                         <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">To</label>
-                        <input type="date" name="to" aria-label="To date" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500">
+                        <input type="date" name="to" aria-label="To date" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                     </div>
                     <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Filter</button>
                     @if (request()->anyFilled(['search', 'from', 'to']))
@@ -68,7 +68,7 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('finance.cash-memos.export.pdf', $exportQuery) }}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-money-600 hover:bg-money-700 text-white text-xs font-semibold rounded"
                            title="One-page summary PDF of every cash sale in this range - perfect for emailing to your CA">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Download PDF
@@ -111,7 +111,7 @@
                         </div>
                         <div class="mt-3 pt-2 border-t border-gray-100 flex items-center gap-3 text-xs print:hidden">
                             <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium">View / Print</a>
-                            <a href="{{ route('finance.cash-memos.pdf', $m) }}" class="text-emerald-700 hover:underline font-medium">PDF</a>
+                            <a href="{{ route('finance.cash-memos.pdf', $m) }}" class="text-money-700 hover:underline font-medium">PDF</a>
                             <span class="ml-auto">
                                 <x-confirm-form
                                     :action="route('finance.cash-memos.destroy', $m)"
@@ -119,9 +119,9 @@
                                     title="Delete cash sale {{ $m->memo_number }}?"
                                     message="The linked expense entry will also be removed. This cannot be undone."
                                     confirmLabel="Delete memo"
-                                    confirmClass="bg-red-600 hover:bg-red-700"
+                                    confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
-                                    <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                    <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                 </x-confirm-form>
                             </span>
                         </div>
@@ -197,23 +197,23 @@
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $m->payment_mode }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
                                         <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open the memo on screen">View / Print</a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('finance.cash-memos.pdf', $m) }}"
-                                           class="inline-flex items-center gap-1 text-emerald-700 hover:underline font-medium"
+                                           class="inline-flex items-center gap-1 text-money-700 hover:underline font-medium"
                                            title="Download this cash sale as a PDF">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                             PDF
                                         </a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <x-confirm-form
                                             :action="route('finance.cash-memos.destroy', $m)"
                                             method="DELETE"
                                             title="Delete cash sale {{ $m->memo_number }}?"
                                             message="The linked expense entry will also be removed. This cannot be undone."
                                             confirmLabel="Delete memo"
-                                            confirmClass="bg-red-600 hover:bg-red-700"
+                                            confirmClass="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                            <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                         </x-confirm-form>
                                     </td>
                                 </tr>

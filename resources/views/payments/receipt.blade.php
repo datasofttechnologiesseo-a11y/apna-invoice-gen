@@ -43,8 +43,8 @@
         margin-top: 18px;
         display: inline-block;
         padding: 6px 14px;
-        border: 2px solid #047857;
-        color: #047857;
+        border: 2px solid #15803d;
+        color: #15803d;
         font-weight: 700;
         letter-spacing: 2px;
         transform: rotate(-6deg);
