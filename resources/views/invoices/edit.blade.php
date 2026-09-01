@@ -131,7 +131,7 @@
             @unless ($invoice->exists)
                 <div x-data="{ show: !localStorage.getItem('hideFirstInvoiceTip') }" x-show="show" x-cloak
                      class="p-4 bg-brand-50 border border-brand-200 text-brand-900 rounded-lg flex items-start gap-3">
-                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div class="text-sm flex-1">
@@ -405,7 +405,7 @@
                                             <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                target="_blank" rel="noopener"
                                                onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                               class="text-brand-600 hover:text-brand-700"
+                                               class="text-brand-700 hover:text-brand-800"
                                                aria-label="Search HSN/SAC code on the official GST portal"
                                                title="Search HSN/SAC code on the official GST portal">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -461,7 +461,7 @@
                                         @foreach ($commonRates as $r)
                                             <button type="button"
                                                     @click="item.gst_rate = {{ $r }}; recompute()"
-                                                    :class="(parseFloat(item.gst_rate) === {{ $r }}) ? 'bg-brand-600 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
+                                                    :class="(parseFloat(item.gst_rate) === {{ $r }}) ? 'bg-brand-700 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
                                                     class="inline-flex items-center justify-center min-h-[40px] text-sm font-extrabold rounded transition tabular-nums">
                                                 {{ $r }}%
                                             </button>
@@ -509,7 +509,7 @@
                                             <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                target="_blank" rel="noopener"
                                                onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                               class="text-brand-600 hover:text-brand-700"
+                                               class="text-brand-700 hover:text-brand-800"
                                                aria-label="Search HSN/SAC code on the official GST portal"
                                                title="Search HSN/SAC code on the official GST portal">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>

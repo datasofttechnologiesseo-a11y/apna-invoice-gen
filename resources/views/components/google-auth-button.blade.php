@@ -23,9 +23,9 @@
     @if ($showTerms)
         <p class="mt-3 text-center text-xs text-gray-500">
             By continuing with Google you agree to our
-            <a href="{{ route('pages.terms') }}" target="_blank" rel="noopener" class="text-brand-600 hover:underline">Terms</a>
+            <a href="{{ route('pages.terms') }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Terms</a>
             and
-            <a href="{{ route('pages.privacy') }}" target="_blank" rel="noopener" class="text-brand-600 hover:underline">Privacy Policy</a>.
+            <a href="{{ route('pages.privacy') }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Privacy Policy</a>.
         </p>
     @endif
 @endif

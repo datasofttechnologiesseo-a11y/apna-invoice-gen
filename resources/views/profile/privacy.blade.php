@@ -28,7 +28,7 @@
                     </div>
                     <input type="hidden" name="marketing_opt_in" value="{{ $marketingConsent ? 0 : 1 }}">
                     <button type="submit"
-                        class="px-4 py-2 rounded-lg text-sm font-semibold {{ $marketingConsent ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' : 'bg-brand-600 text-white hover:bg-brand-700' }} transition">
+                        class="px-4 py-2 rounded-lg text-sm font-semibold {{ $marketingConsent ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' : 'bg-brand-700 text-white hover:bg-brand-700' }} transition">
                         {{ $marketingConsent ? 'Withdraw consent' : 'Opt in' }}
                     </button>
                 </form>
@@ -110,7 +110,7 @@
                 <dl class="mt-3 text-sm text-gray-700 space-y-1">
                     <div><dt class="inline font-medium">Name:</dt> <dd class="inline">{{ config('legal.grievance.name') }}</dd></div>
                     <div><dt class="inline font-medium">Email:</dt>
-                        <dd class="inline"><a class="text-brand-600 hover:underline" href="mailto:{{ config('legal.grievance.email') }}">{{ config('legal.grievance.email') }}</a></dd>
+                        <dd class="inline"><a class="text-brand-700 hover:underline" href="mailto:{{ config('legal.grievance.email') }}">{{ config('legal.grievance.email') }}</a></dd>
                     </div>
                 </dl>
                 <p class="text-xs text-gray-500 mt-3">

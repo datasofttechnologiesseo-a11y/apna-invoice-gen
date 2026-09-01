@@ -582,9 +582,11 @@ class InvoiceController extends Controller
             $company = $invoice->company()->lockForUpdate()->first();
 
             if (filled($invoice->invoice_number) && blank($company->gstin)) {
-                // Non-GST business chose a custom number on the draft — keep it.
-                // The auto counter is NOT advanced (same policy as cash memos).
+                // Non-GST business chose a custom number on the draft — keep it,
+                // and carry the series forward from it so the next auto-numbered
+                // bill continues (5464 -> 5465) instead of restarting at 0001.
                 $number = $invoice->invoice_number;
+                $company->learnSeriesFrom($number);
             } else {
                 // Atomic: resets counter on FY boundary, increments, stamps format.
                 // Skip past any number a custom-numbered invoice already claimed,
@@ -610,7 +612,12 @@ class InvoiceController extends Controller
             $invoice
         );
 
-        return redirect()->route('invoices.show', $invoice)->with('status', 'Invoice issued. Number: ' . $invoice->fresh()->invoice_number);
+        // The review invite is deliberately NOT raised here. This screen already
+        // congratulates the user, and its job is to get the bill sent - a modal
+        // over the share buttons would block exactly the thing being celebrated.
+        // The dashboard picks it up on the next visit instead.
+        return redirect()->route('invoices.show', $invoice)
+            ->with('status', 'Invoice issued. Number: ' . $invoice->fresh()->invoice_number);
     }
 
     public function recordPayment(Request $request, Invoice $invoice): RedirectResponse

@@ -80,7 +80,7 @@
                             'n' => 1,
                             'title' => 'Set up your business profile',
                             'time' => '3 min',
-                            'desc' => 'Your GSTIN, PAN, address and state live here, they print on every invoice as the letterhead. Also set your invoice-number prefix and upload a logo &amp; signature for that professional look.',
+                            'desc' => 'Your GSTIN, PAN, address and state live here, they print on every invoice as the letterhead. Also set your invoice-number prefix and upload a logo & signature for that professional look.',
                             'cta' => ['label' => 'Open Company settings', 'href' => route('company.edit')],
                             'tips' => [
                                 '<strong>State matters.</strong> Your company state decides whether an invoice is intrastate (CGST + SGST) or interstate (IGST). Always set it.',
@@ -107,7 +107,7 @@
                             'n' => 3,
                             'title' => 'Save products / services (optional but worth it)',
                             'time' => '1 min per item',
-                            'desc' => 'Add the things you sell, name, HSN/SAC, unit, default rate, GST%. On the invoice form, picking a product auto-fills all those fields so one customer &amp; two clicks = an invoice.',
+                            'desc' => 'Add the things you sell, name, HSN/SAC, unit, default rate, GST%. On the invoice form, picking a product auto-fills all those fields so one customer & two clicks = an invoice.',
                             'cta' => ['label' => 'Add a product', 'href' => route('products.create')],
                             'tips' => [
                                 '<strong>HSN vs SAC.</strong> Goods use HSN (4/6/8 digits). Services use SAC, which starts with 99.',
@@ -190,7 +190,7 @@
                             'n' => 9,
                             'title' => 'Track progress on the dashboard',
                             'time' => 'glance',
-                            'desc' => 'The dashboard shows two numbers that actually matter: <strong>Bills issued</strong> (lifetime + this month) and <strong>Payments received</strong> (lifetime + this month). Plus outstanding, drafts, and monthly P&amp;L.',
+                            'desc' => 'The dashboard shows two numbers that actually matter: <strong>Bills issued</strong> (lifetime + this month) and <strong>Payments received</strong> (lifetime + this month). Plus outstanding, drafts, and monthly P&L.',
                             'cta' => ['label' => 'Go to Dashboard', 'href' => route('dashboard')],
                             'tips' => [
                                 '<strong>Outstanding</strong> = everything issued but not yet fully paid. It\'s your money-to-collect number.',
@@ -221,7 +221,7 @@
                             'title' => 'Frequently asked',
                             'desc' => null,
                             'faq' => [
-                                ['q' => 'Is my data secure?', 'a' => 'Yes, all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user &amp; company, and we never share it. Deletion of data you own is permanent.'],
+                                ['q' => 'Is my data secure?', 'a' => 'Yes, all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user & company, and we never share it. Deletion of data you own is permanent.'],
                                 ['q' => 'Can I run multiple businesses?', 'a' => 'Yes. Use the <em>Companies</em> section to add more than one, each with its own GSTIN, invoice series and customers. Switch between them using the dropdown at the top of the page.'],
                                 ['q' => 'What\'s the difference between a Quotation and an Invoice?', 'a' => 'A <strong>Quotation</strong> is a price proposal you send <em>before</em> a sale, no GST is collected, nothing is reported to the GSTN, and the customer is just being told "this is what it would cost." A <strong>Tax Invoice</strong> is the legal sale document, GST is officially charged, the invoice number is locked, and it goes on GSTR-1 / GSTR-3B. In Apna Invoice, once the customer accepts a quote, click <em>Convert to Invoice</em> to turn it into a draft tax invoice in one click, same line items, ready for you to finalize.'],
                                 ['q' => 'What if I need to cancel an issued invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason, this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],

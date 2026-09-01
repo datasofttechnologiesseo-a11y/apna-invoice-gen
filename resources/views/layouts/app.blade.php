@@ -11,7 +11,7 @@
             :noindex="true" />
 
         {{-- PWA manifest now comes from <x-seo>. --}}
-        <meta name="theme-color" content="#1e3a8a">
+        <meta name="theme-color" content="#0f766e">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="Apna Invoice">

@@ -44,7 +44,7 @@
                                 <div class="flex items-center justify-between">
                                     <x-input-label for="memo_number" value="Memo number" />
                                     <button type="button" @click="locked = !locked; if (!locked) $nextTick(() => $refs.memoInput.focus())"
-                                            class="text-[11px] font-semibold text-brand-600 hover:underline">
+                                            class="text-[11px] font-semibold text-brand-700 hover:underline">
                                         <span x-show="locked">Edit manually</span>
                                         <span x-show="!locked">Use auto-generated</span>
                                     </button>
@@ -131,7 +131,7 @@
                                                 <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                    target="_blank" rel="noopener"
                                                    onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   class="text-brand-600 hover:text-brand-700"
+                                                   class="text-brand-700 hover:text-brand-800"
                                                    aria-label="Search HSN/SAC code on the official GST portal"
                                                    title="Search HSN/SAC code on the official GST portal">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -173,7 +173,7 @@
                                                 <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                    target="_blank" rel="noopener"
                                                    onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   class="text-brand-600 hover:text-brand-700"
+                                                   class="text-brand-700 hover:text-brand-800"
                                                    aria-label="Search HSN/SAC code on the official GST portal"
                                                    title="Search HSN/SAC code on the official GST portal">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -246,7 +246,7 @@
                                 <div x-show="gstRate > 0" class="flex items-center gap-2">
                                     <input id="is_interstate" type="checkbox" x-model="isInterstate" @change="recompute()"
                                            name="is_interstate" value="1"
-                                           class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                           class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                                     <label for="is_interstate" class="text-sm text-gray-700">Inter-state purchase (charge IGST instead of CGST/SGST)</label>
                                 </div>
                                 {{-- Warn (don't block) when the seller state and the inter-state
@@ -261,7 +261,7 @@
                                 <div x-show="gstRate > 0" class="flex items-start gap-2">
                                     <input id="itc_eligible" type="checkbox" name="itc_eligible" value="1"
                                            @checked(old('itc_eligible', isset($memo) ? $memo->itc_eligible : true))
-                                           class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                           class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                                     <label for="itc_eligible" class="text-sm text-gray-700">
                                         Eligible for input tax credit
                                         <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use items - so this GST isn't claimed on GSTR-3B.</span>

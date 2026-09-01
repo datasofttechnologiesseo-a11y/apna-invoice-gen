@@ -47,10 +47,10 @@
                 @if ($invoices->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.' }}"
-                        actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.create') }}"
-                        actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create invoice' }}"
+                        :title="request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!'"
+                        :description="request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.'"
+                        :actionHref="request('search') || request('status') ? route('invoices.index') : route('invoices.create')"
+                        :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Create invoice'"
                         :secondaryHref="request('search') || request('status') ? null : route('invoices.create', ['sample' => 1])"
                         :secondaryLabel="request('search') || request('status') ? null : 'Try a sample invoice'"
                     />
@@ -162,7 +162,7 @@
                                         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
-                                        <a href="{{ route('invoices.show', $inv) }}" class="text-brand-600 hover:underline">View</a>
+                                        <a href="{{ route('invoices.show', $inv) }}" class="text-brand-700 hover:underline">View</a>
                                         <span class="text-gray-300 mx-1">·</span>
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
                                         @if ($inv->isEditable())

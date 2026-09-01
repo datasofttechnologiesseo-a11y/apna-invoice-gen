@@ -60,8 +60,15 @@ class CustomInvoiceNumberTest extends TestCase
         $invoice->refresh();
         $this->assertSame('SHOP-2026-42', $invoice->invoice_number);
         $this->assertNotNull($invoice->finalized_at);
-        // The auto counter must NOT advance for a custom number.
-        $this->assertSame($counterBefore, $this->company->fresh()->invoice_counter);
+
+        // Policy change: the counter now DOES follow a hand-typed number.
+        // It used to be frozen, which meant a shop that typed its existing
+        // bill-book number (say 5464) got INV-0001 as the very next invoice -
+        // the series jumped backwards. The counter now continues from what
+        // was typed, so the next bill carries on the same run.
+        // See InvoiceSeriesContinuityTest for the full behaviour.
+        $this->assertGreaterThan($counterBefore, (int) $this->company->fresh()->invoice_counter);
+        $this->assertSame(42, (int) $this->company->fresh()->invoice_counter);
     }
 
     public function test_duplicate_custom_number_is_rejected(): void

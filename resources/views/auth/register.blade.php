@@ -70,7 +70,7 @@
                 <input id="terms_accepted" name="terms_accepted" type="checkbox" value="1"
                     @checked(old('terms_accepted'))
                     required
-                    class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                    class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                 <span>
                     I've read and agree to the
                     <a href="{{ route('pages.terms') }}" target="_blank" rel="noopener" class="font-semibold text-brand-700 hover:underline">Terms of Service</a>
@@ -84,7 +84,7 @@
             <label class="flex items-start gap-2.5 text-sm text-gray-600 leading-snug">
                 <input id="marketing_opt_in" name="marketing_opt_in" type="checkbox" value="1"
                     @checked(old('marketing_opt_in'))
-                    class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                    class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                 <span>Send me occasional product tips and GST-compliance updates by email. Optional, and you can unsubscribe any time.</span>
             </label>
         </div>

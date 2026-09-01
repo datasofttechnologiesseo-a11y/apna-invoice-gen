@@ -60,7 +60,7 @@
                         <div class="md:col-span-2">
                             <label class="inline-flex items-center gap-2">
                                 <input type="hidden" name="is_active" value="0">
-                                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                                 <span class="text-sm text-gray-700">Active, available in invoice autocomplete</span>
                             </label>
                         </div>

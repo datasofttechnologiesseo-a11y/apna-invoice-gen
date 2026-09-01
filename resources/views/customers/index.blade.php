@@ -29,10 +29,10 @@
                 @if ($customers->isEmpty())
                     <x-empty-state
                         icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        title="{{ request('search') ? 'No customers match that search' : 'Add your first customer' }}"
-                        description="{{ request('search') ? 'Try a different search term or clear the filter.' : 'Save details once - name, mobile, GSTIN, state - and reuse them on every bill. CGST/SGST vs IGST is auto-detected from their state, so you never have to think about it. A mobile number unlocks one-tap WhatsApp share.' }}"
-                        actionHref="{{ request('search') ? route('customers.index') : route('customers.create') }}"
-                        actionLabel="{{ request('search') ? 'Clear search' : 'Add a customer' }}"
+                        :title="request('search') ? 'No customers match that search' : 'Add your first customer'"
+                        :description="request('search') ? 'Try a different search term or clear the filter.' : 'Save details once - name, mobile, GSTIN, state - and reuse them on every bill. CGST/SGST vs IGST is auto-detected from their state, so you never have to think about it. A mobile number unlocks one-tap WhatsApp share.'"
+                        :actionHref="request('search') ? route('customers.index') : route('customers.create')"
+                        :actionLabel="request('search') ? 'Clear search' : 'Add a customer'"
                     />
                 @else
                     <div class="overflow-x-auto">
@@ -65,7 +65,7 @@
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h6m0 0l-3-3m3 3l-3 3M3 7h6a4 4 0 014 4v6"/></svg>
                                                 Ledger
                                             </a>
-                                            <a href="{{ route('customers.edit', $c) }}" class="text-brand-600 hover:underline text-sm px-2 py-1.5">Edit</a>
+                                            <a href="{{ route('customers.edit', $c) }}" class="text-brand-700 hover:underline text-sm px-2 py-1.5">Edit</a>
                                             <x-confirm-form
                                                 :action="route('customers.destroy', $c)"
                                                 method="DELETE"

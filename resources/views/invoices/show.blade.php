@@ -412,7 +412,7 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-2 text-right whitespace-nowrap">
-                                            <a href="{{ route('payments.receipt', $p) }}" class="text-brand-600 hover:underline text-sm">PDF</a>
+                                            <a href="{{ route('payments.receipt', $p) }}" class="text-brand-700 hover:underline text-sm">PDF</a>
                                             <span class="text-gray-300 mx-1">·</span>
                                             <x-confirm-form
                                                 :action="route('payments.destroy', $p)"

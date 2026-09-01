@@ -9,7 +9,7 @@
 ])
 
 <div class="p-10 sm:p-14 text-center">
-    <div class="mx-auto w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $icon }}"/>
         </svg>

@@ -128,8 +128,13 @@
                     </div>
                 @empty
                     <div class="bg-white shadow-sm rounded-lg p-8 text-center text-gray-500">
-                        No cash sales yet.
-                        <a href="{{ route('finance.cash-memos.create') }}" class="block mt-2 text-brand-700 underline">Create your first →</a>
+                        <x-empty-state
+                            icon="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
+                            title="No cash memos yet"
+                            description="A cash memo is a quick bill for an over-the-counter cash sale. It gets its own number series and prints on a normal or thermal printer."
+                            :actionHref="route('finance.cash-memos.create')"
+                            actionLabel="Create your first cash memo"
+                        />
                     </div>
                 @endforelse
             </div>
@@ -214,7 +219,13 @@
                                 </tr>
                             @empty
                                 <tr><td colspan="6" class="px-5 py-12 text-center text-gray-500">
-                                    No cash sales yet. <a href="{{ route('finance.cash-memos.create') }}" class="text-brand-700 underline">Create your first →</a>
+                                    <x-empty-state
+                                        icon="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
+                                        title="No cash memos yet"
+                                        description="A cash memo is a quick bill for an over-the-counter cash sale, with its own number series."
+                                        :actionHref="route('finance.cash-memos.create')"
+                                        actionLabel="Create your first cash memo"
+                                    />
                                 </td></tr>
                             @endforelse
                         </tbody>

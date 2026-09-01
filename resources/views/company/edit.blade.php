@@ -56,7 +56,7 @@
                             <label class="inline-flex items-start gap-2 cursor-pointer">
                                 <input type="hidden" name="composition_dealer" value="0">
                                 <input type="checkbox" id="composition_dealer" name="composition_dealer" value="1"
-                                       class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500"
                                        @checked(old('composition_dealer', $company->composition_dealer))>
                                 <span class="text-sm">
                                     <span class="font-semibold text-gray-900">Registered under Composition Scheme</span>

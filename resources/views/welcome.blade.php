@@ -27,7 +27,14 @@
             'name' => config('seo.organization.name'),
             'legalName' => config('seo.organization.legal_name'),
             'url' => config('seo.organization.url'),
-            'sameAs' => [config('seo.organization.url')],
+            // sameAs is how Google ties the social profiles to this business
+            // in its Knowledge Panel, so the footer links are declared here too.
+            'sameAs' => array_values(array_filter([
+                config('seo.organization.url'),
+                config('seo.social.facebook'),
+                config('seo.social.instagram'),
+                config('seo.social.linkedin'),
+            ])),
             'logo' => $appUrl . config('seo.organization.logo'),
             'foundingLocation' => ['@type' => 'Country', 'name' => 'India'],
             'areaServed' => 'IN',
@@ -167,7 +174,7 @@
         type="website"
         :json-ld="$jsonLd" />
     {{-- PWA manifest + theme-color now come from <x-seo>. --}}
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="theme-color" content="#0f766e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Apna Invoice">
@@ -483,7 +490,7 @@
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 mr-1">Quick:</span>
                                 <template x-for="p in presets" :key="p.v">
                                     <button type="button" @click="amount = p.v"
-                                            :class="parseFloat(amount) === p.v ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 hover:text-brand-700 hover:shadow-sm'"
+                                            :class="parseFloat(amount) === p.v ? 'bg-brand-700 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 hover:text-brand-700 hover:shadow-sm'"
                                             class="inline-flex items-center justify-center min-h-[44px] px-2.5 text-xs font-bold border rounded-md transition tabular-nums"
                                             x-text="p.label"></button>
                                 </template>
@@ -499,7 +506,7 @@
                             <div class="grid grid-cols-5 gap-1 p-1 bg-gray-100 rounded-lg">
                                 @foreach ([0, 5, 12, 18, 28] as $r)
                                     <button type="button" @click="rate = {{ $r }}"
-                                            :class="rate === {{ $r }} ? 'bg-brand-600 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
+                                            :class="rate === {{ $r }} ? 'bg-brand-700 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
                                             class="inline-flex items-center justify-center min-h-[44px] text-sm font-extrabold rounded transition tabular-nums">
                                         {{ $r }}%
                                     </button>
@@ -513,10 +520,10 @@
                                 <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Supply</label>
                                 <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-lg">
                                     <button type="button" @click="scope = 'intra'"
-                                            :class="scope === 'intra' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            :class="scope === 'intra' ? 'bg-brand-700 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
                                             class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Intra-state</button>
                                     <button type="button" @click="scope = 'inter'"
-                                            :class="scope === 'inter' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            :class="scope === 'inter' ? 'bg-brand-700 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
                                             class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Inter-state</button>
                                 </div>
                             </div>
@@ -524,10 +531,10 @@
                                 <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">Amount is</label>
                                 <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-lg">
                                     <button type="button" @click="mode = 'exclusive'"
-                                            :class="mode === 'exclusive' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            :class="mode === 'exclusive' ? 'bg-brand-700 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
                                             class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Excl. GST</button>
                                     <button type="button" @click="mode = 'inclusive'"
-                                            :class="mode === 'inclusive' ? 'bg-brand-600 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
+                                            :class="mode === 'inclusive' ? 'bg-brand-700 text-white shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'"
                                             class="inline-flex items-center justify-center min-h-[44px] text-xs font-bold rounded transition">Incl. GST</button>
                                 </div>
                             </div>
@@ -1054,7 +1061,7 @@
                 They'll love this too, same audit defensibility, same CGST-Rule-46 compliance, for <span class="text-saffron-300 font-bold">₹0 during beta</span>. Export GSTR-1 CSV, hand over the books, file in minutes.
             </p>
             <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-saffron-500 hover:bg-saffron-600 text-brand-900 font-bold shadow-md transition">
+                <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-saffron-500 hover:bg-saffron-600 text-accent-950 font-bold shadow-md transition">
                     Try the free GST invoicing app
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
                 </a>
@@ -1365,7 +1372,7 @@
                     'label' => 'DPDP Compliant', 'sub' => 'Indian data residency',
                     'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z',
                     'card' => 'hover:ring-brand-200',
-                    'tile' => 'bg-brand-50 text-brand-600 ring-brand-100',
+                    'tile' => 'bg-brand-50 text-brand-700 ring-brand-100',
                 ],
                 [
                     'label' => '36 States & UTs', 'sub' => 'Every jurisdiction pre-loaded',
@@ -1519,7 +1526,7 @@
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-3xl ring-1 ring-gray-200 shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div>
-                <div class="text-xs font-bold uppercase tracking-widest text-brand-600">Built &amp; supported by</div>
+                <div class="text-xs font-bold uppercase tracking-widest text-brand-700">Built &amp; supported by</div>
                 <a href="{{ config('seo.organization.url') }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center gap-3 group">
                     <img src="{{ asset('brand/dst-logo.webp') }}" alt="Datasoft Technologies" class="h-12 w-auto" width="932" height="320" loading="lazy">
                     <span class="font-display text-2xl font-extrabold text-gray-900 group-hover:text-brand-700 transition">Datasoft Technologies</span>
@@ -1533,7 +1540,7 @@
                         WhatsApp support
                     </a>
                     <a href="tel:{{ config('seo.contact.phone_e164') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white ring-1 ring-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-semibold transition">
-                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        <svg class="w-4 h-4 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                         {{ config('seo.contact.phone_display') }}
                     </a>
                 </div>

@@ -30,10 +30,10 @@
                 @if ($posts->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No posts match' : 'No blog posts yet' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different filter.' : 'Write your first article to start driving SEO traffic. Use clear titles, meta descriptions, and keywords.' }}"
-                        actionHref="{{ request('search') || request('status') ? route('admin.blog.index') : route('admin.blog.create') }}"
-                        actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Write first post' }}"
+                        :title="request('search') || request('status') ? 'No posts match' : 'No blog posts yet'"
+                        :description="request('search') || request('status') ? 'Try a different filter.' : 'Write your first article to start driving SEO traffic. Use clear titles, meta descriptions, and keywords.'"
+                        :actionHref="request('search') || request('status') ? route('admin.blog.index') : route('admin.blog.create')"
+                        :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Write first post'"
                     />
                 @else
                     <div class="overflow-x-auto">
@@ -70,7 +70,7 @@
                                             <a href="{{ route('blog.show', $p->slug) }}" target="_blank" class="text-gray-600 hover:underline">View</a>
                                             <span class="text-gray-300 mx-1">·</span>
                                         @endif
-                                        <a href="{{ route('admin.blog.edit', $p) }}" class="text-brand-600 hover:underline">Edit</a>
+                                        <a href="{{ route('admin.blog.edit', $p) }}" class="text-brand-700 hover:underline">Edit</a>
                                         <span class="text-gray-300 mx-1">·</span>
                                         <form method="POST" action="{{ route('admin.blog.toggle', $p) }}" class="inline">
                                             @csrf

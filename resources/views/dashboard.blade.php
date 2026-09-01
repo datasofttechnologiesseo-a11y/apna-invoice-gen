@@ -98,7 +98,7 @@
 
                     <div class="p-6 bg-brand-50/60 border-b border-gray-100 flex items-center justify-between">
                         <div class="flex-1 min-w-0">
-                            <div class="text-xs uppercase font-semibold tracking-widest text-brand-600">Getting started</div>
+                            <div class="text-xs uppercase font-semibold tracking-widest text-brand-700">Getting started</div>
                             <h3 class="mt-1 font-display text-xl font-extrabold text-gray-900">
                                 {{ $stepsLeft === 1 ? 'One last step to your first invoice.' : "Your first invoice is {$stepsLeft} steps away." }}
                             </h3>
@@ -149,7 +149,7 @@
                                         <span @class([
                                             'text-[10px] uppercase font-bold tracking-widest',
                                             'text-money-700' => $item['done'],
-                                            'text-brand-600' => ! $item['done'],
+                                            'text-brand-700' => ! $item['done'],
                                         ])>Step {{ $index + 1 }}</span>
                                         @unless ($item['done'])
                                             <span class="text-[10px] font-semibold text-gray-500 px-1.5 py-0.5 rounded bg-gray-100">{{ $item['time'] }}</span>
@@ -552,7 +552,7 @@
                         </div>
                         @if ($recent->isEmpty())
                             <div class="p-12 text-center">
-                                <div class="w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto">
+                                <div class="w-16 h-16 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center mx-auto">
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
                                 <h4 class="mt-4 font-semibold text-gray-900">No invoices yet</h4>
@@ -613,6 +613,9 @@
             @endif
         </div>
     </div>
+
+    {{-- Asked once, after the user has actually issued an invoice. --}}
+    <x-review-invite :show="$showReviewInvite" />
 
     <x-quick-action-fab />
 </x-app-layout>

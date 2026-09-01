@@ -246,8 +246,13 @@
                     </div>
                 @empty
                     <div class="bg-white shadow-sm rounded-lg p-8 text-center text-gray-500">
-                        No expenses in this period.
-                        <a href="{{ route('finance.expenses.create') }}" class="block mt-2 text-brand-700 underline">Add your first →</a>
+                        <x-empty-state
+                            icon="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                            title="No expenses in this period"
+                            description="Record what you spend and the software works out your real profit and the GST you can claim back as input tax credit."
+                            :actionHref="route('finance.expenses.create')"
+                            actionLabel="Add your first expense"
+                        />
                     </div>
                 @endforelse
             </div>
@@ -310,7 +315,13 @@
                                 </tr>
                             @empty
                                 <tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">
-                                    No expenses in this period. <a href="{{ route('finance.expenses.create') }}" class="text-brand-700 underline">Add one →</a>
+                                    <x-empty-state
+                                        icon="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                                        title="No expenses in this period"
+                                        description="Record what you spend to see real profit and the GST you can claim back."
+                                        :actionHref="route('finance.expenses.create')"
+                                        actionLabel="Add your first expense"
+                                    />
                                 </td></tr>
                             @endforelse
                         </tbody>

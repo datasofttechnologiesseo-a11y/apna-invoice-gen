@@ -121,6 +121,14 @@ return [
 
     'twitter_handle' => '@datasofttech',
 
+    // Official social profiles. Rendered as icons in the footer and emitted as
+    // Organization.sameAs so search engines can connect them to the business.
+    'social' => [
+        'facebook'  => 'https://www.facebook.com/profile.php?id=61590370831849',
+        'instagram' => 'https://www.instagram.com/apnainvoice/',
+        'linkedin'  => 'https://www.linkedin.com/showcase/apna-invoice/',
+    ],
+
     'organization' => [
         'name' => 'Datasoft Technologies',
         'legal_name' => 'Datasoft Technologies',
@@ -147,6 +155,11 @@ return [
         'phone_e164'      => '+917428693901',       // for tel: links + schema.org
         'whatsapp_digits' => '917428693901',        // wa.me only takes digits, no '+'
         'whatsapp_url'    => 'https://wa.me/917428693901',
+        // Google Business review link. Public, not a secret, so it lives here
+        // as the default and needs no deployment config; GOOGLE_REVIEW_URL can
+        // still override it if the listing ever moves. Drives the clickable
+        // "Write a review" button beside the QR code on the review invite.
+        'google_review_url' => env('GOOGLE_REVIEW_URL', 'https://g.page/r/CTvUSP6MtrMaEBM/review'),
     ],
 
 ];

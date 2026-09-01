@@ -29,7 +29,7 @@
                         @endforeach
                     </select>
                     <label class="text-sm flex items-center gap-1.5 text-gray-600">
-                        <input type="checkbox" name="only_inactive" value="1" @checked(request('only_inactive')) onchange="this.form.submit()" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                        <input type="checkbox" name="only_inactive" value="1" @checked(request('only_inactive')) onchange="this.form.submit()" class="rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                         Show archived
                     </label>
                     <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
@@ -42,10 +42,10 @@
                 @if ($products->isEmpty())
                     <x-empty-state
                         icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        title="{{ request('search') || request('kind') ? 'No products match that filter' : 'Save the things you sell' }}"
-                        description="{{ request('search') || request('kind') ? 'Try a different search term or clear the filter.' : 'Save the name, HSN or SAC code, unit, price and GST rate once. After that, typing the first few letters on an invoice fills in the rest. You can also add a product while making an invoice, without coming back here.' }}"
-                        actionHref="{{ request('search') || request('kind') ? route('products.index') : route('products.create') }}"
-                        actionLabel="{{ request('search') || request('kind') ? 'Clear filters' : 'Add your first product' }}"
+                        :title="request('search') || request('kind') ? 'No products match that filter' : 'Save the things you sell'"
+                        :description="request('search') || request('kind') ? 'Try a different search term or clear the filter.' : 'Save the name, HSN or SAC code, unit, price and GST rate once. After that, typing the first few letters on an invoice fills in the rest. You can also add a product while making an invoice, without coming back here.'"
+                        :actionHref="request('search') || request('kind') ? route('products.index') : route('products.create')"
+                        :actionLabel="request('search') || request('kind') ? 'Clear filters' : 'Add your first product'"
                     />
                 @else
                     <div class="overflow-x-auto">
@@ -78,7 +78,7 @@
                                     <td class="px-4 py-3 text-right font-mono">₹{{ inr($p->rate) }}</td>
                                     <td class="px-4 py-3 text-right text-sm">{{ rtrim(rtrim(number_format((float) $p->gst_rate, 2, '.', ''), '0'), '.') }}%</td>
                                     <td class="px-4 py-3 text-right space-x-2">
-                                        <a href="{{ route('products.edit', $p) }}" class="text-brand-600 hover:underline text-sm">Edit</a>
+                                        <a href="{{ route('products.edit', $p) }}" class="text-brand-700 hover:underline text-sm">Edit</a>
                                         @php $willArchive = $p->invoiceProducts()->exists(); @endphp
                                         <x-confirm-form
                                             :action="route('products.destroy', $p)"

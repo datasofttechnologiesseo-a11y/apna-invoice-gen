@@ -31,7 +31,7 @@
             </div>
             <p class="mt-3 text-sm text-gray-500">Primary wordmark (light backgrounds)</p>
         </div>
-        <div class="p-6 rounded-xl ring-1 ring-gray-200 bg-[#050a1a] text-center">
+        <div class="p-6 rounded-xl ring-1 ring-gray-200 bg-[#04211d] text-center">
             <div class="inline-block bg-white p-4 rounded-lg">
                 <x-brand-logo class="h-12 w-auto mx-auto" />
             </div>

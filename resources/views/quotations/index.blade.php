@@ -21,14 +21,14 @@
                  then gets out of the way. --}}
             <div x-data="{ show: !localStorage.getItem('hideQuotationsTip') }" x-show="show" x-cloak
                  class="px-4 py-2.5 bg-brand-50 border border-brand-200 text-brand-900 rounded-lg text-xs flex items-center gap-2.5">
-                <svg class="w-4 h-4 flex-shrink-0 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 flex-shrink-0 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span class="flex-1">
                     Quotations don't appear on GSTR-1 / GSTR-3B and aren't affected by books-locked. Click <strong>Convert to Invoice</strong> on an accepted quote to issue the tax invoice.
                 </span>
                 <button @click="localStorage.setItem('hideQuotationsTip','1'); show=false"
-                        class="shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-brand-600 hover:text-brand-900 hover:bg-brand-100"
+                        class="shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-brand-700 hover:text-brand-900 hover:bg-brand-100"
                         aria-label="Dismiss tip">×</button>
             </div>
 
@@ -50,10 +50,10 @@
                 @if ($quotations->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No quotations match that filter' : 'Send your first quote' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Send a price proposal on WhatsApp or email, your customer clicks Accept on the public link - you click Convert and it becomes a tax invoice. No re-typing.' }}"
-                        actionHref="{{ request('search') || request('status') ? route('quotations.index') : route('quotations.create') }}"
-                        actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create quotation' }}"
+                        :title="request('search') || request('status') ? 'No quotations match that filter' : 'Send your first quote'"
+                        :description="request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Send a price proposal on WhatsApp or email, your customer clicks Accept on the public link - you click Convert and it becomes a tax invoice. No re-typing.'"
+                        :actionHref="request('search') || request('status') ? route('quotations.index') : route('quotations.create')"
+                        :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Create quotation'"
                     />
                 @else
                     @php
@@ -175,7 +175,7 @@
                                             <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $colors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
-                                            <a href="{{ route('quotations.show', $q) }}" class="text-brand-600 hover:underline">View</a>
+                                            <a href="{{ route('quotations.show', $q) }}" class="text-brand-700 hover:underline">View</a>
                                             <span class="text-gray-300 mx-1">·</span>
                                             <a href="{{ route('quotations.pdf', $q) }}" class="text-gray-600 hover:underline">PDF</a>
                                             @if ($q->isDraft())

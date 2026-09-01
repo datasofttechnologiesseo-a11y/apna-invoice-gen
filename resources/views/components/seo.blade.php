@@ -77,7 +77,7 @@
 
 <meta name="author" content="{{ config('seo.organization.name') }}">
 <meta name="publisher" content="{{ config('seo.organization.name') }}">
-<meta name="theme-color" content="#1e3a8a">
+<meta name="theme-color" content="#0f766e">
 <meta http-equiv="Content-Language" content="en-IN">
 
 {{-- Favicon / app icons + PWA manifest. Living here means every public page

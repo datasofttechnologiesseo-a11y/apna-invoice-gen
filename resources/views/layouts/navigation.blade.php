@@ -41,7 +41,7 @@
                             'bg-brand-50 text-brand-700 font-bold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
                             'text-gray-600 font-semibold hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
                         ])>
-                            <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-500 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                             </svg>
                             {{ $item['label'] }}
@@ -186,13 +186,13 @@
                     New invoice
                 </a>
             @endauth
-            @foreach ($navProducts as $item)
+            @foreach ($navItems as $item)
                 <a href="{{ $item['href'] }}" @class([
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
                     'bg-brand-50 text-brand-700' => $item['active'],
                     'text-gray-700 hover:bg-gray-100' => ! $item['active'],
                 ])>
-                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                     </svg>
                     {{ $item['label'] }}
