@@ -63,7 +63,7 @@
                 <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Severity</dt><dd class="mt-1 font-semibold text-slate-900 capitalize">{{ $breach->severity }}</dd></div>
                 <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Status</dt><dd class="mt-1 font-semibold text-slate-900 capitalize">{{ $breach->status }}</dd></div>
                 <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Discovered</dt><dd class="mt-1 text-slate-700">{{ $breach->discovered_at->format('d M Y, H:i') }}</dd></div>
-                <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Occurred</dt><dd class="mt-1 text-slate-700">{{ $breach->occurred_at?->format('d M Y, H:i') ?? '—' }}</dd></div>
+                <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Occurred</dt><dd class="mt-1 text-slate-700">{{ $breach->occurred_at?->format('d M Y, H:i') ?? '-' }}</dd></div>
                 <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Affected users</dt><dd class="mt-1 text-slate-700 tabular-nums">{{ number_format($breach->affected_users) }}</dd></div>
                 <div><dt class="text-xs uppercase tracking-wider font-bold text-slate-400">Logged by</dt><dd class="mt-1 text-slate-700">{{ $breach->logger?->name ?? 'System' }}</dd></div>
             </dl>

@@ -90,7 +90,7 @@
 
                     {{ $slot }}
 
-                    <p class="mt-8 text-center text-xs text-gray-400">
+                    <p class="mt-8 text-center text-xs text-gray-500">
                         Powered by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-semibold text-gray-500 hover:text-brand-700 transition">Datasoft Technologies</a>
                     </p>
                 </div>

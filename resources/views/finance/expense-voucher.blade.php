@@ -76,7 +76,7 @@
                 <table class="meta-grid" style="width: auto; margin-left: auto;">
                     <tr><td class="k">Voucher No.</td><td class="v">EV-{{ str_pad((string) $expense->id, 5, '0', STR_PAD_LEFT) }}</td></tr>
                     <tr><td class="k">Date</td><td class="v">{{ $expense->entry_date->format('d M Y') }}</td></tr>
-                    <tr><td class="k">Payment</td><td class="v" style="text-transform: uppercase;">{{ $expense->payment_method ?: '—' }}</td></tr>
+                    <tr><td class="k">Payment</td><td class="v" style="text-transform: uppercase;">{{ $expense->payment_method ?: '-' }}</td></tr>
                     @if ($expense->reference_number)
                         <tr><td class="k">Reference</td><td class="v">{{ $expense->reference_number }}</td></tr>
                     @endif

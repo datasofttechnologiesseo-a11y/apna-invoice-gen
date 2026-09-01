@@ -11,7 +11,7 @@
                 </a>
                 <a href="{{ route('invoices.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                    Create new invoice
+                    New invoice
                 </a>
             </div>
         </div>
@@ -48,14 +48,14 @@
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         title="{{ request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done — share on WhatsApp from the next screen.' }}"
+                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.' }}"
                         actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.create') }}"
                         actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create invoice' }}"
                         :secondaryHref="request('search') || request('status') ? null : route('invoices.create', ['sample' => 1])"
                         :secondaryLabel="request('search') || request('status') ? null : 'Try a sample invoice'"
                     />
                 @else
-                    {{-- Mobile card view — one card per invoice, no horizontal scroll --}}
+                    {{-- Mobile card view - one card per invoice, no horizontal scroll --}}
                     <ul class="md:hidden divide-y divide-gray-100">
                         @foreach ($invoices as $inv)
                             @php
@@ -72,12 +72,12 @@
                                     <div class="min-w-0 flex-1">
                                         <div class="font-mono text-sm">
                                             @if ($inv->isDraft())
-                                                <span class="text-gray-400 italic">Draft #{{ $inv->id }}</span>
+                                                <span class="text-gray-500 italic">Draft #{{ $inv->id }}</span>
                                             @else
                                                 <span class="font-semibold text-gray-900">{{ $inv->invoice_number }}</span>
                                             @endif
                                         </div>
-                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '—' }}</div>
+                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '-' }}</div>
                                         <div class="text-xs text-gray-500">{{ $inv->invoice_date?->format('d M Y') }}</div>
                                     </div>
                                     <span class="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
@@ -128,7 +128,7 @@
                                 <tr>
                                     <td class="px-4 py-3 font-mono text-sm">
                                         @if ($inv->isDraft())
-                                            <span class="text-gray-400 italic">Draft #{{ $inv->id }}</span>
+                                            <span class="text-gray-500 italic">Draft #{{ $inv->id }}</span>
                                         @else
                                             <span class="font-semibold text-gray-900">{{ $inv->invoice_number }}</span>
                                         @endif
@@ -138,9 +138,9 @@
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <span>{{ $inv->customer?->name }}</span>
                                             @if ($inv->customer?->gstin)
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" title="Customer has GSTIN — B2B reportable in GSTR-1">B2B</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" title="Customer has GSTIN - B2B reportable in GSTR-1">B2B</span>
                                             @else
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer — B2C">B2C</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer - B2C">B2C</span>
                                             @endif
                                         </div>
                                         @if ($inv->customer?->phone)

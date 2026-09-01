@@ -35,7 +35,7 @@
             <div class="inline-block bg-white p-4 rounded-lg">
                 <x-brand-logo class="h-12 w-auto mx-auto" />
             </div>
-            <p class="mt-3 text-sm text-gray-400">On dark backgrounds (use white card)</p>
+            <p class="mt-3 text-sm text-gray-300">On dark backgrounds (use white card)</p>
         </div>
     </div>
 

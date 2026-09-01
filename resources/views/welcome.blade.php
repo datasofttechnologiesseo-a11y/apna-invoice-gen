@@ -1,6 +1,6 @@
 @php
     $faqs = [
-        ['q' => 'How to use Apna Invoice, step by step?', 'a' => "1. Sign up free at apnainvoice.com. Continue with Google, or enter your mobile, email and password and verify the one-time code we send. No credit card.\n\n2. Add your business once: name, GSTIN, address, state. The state decides CGST + SGST (same state) or IGST (different state) automatically.\n\n3. Add your first customer. Name and state are required; GSTIN is optional for B2C. You can also click '+ New' on any invoice to add a customer inline (no page refresh, no lost data).\n\n4. Click 'New invoice', pick the customer, then type description, HSN/SAC, qty, rate and GST%. Defaults to GST 18%, qty 1.\n\n5. Click 'Issue'. The invoice locks, gets a permanent number (auto-resets every 1 April), and the PDF is generated. Goods invoices auto-print 3 copies (Original, Duplicate-Transporter, Triplicate-Supplier) per CGST Rule 48.\n\n6. Share on WhatsApp (pre-filled message), Email (PDF attached), or copy a 30-day public link. UPI QR is included if you've added a UPI ID.\n\n7. Record payment when received: full or part payment, with TDS support. The receipt PDF is generated automatically.\n\n8. At month-end, download the GSTR-1 CSV, GSTR-3B summary, receivables aging report, or a full ZIP backup from the dashboard.\n\nTip: Install Apna Invoice as a phone app via Chrome's 'Install' menu. It works like a native app."],
+        ['q' => 'How to use Apna Invoice, step by step?', 'a' => "1. Sign up free at apnainvoice.com. Continue with Google, or enter your mobile, email and password and verify the one-time code we send. No credit card.\n\n2. Add your business once: name, GSTIN, address, state. The state decides CGST + SGST (same state) or IGST (different state) automatically.\n\n3. Add your first customer. Name and state are required; GSTIN is optional for B2C. You can also click '+ New' on any invoice to add a customer inline (no page refresh, no lost data).\n\n4. Click 'New invoice', pick the customer, then type description, HSN/SAC, qty, rate and GST%. Defaults to GST 18%, qty 1.\n\n5. Click 'Issue'. The invoice locks, gets a permanent number (auto-resets every 1 April), and the PDF is generated. Goods invoices auto-print 3 copies (Original, Duplicate-Transporter, Triplicate-Supplier) per CGST Rule 48.\n\n6. Share on WhatsApp (pre-filled message), Email (PDF attached), or copy a 30-day public link. UPI QR is included if you've added a UPI ID.\n\n7. Record Receipt when received: full or part payment, with TDS support. The receipt PDF is generated automatically.\n\n8. At month-end, download the GSTR-1 CSV, GSTR-3B summary, receivables aging report, or a full ZIP backup from the dashboard.\n\nTip: Install Apna Invoice as a phone app via Chrome's 'Install' menu. It works like a native app."],
         ['q' => 'How can I create a GST invoice online for free in India?', 'a' => "Sign up on Apna Invoice (continue with Google or verify your mobile, no card required), add your business GSTIN and state once, then create your first GST invoice in about 60 seconds. The tool auto-calculates CGST + SGST for intra-state and IGST for inter-state supplies, supports HSN/SAC codes, and exports a GST-compliant tax invoice as PDF. It's completely free for unlimited invoices during beta."],
         ['q' => 'Is Apna Invoice the best free GST invoice generator for freelancers and small businesses in India?', 'a' => "We're built specifically for Indian freelancers, MSMEs, SMEs, startups, small shops and CAs. Apna Invoice is fully online (no installation), zero-cost, with India-first defaults: Indian numbering (lakhs and crores), GST slabs pre-loaded, FY-reset invoice numbers, UPI QR on every invoice, and one-click WhatsApp share, with no per-invoice or per-user limit."],
         ['q' => 'Does the invoice generator include HSN/SAC code and auto GST calculation?', 'a' => "Yes. Every line item has an HSN/SAC field with a built-in search link to the official GST portal, and you pick the GST rate (0%, 0.10%, 0.25%, 3%, 5%, 12%, 18%, 28%) per item. We auto-split CGST/SGST or IGST based on customer state, round to the paisa, and print the rate on every line as Rule 46 requires."],
@@ -60,7 +60,7 @@
             // guideline (the feature was deprecated in 2024 regardless).
         ],
         // FAQPage schema now lives on the dedicated /faq page, and HowTo on
-        // /how-to-use — those pages own that structured data so it isn't
+        // /how-to-use - those pages own that structured data so it isn't
         // duplicated across two URLs. The home page keeps a visible FAQ.
         // WebApplication schema, declares the page hosts a free GST calculator
         // tool. Targets rich-result eligibility for "free GST calculator",
@@ -105,7 +105,7 @@
         // SoftwareApplication schema, declares the invoicing/billing tool
         // itself. Targets rich-result eligibility for "online invoice generator",
         // "free bill generator", "GST bill generator", "invoice generator India".
-        // Single canonical node (@id) — Google drops an entity described by two
+        // Single canonical node (@id) - Google drops an entity described by two
         // conflicting SoftwareApplication nodes, so this is the only one.
         [
             '@context' => 'https://schema.org',
@@ -175,7 +175,7 @@
 
     {{-- Preload the brand logo, it's the LCP element on the landing header. --}}
     <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.webp') }}" as="image" type="image/webp" fetchpriority="high">
-    {{-- Fonts: warm the connection (crossorigin is REQUIRED — font files are
+    {{-- Fonts: warm the connection (crossorigin is REQUIRED - font files are
          fetched with CORS, so a plain preconnect warms the wrong connection),
          then load the stylesheet non-render-blocking. display=swap already
          paints text immediately in a fallback face and swaps the web font in
@@ -221,7 +221,7 @@
                 <a href="{{ route('dashboard') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Go to dashboard →</a>
             @else
                 <a href="{{ route('login') }}" class="text-base text-gray-800 hover:text-brand-700 font-semibold tracking-tight px-2 py-2 md:px-3 whitespace-nowrap">Log in</a>
-                <a href="{{ route('register') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-saffron-500 hover:bg-saffron-600 text-white font-semibold shadow-sm transition whitespace-nowrap">Signup for Free</a>
+                <a href="{{ route('register') }}" class="px-3 py-2 md:px-5 md:py-2.5 rounded-lg bg-saffron-700 hover:bg-saffron-800 text-white font-semibold shadow-sm transition whitespace-nowrap">Signup for Free</a>
             @endauth
         </nav>
     </div>
@@ -283,7 +283,7 @@
             <h1 class="font-display font-extrabold tracking-tight text-gray-900 leading-[1.05]">
                 <span class="block text-2xl sm:text-3xl md:text-4xl whitespace-nowrap">Free GST <span class="text-brand-700">Invoicing</span> Software</span>
                 <span class="block mt-2 text-xl sm:text-2xl md:text-3xl font-extrabold text-brand-700 leading-tight">
-                    Built for <span class="text-saffron-600">Indian</span> Businesses
+                    Built for <span class="text-saffron-700">Indian</span> Businesses
                 </span>
             </h1>
 
@@ -295,7 +295,7 @@
 
             {{-- Hindi tagline, small, restrained, signals India-first without dominating --}}
             <p class="mt-4 text-base sm:text-lg font-bold text-brand-900 leading-snug" lang="hi">
-                आपका अपना <span class="text-saffron-600">GST बिलिंग साथी</span>। हर invoice
+                आपका अपना <span class="text-saffron-700">GST बिलिंग साथी</span>। हर invoice
                 <span class="px-1.5 rounded text-money-800 bg-money-100">सिर्फ़&nbsp;60 सेकंड</span> में।
             </p>
 
@@ -412,7 +412,7 @@
                     lines.push('');
                     // Deep link to the full calculator, prefilled with this exact
                     // calculation (+ campaign tags) so the recipient sees the same
-                    // numbers — not a blank default — and the visit is attributable.
+                    // numbers - not a blank default - and the visit is attributable.
                     const p = new URLSearchParams({
                         amount: this.amount, rate: this.rate, mode: this.mode, supply: this.scope,
                         utm_source: 'whatsapp', utm_medium: 'share', utm_campaign: 'gst_calculator',
@@ -460,7 +460,7 @@
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     Amount
                                 </span>
-                                <span class="text-[10px] font-medium text-gray-400 normal-case tracking-normal">Type your amount ↓</span>
+                                <span class="text-[10px] font-medium text-gray-500 normal-case tracking-normal">Type your amount ↓</span>
                             </label>
                             <div class="relative group">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-700 font-bold pointer-events-none text-lg leading-none">₹</span>
@@ -474,13 +474,13 @@
                                 <button type="button" @click="amount = 0; $nextTick(() => document.getElementById('gst-amount')?.focus())"
                                         x-show="parseFloat(amount) > 0"
                                         x-cloak
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-full text-gray-400 hover:text-white hover:bg-gray-600 transition"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-full text-gray-500 hover:text-white hover:bg-gray-600 transition"
                                         aria-label="Clear amount" title="Clear">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
                             </div>
                             <div class="mt-2 flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mr-1">Quick:</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 mr-1">Quick:</span>
                                 <template x-for="p in presets" :key="p.v">
                                     <button type="button" @click="amount = p.v"
                                             :class="parseFloat(amount) === p.v ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 hover:text-brand-700 hover:shadow-sm'"
@@ -552,24 +552,24 @@
                              two unrelated colours implied they were different kinds. --}}
                         <div class="pt-3 border-t border-gray-100 space-y-1.5">
                             <div class="flex justify-between text-gray-700 text-xs">
-                                <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-money-500"></span>Taxable amount <span class="text-gray-400">(your value)</span></span>
+                                <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-money-500"></span>Taxable amount <span class="text-gray-500">(your value)</span></span>
                                 <span class="font-mono tabular-nums">₹<span x-text="fmt(base)"></span></span>
                             </div>
                             <template x-if="scope === 'intra'">
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>CGST @ <span x-text="halfRate"></span>% <span class="text-gray-400">(to Centre)</span></span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>CGST @ <span x-text="halfRate"></span>% <span class="text-gray-500">(to Centre)</span></span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(cgst)"></span></span>
                                     </div>
                                     <div class="flex justify-between text-gray-600 text-xs">
-                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-400"></span>SGST @ <span x-text="halfRate"></span>% <span class="text-gray-400">(to State)</span></span>
+                                        <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-400"></span>SGST @ <span x-text="halfRate"></span>% <span class="text-gray-500">(to State)</span></span>
                                         <span class="font-mono tabular-nums">₹<span x-text="fmt(sgst)"></span></span>
                                     </div>
                                 </div>
                             </template>
                             <template x-if="scope === 'inter'">
                                 <div class="flex justify-between text-gray-600 text-xs">
-                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>IGST @ <span x-text="rate"></span>% <span class="text-gray-400">(to Centre, split later)</span></span>
+                                    <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-saffron-500"></span>IGST @ <span x-text="rate"></span>% <span class="text-gray-500">(to Centre, split later)</span></span>
                                     <span class="font-mono tabular-nums">₹<span x-text="fmt(igst)"></span></span>
                                 </div>
                             </template>
@@ -600,7 +600,7 @@
                                 <svg class="w-4 h-4 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
                             </a>
                             <a :href="whatsappLink" target="_blank" rel="noopener"
-                               class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] hover:bg-[#1ebe5b] text-white rounded-lg font-bold text-sm transition shadow-sm whitespace-nowrap"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#0f7540] hover:bg-[#0c5f34] text-white rounded-lg font-bold text-sm transition shadow-sm whitespace-nowrap"
                                title="Share this calculation on WhatsApp">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                                 Share
@@ -788,7 +788,7 @@
         <div class="mt-10 pt-8 border-t border-gray-200">
             <div class="text-center">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-saffron-50 ring-1 ring-saffron-200">
-                    <svg class="w-3.5 h-3.5 text-saffron-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                    <svg class="w-3.5 h-3.5 text-saffron-700" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
                     <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-saffron-800">Serving businesses across Bharat</span>
                 </div>
                 <div class="mt-5 flex flex-wrap items-center justify-center gap-2 md:gap-2.5">
@@ -840,7 +840,7 @@
         </div>
 
         <div class="mt-12 text-center">
-            <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-saffron-500 hover:bg-saffron-600 text-white font-semibold rounded-xl shadow-brand transition">
+            <a href="{{ route('register') }}" class="group inline-flex items-center justify-center px-7 py-3.5 bg-saffron-700 hover:bg-saffron-800 text-white font-semibold rounded-xl shadow-brand transition">
                 Signup for Free, no card needed
                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
             </a>
@@ -1118,7 +1118,7 @@
         <div class="mt-14 grid md:grid-cols-2 gap-6 md:gap-8 items-stretch">
             {{-- Excel column --}}
             <div class="relative bg-white rounded-2xl p-7 md:p-9 ring-1 ring-red-100 shadow-sm">
-                <div class="absolute -top-3 left-7 inline-flex items-center gap-1.5 px-3 py-1 bg-red-500 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">
+                <div class="absolute -top-3 left-7 inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                     Excel / WhatsApp PDFs
                 </div>
@@ -1147,7 +1147,7 @@
                 <div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
                     <div class="absolute -top-24 -right-24 w-64 h-64 bg-accent-400 rounded-full blur-3xl opacity-20"></div>
                 </div>
-                <div class="absolute -top-3 left-7 inline-flex items-center gap-1.5 px-3 py-1 bg-money-500 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm z-10">
+                <div class="absolute -top-3 left-7 inline-flex items-center gap-1.5 px-3 py-1 bg-money-700 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm z-10">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     Apna Invoice
                 </div>
@@ -1206,7 +1206,7 @@
             @endforeach
         </div>
         <div class="mt-14 text-center">
-            <a href="{{ route('register') }}" class="inline-flex items-center px-8 py-4 bg-accent-500 hover:bg-accent-600 text-accent-900 font-bold rounded-xl shadow-glow transition text-lg">
+            <a href="{{ route('register') }}" class="inline-flex items-center px-8 py-4 bg-accent-500 hover:bg-accent-600 text-accent-950 font-bold rounded-xl shadow-glow transition text-lg">
                 Start billing free →
             </a>
         </div>
@@ -1220,7 +1220,7 @@
             <span class="inline-block px-3 py-1 rounded-full bg-saffron-50 text-saffron-700 text-xs font-bold uppercase tracking-wider">What users say</span>
             <h2 class="mt-4 font-display text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">Loved by India's SMEs & Startups.</h2>
             <p class="mt-4 text-lg text-gray-600">From Mumbai consultancies to Bengaluru agencies, business owners use DST's invoice tool to close the month in hours, not days.</p>
-            <p class="mt-3 text-xs text-gray-400">Representative scenarios from early private-beta users. Full case studies coming post-launch.</p>
+            <p class="mt-3 text-xs text-gray-500">Representative scenarios from early private-beta users. Full case studies coming post-launch.</p>
         </div>
         <div class="mt-14 grid md:grid-cols-3 gap-6">
             @foreach ([
@@ -1267,7 +1267,7 @@
                         <div class="min-w-0 flex-1">
                             <div class="font-semibold text-gray-900 truncate">{{ $t['n'] }}</div>
                             <div class="text-xs text-gray-500 truncate">{{ $t['r'] }} · {{ $t['company'] }}</div>
-                            <div class="mt-1 flex items-center gap-2 text-[11px] text-gray-400">
+                            <div class="mt-1 flex items-center gap-2 text-[11px] text-gray-500">
                                 <span class="inline-flex items-center gap-1">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     {{ $t['city'] }}
@@ -1303,7 +1303,7 @@
                         <span class="text-brand-200 text-sm">/ Free</span>
                     </div>
                     <p class="mt-4 text-brand-100 text-sm">For Indian solo professionals, SMEs &amp; startups billing up to 500 invoices/month.</p>
-                    <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-900 font-bold rounded-xl transition">Claim free account →</a>
+                    <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-950 font-bold rounded-xl transition">Claim free account →</a>
                 </div>
                 <div class="p-8 md:p-10">
                     <div class="text-xs font-bold tracking-widest uppercase text-brand-700">What's included</div>
@@ -1377,7 +1377,7 @@
                     'label' => '₹ in Lakhs & Crores', 'sub' => 'Indian number system',
                     'icon' => 'M11 11V9a2 2 0 00-2-2h-2M9 13h6m-3-7v1m0 8v1m-6-1h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2z',
                     'card' => 'hover:ring-saffron-200',
-                    'tile' => 'bg-saffron-50 text-saffron-600 ring-saffron-100',
+                    'tile' => 'bg-saffron-50 text-saffron-700 ring-saffron-100',
                 ],
             ] as $badge)
                 <div class="group relative bg-white rounded-2xl p-5 md:p-6 ring-1 ring-gray-100 {{ $badge['card'] }} hover:shadow-card transition-all duration-300 hover:-translate-y-0.5 text-center">
@@ -1470,7 +1470,7 @@
                 <details class="group rounded-xl bg-gray-50 hover:bg-white ring-1 ring-gray-200 hover:ring-brand-200 transition">
                     <summary class="flex items-center justify-between p-5 cursor-pointer font-semibold text-gray-900">
                         <span>{{ $faq['q'] }}</span>
-                        <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </summary>
                     <div class="px-5 pb-5 text-gray-600 leading-relaxed whitespace-pre-line">{{ $faq['a'] }}</div>
                 </details>
@@ -1484,7 +1484,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div class="flex-1 min-w-0">
-                <div class="text-[11px] font-bold uppercase tracking-widest text-saffron-600">Free guide · No signup</div>
+                <div class="text-[11px] font-bold uppercase tracking-widest text-saffron-700">Free guide · No signup</div>
                 <h3 class="mt-0.5 font-display text-lg font-extrabold text-gray-900">17-slide getting-started deck</h3>
                 <p class="mt-1 text-sm text-gray-600">A complete walkthrough, from sign-up to your first paid GST invoice, in 17 slides. Share with your team or your CA.</p>
             </div>
@@ -1528,7 +1528,7 @@
                     Apna Invoice is built and <strong class="text-gray-900">actively maintained</strong> by Datasoft Technologies, an Indian software company. It's a supported product with a team behind it, free during beta, not a side-project left to gather dust.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-3">
-                    <a href="{{ config('seo.contact.whatsapp_url') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#25D366] hover:bg-[#1ebe5b] text-white text-sm font-semibold transition">
+                    <a href="{{ config('seo.contact.whatsapp_url') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0f7540] hover:bg-[#0c5f34] text-white text-sm font-semibold transition">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                         WhatsApp support
                     </a>

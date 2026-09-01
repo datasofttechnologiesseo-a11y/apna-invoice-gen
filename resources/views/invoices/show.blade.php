@@ -78,16 +78,16 @@
                     </div>
                 </div>
                 <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
-                {{-- Thermal 80mm receipt — for retail counters with 2"/3" thermal
+                {{-- Thermal 80mm receipt - for retail counters with 2"/3" thermal
                      printers. Auto-prints on load; falls back to readable preview
                      in browsers without a connected printer. --}}
                 <a href="{{ route('invoices.print', ['invoice' => $invoice, 'format' => 'thermal']) }}"
                    target="_blank"
                    class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50"
-                   title="80mm thermal receipt — for counter printers (kirana/retail/cafe)">
+                   title="80mm thermal receipt - for counter printers (kirana/retail/cafe)">
                     Thermal 80mm
                 </a>
-                {{-- Duplicate into a fresh editable draft — repeat/recurring billing. --}}
+                {{-- Duplicate into a fresh editable draft - repeat/recurring billing. --}}
                 <form method="POST" action="{{ route('invoices.duplicate', $invoice) }}" class="inline">
                     @csrf
                     <button type="submit" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50" title="Create a new editable draft with the same customer and line items">
@@ -96,16 +96,16 @@
                 </form>
                 @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)
                     @if ($invoice->isCreditNoteWindowClosed())
-                        {{-- Section 34(2) window closed — disable the action with a tooltip
+                        {{-- Section 34(2) window closed - disable the action with a tooltip
                              explaining the legal cut-off so the operator knows why. --}}
-                        <span class="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded text-sm cursor-not-allowed"
+                        <span class="px-3 py-1.5 bg-gray-100 text-gray-500 border border-gray-200 rounded text-sm cursor-not-allowed"
                               title="Section 34(2) credit-note window closed on {{ $invoice->creditNoteDeadline()->format('d M Y') }}. Issue a commercial refund instead.">
                             Issue credit note
                         </span>
                     @else
                         <a href="{{ route('credit-notes.create', $invoice) }}"
                            class="px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-sm hover:bg-amber-200"
-                           title="Issue a credit note — for returns, post-sale discounts, rate corrections. Section 34(2) deadline: {{ $invoice->creditNoteDeadline()->format('d M Y') }}">
+                           title="Issue a credit note - for returns, post-sale discounts, rate corrections. Section 34(2) deadline: {{ $invoice->creditNoteDeadline()->format('d M Y') }}">
                             Issue credit note
                         </a>
                     @endif
@@ -158,7 +158,7 @@
                     <label for="cancellation_reason" class="text-xs uppercase font-bold tracking-wider text-gray-500">Reason (required)</label>
                     <textarea name="cancellation_reason" id="cancellation_reason" rows="3" required minlength="5" maxlength="500"
                               class="mt-1 block w-full border-gray-300 rounded shadow-sm"
-                              placeholder="e.g. Wrong amount — replacement issued as INV-0145"></textarea>
+                              placeholder="e.g. Wrong amount - replacement issued as INV-0145"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-2 border-t">
                     <button type="button" onclick="document.getElementById('cancel-invoice-modal').close()" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Keep invoice</button>
@@ -188,14 +188,14 @@
                     <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-saffron-500 via-white to-money-600"></div>
                     <button type="button"
                             @click="localStorage.setItem('hideFirstInvoiceCelebration','1'); show=false"
-                            class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 text-gray-400 hover:text-gray-700 hover:bg-white/60 rounded"
+                            class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 text-gray-500 hover:text-gray-700 hover:bg-white/60 rounded"
                             aria-label="Close celebration">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                     <div class="flex items-start gap-4 pt-1">
                         <div class="text-4xl leading-none">🎉</div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-xs uppercase font-bold tracking-widest text-saffron-700">First invoice issued — welcome aboard!</div>
+                            <div class="text-xs uppercase font-bold tracking-widest text-saffron-700">First invoice issued - welcome aboard!</div>
                             <h3 class="font-display text-xl font-extrabold text-gray-900 mt-1">
                                 Mubarak ho, {{ Str::limit(explode(' ', auth()->user()->name)[0] ?? 'friend', 20) }} ji!
                             </h3>
@@ -318,29 +318,29 @@
                                 <label class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS Section</label>
                                 <select name="tds_section" x-model="section" @change="applySection()"
                                         class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
-                                    <option value="">— None —</option>
+                                    <option value="">- None -</option>
                                     <optgroup label="Common (services / contracts)">
-                                        <option value="194C_indiv">194C — Contractor (Indiv/HUF) — 1%</option>
-                                        <option value="194C_other">194C — Contractor (Co/Firm) — 2%</option>
-                                        <option value="194J_prof">194J — Professional fees — 10%</option>
-                                        <option value="194J_tech">194J — Technical services — 2%</option>
-                                        <option value="194H">194H — Commission / brokerage — 5%</option>
+                                        <option value="194C_indiv">194C - Contractor (Indiv/HUF) - 1%</option>
+                                        <option value="194C_other">194C - Contractor (Co/Firm) - 2%</option>
+                                        <option value="194J_prof">194J - Professional fees - 10%</option>
+                                        <option value="194J_tech">194J - Technical services - 2%</option>
+                                        <option value="194H">194H - Commission / brokerage - 5%</option>
                                     </optgroup>
                                     <optgroup label="Rent &amp; property">
-                                        <option value="194I_plant">194I — Rent (plant/machinery) — 2%</option>
-                                        <option value="194I_land">194I — Rent (land/building) — 10%</option>
-                                        <option value="194-IB">194-IB — Rent by Indiv/HUF (&gt;₹50k/mo) — 5%</option>
-                                        <option value="194-IA">194-IA — Sale of property (&gt;₹50L) — 1%</option>
+                                        <option value="194I_plant">194I - Rent (plant/machinery) - 2%</option>
+                                        <option value="194I_land">194I - Rent (land/building) - 10%</option>
+                                        <option value="194-IB">194-IB - Rent by Indiv/HUF (&gt;₹50k/mo) - 5%</option>
+                                        <option value="194-IA">194-IA - Sale of property (&gt;₹50L) - 1%</option>
                                     </optgroup>
                                     <optgroup label="Goods &amp; e-commerce">
-                                        <option value="194Q">194Q — Purchase of goods (&gt;₹50L) — 0.1%</option>
-                                        <option value="194O">194O — E-commerce participants — 1%</option>
+                                        <option value="194Q">194Q - Purchase of goods (&gt;₹50L) - 0.1%</option>
+                                        <option value="194O">194O - E-commerce participants - 1%</option>
                                     </optgroup>
                                     <optgroup label="Other">
-                                        <option value="194A">194A — Interest (other than securities) — 10%</option>
-                                        <option value="194D">194D — Insurance commission — 5%</option>
-                                        <option value="194B">194B — Lottery / games — 30%</option>
-                                        <option value="51">Section 51 — GST TDS (govt) — 2%</option>
+                                        <option value="194A">194A - Interest (other than securities) - 10%</option>
+                                        <option value="194D">194D - Insurance commission - 5%</option>
+                                        <option value="194B">194B - Lottery / games - 30%</option>
+                                        <option value="51">Section 51 - GST TDS (govt) - 2%</option>
                                         <option value="other">Other</option>
                                     </optgroup>
                                 </select>
@@ -366,7 +366,7 @@
                         <input type="text" name="notes" maxlength="500" value="{{ old('notes') }}" class="mt-1 block w-full border-gray-300 rounded shadow-sm">
                     </div>
                     <div class="flex justify-end">
-                        <button class="px-4 py-2 bg-money-600 hover:bg-money-700 text-white rounded font-semibold">Record payment & issue receipt</button>
+                        <button class="px-4 py-2 bg-money-600 hover:bg-money-700 text-white rounded font-semibold">Record Receipt & issue receipt</button>
                     </div>
                 </form>
             @endif
@@ -401,7 +401,7 @@
                                         <td class="px-4 py-2 font-mono text-sm font-semibold">{{ $p->receipt_number }}</td>
                                         <td class="px-4 py-2">{{ $p->received_at?->format('d M Y') }}</td>
                                         <td class="px-4 py-2">{{ $p->methodLabel() }}</td>
-                                        <td class="px-4 py-2 text-xs font-mono text-gray-600">{{ $p->reference_number ?: '—' }}</td>
+                                        <td class="px-4 py-2 text-xs font-mono text-gray-600">{{ $p->reference_number ?: '-' }}</td>
                                         <td class="px-4 py-2 text-right font-mono font-semibold">
                                             ₹{{ inr($p->amount) }}
                                             @if ((float) $p->tds_amount > 0)
@@ -458,7 +458,7 @@
                 const a = document.createElement('a');
                 a.href = url;
                 a.rel = 'noopener';
-                // Tiny delay so the page paints first — feels more responsive.
+                // Tiny delay so the page paints first - feels more responsive.
                 setTimeout(() => { a.click(); }, 250);
             })();
         </script>

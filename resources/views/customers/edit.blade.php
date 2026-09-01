@@ -91,7 +91,7 @@
                         <div>
                             <x-input-label for="state_id" value="State *" />
                             <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                <option value="">— Select state —</option>
+                                <option value="">- Select state -</option>
                                 @foreach ($states as $s)
                                     <option value="{{ $s->id }}" @selected(old('state_id', $customer->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                                 @endforeach

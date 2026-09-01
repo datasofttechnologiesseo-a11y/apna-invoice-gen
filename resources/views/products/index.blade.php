@@ -1,7 +1,7 @@
-<x-app-layout title="Products and services">
+<x-app-layout title="Products / Services">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Products & services') }}</h1>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Products') }}</h1>
             <a href="{{ route('products.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm whitespace-nowrap transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Add new product
@@ -71,7 +71,7 @@
                                             <span class="ml-2 text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-600 uppercase tracking-wider">Archived</span>
                                         @endunless
                                     </td>
-                                    <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $p->sku ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $p->sku ?? '-' }}</td>
                                     <td class="px-4 py-3 text-sm">{{ ucfirst($p->kind) }}</td>
                                     <td class="px-4 py-3 font-mono text-sm">{{ $p->hsn_sac }}</td>
                                     <td class="px-4 py-3 text-sm">{{ $p->unit }}</td>
@@ -79,12 +79,12 @@
                                     <td class="px-4 py-3 text-right text-sm">{{ rtrim(rtrim(number_format((float) $p->gst_rate, 2, '.', ''), '0'), '.') }}%</td>
                                     <td class="px-4 py-3 text-right space-x-2">
                                         <a href="{{ route('products.edit', $p) }}" class="text-brand-600 hover:underline text-sm">Edit</a>
-                                        @php $willArchive = $p->invoiceItems()->exists(); @endphp
+                                        @php $willArchive = $p->invoiceProducts()->exists(); @endphp
                                         <x-confirm-form
                                             :action="route('products.destroy', $p)"
                                             method="DELETE"
                                             title="{{ $willArchive ? 'Archive' : 'Delete' }} {{ $p->name }}?"
-                                            message="{{ $willArchive ? 'This product has invoice history so it will be archived (hidden from the autocomplete) — the records stay intact for GST audit.' : 'This product has never been invoiced so it will be permanently deleted.' }}"
+                                            message="{{ $willArchive ? 'This product has invoice history so it will be archived (hidden from the autocomplete) - the records stay intact for GST audit.' : 'This product has never been invoiced so it will be permanently deleted.' }}"
                                             confirm-label="{{ $willArchive ? 'Archive' : 'Delete' }} product"
                                             confirm-class="{{ $willArchive ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700' }}"
                                             tone="{{ $willArchive ? 'warning' : 'danger' }}">

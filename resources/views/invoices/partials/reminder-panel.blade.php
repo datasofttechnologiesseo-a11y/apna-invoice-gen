@@ -18,7 +18,7 @@
                     @elseif ($daysPastDue === 0)
                         Due today.
                     @else
-                        <span class="text-red-600 font-semibold">{{ $daysPastDue }} day{{ $daysPastDue > 1 ? 's' : '' }} overdue</span> — automatic reminders will trigger at the configured thresholds.
+                        <span class="text-red-600 font-semibold">{{ $daysPastDue }} day{{ $daysPastDue > 1 ? 's' : '' }} overdue</span> - automatic reminders will trigger at the configured thresholds.
                     @endif
                 </div>
             </div>
@@ -33,7 +33,7 @@
                         </button>
                     </form>
                 @else
-                    <span class="text-xs text-gray-400">No customer email on file</span>
+                    <span class="text-xs text-gray-500">No customer email on file</span>
                 @endif
 
                 @if ($waLink)
@@ -54,14 +54,14 @@
                             <span class="inline-block w-2 h-2 rounded-full {{ $r->status === 'sent' ? 'bg-money-500' : 'bg-red-500' }}"></span>
                             <span class="uppercase font-semibold text-[10px] tracking-wider text-gray-500">{{ $r->channel }}</span>
                             <span>·</span>
-                            <span>{{ $r->recipient ?: '—' }}</span>
+                            <span>{{ $r->recipient ?: '-' }}</span>
                             <span>·</span>
                             <span>{{ $r->sent_at?->format('d M Y, h:i A') }}</span>
-                            <span class="text-gray-400">·</span>
+                            <span class="text-gray-500">·</span>
                             <span class="{{ $r->status === 'sent' ? 'text-money-700' : 'text-red-700' }}">
                                 {{ $r->status === 'sent'
                                     ? ($r->trigger === 'auto' ? 'auto' : 'manual')
-                                    : 'failed' . ($r->error ? ' — ' . $r->error : '') }}
+                                    : 'failed' . ($r->error ? ' - ' . $r->error : '') }}
                             </span>
                         </li>
                     @endforeach

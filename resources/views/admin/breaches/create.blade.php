@@ -56,7 +56,7 @@
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">Affected users (estimate)</label>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">Affected users (quotation)</label>
             <input type="number" name="affected_users" value="{{ old('affected_users', 0) }}" min="0" required
                    class="w-40 rounded-lg border-slate-300 focus:border-red-500 focus:ring-red-500 text-sm">
         </div>

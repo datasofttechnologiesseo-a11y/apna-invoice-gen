@@ -30,7 +30,7 @@ return [
     'consulting' => [
         'label' => 'Consulting / Professional Services',
         'tagline' => 'Hourly or per-engagement billing.',
-        'description' => 'For consultants, CAs, lawyers, agencies, freelancers, designers, developers, content creators, SaaS, AMC and support contracts — anyone billing for time, expertise or recurring services.',
+        'description' => 'For consultants, CAs, lawyers, agencies, freelancers, designers, developers, content creators, SaaS, AMC and support contracts - anyone billing for time, expertise or recurring services.',
         'audience' => 'Consultants · CAs · Lawyers · Agencies · Freelancers · SaaS',
         'style' => 'classic',
         'icon' => 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z',
@@ -43,7 +43,7 @@ return [
     'product_sale' => [
         'label' => 'Product Sale (Goods)',
         'tagline' => 'For trading, retail, manufacturing & e-commerce.',
-        'description' => 'Inventory-style line items with HSN codes for physical goods — covers traders, retailers, manufacturers, D2C brands, online sellers, restaurants, F&B, and rental of equipment or property.',
+        'description' => 'Inventory-style line items with HSN codes for physical goods - covers traders, retailers, manufacturers, D2C brands, online sellers, restaurants, F&B, and rental of equipment or property.',
         'audience' => 'Traders · Retailers · Manufacturers · D2C · F&B · Rental',
         'style' => 'bold',
         'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',

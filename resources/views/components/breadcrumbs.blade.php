@@ -14,7 +14,7 @@
             </li>
             @foreach ($items as $i => $item)
                 <li class="flex items-center gap-1.5" @if ($i === count($items) - 1) aria-current="page" @endif>
-                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                     @if (! empty($item['href']) && $i !== count($items) - 1)

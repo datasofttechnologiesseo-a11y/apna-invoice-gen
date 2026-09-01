@@ -27,7 +27,7 @@
             </h1>
 
             <div class="flex flex-wrap items-center gap-2">
-                {{-- Utility group: edit/PDF — neutral grays, lowest visual priority --}}
+                {{-- Utility group: edit/PDF - neutral grays, lowest visual priority --}}
                 @if ($quotation->isEditable())
                     <a href="{{ route('quotations.edit', $quotation) }}" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 rounded text-sm font-medium transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -67,7 +67,7 @@
                         :action="route('quotations.accept', $quotation)"
                         method="POST"
                         title="Mark as accepted?"
-                        message="The customer has confirmed this quote — record their acceptance. You can then convert it to a tax invoice."
+                        message="The customer has confirmed this quote - record their acceptance. You can then convert it to a tax invoice."
                         confirm-label="Mark as accepted"
                         confirm-class="bg-emerald-700 hover:bg-emerald-800"
                         tone="default">
@@ -92,7 +92,7 @@
                         confirm-label="Convert to invoice"
                         confirm-class="bg-purple-700 hover:bg-purple-800"
                         tone="default">
-                        {{-- Convert is the most-valuable workflow action — saffron CTA --}}
+                        {{-- Convert is the most-valuable workflow action - saffron CTA --}}
                         <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                             Convert to invoice
@@ -126,7 +126,7 @@
             <form method="POST" action="{{ route('quotations.decline', $quotation) }}" class="p-5 sm:p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
                 <h3 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h3>
-                <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why — useful for follow-ups.</p>
+                <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why - useful for follow-ups.</p>
                 <div>
                     <x-input-label for="decline_reason" value="Reason (optional)" />
                     <textarea id="decline_reason" name="decline_reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" maxlength="500" placeholder="e.g. Going with a different vendor"></textarea>
@@ -147,7 +147,7 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
-            {{-- Subject + validity countdown — the two pieces of information a
+            {{-- Subject + validity countdown - the two pieces of information a
                  customer/owner needs to recognise this quote at a glance. --}}
             @if ($quotation->subject)
                 <div class="bg-white shadow sm:rounded-lg px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
@@ -176,9 +176,9 @@
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>
                         @if ($daysLeft < 0)
-                            <strong>Expired</strong> {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago — the quote can still be marked accepted or converted, but the price you committed to has lapsed.
+                            <strong>Expired</strong> {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago - the quote can still be marked accepted or converted, but the price you committed to has lapsed.
                         @else
-                            Expires in <strong>{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }}</strong> — follow up with the customer.
+                            Expires in <strong>{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }}</strong> - follow up with the customer.
                         @endif
                     </span>
                 </div>
@@ -201,7 +201,7 @@
                         on {{ $quotation->declined_at->format('d M Y') }}
                     @endif
                     @if ($quotation->decline_reason)
-                        — {{ $quotation->decline_reason }}
+                        - {{ $quotation->decline_reason }}
                     @endif
                 </div>
             @endif

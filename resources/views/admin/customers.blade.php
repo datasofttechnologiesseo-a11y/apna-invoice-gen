@@ -33,7 +33,7 @@
                                 <div class="text-xs text-slate-500 truncate">{{ $cust->email }}</div>
                             @endif
                         </td>
-                        <td class="px-5 py-3 text-sm text-slate-700">{{ $cust->company?->name ?? '—' }}</td>
+                        <td class="px-5 py-3 text-sm text-slate-700">{{ $cust->company?->name ?? '-' }}</td>
                         <td class="px-5 py-3">
                             <a href="{{ route('admin.users.show', $cust->user) }}" class="text-indigo-700 hover:underline text-sm">{{ $cust->user?->name }}</a>
                         </td>

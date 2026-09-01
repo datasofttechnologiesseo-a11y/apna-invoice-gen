@@ -1,7 +1,7 @@
-<x-app-layout :title="$product->exists ? 'Edit product' : 'New product'">
+<x-app-layout :title="$product->exists ? 'Edit Item' : 'New Item'">
     <x-slot name="header">
         <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
-            {{ $product->exists ? 'Edit product' : 'New product' }}
+            {{ $product->exists ? 'Edit Item' : 'New Item' }}
         </h1>
     </x-slot>
 
@@ -15,7 +15,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <x-breadcrumbs :items="[
                 ['label' => 'Products', 'href' => route('products.index')],
-                ['label' => $product->exists ? $product->name : 'New product'],
+                ['label' => $product->exists ? $product->name : 'New Item'],
             ]" />
 
             <form method="POST" action="{{ $product->exists ? route('products.update', $product) : route('products.store') }}"
@@ -36,7 +36,7 @@
                     <p class="text-xs text-gray-500 mt-0.5">What you're selling. Reused across invoices via autocomplete.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
-                            <x-input-label for="name" value="Product / service name *" />
+                            <x-input-label for="name" value="Item name *" />
                             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $product->name)" required autofocus placeholder="e.g. OPC 53 Grade Cement" />
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
@@ -50,7 +50,7 @@
                             <p class="text-xs text-gray-500 mt-1">Goods use HSN. Services use SAC (6 digits starting with 99).</p>
                         </div>
                         <div>
-                            <x-input-label for="sku" value="SKU (optional, internal code)" />
+                            <x-input-label for="sku" value="Item code (optional)" />
                             <x-text-input id="sku" name="sku" type="text" class="mt-1 block w-full font-mono" :value="old('sku', $product->sku)" maxlength="60" placeholder="e.g. CEMENT-50KG" />
                         </div>
                         <div class="md:col-span-2">
@@ -109,13 +109,13 @@
                                                 :class="i === highlight ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-50'"
                                                 x-text="u.label"></button>
                                     </template>
-                                    <div x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-400">No matching unit</div>
+                                    <div x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-500">No matching unit</div>
                                 </div>
                             </div>
                             <x-input-error :messages="$errors->get('unit')" class="mt-2" />
                         </div>
                         <div>
-                            <x-input-label for="rate" value="Default rate (₹, pre-tax) *" />
+                            <x-input-label for="rate" value="Sale price (₹, pre-tax) *" />
                             <x-text-input id="rate" name="rate" type="number" step="any" min="0" class="mt-1 block w-full" :value="old('rate', $product->rate ?? 0)" required />
                             <x-input-error :messages="$errors->get('rate')" class="mt-2" />
                         </div>

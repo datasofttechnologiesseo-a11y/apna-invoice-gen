@@ -41,7 +41,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 16l4-4 3 3 5-7"/></svg>
                     </div>
                     <h3 class="mt-3 font-semibold text-gray-900">Track P&amp;L</h3>
-                    <p class="text-sm text-gray-600 mt-0.5">Log expenses &amp; cash memos to see profit</p>
+                    <p class="text-sm text-gray-600 mt-0.5">Log expenses &amp; cash sales to see profit</p>
                     <a href="{{ route('finance.index') }}" class="mt-2 inline-block text-xs text-amber-700 hover:underline font-semibold">Open Finance →</a>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                         <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
                     </a>
                 @else
-                    <a href="{{ route('customers.create') }}" class="inline-flex items-center px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl shadow-brand transition text-lg">
+                    <a href="{{ route('customers.create') }}" class="inline-flex items-center px-8 py-4 bg-accent-700 hover:bg-accent-800 text-white font-bold rounded-xl shadow-brand transition text-lg">
                         Add a customer →
                     </a>
                 @endif

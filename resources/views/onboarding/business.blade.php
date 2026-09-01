@@ -107,7 +107,7 @@
                         <span class="font-display font-bold text-gray-900">Add more details</span>
                         <span class="block text-sm text-gray-500 mt-0.5">Address, logo, bank &amp; UPI, invoice numbering, all optional</span>
                     </span>
-                    <svg class="w-5 h-5 flex-shrink-0 text-gray-400 group-hover:text-gray-600 transition-transform"
+                    <svg class="w-5 h-5 flex-shrink-0 text-gray-500 group-hover:text-gray-600 transition-transform"
                          x-bind:class="advanced && 'rotate-180'"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -125,7 +125,7 @@
                         <h3 class="font-display font-bold text-gray-900">Registered address</h3>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
-                                <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-400">(required if GST-registered)</span></x-input-label>
+                                <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-500">(required if GST-registered)</span></x-input-label>
                                 <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1', $company->address_line1)" placeholder="Plot 42, Tech Park" />
                                 <x-input-error :messages="$errors->get('address_line1')" class="mt-2" />
                             </div>
@@ -134,7 +134,7 @@
                                 <x-text-input id="address_line2" name="address_line2" type="text" class="mt-1 block w-full" :value="old('address_line2', $company->address_line2)" placeholder="Sector 5, Powai" />
                             </div>
                             <div>
-                                <x-input-label for="city">City <span class="font-normal text-gray-400">(required if GST-registered)</span></x-input-label>
+                                <x-input-label for="city">City <span class="font-normal text-gray-500">(required if GST-registered)</span></x-input-label>
                                 <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $company->city)" placeholder="Mumbai" />
                                 <x-input-error :messages="$errors->get('city')" class="mt-2" />
                             </div>
@@ -193,7 +193,7 @@
                                 <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="$previewPrefix" maxlength="10" />
                                 <p class="mt-1 text-xs text-gray-500">
                                     Your first invoice will be <strong class="font-mono text-brand-700">{{ $previewPrefix }}/{{ $fyLabel }}/0001</strong>
-                                    <span class="text-gray-400">, sequence auto-resets on 1&nbsp;April (GST best practice).</span>
+                                    <span class="text-gray-500">, sequence auto-resets on 1&nbsp;April (GST best practice).</span>
                                 </p>
                                 <x-input-error :messages="$errors->get('invoice_prefix')" class="mt-2" />
                             </div>

@@ -17,7 +17,7 @@
                         <p>Hi {{ $user->name }},</p>
                         <p>Your scheduled data backup is attached as a ZIP file ({{ $generatedAt->format('d M Y, H:i') }}). It includes CSV exports of your companies, customers, products, invoices, payments and expenses.</p>
                         <p style="background: #f9fafb; border-left: 4px solid #1e3a8a; padding: 12px 14px; margin: 20px 0; font-size: 13px;">
-                            <strong>Keep this safe.</strong> It contains customer GSTINs and payment history —
+                            <strong>Keep this safe.</strong> It contains customer GSTINs and payment history -
                             store it on an encrypted drive and don't share publicly.
                         </p>
                         <p>You can also trigger a backup any time from the <strong>Profile → Backups</strong> page in the app.</p>

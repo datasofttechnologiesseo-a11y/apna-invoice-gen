@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -129,6 +130,8 @@ class QuotationController extends Controller
                 'user_id' => $user->id,
                 'company_id' => $company->id,
                 'customer_id' => $customer->id,
+                // Blank means "use the auto series", assigned when sent.
+                'quote_number' => filled($data['quote_number'] ?? null) ? trim($data['quote_number']) : null,
                 'quote_date' => $data['quote_date'],
                 'valid_until' => $data['valid_until'] ?? null,
                 'subject' => $data['subject'] ?? null,
@@ -206,6 +209,8 @@ class QuotationController extends Controller
         DB::transaction(function () use ($quotation, $customer, $data, $result, $isInterstate) {
             $quotation->update([
                 'customer_id' => $customer->id,
+                // Blank means "use the auto series", assigned when sent.
+                'quote_number' => filled($data['quote_number'] ?? null) ? trim($data['quote_number']) : null,
                 'quote_date' => $data['quote_date'],
                 'valid_until' => $data['valid_until'] ?? null,
                 'subject' => $data['subject'] ?? null,
@@ -255,7 +260,14 @@ class QuotationController extends Controller
 
         DB::transaction(function () use ($quotation) {
             $company = $quotation->company()->lockForUpdate()->first();
-            $number = $company->bumpQuoteCounter($quotation->quote_date);
+
+            // A number the user typed on the draft wins, and the auto counter
+            // is left alone so it is not silently burned. Only fall back to
+            // the generated series when they did not choose one.
+            $number = filled($quotation->quote_number)
+                ? $quotation->quote_number
+                : $company->bumpQuoteCounter($quotation->quote_date);
+
             $quotation->update([
                 'quote_number' => $number,
                 'status' => 'sent',
@@ -432,6 +444,13 @@ class QuotationController extends Controller
     {
         return $request->validate([
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
+            // Quotations are not statutory documents, so the number is the
+            // user's to choose. Still unique per company — the quotations
+            // table carries a unique index on (company_id, quote_number).
+            'quote_number' => ['nullable', 'string', 'max:50',
+                Rule::unique('quotations', 'quote_number')
+                    ->where(fn ($q) => $q->where('company_id', $companyId))
+                    ->ignore($request->route('quotation')?->id)],
             'quote_date' => ['required', 'date'],
             'valid_until' => ['nullable', 'date', 'after_or_equal:quote_date'],
             'subject' => ['nullable', 'string', 'max:200'],

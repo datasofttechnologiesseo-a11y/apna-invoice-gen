@@ -87,7 +87,7 @@
                     // others held six, so three of the four columns ended early
                     // and the block was a third empty.
                     ['title' => 'Free tools', 'color' => 'accent', 'links' => [
-                        ['href' => route('pages.gst-calculator'), 'label' => 'GST calculator'],
+                        ['href' => route('pages.gst-calculator'), 'label' => 'Free GST calculator'],
                         ['href' => route('pages.gst-invoice-format'), 'label' => 'GST invoice format'],
                         ['href' => route('pages.billing-software'), 'label' => 'Free billing software'],
                         ['href' => route('pages.cash-memo-format'), 'label' => 'Cash memo format'],

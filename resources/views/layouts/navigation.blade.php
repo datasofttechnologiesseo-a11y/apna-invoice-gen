@@ -1,4 +1,4 @@
-{{-- App navigation — clean, light top bar: white surface, a thin bottom border,
+{{-- App navigation - clean, light top bar: white surface, a thin bottom border,
      calm navy accents for the active item, and generous spacing. Sticky so it
      stays in reach as the page scrolls. --}}
 {{-- z-40: above in-page popovers/comboboxes (z-30) so nothing paints over the
@@ -20,11 +20,11 @@
                         ['href' => route('dashboard'), 'label' => 'Dashboard', 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
                         ['href' => route('invoices.index'), 'label' => 'Invoices', 'active' => request()->routeIs('invoices.*') || request()->routeIs('quotations.*'), 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                         ['href' => route('customers.index'), 'label' => 'Customers', 'active' => request()->routeIs('customers.*'), 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
-                        ['href' => route('products.index'), 'label' => 'Products', 'active' => request()->routeIs('products.*'), 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
-                        ['href' => route('companies.index'), 'label' => 'Companies', 'active' => request()->routeIs('companies.*') || request()->routeIs('company.*'), 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
-                        ['href' => route('finance.index'), 'label' => 'Finance', 'active' => request()->routeIs('finance.*'), 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
+                        ['href' => route('products.index'), 'label' => 'Products / Services', 'active' => request()->routeIs('products.*'), 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
+                        ['href' => route('companies.index'), 'label' => 'Your Company', 'active' => request()->routeIs('companies.*') || request()->routeIs('company.*'), 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
+                        ['href' => route('finance.index'), 'label' => 'P&L', 'active' => request()->routeIs('finance.*'), 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
                     ];
-                    // Super-admin-only Admin link — a visible top-bar item, not
+                    // Super-admin-only Admin link - a visible top-bar item, not
                     // buried in a menu. The nav's responsive compacting (labels
                     // only at lg) keeps this 7th item from re-introducing the
                     // Mac-width overlap.
@@ -41,7 +41,7 @@
                             'bg-brand-50 text-brand-700 font-bold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
                             'text-gray-600 font-semibold hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
                         ])>
-                            <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-600' : 'text-gray-500 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                             </svg>
                             {{ $item['label'] }}
@@ -64,17 +64,17 @@
                             <x-slot name="trigger">
                                 {{-- Trigger shrinks to icon+chevron below 2xl so the bar
                                      always fits on 13"/14" screens; full label on wide monitors. --}}
-                                <button title="Active company: {{ $activeCompany->name }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition 2xl:w-44">
-                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                <button title="Active firm: {{ $activeCompany->name }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition 2xl:w-44">
+                                    <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                     <div class="text-left min-w-0 flex-1 hidden 2xl:block">
-                                        <div class="text-[10px] text-gray-400 leading-tight uppercase tracking-wider font-semibold">Active company</div>
+                                        <div class="text-[10px] text-gray-500 leading-tight uppercase tracking-wider font-semibold">Active firm</div>
                                         <div class="leading-tight truncate text-xs font-semibold text-gray-900">{{ $activeCompany->name }}</div>
                                     </div>
-                                    <svg class="fill-current h-4 w-4 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    <svg class="fill-current h-4 w-4 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                                 </button>
                             </x-slot>
                             <x-slot name="content">
-                                <div class="px-3 py-2 text-[11px] text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-100">Switch company</div>
+                                <div class="px-3 py-2 text-[11px] text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-100">Switch firm</div>
                                 @foreach ($myCompanies as $c)
                                     @if ($c->id === $activeCompany->id)
                                         <div class="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-brand-700 font-semibold bg-brand-50">
@@ -99,7 +99,7 @@
                     </div>
                 @endif
 
-                {{-- Persistent "+ New" create menu — primary action, one click away
+                {{-- Persistent "+ New" create menu - primary action, one click away
                      on every screen. Desktop only; mobile keeps the floating button. --}}
                 <div class="hidden lg:flex lg:items-center">
                     <x-dropdown align="right" width="48">
@@ -111,11 +111,11 @@
                             </button>
                         </x-slot>
                         <x-slot name="content">
-                            <div class="px-4 py-2 text-[11px] text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-100">Create new</div>
+                            <div class="px-4 py-2 text-[11px] text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-100">Create new</div>
                             <x-dropdown-link :href="route('invoices.create')">{{ __('Invoice') }}</x-dropdown-link>
                             <x-dropdown-link :href="route('quotations.create')">{{ __('Quotation') }}</x-dropdown-link>
                             <x-dropdown-link :href="route('customers.create')">{{ __('Customer') }}</x-dropdown-link>
-                            <x-dropdown-link :href="route('products.create')">{{ __('Product / service') }}</x-dropdown-link>
+                            <x-dropdown-link :href="route('products.create')">{{ __('Item') }}</x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
                 </div>
@@ -133,9 +133,9 @@
                             <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-sm flex-shrink-0">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                             <div class="text-left hidden 2xl:block pr-1">
                                 <div class="leading-tight text-xs font-semibold text-gray-900">{{ Str::limit(Auth::user()->name, 14) }}</div>
-                                <div class="text-[10px] text-gray-400 leading-tight">View account</div>
+                                <div class="text-[10px] text-gray-500 leading-tight">View account</div>
                             </div>
-                            <svg class="fill-current h-4 w-4 text-gray-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            <svg class="fill-current h-4 w-4 text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
                     </x-slot>
 
@@ -186,13 +186,13 @@
                     New invoice
                 </a>
             @endauth
-            @foreach ($navItems as $item)
+            @foreach ($navProducts as $item)
                 <a href="{{ $item['href'] }}" @class([
                     'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
                     'bg-brand-50 text-brand-700' => $item['active'],
                     'text-gray-700 hover:bg-gray-100' => ! $item['active'],
                 ])>
-                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-600' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
                     </svg>
                     {{ $item['label'] }}
@@ -203,7 +203,7 @@
         <!-- Responsive company switcher -->
         @auth
             <div class="pt-3 pb-1 border-t border-gray-200">
-                <div class="px-4 text-[10px] uppercase tracking-wider font-semibold text-gray-400">Active company</div>
+                <div class="px-4 text-[10px] uppercase tracking-wider font-semibold text-gray-500">Active firm</div>
                 <div class="px-4 pt-1 pb-2 text-sm font-semibold text-brand-700">{{ $activeCompany->name }}</div>
                 @if ($myCompanies->count() > 1)
                     <div class="mt-1 space-y-1">
@@ -212,7 +212,7 @@
                                 <form method="POST" action="{{ route('companies.switch', $c) }}">
                                     @csrf
                                     <button type="submit" class="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                                         Switch to {{ $c->name }}
                                     </button>
                                 </form>

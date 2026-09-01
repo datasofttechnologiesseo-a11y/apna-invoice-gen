@@ -2,7 +2,7 @@
 
 /**
  * Professional invoice themes compliant with CBIC Rule 46 conventions for
- * Indian tax invoices. All themes share the same compliant layout — they
+ * Indian tax invoices. All themes share the same compliant layout - they
  * differ only in accent color, rule weight, and a subtle title treatment.
  * Nothing overrides the structural professionalism required for B2B use.
  */

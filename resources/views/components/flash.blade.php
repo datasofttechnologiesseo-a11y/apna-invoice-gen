@@ -34,7 +34,7 @@
         'warning' => 'bg-amber-50 border-amber-200 text-amber-800',
     ][$type] ?? 'bg-gray-50 border-gray-200 text-gray-800';
 
-    // Errors and warnings stay visible until manually dismissed — they often
+    // Errors and warnings stay visible until manually dismissed - they often
     // describe something the user needs to act on, and a 6-second auto-dismiss
     // means a distracted reader misses the message entirely.
     $shouldAutoDismiss = $auto && in_array($type, ['success', 'info'], true);

@@ -47,7 +47,7 @@
         ? \App\Support\UpiQr::svgDataUri($c->upi_id, $c->name, $payableAmount, $invoice->invoice_number ?: 'Invoice', 140)
         : null;
 
-    // HSN-wise summary (Rule 46 best practice — required on GSTR-1 anyway)
+    // HSN-wise summary (Rule 46 best practice - required on GSTR-1 anyway)
     $hsnSummary = collect($invoice->items ?? [])
         ->groupBy('hsn_sac')
         ->map(function ($items, $hsn) use ($invoice) {
@@ -66,7 +66,7 @@
             ];
         })
         ->values();
-    // Only render HSN summary when invoice has enough complexity to benefit — 2-item invoices don't need it
+    // Only render HSN summary when invoice has enough complexity to benefit - 2-item invoices don't need it
     $showHsnSummary = $hsnSummary->count() > 1 && collect($invoice->items ?? [])->count() >= 4;
 
     $jurisdictionCity = $c->city ?: 'India';
@@ -158,7 +158,7 @@
         /* Column HEADERS must adopt the same alignment as their cells. Without
            this, `table.items th { text-align: left }` out-specifies the .tr/.tc
            utility classes, so the numeric headers (Qty, Rate, GST%, Taxable) sat
-           at the left of their columns while the numbers were right-aligned —
+           at the left of their columns while the numbers were right-aligned -
            making the data look like it was under the wrong heading. */
         table.items th.tr, table.hsn-summary th.tr { text-align: right; }
         table.items th.tc, table.hsn-summary th.tc { text-align: center; }
@@ -252,7 +252,7 @@
     // Duplicate/Transporter, Triplicate/Supplier); services need only 2.
     // The controller passes an explicit $copyLabels list (honouring a caller's
     // copy selection). Fall back to the count-based default for any legacy
-    // caller that only passes $copies (or neither — e.g. the email attachment).
+    // caller that only passes $copies (or neither - e.g. the email attachment).
     $copyLabels = $copyLabels ?? $invoice->copyLabels($copies ?? 1);
 @endphp
 
@@ -289,7 +289,7 @@
                 </div>
             </td>
             @php
-                // 3-way title resolved by the model — consistent across show
+                // 3-way title resolved by the model - consistent across show
                 // page, PDF, print view and email subject. Rules:
                 //   • No GSTIN → "Invoice" (unregistered, no GST law applies)
                 //   • Composition dealer → "Bill of Supply" (CGST Rule 49)
@@ -299,7 +299,7 @@
             <td style="vertical-align: top; text-align: right; width: 42%;">
                 <div class="title">{{ $documentTitle }}</div>
                 @if ($c->composition_dealer)
-                    {{-- Mandatory under Section 31(3)(c) + Rule 49 — must
+                    {{-- Mandatory under Section 31(3)(c) + Rule 49 - must
                          appear on every Bill of Supply issued by a composition
                          dealer, alongside the title. --}}
                     <div style="margin-top: 4px; padding: 4px 6px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 3px; font-size: 8.5px; color: #78350f; line-height: 1.3;">
@@ -319,7 +319,7 @@
                         <br><strong>Place of supply:</strong> {{ $invoice->placeOfSupply->name }}@if ($invoice->placeOfSupply->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif
                     @endif
                     @if ($invoice->reverse_charge)
-                        <br><strong class="accent">Reverse charge applicable — Section 9(3)/9(4)</strong>
+                        <br><strong class="accent">Reverse charge applicable - Section 9(3)/9(4)</strong>
                     @endif
                 </div>
             </td>
@@ -397,7 +397,7 @@
 
     {{-- ========== ITEMS ========== --}}
     @php
-        // Only show the discount column if at least one line carries a discount —
+        // Only show the discount column if at least one line carries a discount -
         // keeps the invoice clean when not used.
         $hasDiscount = $invoice->items->sum(fn ($i) => (float) ($i->discount ?? 0)) > 0;
     @endphp
@@ -443,7 +443,7 @@
                     <td class="tr mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="tr mono">{{ $inr($item->rate) }}</td>
                     @if ($hasDiscount)
-                        <td class="tr mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . $inr($item->discount) : '—' }}</td>
+                        <td class="tr mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . $inr($item->discount) : '-' }}</td>
                     @endif
                     <td class="tr">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
                     <td class="tr mono bold">{{ $inr($item->amount) }}</td>
@@ -654,10 +654,10 @@
 
     <div class="foot">This is a computer-generated invoice and does not require a physical signature.</div>
     {{-- Viral loop: every invoice reaches another business owner. One tasteful
-         line — the standard free-tier trade (and how invoicing tools grow).
+         line - the standard free-tier trade (and how invoicing tools grow).
          DomPDF renders <a href> as a real clickable PDF link annotation, so the
          recipient can tap through (and the visit is attributable via UTM). --}}
-    <div class="foot" style="margin-top: 2px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=invoice_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com — free GST invoicing for Indian businesses</a></div>
+    <div class="foot" style="margin-top: 2px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=invoice_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com - free GST invoicing for Indian businesses</a></div>
 </div>
 @endforeach
 

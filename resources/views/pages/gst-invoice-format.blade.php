@@ -1,7 +1,7 @@
 @php
     $appName = config('seo.name', 'Apna Invoice');
     $url = url('/free-gst-invoice-format');
-    // Fixed, real dates — NOT now(). A now()-based value made the Article claim
+    // Fixed, real dates - NOT now(). A now()-based value made the Article claim
     // it was published AND modified "today" on every single request, which
     // Google distrusts. Bump dateModified only when this guide's content changes.
     $datePublished = '2026-05-04';

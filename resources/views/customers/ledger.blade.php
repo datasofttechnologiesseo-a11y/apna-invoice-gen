@@ -112,17 +112,17 @@
                                         <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 ml-1">{{ str_replace('_', ' ', $e['type']) }}</span>
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['debit'] > 0 ? '' : 'text-gray-300' }}">
-                                        {{ $e['debit'] > 0 ? inr($e['debit']) : '—' }}
+                                        {{ $e['debit'] > 0 ? inr($e['debit']) : '-' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-emerald-700' : 'text-gray-300' }}">
-                                        {{ $e['credit'] > 0 ? inr($e['credit']) : '—' }}
+                                        {{ $e['credit'] > 0 ? inr($e['credit']) : '-' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold {{ $e['balance'] > 0 ? 'text-amber-800' : ($e['balance'] < 0 ? 'text-emerald-700' : 'text-gray-500') }}">
                                         {{ inr(abs($e['balance'])) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-12 text-center text-gray-400">No invoices or payments yet for this customer.</td></tr>
+                                <tr><td colspan="6" class="px-4 py-12 text-center text-gray-500">No invoices or payments yet for this customer.</td></tr>
                             @endforelse
                         </tbody>
                         @if ($entries->isNotEmpty())

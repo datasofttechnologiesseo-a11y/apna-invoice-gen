@@ -110,7 +110,7 @@
                         <div>
                             <x-input-label for="state_id" value="State *" />
                             <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
-                                <option value="">— Select —</option>
+                                <option value="">- Select -</option>
                                 @foreach ($states as $state)
                                     <option value="{{ $state->id }}" @selected(old('state_id', $company->state_id) == $state->id)>{{ $state->name }} ({{ $state->gst_code }})</option>
                                 @endforeach
@@ -264,7 +264,7 @@
                         <x-text-input id="books_locked_until" name="books_locked_until" type="date" class="mt-1 block w-full sm:w-64"
                                       :value="old('books_locked_until', $company->books_locked_until?->toDateString())" />
                         <p class="text-xs text-gray-500 mt-1">
-                            After your CA closes a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash memo dated on or before this date can be added, edited, or deleted. <span class="text-amber-700">Leave empty to keep all entries editable.</span>
+                            After your CA closes a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash sale dated on or before this date can be added, edited, or deleted. <span class="text-amber-700">Leave empty to keep all entries editable.</span>
                         </p>
                         <x-input-error :messages="$errors->get('books_locked_until')" class="mt-2" />
                     </div>

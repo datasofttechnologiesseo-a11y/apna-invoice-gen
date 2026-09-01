@@ -52,7 +52,7 @@
         'description' => 'Create a GST-compliant tax invoice online for free in about 60 seconds, with automatic CGST/SGST/IGST, HSN/SAC codes, UPI QR and WhatsApp share.',
         'totalTime' => 'PT60S',
         'inLanguage' => 'en-IN',
-        'estimatedCost' => ['@type' => 'MonetaryAmount', 'currency' => 'INR', 'value' => '0'],
+        'quotationdCost' => ['@type' => 'MonetaryAmount', 'currency' => 'INR', 'value' => '0'],
         'step' => array_map(fn ($i, $s) => [
             '@type' => 'HowToStep',
             'position' => $i + 1,
@@ -65,14 +65,14 @@
 <x-layouts.marketing
     title="How to Make a GST Invoice Free"
     eyebrow="Learn the tool"
-    lead="Pick a task and follow the exact steps — create and issue a GST invoice, share it and get paid, pull month-end reports, or raise quotations and credit notes. Simple language, no jargon. You can download the full handbook too."
+    lead="Pick a task and follow the exact steps - create and issue a GST invoice, share it and get paid, pull month-end reports, or raise quotations and credit notes. Simple language, no jargon. You can download the full handbook too."
     description="Make and issue a GST invoice in 60 seconds, share it on WhatsApp, collect payment by UPI and export GSTR-1 and GSTR-3B. A free step-by-step guide for India."
     keywords="how to make GST invoice, how to create GST invoice online free, how to use invoice software India, GST billing steps, GSTR-1 export how to"
     type="article"
     :json-ld="[$howToSchema]">
 
     <p>
-        {{ $appName }} is built to be simple enough to use without help &mdash; but here is exactly how each job is done, start to
+        {{ $appName }} is built to be simple enough to use without help - but here is exactly how each job is done, start to
         finish. Everything below is free during beta.
     </p>
 
@@ -106,7 +106,7 @@
                 </span>
                 <span class="min-w-0">
                     <span class="block font-display font-bold text-gray-900 group-hover:text-brand-700 transition">{{ $doc['name'] }}</span>
-                    <span class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">{{ $doc['meta'] }}</span>
+                    <span class="block text-[11px] font-semibold uppercase tracking-wider text-gray-500 mt-0.5">{{ $doc['meta'] }}</span>
                     <span class="block text-sm text-gray-600 mt-1.5 leading-relaxed">{{ $doc['blurb'] }}</span>
                 </span>
             </a>
@@ -118,7 +118,7 @@
         <h2>{{ $task['title'] }}</h2>
         <ol>
             @foreach ($task['steps'] as $step)
-                <li><strong>{{ $step['t'] }}</strong> — {{ $step['d'] }}</li>
+                <li><strong>{{ $step['t'] }}</strong> - {{ $step['d'] }}</li>
             @endforeach
         </ol>
         <p><em>Tip:</em> {{ $task['tip'] }}</p>

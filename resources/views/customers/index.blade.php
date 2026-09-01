@@ -30,7 +30,7 @@
                     <x-empty-state
                         icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         title="{{ request('search') ? 'No customers match that search' : 'Add your first customer' }}"
-                        description="{{ request('search') ? 'Try a different search term or clear the filter.' : 'Save details once — name, mobile, GSTIN, state — and reuse them on every bill. CGST/SGST vs IGST is auto-detected from their state, so you never have to think about it. A mobile number unlocks one-tap WhatsApp share.' }}"
+                        description="{{ request('search') ? 'Try a different search term or clear the filter.' : 'Save details once - name, mobile, GSTIN, state - and reuse them on every bill. CGST/SGST vs IGST is auto-detected from their state, so you never have to think about it. A mobile number unlocks one-tap WhatsApp share.' }}"
                         actionHref="{{ request('search') ? route('customers.index') : route('customers.create') }}"
                         actionLabel="{{ request('search') ? 'Clear search' : 'Add a customer' }}"
                     />
@@ -50,18 +50,18 @@
                             @foreach ($customers as $c)
                                 <tr>
                                     <td class="px-4 py-3 font-medium text-gray-900">{{ $c->name }}</td>
-                                    <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $c->gstin ?? '—' }}</td>
-                                    <td class="px-4 py-3 text-gray-600">{{ $c->state?->name ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $c->gstin ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-gray-600">{{ $c->state?->name ?? '-' }}</td>
                                     <td class="px-4 py-3 text-gray-600 text-sm">
                                         @if ($c->email)<div class="truncate max-w-[200px]" title="{{ $c->email }}">{{ $c->email }}</div>@endif
                                         @if ($c->phone)<div class="text-gray-500 font-mono text-xs">{{ $c->phone }}</div>@endif
-                                        @if (! $c->email && ! $c->phone)<span class="text-gray-300">—</span>@endif
+                                        @if (! $c->email && ! $c->phone)<span class="text-gray-300">-</span>@endif
                                     </td>
                                     <td class="px-4 py-3 text-right">
                                         <div class="inline-flex items-center gap-1.5 whitespace-nowrap">
                                             <a href="{{ route('customers.ledger', $c) }}"
                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-money-50 hover:bg-money-100 text-money-800 text-xs font-semibold ring-1 ring-money-200 transition"
-                                               title="View ledger — Dr/Cr running balance for this customer">
+                                               title="View ledger - Dr/Cr running balance for this customer">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h6m0 0l-3-3m3 3l-3 3M3 7h6a4 4 0 014 4v6"/></svg>
                                                 Ledger
                                             </a>
@@ -70,7 +70,7 @@
                                                 :action="route('customers.destroy', $c)"
                                                 method="DELETE"
                                                 title="Delete {{ $c->name }}?"
-                                                message="Customers with issued invoices can't be deleted for GST audit reasons — we'll show a friendly error if that happens."
+                                                message="Customers with issued invoices can't be deleted for GST audit reasons - we'll show a friendly error if that happens."
                                                 confirm-label="Delete customer"
                                                 confirm-class="bg-red-600 hover:bg-red-700"
                                                 tone="danger">

@@ -57,7 +57,7 @@
                                        class="mt-1 block w-full font-mono text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
                                 <p class="mt-1 text-[11px] text-gray-500">
                                     <span x-show="locked">Auto-generated · FY-based sequence. Click <em>Edit manually</em> to override.</span>
-                                    <span x-show="!locked" class="text-amber-700">Custom number — must be unique within your company. Auto counter will <strong>not</strong> advance.</span>
+                                    <span x-show="!locked" class="text-amber-700">Custom number - must be unique within your company. Auto counter will <strong>not</strong> advance.</span>
                                 </p>
                                 @error('memo_number')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                             </div>
@@ -93,7 +93,7 @@
                                 <x-input-label for="seller_state" value="Seller state" />
                                 <select id="seller_state" name="seller_state" x-model="sellerState"
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                    <option value="">— Select —</option>
+                                    <option value="">- Select -</option>
                                     @foreach ($states as $st)
                                         <option value="{{ $st->name }}" @selected(old('seller_state', $memo->seller_state) === $st->name)>{{ $st->name }}</option>
                                     @endforeach
@@ -235,13 +235,13 @@
                                     <x-input-label for="gst_rate" value="GST rate" />
                                     <select id="gst_rate" name="gst_rate" x-model.number="gstRate" @change="recompute()"
                                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                        <option value="0">No GST (most cash memos)</option>
+                                        <option value="0">No GST (most cash sales)</option>
                                         <option value="5">5%</option>
                                         <option value="12">12%</option>
                                         <option value="18">18%</option>
                                         <option value="28">28%</option>
                                     </select>
-                                    <p class="mt-1 text-xs text-gray-500">Most cash memos from unregistered vendors carry no GST. Add it only if the seller charged tax.</p>
+                                    <p class="mt-1 text-xs text-gray-500">Most cash sales from unregistered vendors carry no GST. Add it only if the seller charged tax.</p>
                                 </div>
                                 <div x-show="gstRate > 0" class="flex items-center gap-2">
                                     <input id="is_interstate" type="checkbox" x-model="isInterstate" @change="recompute()"
@@ -250,7 +250,7 @@
                                     <label for="is_interstate" class="text-sm text-gray-700">Inter-state purchase (charge IGST instead of CGST/SGST)</label>
                                 </div>
                                 {{-- Warn (don't block) when the seller state and the inter-state
-                                     toggle disagree — catches a silently wrong tax split. --}}
+                                     toggle disagree - catches a silently wrong tax split. --}}
                                 <div x-show="stateMismatch" x-cloak
                                      class="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
                                     <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
@@ -264,7 +264,7 @@
                                            class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
                                     <label for="itc_eligible" class="text-sm text-gray-700">
                                         Eligible for input tax credit
-                                        <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) — motor vehicles, staff food/catering, personal-use items — so this GST isn't claimed on GSTR-3B.</span>
+                                        <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use items - so this GST isn't claimed on GSTR-3B.</span>
                                     </label>
                                 </div>
                             </div>
@@ -354,10 +354,10 @@
                         if (!this.gstRate || !this.sellerState || !this.companyStateName) return null;
                         const sameState = this.sellerState === this.companyStateName;
                         if (sameState && this.isInterstate) {
-                            return `Seller is in ${this.sellerState}, same as your company — same-state purchases are usually CGST + SGST, not IGST. Untick "Inter-state" unless you're sure.`;
+                            return `Seller is in ${this.sellerState}, same as your company - same-state purchases are usually CGST + SGST, not IGST. Untick "Inter-state" unless you're sure.`;
                         }
                         if (!sameState && !this.isInterstate) {
-                            return `Seller is in ${this.sellerState}, a different state from your company (${this.companyStateName}) — inter-state purchases are usually IGST. Tick "Inter-state purchase".`;
+                            return `Seller is in ${this.sellerState}, a different state from your company (${this.companyStateName}) - inter-state purchases are usually IGST. Tick "Inter-state purchase".`;
                         }
                         return null;
                     },

@@ -8,7 +8,7 @@
     $balance = (float) $invoice->balance;
     $isPaid = $balance <= 0.005;
     $upi = trim((string) ($c?->upi_id ?? ''));
-    // UPI intent deep-link — only meaningful when money is still owed and the
+    // UPI intent deep-link - only meaningful when money is still owed and the
     // seller published a UPI ID. am/tn are URL-encoded per the UPI spec.
     $upiLink = ($upi && ! $isPaid)
         ? 'upi://pay?pa=' . rawurlencode($upi)
@@ -16,7 +16,7 @@
             . '&am=' . number_format($balance, 2, '.', '')
             . '&cu=INR&tn=' . rawurlencode(($docTitle) . ' ' . $number)
         : null;
-    $ogTitle = $docTitle . ' ' . $number . ' from ' . ($c?->name ?: 'a business') . ' — ' . $grand;
+    $ogTitle = $docTitle . ' ' . $number . ' from ' . ($c?->name ?: 'a business') . ' - ' . $grand;
 @endphp
 <!DOCTYPE html>
 <html lang="en-IN">
@@ -43,7 +43,7 @@
     <div class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div>
-                <div class="text-xs uppercase tracking-wide text-gray-400 font-semibold">{{ $docTitle }} no.</div>
+                <div class="text-xs uppercase tracking-wide text-gray-500 font-semibold">{{ $docTitle }} no.</div>
                 <div class="text-lg font-bold text-gray-900">{{ $number }}</div>
             </div>
             @if ($isPaid)
@@ -89,7 +89,7 @@
                    class="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm transition">
                     Pay {{ $symbol . number_format($balance, 2) }} via UPI
                 </a>
-                <p class="text-center text-xs text-gray-400">Opens your UPI app (GPay, PhonePe, Paytm…)</p>
+                <p class="text-center text-xs text-gray-500">Opens your UPI app (GPay, PhonePe, Paytm…)</p>
             @endif
         </div>
     </div>
@@ -100,7 +100,7 @@
            class="inline-flex items-center gap-2 text-brand-700 hover:text-brand-800 font-semibold">
             Make your own GST invoices free →
         </a>
-        <p class="mt-1 text-xs text-gray-400">Powered by Apna Invoice — free GST invoicing for Indian businesses</p>
+        <p class="mt-1 text-xs text-gray-500">Powered by Apna Invoice - free GST invoicing for Indian businesses</p>
     </div>
 </main>
 

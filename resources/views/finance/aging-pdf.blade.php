@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Receivables Aging — {{ $today->format('d M Y') }}</title>
+    <title>Receivables Aging - {{ $today->format('d M Y') }}</title>
     <style>
         @page { margin: 10mm 8mm; }
         * { box-sizing: border-box; }
@@ -79,7 +79,7 @@
                 <td class="v bucket-current">Rs. {{ inr($summary['current']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['current'] / $summary['total']) * 100) : 0 }}% of total</small></td>
                 <td class="v bucket-30">Rs. {{ inr($summary['b30_60']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</small></td>
                 <td class="v bucket-60">Rs. {{ inr($summary['b60_90']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</small></td>
-                <td class="v bucket-90">Rs. {{ inr($summary['b90_plus']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% — chase</small></td>
+                <td class="v bucket-90">Rs. {{ inr($summary['b90_plus']) }}<br><small>{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% - chase</small></td>
             </tr>
         </table>
 
@@ -104,13 +104,13 @@
                     <tr>
                         <td>{{ $idx + 1 }}</td>
                         <td><strong>{{ $c['name'] }}</strong></td>
-                        <td style="font-family: DejaVu Sans Mono, monospace;">{{ $c['gstin'] ?? '—' }}</td>
+                        <td style="font-family: DejaVu Sans Mono, monospace;">{{ $c['gstin'] ?? '-' }}</td>
                         <td class="r">{{ $c['invoice_count'] }}</td>
                         <td class="r">{{ $c['oldest_days'] }}d</td>
-                        <td class="r">{{ $c['current'] > 0 ? inr($c['current']) : '—' }}</td>
-                        <td class="r">{{ $c['b30_60'] > 0 ? inr($c['b30_60']) : '—' }}</td>
-                        <td class="r">{{ $c['b60_90'] > 0 ? inr($c['b60_90']) : '—' }}</td>
-                        <td class="r" style="color: #b91c1c;">{{ $c['b90_plus'] > 0 ? inr($c['b90_plus']) : '—' }}</td>
+                        <td class="r">{{ $c['current'] > 0 ? inr($c['current']) : '-' }}</td>
+                        <td class="r">{{ $c['b30_60'] > 0 ? inr($c['b30_60']) : '-' }}</td>
+                        <td class="r">{{ $c['b60_90'] > 0 ? inr($c['b60_90']) : '-' }}</td>
+                        <td class="r" style="color: #b91c1c;">{{ $c['b90_plus'] > 0 ? inr($c['b90_plus']) : '-' }}</td>
                         <td class="r" style="font-weight: bold;">{{ inr($c['total']) }}</td>
                     </tr>
                 @endforeach

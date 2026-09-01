@@ -48,7 +48,7 @@
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-200"><h3 class="font-display font-bold text-slate-900">Phone numbers</h3></div>
             <ul class="divide-y divide-slate-100">
-                {{-- The personal mobile captured at signup (users.phone) — the
+                {{-- The personal mobile captured at signup (users.phone) - the
                      number the team actually calls/WhatsApps for onboarding.
                      Listed first; company phones (from settings) follow. --}}
                 <li class="px-5 py-3 flex items-center justify-between gap-4 text-sm">
@@ -82,7 +82,7 @@
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-200">
                     <h3 class="font-display font-bold text-slate-900">Reset password</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Set a new password for this user. Share it securely — they should change it on next login.</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Set a new password for this user. Share it securely - they should change it on next login.</p>
                 </div>
                 <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="p-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-start"
                       onsubmit="return confirm('Reset password for {{ $user->name }}?')">
@@ -155,8 +155,8 @@
                         @foreach ($recentInvoices as $inv)
                             <tr class="hover:bg-slate-50">
                                 <td class="px-5 py-2 font-mono text-xs">{{ $inv->displayNumber() }}</td>
-                                <td class="px-5 py-2">{{ $inv->customer?->name ?? '—' }}</td>
-                                <td class="px-5 py-2 text-xs text-slate-600">{{ $inv->company?->name ?? '—' }}</td>
+                                <td class="px-5 py-2">{{ $inv->customer?->name ?? '-' }}</td>
+                                <td class="px-5 py-2 text-xs text-slate-600">{{ $inv->company?->name ?? '-' }}</td>
                                 <td class="px-5 py-2"><span class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>
                                 <td class="px-5 py-2 text-right font-mono tabular-nums">₹{{ inr($inv->grand_total) }}</td>
                                 <td class="px-5 py-2 text-xs text-slate-500">{{ $inv->invoice_date?->format('d M Y') }}</td>

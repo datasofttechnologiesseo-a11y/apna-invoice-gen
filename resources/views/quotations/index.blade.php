@@ -4,7 +4,7 @@
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Quotations') }}</h1>
             <a href="{{ route('quotations.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                New quotation
+                New Quotation
             </a>
         </div>
     </x-slot>
@@ -15,7 +15,7 @@
 
             @include('partials.sales-tabs', ['active' => 'quotations', 'stats' => $salesStats ?? []])
 
-            {{-- Slim, dismissible explainer — only shown on first visit. The
+            {{-- Slim, dismissible explainer - only shown on first visit. The
                  tab strip already states "Pre-sale proposals · convert to
                  invoice on accept", so the banner repeats that for new users
                  then gets out of the way. --}}
@@ -51,7 +51,7 @@
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         title="{{ request('search') || request('status') ? 'No quotations match that filter' : 'Send your first quote' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Send a price proposal on WhatsApp or email, your customer clicks Accept on the public link — you click Convert and it becomes a tax invoice. No re-typing.' }}"
+                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Send a price proposal on WhatsApp or email, your customer clicks Accept on the public link - you click Convert and it becomes a tax invoice. No re-typing.' }}"
                         actionHref="{{ request('search') || request('status') ? route('quotations.index') : route('quotations.create') }}"
                         actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create quotation' }}"
                     />
@@ -82,10 +82,10 @@
                                             @if ($q->quote_number)
                                                 <span class="font-semibold text-gray-900">{{ $q->quote_number }}</span>
                                             @else
-                                                <span class="text-gray-400 italic">Draft #{{ $q->id }}</span>
+                                                <span class="text-gray-500 italic">Draft #{{ $q->id }}</span>
                                             @endif
                                         </div>
-                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $q->customer?->name ?? '—' }}</div>
+                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $q->customer?->name ?? '-' }}</div>
                                         <div class="text-xs text-gray-500">
                                             {{ $q->quote_date?->format('d M Y') }}
                                             @if ($q->valid_until)
@@ -111,7 +111,7 @@
                                             :action="route('quotations.destroy', $q)"
                                             method="DELETE"
                                             title="Delete draft quotation #{{ $q->id }}?"
-                                            message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable — they're kept for record."
+                                            message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable - they're kept for record."
                                             confirm-label="Delete draft"
                                             confirm-class="bg-red-600 hover:bg-red-700"
                                             tone="danger">
@@ -149,7 +149,7 @@
                                             @if ($q->quote_number)
                                                 <span class="font-semibold text-gray-900">{{ $q->quote_number }}</span>
                                             @else
-                                                <span class="text-gray-400 italic">Draft #{{ $q->id }}</span>
+                                                <span class="text-gray-500 italic">Draft #{{ $q->id }}</span>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-600">{{ $q->quote_date?->format('d M Y') }}</td>
@@ -166,7 +166,7 @@
                                                     @endif
                                                 @endif
                                             @else
-                                                —
+                                                -
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">{{ $q->customer?->name }}</td>
@@ -184,7 +184,7 @@
                                                     :action="route('quotations.destroy', $q)"
                                                     method="DELETE"
                                                     title="Delete draft quotation #{{ $q->id }}?"
-                                                    message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable — they're kept for record."
+                                                    message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable - they're kept for record."
                                                     confirm-label="Delete draft"
                                                     confirm-class="bg-red-600 hover:bg-red-700"
                                                     tone="danger">

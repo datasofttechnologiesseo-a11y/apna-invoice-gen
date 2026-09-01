@@ -45,8 +45,8 @@
                         <td class="px-5 py-3">
                             <a href="{{ route('admin.users.show', $inv->user) }}" class="text-indigo-700 hover:underline text-sm">{{ $inv->user?->name }}</a>
                         </td>
-                        <td class="px-5 py-3 text-slate-700">{{ $inv->company?->name ?? '—' }}</td>
-                        <td class="px-5 py-3 text-slate-700">{{ $inv->customer?->name ?? '—' }}</td>
+                        <td class="px-5 py-3 text-slate-700">{{ $inv->company?->name ?? '-' }}</td>
+                        <td class="px-5 py-3 text-slate-700">{{ $inv->customer?->name ?? '-' }}</td>
                         <td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded font-semibold {{ $statusColor[$inv->status] ?? 'bg-slate-100 text-slate-700' }}">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>
                         <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">₹{{ inr($inv->grand_total) }}</td>
                         <td class="px-5 py-3 text-right font-mono tabular-nums {{ (float) $inv->balance > 0 ? 'text-amber-700 font-semibold' : 'text-slate-400' }}">₹{{ inr($inv->balance) }}</td>

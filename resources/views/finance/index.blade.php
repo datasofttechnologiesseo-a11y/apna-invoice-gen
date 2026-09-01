@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            {{-- KPI tiles — vary by view --}}
+            {{-- KPI tiles - vary by view --}}
             @if ($view === 'accrual')
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-brand-600">
@@ -71,7 +71,7 @@
                         <div class="mt-1 text-xs text-gray-500">Margin: <strong class="{{ $netProfit >= 0 ? 'text-emerald-700' : 'text-red-700' }}">{{ number_format($margin, 1) }}%</strong></div>
                     </div>
                 </div>
-                {{-- Working-capital cue on the main P&L view too — profit on paper
+                {{-- Working-capital cue on the main P&L view too - profit on paper
                      means little if it's stuck in unpaid invoices. --}}
                 @if ((float) $revenue['outstanding'] > 0)
                     <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded hover:bg-amber-100 transition">
@@ -169,7 +169,7 @@
                         <span class="text-xs text-gray-500">{{ $byCategory->count() }} categor{{ $byCategory->count() === 1 ? 'y' : 'ies' }}</span>
                     </div>
                     @if ($byCategory->isEmpty())
-                        <div class="p-10 text-center text-gray-400 text-sm">No expenses this period. <a href="{{ route('finance.expenses.create') }}" class="text-brand-700 underline">Add one →</a></div>
+                        <div class="p-10 text-center text-gray-500 text-sm">No expenses this period. <a href="{{ route('finance.expenses.create') }}" class="text-brand-700 underline">Add one →</a></div>
                     @else
                         <ul class="divide-y divide-gray-100">
                             @foreach ($byCategory as $cat)
@@ -201,7 +201,7 @@
                         <a href="{{ route('finance.expenses') }}" class="text-xs font-semibold text-brand-700 hover:underline">View all →</a>
                     </div>
                     @if ($topExpenses->isEmpty())
-                        <div class="p-10 text-center text-gray-400 text-sm">No expenses yet.</div>
+                        <div class="p-10 text-center text-gray-500 text-sm">No expenses yet.</div>
                     @else
                         <ul class="divide-y divide-gray-100">
                             @foreach ($topExpenses as $e)

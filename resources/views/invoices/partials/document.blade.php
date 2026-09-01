@@ -3,7 +3,7 @@
     $cust = $invoice->customer;
     $currencySymbol = '₹';
 
-    // Document title is decided by Invoice::documentTitle() — keeps the
+    // Document title is decided by Invoice::documentTitle() - keeps the
     // print view, the PDF, the show page heading and the email subject all
     // showing the same string. Three-way: "Invoice" (no GSTIN),
     // "Bill of Supply" (composition dealer, Rule 49) or "Tax Invoice"
@@ -15,7 +15,7 @@
     $hasDiscount = $invoice->items->sum(fn ($i) => (float) ($i->discount ?? 0)) > 0;
     // Only render the Product column when at least one line is linked to a
     // saved product. Cash-bill style invoices with all-custom lines don't need
-    // the column at all — saves horizontal room for Description.
+    // the column at all - saves horizontal room for Description.
     $hasProducts = $invoice->items->contains(fn ($i) => $i->product_id !== null && $i->product?->name);
 @endphp
 
@@ -49,7 +49,7 @@
                     <strong>Composition taxable person, not eligible to collect tax on supplies.</strong>
                 </div>
             @elseif ($isBillOfSupply)
-                <div class="mt-2 text-[11px] italic text-gray-500">Issued under Section 31(3)(c) — exempt supply</div>
+                <div class="mt-2 text-[11px] italic text-gray-500">Issued under Section 31(3)(c) - exempt supply</div>
             @endif
             <div class="text-sm mt-2">
                 <div><strong>{{ $documentTitle }} #:</strong> {{ $invoice->isDraft() ? 'Not yet issued (preview: ' . $invoice->company->nextInvoiceNumber() . ')' : $invoice->invoice_number }}</div>
@@ -57,9 +57,9 @@
                 @if ($invoice->due_date)
                     <div><strong>Due:</strong> {{ $invoice->due_date->format('d M Y') }}</div>
                 @endif
-                <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '—' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
+                <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '-' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
                 @if ($invoice->reverse_charge)
-                    <div class="text-amber-700"><strong>Reverse charge applicable</strong> — Section 9(3)/9(4)</div>
+                    <div class="text-amber-700"><strong>Reverse charge applicable</strong> - Section 9(3)/9(4)</div>
                 @endif
             </div>
         </div>
@@ -150,17 +150,17 @@
                 <tr class="border-b">
                     <td class="px-2 py-2">{{ $idx + 1 }}</td>
                     @if ($hasProducts)
-                        {{-- Product column — bold name if linked to a saved product.
+                        {{-- Product column - bold name if linked to a saved product.
                              Empty dash for custom-typed lines so the user can see at
                              a glance which lines are catalogued vs one-offs. --}}
                         <td class="px-2 py-2 font-medium">
-                            {{ $item->product?->name ?: '—' }}
+                            {{ $item->product?->name ?: '-' }}
                         </td>
                     @endif
                     {{-- Description: raw saved value. When the Product column is
                          present, the description is purely the user's extra note.
                          When there's no Product column (all custom lines), the
-                         description doubles as the item identifier — and the
+                         description doubles as the item identifier - and the
                          legacy display fallback fills it in from product.name if
                          it was saved as blank/junk. --}}
                     <td class="px-2 py-2">
@@ -168,7 +168,7 @@
                             $desc = trim((string) $item->description);
                             $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
                             // Only apply the product-name fallback when there's NO Product
-                            // column already showing it — avoid duplication.
+                            // column already showing it - avoid duplication.
                             $shown = ($looksLikeJunk && ! $hasProducts && $item->product?->name)
                                 ? $item->product->name
                                 : ($looksLikeJunk ? '' : $item->description);
@@ -179,7 +179,7 @@
                     <td class="px-2 py-2 text-right font-mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="px-2 py-2 text-right font-mono">{{ inr($item->rate) }}</td>
                     @if ($hasDiscount)
-                        <td class="px-2 py-2 text-right font-mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . inr($item->discount) : '—' }}</td>
+                        <td class="px-2 py-2 text-right font-mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . inr($item->discount) : '-' }}</td>
                     @endif
                     <td class="px-2 py-2 text-right">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
                     <td class="px-2 py-2 text-right font-mono font-medium">{{ inr($item->amount) }}</td>

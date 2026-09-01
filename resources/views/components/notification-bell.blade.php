@@ -3,11 +3,11 @@
     use App\Models\Payment;
     use Illuminate\Support\Carbon;
 
-    // Compute everything from existing tables — no schema change, no
+    // Compute everything from existing tables - no schema change, no
     // background workers. Caller is responsible for gating with @auth.
     $user = auth()->user();
 
-    // 1. ACTION NEEDED — overdue, unpaid invoices.
+    // 1. ACTION NEEDED - overdue, unpaid invoices.
     $overdue = Invoice::query()
         ->where('user_id', $user->id)
         ->whereNotIn('status', ['cancelled', 'draft'])
@@ -19,7 +19,7 @@
         ->limit(5)
         ->get(['id', 'invoice_number', 'customer_id', 'due_date', 'balance']);
 
-    // 2. RECENT — payments received in the last 7 days.
+    // 2. RECENT - payments received in the last 7 days.
     $recentPayments = Payment::query()
         ->where('user_id', $user->id)
         ->where('created_at', '>=', now()->subDays(7))
@@ -28,7 +28,7 @@
         ->limit(5)
         ->get(['id', 'invoice_id', 'amount', 'method', 'received_at', 'created_at']);
 
-    // 3. RECENT — invoices finalized in the last 24 h. Useful "what did I do
+    // 3. RECENT - invoices finalized in the last 24 h. Useful "what did I do
     // this morning" peek when a user opens the app on their phone.
     $recentFinalized = Invoice::query()
         ->where('user_id', $user->id)
@@ -73,7 +73,7 @@
         <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 class="font-display font-bold text-gray-900 text-sm">Notifications</h3>
             @if ($totalCount > 0)
-                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">{{ $totalCount }} {{ $totalCount === 1 ? 'item' : 'items' }}</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">{{ $totalCount }} {{ $totalCount === 1 ? 'item' : 'items' }}</span>
             @endif
         </div>
 
@@ -124,7 +124,7 @@
                             <div class="flex items-baseline justify-between gap-2">
                                 <div class="text-xs font-semibold text-gray-900 truncate">
                                     ₹{{ inr($p->amount) }}
-                                    <span class="font-normal text-gray-400 text-[11px]">on {{ $p->invoice?->invoice_number ?? 'invoice' }}</span>
+                                    <span class="font-normal text-gray-500 text-[11px]">on {{ $p->invoice?->invoice_number ?? 'invoice' }}</span>
                                 </div>
                                 <div class="text-[10px] text-gray-500 whitespace-nowrap">{{ $p->created_at?->diffForHumans() }}</div>
                             </div>

@@ -15,11 +15,11 @@
         'Priority email support',
     ];
 
-    // Offer schema — declares the free plan for rich results.
+    // Offer schema - declares the free plan for rich results.
     $offerSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'Product',
-        'name' => $appName . ' — GST Invoicing',
+        'name' => $appName . ' - GST Invoicing',
         'description' => 'Free GST invoice generator and billing software for Indian MSMEs, SMEs, startups, freelancers and CAs.',
         'brand' => ['@type' => 'Brand', 'name' => $appName],
         'offers' => [
@@ -35,15 +35,15 @@
 <x-layouts.marketing
     title="Pricing: Free GST Invoice Software for India"
     eyebrow="Beta pricing"
-    lead="Free for Indian MSMEs, SMEs, startups and freelancers — unlimited invoices, customers and PDF exports. No credit card, no feature locks, no hidden add-ons."
-    description="Apna Invoice pricing: free during beta — unlimited GST invoices, customers & PDF exports, no card, no feature locks. Beta users keep the free plan."
+    lead="Free for Indian MSMEs, SMEs, startups and freelancers - unlimited invoices, customers and PDF exports. No credit card, no feature locks, no hidden add-ons."
+    description="Apna Invoice pricing: free during beta - unlimited GST invoices, customers & PDF exports, no card, no feature locks. Beta users keep the free plan."
     keywords="free GST invoice software, free billing software India pricing, free invoice generator no card, GST invoicing free plan"
     type="website"
     :json-ld="[$offerSchema]">
 
     <p>
         {{ $appName }} is <strong>free during beta</strong>. Sign up today and get unlimited invoices, customers and
-        PDF exports — no credit card, no feature locks, no hidden add-ons. When we launch paid tiers for larger
+        PDF exports - no credit card, no feature locks, no hidden add-ons. When we launch paid tiers for larger
         businesses, <strong>beta users keep the free plan</strong>.
     </p>
 
@@ -59,7 +59,7 @@
                 <span class="text-brand-200 text-sm">/ month, during beta</span>
             </div>
             <p class="mt-4 text-brand-100 text-sm">For Indian solo professionals, SMEs &amp; startups billing up to 500 invoices/month.</p>
-            <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-900 font-bold rounded-xl transition">Claim free account →</a>
+            <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-950 font-bold rounded-xl transition">Claim free account →</a>
         </div>
         <div class="p-8 bg-white">
             <div class="text-xs font-bold tracking-widest uppercase text-brand-700">What's included</div>

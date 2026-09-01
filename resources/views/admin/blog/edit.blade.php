@@ -55,7 +55,7 @@
                 @csrf
                 @if ($post->exists) @method('PATCH') @endif
 
-                {{-- ─── MAIN COLUMN — title, slug, body ──────────────────── --}}
+                {{-- ─── MAIN COLUMN - title, slug, body ──────────────────── --}}
                 <div class="space-y-6">
 
                     {{-- Title + auto-slug --}}
@@ -107,20 +107,20 @@
                         <div class="px-5 sm:px-6 py-3 border-b flex items-center justify-between gap-3 flex-wrap">
                             <div>
                                 <h3 class="font-medium text-gray-900">Body</h3>
-                                <p class="text-[11px] text-gray-500">Markdown — <code class="bg-gray-100 px-1 rounded">## Heading</code>, <code class="bg-gray-100 px-1 rounded">**bold**</code>, or use the toolbar. The post title is the page's H1; <code class="bg-gray-100 px-1 rounded">#</code> in the body renders as a section heading. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
+                                <p class="text-[11px] text-gray-500">Markdown - <code class="bg-gray-100 px-1 rounded">## Heading</code>, <code class="bg-gray-100 px-1 rounded">**bold**</code>, or use the toolbar. The post title is the page's H1; <code class="bg-gray-100 px-1 rounded">#</code> in the body renders as a section heading. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
                             </div>
                             <div class="flex items-center gap-3 text-xs text-gray-600">
                                 <span><strong x-text="wordCount"></strong> words</span>
                                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span><strong x-text="readingMinutes"></strong> min read</span>
-                                {{-- Autosave indicator — set to "Saving…" then "Saved {time}"
+                                {{-- Autosave indicator - set to "Saving…" then "Saved {time}"
                                      while autosaving to localStorage. Restored on page reload. --}}
                                 <span class="w-1 h-1 rounded-full bg-gray-300" x-show="autosaveLabel" x-cloak></span>
                                 <span x-show="autosaveLabel" x-cloak class="text-emerald-700" x-text="autosaveLabel"></span>
                             </div>
                         </div>
 
-                        {{-- Formatting toolbar — clicking a button wraps the textarea
+                        {{-- Formatting toolbar - clicking a button wraps the textarea
                              selection in the matching markdown. Keyboard friendly:
                              still works while the textarea is focused (mousedown is on
                              the button so the textarea selection is preserved). --}}
@@ -139,9 +139,9 @@
                                     class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                             </button>
-                            {{-- Image — clicking opens a hidden file picker. On choose,
+                            {{-- Image - clicking opens a hidden file picker. On choose,
                                  we upload via AJAX and insert ![](url) at the caret.
-                                 No prompt, no placeholder URL nonsense — the writer
+                                 No prompt, no placeholder URL nonsense - the writer
                                  picks a file, sees their image inline. --}}
                             <button type="button" @click.prevent="$refs.bodyImagePicker.click()"
                                     :disabled="imageUploading"
@@ -171,7 +171,7 @@
 
                             <div class="flex-1"></div>
 
-                            {{-- Preview button — opens a modal rendering the markdown
+                            {{-- Preview button - opens a modal rendering the markdown
                                  via the same server-side renderer as production. --}}
                             <button type="button" @click="openPreview()"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded font-semibold text-xs transition">
@@ -184,11 +184,11 @@
                                   x-model="body" @input="updateBodyStats(); scheduleAutosave()"
                                   @keydown="onKeydown($event)"
                                   @paste="onPaste($event)"
-                                  placeholder="## Introduction&#10;&#10;Write your post here…&#10;&#10;Tip: Paste an image directly from your clipboard (Ctrl+V) — it'll auto-upload."
+                                  placeholder="## Introduction&#10;&#10;Write your post here…&#10;&#10;Tip: Paste an image directly from your clipboard (Ctrl+V) - it'll auto-upload."
                                   class="block w-full border-0 focus:ring-0 font-mono text-sm leading-relaxed p-5 sm:p-6 resize-y">{{ $bodyVal }}</textarea>
                     </div>
 
-                    {{-- Restore-from-localStorage banner — shown if a newer autosave
+                    {{-- Restore-from-localStorage banner - shown if a newer autosave
                          exists than what the server gave us. One-click to restore. --}}
                     <div x-show="autosaveAvailable" x-cloak
                          class="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-4 flex items-center justify-between gap-3">
@@ -202,7 +202,7 @@
                         </div>
                     </div>
 
-                    {{-- Preview modal — full-screen iframe-style overlay with the
+                    {{-- Preview modal - full-screen iframe-style overlay with the
                          rendered markdown styled the same way the public blog renders it. --}}
                     <div x-show="previewOpen" x-cloak
                          @keydown.escape.window="previewOpen = false"
@@ -214,7 +214,7 @@
                                     <p class="text-xs text-gray-500">Same renderer as the public blog. Press Esc to close.</p>
                                 </div>
                                 <button type="button" @click="previewOpen = false"
-                                        class="text-gray-400 hover:text-gray-700 p-1" aria-label="Close preview">
+                                        class="text-gray-500 hover:text-gray-700 p-1" aria-label="Close preview">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
                             </div>
@@ -230,13 +230,13 @@
                                                 [&_code]:bg-gray-100 [&_code]:px-1.5 [&_code]:rounded [&_code]:text-sm
                                                 [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto
                                                 [&_img]:rounded-lg [&_img]:my-4"
-                                         x-html="previewHtml || '<p class=\'text-gray-400 text-center py-20\'>Loading preview…</p>'"></article>
+                                         x-html="previewHtml || '<p class=\'text-gray-500 text-center py-20\'>Loading preview…</p>'"></article>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- ─── SIDEBAR — publish, SEO, images ───────────────────── --}}
+                {{-- ─── SIDEBAR - publish, SEO, images ───────────────────── --}}
                 <aside class="space-y-6">
 
                     {{-- Publish controls --}}
@@ -276,7 +276,7 @@
                         @endif
                     </div>
 
-                    {{-- SEO panel — the heart of the "smart" editor --}}
+                    {{-- SEO panel - the heart of the "smart" editor --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-4">
                         <div class="flex items-center justify-between">
                             <h3 class="font-display font-bold text-gray-900">SEO</h3>
@@ -310,7 +310,7 @@
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ $metaDescVal }}</textarea>
                             <div class="mt-1 text-[10px] flex items-center justify-between"
                                  :class="metaDescription.length > 160 ? 'text-amber-700' : metaDescription.length < 80 ? 'text-amber-700' : 'text-emerald-700'">
-                                <span x-text="metaDescription.length === 0 ? 'Recommended: 150-160 chars' : metaDescription.length > 160 ? 'Too long — Google will truncate' : metaDescription.length < 80 ? 'Too short — aim for 150-160' : 'Looks good'"></span>
+                                <span x-text="metaDescription.length === 0 ? 'Recommended: 150-160 chars' : metaDescription.length > 160 ? 'Too long - Google will truncate' : metaDescription.length < 80 ? 'Too short - aim for 150-160' : 'Looks good'"></span>
                                 <span><span x-text="metaDescription.length"></span> / 160</span>
                             </div>
                         </div>
@@ -334,14 +334,14 @@
                             </div>
                         </div>
 
-                        {{-- Live SEO checklist — every check Google actually rewards,
+                        {{-- Live SEO checklist - every check Google actually rewards,
                              recomputed as you type. Green = done, hint tells you the fix. --}}
                         <div class="pt-3 border-t border-gray-100 space-y-1.5 text-[11px]">
                             <div class="font-bold uppercase tracking-wider text-gray-500">SEO checklist</div>
                             <template x-for="check in seoChecks" :key="check.label">
                                 <div class="flex items-start gap-2 py-0.5">
                                     <span class="mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full shrink-0"
-                                          :class="check.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'">
+                                          :class="check.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'">
                                         <svg x-show="check.ok" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                         <svg x-show="!check.ok" class="w-2 h-2" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
                                     </span>
@@ -354,7 +354,7 @@
                         </div>
                     </div>
 
-                    {{-- Featured image — with instant preview the moment a file is
+                    {{-- Featured image - with instant preview the moment a file is
                          picked (not waiting until form submit). URL.createObjectURL
                          is revoked on the next pick to avoid memory leaks. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
@@ -386,7 +386,7 @@
                         </div>
                     </div>
 
-                    {{-- Social card override — same instant-preview pattern. --}}
+                    {{-- Social card override - same instant-preview pattern. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
                         <h3 class="font-display font-bold text-gray-900">Social-card image</h3>
                         <template x-if="ogPreview">
@@ -425,7 +425,7 @@
         }
 
         function postEditor({ initialTitle, initialSlug, initialBody, initialMetaTitle, initialMetaDescription, initialKeywords, slugLocked }) {
-            // localStorage key — namespaced per post-id so different posts don't
+            // localStorage key - namespaced per post-id so different posts don't
             // clobber each other's drafts on the same browser.
             const postId = @json($post->id ?? 'new');
             const autosaveKey = 'apnainvoice.blog-draft.' + postId;
@@ -442,11 +442,11 @@
                 wordCount: 0,
                 readingMinutes: 1,
 
-                // Preview state — opens a modal with server-rendered HTML.
+                // Preview state - opens a modal with server-rendered HTML.
                 previewOpen: false,
                 previewHtml: '',
 
-                // Autosave state — stored in localStorage, restored on next load
+                // Autosave state - stored in localStorage, restored on next load
                 // if newer than the server's saved copy.
                 autosaveLabel: '',
                 autosaveTimer: null,
@@ -458,7 +458,7 @@
                 // null until a file is chosen; then a blob: URL via createObjectURL.
                 featuredPreview: null,
                 ogPreview: null,
-                // Body-image upload state — disables the toolbar Image button
+                // Body-image upload state - disables the toolbar Image button
                 // while a request is in flight (prevents double-uploads).
                 imageUploading: false,
 
@@ -507,15 +507,15 @@
 
                     return [
                         { ok: t.length >= 30 && t.length <= 60,
-                          label: 'Title 30–60 chars', hint: t.length < 30 ? 'Too short — add the benefit or year' : t.length > 60 ? 'Too long — Google truncates it' : '' },
+                          label: 'Title 30–60 chars', hint: t.length < 30 ? 'Too short - add the benefit or year' : t.length > 60 ? 'Too long - Google truncates it' : '' },
                         { ok: d.length >= 120 && d.length <= 160,
-                          label: 'Meta description 120–160 chars', hint: d.length === 0 ? 'Write one — it is your ad in the results page' : '' },
+                          label: 'Meta description 120–160 chars', hint: d.length === 0 ? 'Write one - it is your ad in the results page' : '' },
                         { ok: this.wordCount >= 600,
                           label: '600+ words (' + this.wordCount + ')', hint: 'Thin pages rarely rank; 900+ is even better' },
                         { ok: h2Count >= 2,
                           label: '2+ section headings (## )', hint: 'Headings make posts scannable and win featured snippets' },
                         { ok: kw !== '' && t.toLowerCase().includes(kw),
-                          label: 'Focus keyword in title', hint: kw === '' ? 'Add keywords below — the first one is your focus keyword' : 'Use "' + kw + '" in the title' },
+                          label: 'Focus keyword in title', hint: kw === '' ? 'Add keywords below - the first one is your focus keyword' : 'Use "' + kw + '" in the title' },
                         { ok: kw !== '' && first100.includes(kw),
                           label: 'Keyword in first 100 words', hint: 'Google weighs the opening heavily' },
                         { ok: hasInternalLink,
@@ -533,7 +533,7 @@
                     return { tone: 'bad', label: failed + ' checks left' };
                 },
 
-                // ──── Formatting toolbar — wraps selection in markdown ─────────────
+                // ──── Formatting toolbar - wraps selection in markdown ─────────────
                 /**
                  * Replace the textarea selection with markdown syntax. For inline
                  * formats (bold, italic, code, link, image) we wrap the selection;
@@ -637,7 +637,7 @@
                         const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         this.autosaveLabel = 'Saved locally at ' + t;
                     } catch (e) {
-                        // localStorage full / disabled — fail silently.
+                        // localStorage full / disabled - fail silently.
                     }
                 },
                 /**
@@ -651,10 +651,10 @@
                         const snap = JSON.parse(raw);
                         if (!snap || !snap.savedAt) return;
                         // Only show banner if the snapshot is meaningfully different
-                        // from the server-provided body — otherwise it's just noise.
+                        // from the server-provided body - otherwise it's just noise.
                         if ((snap.body || '') === (this.body || '')) return;
                         this.autosaveAvailable = true;
-                        // Human-readable age — "2 minutes ago", "1 hour ago".
+                        // Human-readable age - "2 minutes ago", "1 hour ago".
                         const mins = Math.round((Date.now() - snap.savedAt) / 60000);
                         this.autosaveAge = mins < 1 ? 'just now'
                             : mins < 60 ? mins + ' minute' + (mins > 1 ? 's' : '') + ' ago'

@@ -85,7 +85,7 @@
                     <div class="text-sm">
                         <span class="text-gray-500">Showing</span>
                         <strong class="text-gray-900">{{ $periodLabel }}</strong>
-                        <span class="text-gray-400 ml-2">({{ $periodStart->format('d M Y') }} → {{ $periodEnd->format('d M Y') }})</span>
+                        <span class="text-gray-500 ml-2">({{ $periodStart->format('d M Y') }} → {{ $periodEnd->format('d M Y') }})</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('finance.expenses.export.pdf', $exportQuery) }}"
@@ -130,8 +130,8 @@
             @if ($byCategory->isNotEmpty())
                 <details class="bg-white border border-gray-200 rounded-lg print:hidden" open>
                     <summary class="px-4 py-3 cursor-pointer font-semibold text-sm text-gray-800 flex items-center justify-between">
-                        <span>Category-wise breakdown <span class="text-gray-400 font-normal">({{ $byCategory->count() }})</span></span>
-                        <span class="text-xs text-gray-400">click to collapse</span>
+                        <span>Category-wise breakdown <span class="text-gray-500 font-normal">({{ $byCategory->count() }})</span></span>
+                        <span class="text-xs text-gray-500">click to collapse</span>
                     </summary>
                     <div class="overflow-x-auto border-t border-gray-100">
                         <table class="w-full text-sm">
@@ -153,9 +153,9 @@
                                         </td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums">{{ $cat['count'] }}</td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums">{{ inr($cat['taxable']) }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-emerald-700">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '—' }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-emerald-700">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '-' }}</td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold">{{ inr($cat['taxable'] + $cat['gst']) }}</td>
-                                        <td class="px-4 py-2 text-right text-xs text-gray-500">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '—' }}</td>
+                                        <td class="px-4 py-2 text-right text-xs text-gray-500">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '-' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -216,7 +216,7 @@
                                 @endif
                                 <div class="flex items-center gap-3 text-xs text-gray-500 mt-2">
                                     <span>{{ $e->entry_date->format('d M Y') }}</span>
-                                    <span class="uppercase">{{ $e->payment_method ?: '—' }}</span>
+                                    <span class="uppercase">{{ $e->payment_method ?: '-' }}</span>
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
@@ -245,7 +245,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="bg-white shadow-sm rounded-lg p-8 text-center text-gray-400">
+                    <div class="bg-white shadow-sm rounded-lg p-8 text-center text-gray-500">
                         No expenses in this period.
                         <a href="{{ route('finance.expenses.create') }}" class="block mt-2 text-brand-700 underline">Add your first →</a>
                     </div>
@@ -281,8 +281,8 @@
                                         @endif
                                     </td>
                                     <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($e->amount) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . inr($e->gst_amount) : '—' }}</td>
-                                    <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $e->payment_method ?? '—' }}</td>
+                                    <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . inr($e->gst_amount) : '-' }}</td>
+                                    <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $e->payment_method ?? '-' }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
                                         <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -309,7 +309,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">
+                                <tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">
                                     No expenses in this period. <a href="{{ route('finance.expenses.create') }}" class="text-brand-700 underline">Add one →</a>
                                 </td></tr>
                             @endforelse
@@ -339,7 +339,7 @@
             @page { size: A4 portrait; margin: 10mm; }
             html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
 
-            /* Hide everything by default — navbar, topbar, finance tabs, summary cards, etc. */
+            /* Hide everything by default - navbar, topbar, finance tabs, summary cards, etc. */
             body * { visibility: hidden !important; }
 
             /* Then re-show only the expenses-print-area and its descendants */

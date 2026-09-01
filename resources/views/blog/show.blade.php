@@ -61,7 +61,7 @@
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
     {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
          connection must match. Non-blocking load (media=print → all onload)
-         with a noscript fallback keeps fonts off the critical render path —
+         with a noscript fallback keeps fonts off the critical render path -
          blog articles are the primary organic entry pages. Weights trimmed to
          those actually used (lora body 400/500/700; inter UI; jakarta display). --}}
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
@@ -69,7 +69,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
     @if ($post->featured_image_path)
-        {{-- Preload the cover — it's the article LCP on posts that have one. --}}
+        {{-- Preload the cover - it's the article LCP on posts that have one. --}}
         <link rel="preload" as="image" href="{{ asset('storage/' . $post->featured_image_path) }}" fetchpriority="high">
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -187,7 +187,7 @@
 @endif
 
 <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-    {{-- Table of contents — crawlable jump links (ids stamped server-side in
+    {{-- Table of contents - crawlable jump links (ids stamped server-side in
          renderedBody), shown only when the post has enough structure. --}}
     @php $toc = $post->tableOfContents(); @endphp
     @if (count($toc) >= 3)
@@ -197,7 +197,7 @@
                 @foreach ($toc as $i => $item)
                     <li>
                         <a href="#{{ $item['id'] }}" class="group inline-flex items-baseline gap-2 text-gray-700 hover:text-brand-700">
-                            <span class="text-[11px] font-bold text-gray-400 group-hover:text-brand-500 tabular-nums">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                            <span class="text-[11px] font-bold text-gray-500 group-hover:text-brand-500 tabular-nums">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
                             <span class="group-hover:underline decoration-brand-300 underline-offset-2">{{ $item['text'] }}</span>
                         </a>
                     </li>
@@ -247,11 +247,11 @@
         </div>
     @endif
 
-    {{-- Share row — WhatsApp first (how content actually spreads in India),
+    {{-- Share row - WhatsApp first (how content actually spreads in India),
          then X / LinkedIn / copy link. Plain links, no tracking scripts. --}}
     @php
         $shareUrl = route('blog.show', $post->slug);
-        $shareText = $post->title . ' — ' . $shareUrl;
+        $shareText = $post->title . ' - ' . $shareUrl;
     @endphp
     <div class="mt-8 flex flex-wrap items-center gap-2 text-sm">
         <span class="font-semibold text-gray-500 mr-1">Share:</span>
@@ -278,13 +278,13 @@
         </button>
     </div>
 
-    {{-- Previous / next — chronological path through the archive for readers
+    {{-- Previous / next - chronological path through the archive for readers
          and crawlers alike. --}}
     @if (($previous ?? null) || ($next ?? null))
         <nav aria-label="More articles" class="mt-10 grid sm:grid-cols-2 gap-3">
             @if ($previous ?? null)
                 <a href="{{ route('blog.show', $previous->slug) }}" class="group rounded-xl ring-1 ring-gray-200 p-4 hover:ring-brand-300 hover:shadow-sm transition">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">← Previous</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">← Previous</div>
                     <div class="mt-1 text-sm font-semibold text-gray-800 group-hover:text-brand-700 leading-snug">{{ $previous->title }}</div>
                 </a>
             @else
@@ -292,7 +292,7 @@
             @endif
             @if ($next ?? null)
                 <a href="{{ route('blog.show', $next->slug) }}" class="group rounded-xl ring-1 ring-gray-200 p-4 hover:ring-brand-300 hover:shadow-sm transition sm:text-right">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Next →</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Next →</div>
                     <div class="mt-1 text-sm font-semibold text-gray-800 group-hover:text-brand-700 leading-snug">{{ $next->title }}</div>
                 </a>
             @endif
@@ -305,9 +305,9 @@
         <p class="mt-2 text-brand-100 max-w-xl">Apna Invoice is a free GST invoicing tool for Indian SMEs, MSMEs and freelancers. Auto CGST/SGST, HSN/SAC search, UPI QR, WhatsApp share, all in 60 seconds.</p>
         <div class="mt-5 flex flex-wrap gap-3">
             @auth
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-saffron-500 hover:bg-saffron-600 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-saffron-700 hover:bg-saffron-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
             @else
-                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-saffron-500 hover:bg-saffron-600 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
+                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-saffron-700 hover:bg-saffron-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
                 <a href="{{ route('login') }}" class="inline-flex items-center px-5 py-3 bg-white/10 hover:bg-white/20 ring-1 ring-white/30 text-white rounded-lg font-semibold transition">Log in</a>
             @endauth
         </div>

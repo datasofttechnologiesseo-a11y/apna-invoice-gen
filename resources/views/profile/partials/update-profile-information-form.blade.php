@@ -48,7 +48,7 @@
         </div>
 
         <div>
-            <x-input-label for="phone">{{ __('Mobile number') }} <span class="font-normal text-gray-400">({{ __('optional') }})</span></x-input-label>
+            <x-input-label for="phone">{{ __('Mobile number') }} <span class="font-normal text-gray-500">({{ __('optional') }})</span></x-input-label>
             <div class="mt-1 relative">
                 <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-500 text-sm font-semibold">+91</span>
                 <x-text-input id="phone" name="phone" type="tel" inputmode="numeric" maxlength="10" class="block w-full pl-10"

@@ -45,7 +45,7 @@
     $twitter = config('seo.twitter_handle');
 
     // Social-card title/description default to the page title/description but
-    // can be overridden for a richer unfurl (e.g. "Invoice INV-042 — ₹12,500").
+    // can be overridden for a richer unfurl (e.g. "Invoice INV-042 - ₹12,500").
     $socialTitle = $ogTitle ?: ($title ?: $siteName);
     $socialDescr = $ogDescription ?: $descr;
 @endphp

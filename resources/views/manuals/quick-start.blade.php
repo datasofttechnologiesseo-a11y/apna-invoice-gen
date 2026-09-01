@@ -41,7 +41,7 @@
     <div class="head">
         <div class="kicker">{{ $quick['title'] }}</div>
         <h1>{{ $quick['subtitle'] }}</h1>
-        <div class="sub">{{ $appName }} &mdash; free GST invoicing for Indian businesses</div>
+        <div class="sub">{{ $appName }} - free GST invoicing for Indian businesses</div>
     </div>
 
     <table class="steps">

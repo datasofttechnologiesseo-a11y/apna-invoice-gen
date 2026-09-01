@@ -39,7 +39,7 @@
     // that don't pass their own jsonLd (legal/utility pages) emit only a
     // breadcrumb and no page-level entity. Tying each page to the site's WebSite
     // entity via isPartOf, and to its breadcrumb, gives Google a clean graph and
-    // makes each URL an addressable entity — better than an orphan document.
+    // makes each URL an addressable entity - better than an orphan document.
     $webPage = [
         '@context' => 'https://schema.org',
         '@type' => 'WebPage',
@@ -138,7 +138,7 @@
                      colour of <p> inside dark widgets embedded in the slot (e.g.
                      the calculator panel), turning them dark-on-dark.
                      Prose-link styling is likewise scoped to links inside
-                     paragraphs and list items ONLY — a blanket [&_a] would
+                     paragraphs and list items ONLY - a blanket [&_a] would
                      restyle button <a> tags (calculator/pricing CTAs) with
                      dark-blue underlined text on their coloured backgrounds. --}}
                 [&_p_a]:text-brand-700 [&_p_a]:font-medium hover:[&_p_a]:text-brand-800 [&_p_a]:underline [&_p_a]:decoration-brand-200 hover:[&_p_a]:decoration-brand-500

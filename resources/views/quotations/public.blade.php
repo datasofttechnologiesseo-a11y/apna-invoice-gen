@@ -5,7 +5,7 @@
     $symbol = ($quotation->currency ?: 'INR') === 'INR' ? '₹' : e($quotation->currency) . ' ';
     $grand = $symbol . number_format((float) $quotation->grand_total, 2);
     $status = $quotation->effectiveStatus();
-    $ogTitle = 'Quotation ' . $number . ' from ' . ($c?->name ?: 'a business') . ' — ' . $grand;
+    $ogTitle = 'Quotation ' . $number . ' from ' . ($c?->name ?: 'a business') . ' - ' . $grand;
 @endphp
 <!DOCTYPE html>
 <html lang="en-IN">
@@ -30,7 +30,7 @@
     <div class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div>
-                <div class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Quotation no.</div>
+                <div class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Quotation no.</div>
                 <div class="text-lg font-bold text-gray-900">{{ $number }}</div>
             </div>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-brand-100 text-brand-800 ring-1 ring-brand-200 capitalize">{{ $status }}</span>
@@ -75,7 +75,7 @@
            class="inline-flex items-center gap-2 text-brand-700 hover:text-brand-800 font-semibold">
             Make your own quotes & GST invoices free →
         </a>
-        <p class="mt-1 text-xs text-gray-400">Powered by Apna Invoice — free GST invoicing for Indian businesses</p>
+        <p class="mt-1 text-xs text-gray-500">Powered by Apna Invoice - free GST invoicing for Indian businesses</p>
     </div>
 </main>
 

@@ -6,16 +6,16 @@ return [
 
     'legal_name' => 'Datasoft Technologies',
 
-    // Appended after the site name when a page passes no title of its own —
+    // Appended after the site name when a page passes no title of its own -
     // must NOT contain the brand again (the component prepends it).
     'title_suffix' => ' | Best Free GST Invoice & Bill Generator for India',
 
-    // Kept under ~160 chars — Google truncates around there, so the value
+    // Kept under ~160 chars - Google truncates around there, so the value
     // proposition and CTA must fit inside the visible snippet.
     'description' => 'Free GST invoice generator for India. Auto CGST/SGST/IGST, HSN/SAC, UPI QR & WhatsApp share in 60 seconds. Unlimited invoices, no card needed.',
 
     'keywords' => implode(', ', [
-        // Primary head terms — what users search for to find a tool
+        // Primary head terms - what users search for to find a tool
         'best invoice generator India',
         'top invoice generator',
         'best bill generator online',

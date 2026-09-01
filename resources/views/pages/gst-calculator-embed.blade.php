@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>GST Calculator — Apna Invoice</title>
+    <title>GST Calculator - Apna Invoice</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>body { background: transparent; }</style>
 </head>
@@ -67,7 +67,7 @@
     <div class="mt-2 text-center">
         <a href="{{ url('/gst-calculator') }}?utm_source=embed&utm_medium=widget&utm_campaign=powered_by"
            target="_blank" rel="noopener"
-           class="text-xs text-gray-400 hover:text-brand-700">Powered by <strong>Apna Invoice</strong> — free GST calculator &amp; invoicing</a>
+           class="text-xs text-gray-500 hover:text-brand-700">Powered by <strong>Apna Invoice</strong> - free GST calculator &amp; invoicing</a>
     </div>
 </div>
 

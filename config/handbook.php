@@ -7,15 +7,15 @@
  * and later to an on-site HTML page, without the two drifting apart. Block
  * types understood by resources/views/manuals/_blocks.blade.php:
  *
- *   p     — a paragraph                      ['type' => 'p', 'text' => '...']
- *   list  — bullet points                    ['type' => 'list', 'items' => [...]]
- *   steps — a numbered sequence              ['type' => 'steps', 'items' => [...]]
- *   note  — a labelled callout               ['type' => 'note', 'label' => '...', 'text' => '...']
- *   table — a data table                     ['type' => 'table', 'head' => [...], 'rows' => [[...]]]
+ *   p     - a paragraph                      ['type' => 'p', 'text' => '...']
+ *   list  - bullet points                    ['type' => 'list', 'items' => [...]]
+ *   steps - a numbered sequence              ['type' => 'steps', 'items' => [...]]
+ *   note  - a labelled callout               ['type' => 'note', 'label' => '...', 'text' => '...']
+ *   table - a data table                     ['type' => 'table', 'head' => [...], 'rows' => [[...]]]
  *
  * Written in plain English for readers who use English as a second language:
  * short sentences, no idioms, and every GST term explained the first time it
- * appears. Devanagari is deliberately avoided — the PDF font (DejaVu Sans)
+ * appears. Devanagari is deliberately avoided - the PDF font (DejaVu Sans)
  * has no Devanagari glyphs and would render empty boxes.
  */
 return [
@@ -29,7 +29,7 @@ return [
         'steps' => [
             [
                 'title' => 'Create your account',
-                'text' => 'Enter your name, mobile number and email. We send a 6-digit code to your email — type it in to finish. No credit card is needed.',
+                'text' => 'Enter your name, mobile number and email. We send a 6-digit code to your email - type it in to finish. No credit card is needed.',
             ],
             [
                 'title' => 'Add your business',
@@ -57,14 +57,14 @@ return [
             'title' => 'What this software does',
             'blocks' => [
                 ['type' => 'p', 'text' => 'Apna Invoice makes GST bills for Indian businesses. You enter what you sold and to whom. The software works out the tax, gives the bill a proper number, and creates a PDF you can send on WhatsApp or email.'],
-                ['type' => 'p', 'text' => 'It is built for people who are not accountants. You do not need to know which tax applies — the software decides that from your state and your customer\'s state.'],
+                ['type' => 'p', 'text' => 'It is built for people who are not accountants. You do not need to know which tax applies - the software decides that from your state and your customer\'s state.'],
                 ['type' => 'list', 'items' => [
-                    'Tax invoices — the normal GST bill for a sale.',
-                    'Quotations — a price offer, which can become an invoice later.',
-                    'Credit notes — when a sale is returned or reduced.',
-                    'Cash memos — a simple bill for a cash sale.',
-                    'Payment receipts — proof that money came in.',
-                    'GST reports — GSTR-1 and GSTR-3B summaries for filing.',
+                    'Tax invoices - the normal GST bill for a sale.',
+                    'Quotations - a price offer, which can become an invoice later.',
+                    'Credit notes - when a sale is returned or reduced.',
+                    'Cash memos - a simple bill for a cash sale.',
+                    'Payment receipts - proof that money came in.',
+                    'GST reports - GSTR-1 and GSTR-3B summaries for filing.',
                 ]],
                 ['type' => 'note', 'label' => 'Good to know', 'text' => 'You do not need a GST number to use Apna Invoice. If you are not registered, leave the GSTIN field empty and the software makes a simple bill of supply instead of a tax invoice.'],
             ],
@@ -81,7 +81,7 @@ return [
                     'We send a 6-digit code to your email. Type it in the box. It submits on its own once all six digits are in.',
                 ]],
                 ['type' => 'p', 'text' => 'You can also click Sign up with Google. That skips the password, but we still ask for your mobile number so our team can help you if you get stuck.'],
-                ['type' => 'note', 'label' => 'If the code does not arrive', 'text' => 'Check your Spam and Promotions folders first — it can take up to a minute. You can ask for a new code after 30 seconds, up to 3 times. The code is valid for 10 minutes and you get 5 tries to enter it. If it still does not reach you, message us on WhatsApp and we will verify you by hand.'],
+                ['type' => 'note', 'label' => 'If the code does not arrive', 'text' => 'Check your Spam and Promotions folders first - it can take up to a minute. You can ask for a new code after 30 seconds, up to 3 times. The code is valid for 10 minutes and you get 5 tries to enter it. If it still does not reach you, message us on WhatsApp and we will verify you by hand.'],
                 ['type' => 'p', 'text' => 'Your account is created only after the code is confirmed, so nothing is saved until you finish this step.'],
             ],
         ],
@@ -91,12 +91,12 @@ return [
             'blocks' => [
                 ['type' => 'p', 'text' => 'After signing up you land on a short setup form. Only two things are needed to start billing.'],
                 ['type' => 'steps', 'items' => [
-                    'Business name — this prints at the top of every invoice as your letterhead.',
-                    'State — this decides whether a sale is taxed as CGST plus SGST, or as IGST.',
+                    'Business name - this prints at the top of every invoice as your letterhead.',
+                    'State - this decides whether a sale is taxed as CGST plus SGST, or as IGST.',
                 ]],
                 ['type' => 'p', 'text' => 'Everything else sits under Add more details and can be filled in later from Company settings: your address, PAN, logo, bank account, UPI ID and invoice number format.'],
                 ['type' => 'p', 'text' => 'If you have a GSTIN, type it in the box. Your state is selected automatically from the first two digits, which are the state code. The address fields then become required, because GST Rule 46 says a tax invoice must carry the supplier\'s registered address.'],
-                ['type' => 'note', 'label' => 'GST rule', 'text' => 'A GSTIN is always stored and shown in capital letters. Type it in small letters if you like — the software converts it for you, everywhere in the app and on every PDF.'],
+                ['type' => 'note', 'label' => 'GST rule', 'text' => 'A GSTIN is always stored and shown in capital letters. Type it in small letters if you like - the software converts it for you, everywhere in the app and on every PDF.'],
                 ['type' => 'p', 'text' => 'By default your bills are numbered like INV/2026-27/0001. The number resets to 0001 on 1 April each year, which is the accepted practice for a financial year series under Rule 46(a). You can change the prefix in Company settings.'],
                 ['type' => 'p', 'text' => 'If you add a UPI ID, a scan-and-pay QR code is printed on every invoice PDF automatically. Customers scan it with any UPI app and pay you directly. Bank name, account number and IFSC appear in the payment block on the bill.'],
             ],
@@ -108,7 +108,7 @@ return [
                 ['type' => 'p', 'text' => 'Save a customer once and reuse them on every future bill. Only name and state are required. The state matters because it decides the tax split. Address, phone and email are optional.'],
                 ['type' => 'p', 'text' => 'Add a GSTIN only if your customer is GST-registered. That makes the sale B2B, which is reported separately in GSTR-1. Without a GSTIN the sale is treated as B2C.'],
                 ['type' => 'note', 'label' => 'Faster way', 'text' => 'You do not have to leave the invoice screen to add a customer. Start typing a name in the customer box and choose add new. A small window opens, you fill in name and state, and you are back on the invoice.'],
-                ['type' => 'p', 'text' => 'Each customer also has a ledger — a running statement of every bill raised to them and every payment received. You can download it as a PDF if they ask for an account statement.'],
+                ['type' => 'p', 'text' => 'Each customer also has a ledger - a running statement of every bill raised to them and every payment received. You can download it as a PDF if they ask for an account statement.'],
                 ['type' => 'p', 'text' => 'Saving products is optional but saves typing. For anything you sell regularly, save it once with its name, HSN or SAC code, unit, price and GST rate. On future invoices, type the first few letters and the rest fills in. HSN codes are for goods and SAC codes are for services.'],
             ],
         ],
@@ -138,7 +138,7 @@ return [
             'title' => 'Issue the invoice',
             'blocks' => [
                 ['type' => 'p', 'text' => 'A draft is not a legal bill yet. To make it official, open it and click Issue. Three things happen at that moment: the invoice gets its permanent number from your series, the invoice is locked so amounts and items can no longer be edited, and the GST invoice PDF becomes available.'],
-                ['type' => 'note', 'label' => 'Careful', 'text' => 'Once issued, an invoice cannot be edited or deleted. This is deliberate — GST law does not allow you to quietly change a bill you have already given a customer. If something is wrong, issue a credit note against it instead, or cancel it with a recorded reason.'],
+                ['type' => 'note', 'label' => 'Careful', 'text' => 'Once issued, an invoice cannot be edited or deleted. This is deliberate - GST law does not allow you to quietly change a bill you have already given a customer. If something is wrong, issue a credit note against it instead, or cancel it with a recorded reason.'],
                 ['type' => 'table', 'head' => ['Status', 'Meaning'], 'rows' => [
                     ['Draft', 'Still being written. No number, fully editable, not a legal document.'],
                     ['Issued', 'Final and locked. Has a permanent number. Money not received yet.'],
@@ -153,10 +153,10 @@ return [
             'title' => 'Share it and get paid',
             'blocks' => [
                 ['type' => 'list', 'items' => [
-                    'WhatsApp — opens WhatsApp with a ready message and the invoice link.',
-                    'Email — sends the PDF to your customer\'s email address.',
-                    'Public link — a secure link your customer can open without logging in. It works for 30 days.',
-                    'Download PDF — save or print it. There is also a thermal-printer layout for shop counters.',
+                    'WhatsApp - opens WhatsApp with a ready message and the invoice link.',
+                    'Email - sends the PDF to your customer\'s email address.',
+                    'Public link - a secure link your customer can open without logging in. It works for 30 days.',
+                    'Download PDF - save or print it. There is also a thermal-printer layout for shop counters.',
                 ]],
                 ['type' => 'p', 'text' => 'When money comes in, open the invoice and click Record payment. Enter the amount, the date and how it was paid. The invoice moves to Partly paid or Paid on its own, and a numbered payment receipt is created that you can send to the customer.'],
                 ['type' => 'p', 'text' => 'Part payments are fully supported. Record each one as it arrives and the balance updates every time.'],
@@ -183,7 +183,7 @@ return [
                     'Enter the GST amount separately if the bill had GST on it.',
                     'Tick ITC eligible only if you can legally claim that credit.',
                 ]],
-                ['type' => 'note', 'label' => 'Careful', 'text' => 'Some expenses are blocked from input tax credit under Section 17(5) — staff food, personal vehicles and similar. Leave the ITC box unticked for those. Anything unticked is excluded from your GSTR-3B credit figure, which keeps your return honest.'],
+                ['type' => 'note', 'label' => 'Careful', 'text' => 'Some expenses are blocked from input tax credit under Section 17(5) - staff food, personal vehicles and similar. Leave the ITC box unticked for those. Anything unticked is excluded from your GSTR-3B credit figure, which keeps your return honest.'],
             ],
         ],
 
@@ -229,7 +229,7 @@ return [
                     ['IGST', 'Single tax on a sale to another state.'],
                     ['Place of supply', 'The state that decides which tax applies.'],
                     ['Taxable value', 'The amount before GST is added.'],
-                    ['ITC', 'Input tax credit — GST you paid on purchases and can set off.'],
+                    ['ITC', 'Input tax credit - GST you paid on purchases and can set off.'],
                     ['Outstanding', 'Money billed but not yet received.'],
                     ['Receivables aging', 'A list of unpaid bills grouped by how late they are.'],
                 ]],

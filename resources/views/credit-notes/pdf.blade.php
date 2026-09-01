@@ -3,7 +3,7 @@
     $c = $invoice->company;
     $cust = $invoice->customer;
     $print = $print ?? true;
-    // Palette — black/white for print-friendly PDF.
+    // Palette - black/white for print-friendly PDF.
     $accent = $print ? '#111111' : '#7c2d12';
     $divider = $print ? '#cccccc' : '#e5e7eb';
     $muted = '#555555';

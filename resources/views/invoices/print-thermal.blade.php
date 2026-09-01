@@ -1,7 +1,7 @@
 {{--
     Thermal 80mm receipt layout.
 
-    Designed for 80mm thermal printers (also works on 58mm — most browsers
+    Designed for 80mm thermal printers (also works on 58mm - most browsers
     scale down). Used at retail counters (kirana, restaurants, salons) where
     A4 is overkill and the customer just needs a slip.
 
@@ -15,7 +15,7 @@
 
     GST detail is COMPACT: subtotal + CGST+SGST (or IGST) + grand total only.
     Full HSN/SAC/rate breakdown stays on the A4 PDF for the customer/accountant
-    record — the receipt is for "here, sir, your bill" delivery.
+    record - the receipt is for "here, sir, your bill" delivery.
 --}}
 <!DOCTYPE html>
 <html>
@@ -89,7 +89,7 @@
             word-break: break-word;
         }
 
-        /* Print preview chrome — hidden when actually printing. */
+        /* Print preview chrome - hidden when actually printing. */
         .no-print { display: none; }
         @media screen {
             body { background: #f3f4f6; padding: 16px; }
@@ -146,7 +146,7 @@
 
 <div class="no-print">
     <div style="font-size:11px; color:#4b5563; margin-bottom:6px;">
-        Preview shown enlarged &mdash; prints at true 80&nbsp;mm width.
+        Preview shown enlarged - prints at true 80&nbsp;mm width.
     </div>
     <button onclick="window.print()">Print receipt</button>
     <a href="{{ route('invoices.show', $invoice) }}">Back</a>
@@ -161,7 +161,7 @@
 
 <div class="receipt">
     {{-- HEADER: business name + minimal address. Thermal users don't want a logo
-         block (slow to print, wastes paper) — text-only is intentional. --}}
+         block (slow to print, wastes paper) - text-only is intentional. --}}
     <div class="center biz">{{ $c->name }}</div>
     @if ($c->address_line1 || $c->city)
         <div class="center small">
@@ -217,7 +217,7 @@
             $qtyStr = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.');
         @endphp
         @php
-            // Same display fallback as the A4 PDF — render product name if the
+            // Same display fallback as the A4 PDF - render product name if the
             // saved description is blank or just "0" from a legacy save.
             $desc = trim((string) $item->description);
             $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
@@ -237,14 +237,14 @@
 
     <hr class="dash">
 
-    {{-- TOTALS — order matters: subtotal → tax breakdown → grand total --}}
+    {{-- TOTALS - order matters: subtotal → tax breakdown → grand total --}}
     <div class="row">
         <span>Subtotal</span>
         <span>₹{{ number_format((float) $invoice->subtotal, 2) }}</span>
     </div>
 
     @if ($reverseCharge)
-        <div class="xs" style="margin-top:2px;">Reverse charge — GST payable by recipient (Sec 9(3)/9(4))</div>
+        <div class="xs" style="margin-top:2px;">Reverse charge - GST payable by recipient (Sec 9(3)/9(4))</div>
     @else
         @if ($invoice->is_interstate)
             <div class="row small">
@@ -294,7 +294,7 @@
 
     <div class="xs center">{{ $amountInWords }}</div>
 
-    {{-- UPI quick-pay hint — kirana receipts often show this. --}}
+    {{-- UPI quick-pay hint - kirana receipts often show this. --}}
     @if ($c->upi_id)
         <hr class="dash">
         <div class="center small">Pay via UPI: <span class="bold">{{ $c->upi_id }}</span></div>
@@ -309,12 +309,12 @@
 
     @if ($invoice->isDraft())
         <div class="center xs" style="margin-top:4px; border:1px dashed #000; padding:2px;">
-            *** DRAFT — not a tax invoice ***
+            *** DRAFT - not a tax invoice ***
         </div>
     @endif
 </div>
 
-{{-- Auto-print on load — kirana counter workflow: click "Thermal print" →
+{{-- Auto-print on load - kirana counter workflow: click "Thermal print" →
      receipt prints → done. Short delay so the user can see the preview if
      they want to cancel. --}}
 <script>

@@ -38,6 +38,32 @@ input[type="number"],
     font-feature-settings: "tnum" 1;
 }
 
+/* ----------------------------------------------------------------
+ * Control borders — WCAG 1.4.11 (non-text contrast)
+ *
+ * The boundary of an input has to reach 3:1 against the surface behind
+ * it, or people cannot see where the field is. Tailwind's border-gray-300
+ * (#d1d5db) manages 1.47:1 on white, so every form in the app failed.
+ *
+ * #878fa0 measures 3.09:1 on white — it clears the bar while staying far
+ * lighter than gray-500 (4.83:1), which would read as a heavy outline.
+ * Scoped to form controls by element + class so card edges, table rules
+ * and dividers, which are decorative and exempt, are left alone. The
+ * class in the selector is what lets this beat the utility it overrides.
+ * -------------------------------------------------------------- */
+input:not([type="checkbox"]):not([type="radio"]).border-gray-300,
+select.border-gray-300,
+textarea.border-gray-300 {
+    border-color: #878fa0;
+}
+
+/* Checkboxes and radios ship with a transparent border, so their outline
+   comes from the box itself and must carry the same 3:1. */
+input[type="checkbox"],
+input[type="radio"] {
+    border-color: #878fa0;
+}
+
 /* Alpine.js: hide elements tagged with x-cloak until Alpine initialises. */
 [x-cloak] { display: none !important; }
 

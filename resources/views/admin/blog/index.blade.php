@@ -63,7 +63,7 @@
                                             <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">Draft</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $p->published_at?->format('d M Y') ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $p->published_at?->format('d M Y') ?? '-' }}</td>
                                     <td class="px-4 py-3 text-right font-mono text-sm">{{ number_format($p->view_count) }}</td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         @if ($p->isPublished())

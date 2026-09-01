@@ -24,13 +24,13 @@
     <span class="self-center mx-1 text-gray-300">·</span>
     <a href="{{ route('finance.aging') }}"
        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors {{ $current === 'aging' ? 'bg-accent-700 text-white' : 'text-accent-700 hover:bg-accent-50' }}"
-       title="Receivables aging — who owes you what, bucketed by days overdue">
+       title="Party Outstanding - who owes you what, bucketed by days overdue">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Aging
     </a>
     <a href="{{ route('finance.gstr3b') }}"
        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors {{ $current === 'gstr3b' ? 'bg-money-700 text-white' : 'text-money-700 hover:bg-money-50' }}"
-       title="GSTR-3B summary — your monthly return data, computed from books">
+       title="GSTR-3B summary - your monthly return data, computed from books">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
         GSTR-3B
     </a>

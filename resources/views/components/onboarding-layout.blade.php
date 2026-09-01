@@ -56,7 +56,7 @@
             <div class="flex items-center gap-3 flex-1 {{ $i < count($steps) - 1 ? '' : '' }}">
                 <div @class([
                     'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ring-4',
-                    'bg-money-500 text-white ring-money-100' => $done,
+                    'bg-money-700 text-white ring-money-100' => $done,
                     'bg-brand-700 text-white ring-brand-100' => $active,
                     'bg-gray-200 text-gray-500 ring-transparent' => ! $done && ! $active,
                 ])>

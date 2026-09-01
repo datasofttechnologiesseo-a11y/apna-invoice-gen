@@ -1,4 +1,4 @@
-<x-layouts.admin title="Data breaches" subtitle="Personal-data breach register — DPDP Act §8(6)">
+<x-layouts.admin title="Data breaches" subtitle="Personal-data breach register - DPDP Act §8(6)">
     <x-slot name="action">
         <a href="{{ route('admin.breaches.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>

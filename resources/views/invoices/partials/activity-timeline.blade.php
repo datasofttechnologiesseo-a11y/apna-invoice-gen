@@ -13,18 +13,18 @@
         'sub' => 'Invoice draft was started',
     ];
 
-    // 2. Finalized — when an invoice number was assigned and amounts locked
+    // 2. Finalized - when an invoice number was assigned and amounts locked
     if ($invoice->finalized_at) {
         $events[] = [
             'when' => $invoice->finalized_at,
             'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
             'tone' => 'brand',
             'title' => 'Issued',
-            'sub' => 'Issued as ' . ($invoice->invoice_number ?? 'invoice') . ' — line items locked',
+            'sub' => 'Issued as ' . ($invoice->invoice_number ?? 'invoice') . ' - line items locked',
         ];
     }
 
-    // 3. Each payment received — use created_at (precise timestamp) for the
+    // 3. Each payment received - use created_at (precise timestamp) for the
     // chronological position in the timeline, but show received_at (the user-
     // entered business date) in the visible label.
     foreach ($invoice->payments ?? [] as $payment) {
@@ -53,7 +53,7 @@
         ];
     }
 
-    // 5. Fully paid — derive from balance, anchor to last payment time
+    // 5. Fully paid - derive from balance, anchor to last payment time
     if (! $invoice->isDraft() && (float) $invoice->balance <= 0 && $invoice->payments?->isNotEmpty()) {
         $lastPayment = $invoice->payments->sortByDesc('created_at')->first();
         $events[] = [
@@ -100,9 +100,9 @@
         <div class="flex items-center gap-2 min-w-0">
             <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <h3 class="font-display font-bold text-gray-900 truncate">Activity</h3>
-            <span class="text-[11px] uppercase tracking-wider font-bold text-gray-400 shrink-0">{{ count($events) }} {{ count($events) === 1 ? 'event' : 'events' }}</span>
+            <span class="text-[11px] uppercase tracking-wider font-bold text-gray-500 shrink-0">{{ count($events) }} {{ count($events) === 1 ? 'event' : 'events' }}</span>
         </div>
-        <svg class="w-4 h-4 text-gray-400 transition" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        <svg class="w-4 h-4 text-gray-500 transition" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
     </button>
 
     {{-- Hidden semantic list for screen readers / search engines --}}

@@ -16,7 +16,7 @@
 
     if ($mode === 'short') {
         if (abs($n) >= 10000000) {
-            // ≥ 1 Cr — show as ₹X Cr or ₹X.X Cr (no decimal once we're at hundreds of crores)
+            // ≥ 1 Cr - show as ₹X Cr or ₹X.X Cr (no decimal once we're at hundreds of crores)
             $value = $n / 10000000;
             $formatted = abs($value) >= 100
                 ? number_format($value, 0)
@@ -34,7 +34,7 @@
             $rendered = $symbolPrefix . number_format($n, 0);
         }
     } else {
-        // 'full' mode — Indian lakh/crore comma grouping with 2-decimal paise.
+        // 'full' mode - Indian lakh/crore comma grouping with 2-decimal paise.
         // PHP's number_format uses Western thousand-grouping (,) so we build
         // the lakh-grouping manually: last 3 digits, then groups of 2.
         $negative = $n < 0;

@@ -43,11 +43,11 @@
                                 </div>
                             </div>
                             <p class="text-sm text-gray-700 mt-3">
-                                Use this when you have a <strong>proper bill or tax invoice</strong> from the vendor — paid via bank transfer, UPI, card, or cheque.
+                                Use this when you have a <strong>proper bill or tax invoice</strong> from the vendor - paid via bank transfer, UPI, card, or cheque.
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
                                 <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>GST input credit (ITC) claimable if vendor is GST-registered</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Just fill amount, date &amp; category — fast entry</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Just fill amount, date &amp; category - fast entry</span></li>
                                 <li class="flex items-start gap-1.5"><span class="text-emerald-600 font-bold">✓</span><span>Best for office rent, salaries, SaaS, utilities</span></li>
                             </ul>
                             <div class="mt-4 text-xs text-brand-700 font-semibold inline-flex items-center gap-1">
@@ -73,7 +73,7 @@
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
                                 <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Generates a printable A4 Cash Memo as your purchase voucher</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Auto-creates the matching expense entry — no double work</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>Auto-creates the matching expense entry - no double work</span></li>
                                 <li class="flex items-start gap-1.5"><span class="text-amber-600 font-bold">✓</span><span>FY-based memo number (e.g. CM/26-27/0001) for proper records</span></li>
                             </ul>
                             <div class="mt-4 text-xs text-amber-700 font-semibold inline-flex items-center gap-1 group-hover:underline">
@@ -109,7 +109,7 @@
                         <div>
                             <x-input-label for="category" value="Category *" />
                             <select id="category" name="category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500" required>
-                                <option value="">— Select —</option>
+                                <option value="">- Select -</option>
                                 @foreach (config('expense_categories') as $key => $cfg)
                                     <option value="{{ $key }}" @selected(old('category', $expense->category) === $key) title="{{ $cfg['desc'] }}">{{ $cfg['label'] }}</option>
                                 @endforeach
@@ -148,7 +148,7 @@
                                 <x-text-input id="amount" name="amount" type="number" step="any" min="0" class="block w-full pl-8"
                                               :value="old('amount', $expense->amount)" required />
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">The taxable value — what it actually cost you, before GST.</p>
+                            <p class="mt-1 text-xs text-gray-500">The taxable value - what it actually cost you, before GST.</p>
                             <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                         </div>
                         <div>
@@ -161,7 +161,7 @@
                             <p class="mt-1 text-xs text-gray-500">Enter only if you have a valid tax invoice from the vendor. You can claim this back on GSTR-3B.</p>
                             <x-input-error :messages="$errors->get('gst_amount')" class="mt-2" />
 
-                            {{-- Interstate flag — appears only if GST has been entered. Default unchecked
+                            {{-- Interstate flag - appears only if GST has been entered. Default unchecked
                                  (intra-state) since that's the most common case for a sub-₹5cr business
                                  buying from local vendors. Tick when the supplier billed IGST instead
                                  of CGST+SGST (e.g. SaaS billed from a different state). --}}
@@ -175,7 +175,7 @@
                                 </span>
                             </label>
 
-                            {{-- ITC eligibility (CGST Act §17(5)). Default TICKED — most
+                            {{-- ITC eligibility (CGST Act §17(5)). Default TICKED - most
                                  business purchases are claimable. Untick for blocked
                                  credits so the GSTR-3B helper excludes them. --}}
                             <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
@@ -184,7 +184,7 @@
                                        class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
                                 <span>
                                     <span class="font-medium">Eligible for input tax credit</span>
-                                    <span class="block text-xs text-gray-500">Leave ticked for normal business purchases. Untick for blocked credits under §17(5) — motor vehicles, staff food/catering, personal-use or exempt-supply items — so this GST isn't claimed on GSTR-3B.</span>
+                                    <span class="block text-xs text-gray-500">Leave ticked for normal business purchases. Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use or exempt-supply items - so this GST isn't claimed on GSTR-3B.</span>
                                 </span>
                             </label>
                         </div>

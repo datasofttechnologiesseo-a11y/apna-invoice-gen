@@ -11,7 +11,7 @@
         <h1 class="mt-3 font-display text-xl font-extrabold text-gray-900">
             @if ($name) Almost there, {{ \Illuminate\Support\Str::of($name)->before(' ') }}! @else Almost there! @endif
         </h1>
-        <p class="mt-1 text-sm text-gray-500">Add your mobile number and you're in — your email's already verified by Google.</p>
+        <p class="mt-1 text-sm text-gray-500">Add your mobile number and you're in - your email's already verified by Google.</p>
     </div>
 
     <form method="POST" action="{{ route('register.mobile.store') }}">
@@ -29,7 +29,7 @@
         </x-primary-button>
     </form>
 
-    <p class="mt-4 text-center text-xs text-gray-400">
+    <p class="mt-4 text-center text-xs text-gray-500">
         So our team can reach you on WhatsApp/call to help you get set up. You can opt out of marketing any time.
     </p>
     <x-signup-help />

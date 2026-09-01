@@ -2,7 +2,7 @@
 
     <div class="space-y-6">
 
-        {{-- Headline KPIs — clickable --}}
+        {{-- Headline KPIs - clickable --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             @php
                 $tiles = [

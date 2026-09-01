@@ -22,8 +22,8 @@
             Enter the {{ config('otp.length', 6) }}-digit code we sent to <strong class="text-gray-700">{{ $sentTo }}</strong>.
         </p>
         @if ($isEmail)
-            <p class="mt-2 text-xs text-gray-400">
-                Not in your inbox? Check <strong>Spam</strong> or <strong>Promotions</strong> — it can take up to a minute to arrive.
+            <p class="mt-2 text-xs text-gray-500">
+                Not in your inbox? Check <strong>Spam</strong> or <strong>Promotions</strong> - it can take up to a minute to arrive.
             </p>
         @endif
 
@@ -42,11 +42,11 @@
                 <li @class([
                     'px-2.5 py-1 rounded-full ring-1',
                     'bg-brand-50 text-brand-700 ring-brand-200' => $stepItem['state'] === 'current',
-                    'text-gray-400 ring-gray-200' => $stepItem['state'] !== 'current',
+                    'text-gray-500 ring-gray-200' => $stepItem['state'] !== 'current',
                 ])>{{ $stepItem['label'] }}</li>
             @endforeach
         </ol>
-        <p class="mt-2 text-xs text-gray-400">About a minute from here to your first invoice.</p>
+        <p class="mt-2 text-xs text-gray-500">About a minute from here to your first invoice.</p>
     </div>
 
     @if (session('status'))
@@ -80,7 +80,7 @@
     <div class="mt-5 flex items-center justify-between text-sm">
         <form method="POST" action="{{ route('register.resend') }}">
             @csrf
-            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline focus:outline-none disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed">
+            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline focus:outline-none disabled:text-gray-500 disabled:no-underline disabled:cursor-not-allowed">
                 {{ __('Resend code') }}
             </button>
         </form>
@@ -89,11 +89,11 @@
         </a>
     </div>
 
-    <x-signup-help note="Code not arriving, or entered the wrong number? Message us and we'll get you in — we can verify you manually." />
+    <x-signup-help note="Code not arriving, or entered the wrong number? Message us and we'll get you in - we can verify you manually." />
 
     <script>
         (function () {
-            // Auto-submit the moment all 6 digits are in — one less tap.
+            // Auto-submit the moment all 6 digits are in - one less tap.
             var input = document.getElementById('code');
             var form = document.getElementById('otp-form');
             var len = {{ (int) config('otp.length', 6) }};

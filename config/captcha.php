@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Cloudflare Turnstile — free, privacy-respecting captcha. Required on the
+ * Cloudflare Turnstile - free, privacy-respecting captcha. Required on the
  * public auth endpoints in production to block bot sign-ups / credential
  * stuffing / password-reset floods.
  *

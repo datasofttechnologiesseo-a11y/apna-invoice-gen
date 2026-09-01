@@ -9,7 +9,7 @@
 return [
     'sales_return' => [
         'label' => 'Sales return / goods returned',
-        'hint' => 'Customer returned goods — full or partial.',
+        'hint' => 'Customer returned goods - full or partial.',
     ],
     'rate_correction' => [
         'label' => 'Rate / quantity correction',

@@ -8,7 +8,7 @@
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background: #fff; border-radius: 8px; overflow: hidden;">
                 <tr>
                     <td style="padding: 20px 28px; background: #1e3a8a; color: #fff;">
-                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ config('app.name') }} — Contact form</div>
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ config('app.name') }} - Contact form</div>
                         <div style="font-size: 18px; font-weight: 700; margin-top: 4px;">{{ $subjectLine }}</div>
                     </td>
                 </tr>
@@ -28,7 +28,7 @@
                         </table>
                         <div style="padding: 14px 16px; background: #f9fafb; border-left: 3px solid #1e3a8a; white-space: pre-line;">{{ $messageBody }}</div>
                         <p style="margin-top: 20px; font-size: 12px; color: #6b7280;">
-                            Reply to this email to respond — we've set Reply-To to the sender's address.
+                            Reply to this email to respond - we've set Reply-To to the sender's address.
                         </p>
                     </td>
                 </tr>

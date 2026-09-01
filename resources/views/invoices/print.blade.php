@@ -25,7 +25,7 @@
             .invoice-doc * {
                 color: #000 !important;
             }
-            .invoice-doc .text-gray-400,
+            .invoice-doc .text-gray-500,
             .invoice-doc .text-gray-500,
             .invoice-doc .text-gray-600 {
                 color: #444 !important;

@@ -1,7 +1,7 @@
-<x-app-layout :title="$quotation->exists ? 'Edit quotation' : 'New quotation'">
+<x-app-layout :title="$quotation->exists ? 'Edit Quotation' : 'New Quotation'">
     <x-slot name="header">
         <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
-            {{ $quotation->exists ? 'Edit ' . $quotation->displayNumber() : 'New quotation' }}
+            {{ $quotation->exists ? 'Edit ' . $quotation->displayNumber() : 'New Quotation' }}
         </h1>
     </x-slot>
 
@@ -30,7 +30,7 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-breadcrumbs :items="[
                 ['label' => 'Quotations', 'href' => route('quotations.index')],
-                ['label' => $quotation->exists ? $quotation->displayNumber() : 'New quotation'],
+                ['label' => $quotation->exists ? $quotation->displayNumber() : 'New Quotation'],
             ]" />
 
             @if ($errors->any())
@@ -46,7 +46,7 @@
                     </svg>
                     <div class="text-sm">
                         <div class="font-semibold">Quotation, not a tax invoice.</div>
-                        <div class="mt-0.5">A quote is a price proposal you send before a sale. It doesn't go on GSTR-1 or GSTR-3B. When the customer accepts, click <strong>Convert to Invoice</strong> — that's when GST is officially charged.</div>
+                        <div class="mt-0.5">A quote is a price proposal you send before a sale. It doesn't go on GSTR-1 or GSTR-3B. When the customer accepts, click <strong>Convert to Invoice</strong> - that's when GST is officially charged.</div>
                     </div>
                 </div>
             @endunless
@@ -61,10 +61,10 @@
                             <x-input-label for="customer_id" value="Customer *" />
                             <div class="flex items-center gap-2 mt-1">
                                 <select id="customer_id" name="customer_id" x-model="customerId" @change="recompute()" class="block w-full border-gray-300 rounded-md shadow-sm" required>
-                                    <option value="">— Select customer —</option>
+                                    <option value="">- Select customer -</option>
                                     @foreach ($customers as $c)
                                         <option value="{{ $c->id }}" @selected(old('customer_id', $quotation->customer_id) == $c->id)>
-                                            {{ $c->name }}{{ $c->state?->name ? ' — ' . $c->state->name : '' }}
+                                            {{ $c->name }}{{ $c->state?->name ? ' - ' . $c->state->name : '' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -73,15 +73,14 @@
                         </div>
 
                         <div>
-                            <x-input-label value="Quote no." />
-                            <div class="mt-1 py-2 font-mono text-sm">
-                                @if ($quotation->exists && $quotation->quote_number)
-                                    <span class="text-gray-900 font-semibold">{{ $quotation->quote_number }}</span>
-                                @else
-                                    <span class="text-brand-700 font-semibold">{{ $previewNumber }}</span>
-                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned when sent</span>
-                                @endif
-                            </div>
+                            <x-input-label for="quote_number" value="Quote no." />
+                            <x-text-input id="quote_number" name="quote_number" type="text" maxlength="50"
+                                          class="mt-1 block w-full font-mono text-sm"
+                                          :value="old('quote_number', $quotation->quote_number ?: $previewNumber)" />
+                            <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
+                                Edit if you use your own series
+                            </p>
+                            <x-input-error :messages="$errors->get('quote_number')" class="mt-1" />
                         </div>
 
                         <input type="hidden" name="currency" value="INR">
@@ -123,7 +122,7 @@
                     </div>
                 </div>
 
-                {{-- Quote details — subject, reference and delivery period are
+                {{-- Quote details - subject, reference and delivery period are
                      standard on Indian B2B quotations. All optional, but having
                      them surfaced means the operator can fill them in seconds
                      instead of cramming them into the free-text notes field. --}}
@@ -133,7 +132,7 @@
                         <x-text-input id="subject" name="subject" type="text" class="mt-1 block w-full"
                                       :value="old('subject', $quotation->subject)"
                                       placeholder="e.g. Quotation for supply of office furniture" maxlength="200" />
-                        <p class="mt-1 text-[10px] text-gray-500">A one-line title shown at the top of the PDF — helps the customer file it against their RFQ.</p>
+                        <p class="mt-1 text-[10px] text-gray-500">A one-line title shown at the top of the PDF - helps the customer file it against their RFQ.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -141,14 +140,14 @@
                             <x-text-input id="reference" name="reference" type="text" class="mt-1 block w-full"
                                           :value="old('reference', $quotation->reference)"
                                           placeholder="e.g. Your enquiry ABC/RFQ/26-27/021 dated 12-Apr-2026" maxlength="100" />
-                            <p class="mt-1 text-[10px] text-gray-500">Quote your customer's enquiry number — lets them track this against their PO chain.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Quote your customer's enquiry number - lets them track this against their PO chain.</p>
                         </div>
                         <div>
                             <x-input-label for="delivery_period" value="Delivery period (optional)" />
                             <x-text-input id="delivery_period" name="delivery_period" type="text" class="mt-1 block w-full"
                                           :value="old('delivery_period', $quotation->delivery_period)"
                                           placeholder="e.g. 15-20 working days from order confirmation" maxlength="100" />
-                            <p class="mt-1 text-[10px] text-gray-500">Standard on Indian quotations — sets buyer expectation upfront.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Standard on Indian quotations - sets buyer expectation upfront.</p>
                         </div>
                     </div>
                 </div>
@@ -176,7 +175,7 @@
                                         <label class="text-xs text-gray-500 font-semibold">Product</label>
                                         <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
                                         <select @change="pickProduct(idx, $event.target.value)" class="mt-1 block w-full border-gray-300 rounded text-sm">
-                                            <option value="">— Custom —</option>
+                                            <option value="">- Custom -</option>
                                             @foreach ($productIndex as $p)
                                                 <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
                                             @endforeach
@@ -185,7 +184,7 @@
                                 @endif
                                 <div>
                                     <label class="text-xs text-gray-500 font-semibold">Description</label>
-                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -215,7 +214,7 @@
                                         <label class="text-xs text-gray-500 font-semibold">GST rate</label>
                                         <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                             @foreach (config('gst.rates') as $r)
-                                                <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                                <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' - ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -258,14 +257,14 @@
                                             <td class="px-2 py-2">
                                                 <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
                                                 <select @change="pickProduct(idx, $event.target.value)" class="w-40 border-gray-300 rounded text-sm">
-                                                    <option value="">— Custom —</option>
+                                                    <option value="">- Custom -</option>
                                                     @foreach ($productIndex as $p)
                                                         <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
                                                     @endforeach
                                                 </select>
                                             </td>
                                         @endif
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
@@ -278,7 +277,7 @@
                                         <td class="px-2 py-2">
                                             <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
-                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' - ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -307,7 +306,7 @@
                                 <x-input-label for="terms" value="Terms & conditions" />
                                 <textarea id="terms" name="terms" rows="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm font-mono text-xs"
                                           placeholder="1. Payment: 50% advance on order, balance against proforma before dispatch.&#10;2. Taxes: GST extra at applicable rates.&#10;3. Freight: At actuals, on customer's account.&#10;4. Warranty: 12 months from date of dispatch.&#10;5. Disputes: Subject to {{ $company->city ?? 'local' }} jurisdiction.">{{ old('terms', $quotation->terms ?? $company->default_terms) }}</textarea>
-                                <p class="mt-1 text-[10px] text-gray-500">Numbered terms render cleanly on the PDF. The placeholder shows a typical Indian B2B set — adapt to your business.</p>
+                                <p class="mt-1 text-[10px] text-gray-500">Numbered terms render cleanly on the PDF. The placeholder shows a typical Indian B2B set - adapt to your business.</p>
                             </div>
                             <div>
                                 <x-input-label for="notes" value="Notes (shown below Terms)" />
@@ -321,7 +320,7 @@
                             <div class="flex justify-between" x-show="!isInterstate"><span>SGST</span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
                             <div class="flex justify-between" x-show="isInterstate"><span>IGST</span><span class="font-mono" x-text="fmt(totals.igst)"></span></div>
                             <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono" x-text="fmt(totals.grandTotal)"></span></div>
-                            <p class="pt-2 text-[11px] text-gray-500">This is a price proposal — no GST is charged or filed yet. Convert to a tax invoice after the customer confirms.</p>
+                            <p class="pt-2 text-[11px] text-gray-500">This is a price proposal - no GST is charged or filed yet. Convert to a tax invoice after the customer confirms.</p>
                         </div>
                     </div>
                 </div>
@@ -334,7 +333,7 @@
         </div>
     </div>
 
-    {{-- Inline "+ New customer" modal — adds without leaving the page so typed
+    {{-- Inline "+ New customer" modal - adds without leaving the page so typed
          line items stay intact. --}}
     <x-quick-customer-modal :states="$states" />
 
@@ -368,7 +367,7 @@
                 },
                 init() { this.recompute(); },
                 /**
-                 * Wired to @customer-added.window — pushes the new customer
+                 * Wired to @customer-added.window - pushes the new customer
                  * (saved by the inline modal) into the dropdown and selects it,
                  * so the quotation's typed line items aren't lost.
                  */
@@ -378,7 +377,7 @@
                     if (select) {
                         const option = document.createElement('option');
                         option.value = c.id;
-                        option.textContent = c.name + (c.state_name ? ' — ' + c.state_name : '');
+                        option.textContent = c.name + (c.state_name ? ' - ' + c.state_name : '');
                         select.appendChild(option);
                     }
                     this.customerStates[c.id] = c.state_id;

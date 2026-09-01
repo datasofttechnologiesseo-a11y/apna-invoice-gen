@@ -3,7 +3,7 @@
     $url = url('/gst-calculator');
 
     // WebApplication (the calculator is a real tool), HowTo (how to use it) and
-    // FAQPage (the questions below) — three rich-result types on one page.
+    // FAQPage (the questions below) - three rich-result types on one page.
     $appSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'WebApplication',
@@ -64,7 +64,7 @@
     title="Free GST Calculator India"
     eyebrow="Free tool"
     lead="Add or remove GST at 5%, 12%, 18% or 28% in one tap. See the CGST and SGST split for same-state sales, or IGST for inter-state, with no sign up."
-    description="Free online GST calculator for India. Add or remove GST at 5, 12, 18 & 28% with automatic CGST, SGST & IGST split — inclusive or exclusive, no sign-up."
+    description="Free online GST calculator for India. Add or remove GST at 5, 12, 18 & 28% with automatic CGST, SGST & IGST split - inclusive or exclusive, no sign-up."
     keywords="free GST calculator, GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, GST percentage calculator"
     :json-ld="[$appSchema, $howToSchema, $faqSchema]">
 
@@ -98,10 +98,10 @@
                     <div class="flex flex-wrap gap-2">
                         <template x-for="r in [5,12,18,28]" :key="r">
                             <button type="button" @click="rate=r; recompute()"
-                                    :class="rate===r ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-gray-300'"
+                                    :class="rate===r ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-[#878fa0]'"
                                     class="px-4 py-2 rounded-lg text-sm font-semibold ring-1 transition" x-text="r + '%'"></button>
                         </template>
-                        <div class="flex items-center gap-1.5 px-2 rounded-lg ring-1 ring-gray-300 bg-white">
+                        <div class="flex items-center gap-1.5 px-2 rounded-lg ring-1 ring-[#878fa0] bg-white">
                             <input type="number" min="0" max="100" step="0.01" x-model.number="rate" @input="recompute()"
                                    class="w-16 border-0 p-1.5 text-sm font-mono focus:ring-0" aria-label="Custom GST rate">
                             <span class="text-sm text-gray-500 pr-1">%</span>
@@ -206,7 +206,7 @@
         A <strong>reverse GST calculation</strong> works backwards from a price that already includes tax to find the
         base value and the GST inside it. Divide the inclusive amount by <strong>1 plus the rate</strong>. For example,
         ₹1,180 inclusive of 18% GST gives a base of ₹1,000 (₹1,180 ÷ 1.18) and GST of ₹180. Switch the toggle above to
-        <strong>Remove GST</strong> and the calculator does this for you — useful when your MRP or quoted price already
+        <strong>Remove GST</strong> and the calculator does this for you - useful when your MRP or quoted price already
         has GST baked in and you need to show the tax separately on a
         <a href="{{ route('pages.gst-invoice-format') }}">GST invoice</a> or a
         <a href="{{ route('pages.cash-memo-format') }}">cash memo</a>.
@@ -242,7 +242,7 @@
     {{-- Embeddable widget: give bloggers/CAs a copy-paste iframe. Each embed is
          a live referral + backlink surface pointing back at the tool. --}}
     <h2>Embed this GST calculator on your site</h2>
-    <p>Run a CA practice, tax blog or MSME portal? Drop this free calculator into any page — no fees, no sign-up. Just copy the snippet below.</p>
+    <p>Run a CA practice, tax blog or MSME portal? Drop this free calculator into any page - no fees, no sign-up. Just copy the snippet below.</p>
     <div class="not-prose" x-data="{ copied: false, code: '<iframe src=&quot;{{ url('/gst-calculator/embed') }}&quot; width=&quot;100%&quot; height=&quot;520&quot; style=&quot;border:1px solid #e5e7eb;border-radius:12px;max-width:480px&quot; title=&quot;GST Calculator by Apna Invoice&quot; loading=&quot;lazy&quot;></iframe>' }">
         <pre class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto"><code x-text="code"></code></pre>
         <button type="button"
@@ -263,7 +263,7 @@
                 out: { base: 0, gst: 0, cgst: 0, sgst: 0, igst: 0, total: 0 },
                 init() {
                     // Prefill from a shared deep link so a recipient sees the
-                    // exact calculation their friend sent — not a blank default.
+                    // exact calculation their friend sent - not a blank default.
                     const q = new URLSearchParams(location.search);
                     if (q.has('amount')) this.amount = parseFloat(q.get('amount')) || this.amount;
                     if (q.has('rate')) this.rate = parseFloat(q.get('rate')) || this.rate;
@@ -314,7 +314,7 @@
                     return `GST @ ${this.rate || 0}% on ₹${this.fmt(this.out.base)}:\n${split}\nTotal: ₹${this.fmt(this.out.total)}`;
                 },
                 /**
-                 * WhatsApp share — the result plus a deep link, so the tool and
+                 * WhatsApp share - the result plus a deep link, so the tool and
                  * the exact calculation travel together between traders.
                  */
                 whatsAppShare() {

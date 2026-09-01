@@ -68,7 +68,7 @@
                             [
                                 'done'  => $setup['business'],
                                 'title' => 'Your business details',
-                                'sub'   => 'Just your business name and state — nothing else needed to start.',
+                                'sub'   => 'Just your business name and state - nothing else needed to start.',
                                 'time'  => '30 sec',
                                 'href'  => route('company.edit'),
                                 'cta'   => 'Start',
@@ -115,7 +115,7 @@
                             </div>
                             <button type="button"
                                     @click="localStorage.setItem('hideSetupChecklist','1'); show=false"
-                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
+                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition"
                                     aria-label="Hide getting-started checklist"
                                     title="Hide this, I'll set things up later">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -134,9 +134,9 @@
                                      numeral becomes a tick once the step is done. --}}
                                 <div @class([
                                     'w-11 h-11 rounded-full flex items-center justify-center shrink-0 ring-4 font-display font-extrabold',
-                                    'bg-money-500 text-white ring-money-100' => $item['done'],
+                                    'bg-money-700 text-white ring-money-100' => $item['done'],
                                     'bg-brand-700 text-white ring-brand-100' => ! $item['done'] && $isCurrent,
-                                    'bg-white text-gray-400 ring-gray-100 border border-gray-200' => ! $item['done'] && ! $isCurrent,
+                                    'bg-white text-gray-500 ring-gray-100 border border-gray-200' => ! $item['done'] && ! $isCurrent,
                                 ])>
                                     @if ($item['done'])
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -239,11 +239,11 @@
 
             @if ($isFirstRun)
                 {{-- Nothing billed yet. The numbered checklist above is already
-                     telling the user what to do, so this must not repeat it —
+                     telling the user what to do, so this must not repeat it -
                      it only reassures them what this page becomes once they
                      have billed something. No heading, no second button. --}}
                 <div class="rounded-2xl border border-dashed border-gray-200 bg-white/60 px-6 py-5">
-                    <div class="text-xs uppercase font-bold tracking-wider text-gray-400">Once you start billing, this page tracks</div>
+                    <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Once you start billing, this page tracks</div>
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         @foreach ([
                             ['t' => 'Money owed to you', 'd' => 'Outstanding balance, grouped by how late it is'],
@@ -268,7 +268,7 @@
                         <div class="mt-3 text-xs text-brand-700">
                             <span class="font-semibold">{{ number_format($stats['issued_this_month']) }}</span> issued in {{ now()->format('F') }}
                             @if ($stats['drafts'] > 0)
-                                <span class="text-gray-400">·</span>
+                                <span class="text-gray-500">·</span>
                                 <a href="{{ route('invoices.index', ['status' => 'draft']) }}" class="hover:underline">{{ $stats['drafts'] }} draft{{ $stats['drafts'] > 1 ? 's' : '' }} pending</a>
                             @endif
                         </div>
@@ -293,12 +293,12 @@
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Total invoices</div>
                     <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['total'] }}</div>
-                    <div class="mt-3 text-xs text-gray-400">all statuses</div>
+                    <div class="mt-3 text-xs text-gray-500">all statuses</div>
                 </div>
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Drafts</div>
                     <div class="text-2xl font-display font-extrabold mt-2">{{ $stats['drafts'] }}</div>
-                    <div class="mt-3 text-xs text-gray-400">ready to issue</div>
+                    <div class="mt-3 text-xs text-gray-500">ready to issue</div>
                 </div>
                 <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="group relative block p-6 bg-gradient-to-br from-accent-50 to-saffron-50 rounded-2xl shadow-card ring-1 ring-accent-100 hover:ring-accent-300 hover:shadow-lg transition overflow-hidden" title="View invoices awaiting payment">
                     <div class="flex items-start justify-between gap-2">
@@ -311,7 +311,7 @@
                 <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                     <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
                     <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums" title="₹{{ inr($stats['paid_this_month']) }}"><x-inr-compact :amount="$stats['paid_this_month']" /></div>
-                    <div class="mt-3 text-xs text-gray-400">paid on {{ now()->format('F') }} bills</div>
+                    <div class="mt-3 text-xs text-gray-500">paid on {{ now()->format('F') }} bills</div>
                 </div>
             </div>
 
@@ -326,17 +326,17 @@
                     </div>
                     <div class="flex items-center gap-6 sm:gap-8 flex-wrap">
                         <div>
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Income</div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Income</div>
                             <div class="font-display text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($pnl['income'], 0) }}</div>
                         </div>
                         <div class="text-gray-300 font-light text-xl">−</div>
                         <div>
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Expenses</div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Expenses</div>
                             <div class="font-display text-lg sm:text-xl font-extrabold text-gray-900 tabular-nums">₹{{ number_format($pnl['expense'], 0) }}</div>
                         </div>
                         <div class="text-gray-300 font-light text-xl">=</div>
                         <div>
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Net profit</div>
+                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Net profit</div>
                             <div class="font-display text-xl sm:text-2xl font-extrabold tabular-nums {{ $pnl['profit'] >= 0 ? 'text-money-700' : 'text-red-700' }}">₹{{ number_format($pnl['profit'], 0) }}</div>
                         </div>
                         <div class="text-brand-700 text-sm font-semibold">View analytics →</div>
@@ -368,17 +368,17 @@
                                     <div class="font-medium text-gray-900">New invoice</div>
                                     <div class="text-xs text-gray-500">Bill a customer now</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('quotations.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-purple-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-medium text-gray-900">Send quotation</div>
+                                    <div class="font-medium text-gray-900">Send Quotation</div>
                                     <div class="text-xs text-gray-500">Price proposal · convert to invoice later</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('customers.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-saffron-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-saffron-100 text-saffron-700 flex items-center justify-center group-hover:bg-saffron-600 group-hover:text-white transition">
@@ -388,7 +388,7 @@
                                     <div class="font-medium text-gray-900">Add customer</div>
                                     <div class="text-xs text-gray-500">Save for future invoices</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-saffron-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-saffron-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('company.edit') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-700 flex items-center justify-center group-hover:bg-gray-800 group-hover:text-white transition">
@@ -398,7 +398,7 @@
                                     <div class="font-medium text-gray-900">Company settings</div>
                                     <div class="text-xs text-gray-500">Logo, GSTIN, terms</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('finance.expenses.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-red-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-red-100 text-red-700 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition">
@@ -408,7 +408,7 @@
                                     <div class="font-medium text-gray-900">Add expense</div>
                                     <div class="text-xs text-gray-500">Bank · UPI · Card · Cheque</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('finance.cash-memos.create') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-amber-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition">
@@ -418,7 +418,7 @@
                                     <div class="font-medium text-gray-900">Cash memo</div>
                                     <div class="text-xs text-gray-500">Cash purchase · printable voucher</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('invoices.index') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-money-50 transition group">
                                 <div class="w-10 h-10 rounded-lg bg-money-100 text-money-700 flex items-center justify-center group-hover:bg-money-600 group-hover:text-white transition">
@@ -428,7 +428,7 @@
                                     <div class="font-medium text-gray-900">All invoices</div>
                                     <div class="text-xs text-gray-500">Filter by status & date</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
                         </div>
                     </div>
@@ -450,10 +450,10 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="font-medium text-gray-900">Receivables aging</div>
+                                    <div class="font-medium text-gray-900">Party Outstanding</div>
                                     <div class="text-xs text-gray-500 truncate">Who owes you money, and for how long · 0-30 / 30-60 / 60-90 / 90+ days</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-accent-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-accent-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('finance.gstr3b') }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-money-50 transition group">
@@ -464,7 +464,7 @@
                                     <div class="font-medium text-gray-900">GSTR-3B · last month</div>
                                     <div class="text-xs text-gray-500 truncate">Sales, input tax credit and net GST to pay · same layout as the return form</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-money-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-money-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
                             <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
@@ -475,7 +475,7 @@
                                     <div class="font-medium text-gray-900">GSTR-1 · this month</div>
                                     <div class="text-xs text-gray-500 truncate">{{ now()->format('F Y') }} · split into B2B and B2C, with place of supply</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                             </a>
                             <a href="{{ route('invoices.gstr1', ['from' => now()->subMonthNoOverflow()->startOfMonth()->toDateString(), 'to' => now()->subMonthNoOverflow()->endOfMonth()->toDateString()]) }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition group">
@@ -486,7 +486,7 @@
                                     <div class="font-medium text-gray-900">GSTR-1 · last month</div>
                                     <div class="text-xs text-gray-500 truncate">{{ now()->subMonthNoOverflow()->format('F Y') }} · for the {{ now()->day < 11 ? '11th' : 'next' }} filing window</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-blue-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                             </a>
                             <a href="{{ route('finance.expenses.export.csv') }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
@@ -497,7 +497,7 @@
                                     <div class="font-medium text-gray-900">Expenses CSV</div>
                                     <div class="text-xs text-gray-500 truncate">All categories · vendor · GST input</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
                             </a>
                             <a href="{{ route('backup.index') }}"
                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group">
@@ -508,7 +508,7 @@
                                     <div class="font-medium text-gray-900">Full data backup</div>
                                     <div class="text-xs text-gray-500 truncate">ZIP of all CSVs · invoices, customers, payments</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </a>
                         </div>
                     </div>

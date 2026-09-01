@@ -1,5 +1,5 @@
 {{--
-    "What's next?" engagement card — sits at the top of every invoice show page.
+    "What's next?" engagement card - sits at the top of every invoice show page.
 
     Why: Indian SME users land on this page after every invoice action and were
     previously left to figure out which of the dozen buttons in the header was
@@ -9,7 +9,7 @@
     States rendered (in priority order, only ONE shows at a time):
       1. cancelled  → suppressed (red banner already explains)
       2. draft      → "Issue when ready" (move forward)
-      3. paid       → "Fully paid, well done — next sale?" (close the loop)
+      3. paid       → "Fully paid, well done - next sale?" (close the loop)
       4. issued + balance > 0 → "Share & track payment" (most common)
 
     Layout: branded gradient header strip + grid of 2-4 action tiles.
@@ -27,7 +27,7 @@
 
 @unless ($isCancelled)
 <div class="bg-white rounded-xl shadow-card ring-1 ring-brand-100 overflow-hidden">
-    {{-- Header strip — gradient gives the card weight without screaming.
+    {{-- Header strip - gradient gives the card weight without screaming.
          Saffron accent on the icon for Indian-flag warmth without being kitsch. --}}
     <div class="px-5 py-3 bg-gradient-to-r from-brand-50 to-saffron-50 border-b border-brand-100 flex items-center justify-between gap-3">
         <div class="flex items-center gap-2">
@@ -43,7 +43,7 @@
             <div>
                 <div class="text-xs uppercase tracking-widest font-bold text-brand-700">
                     @if ($isPaid)
-                        Fully paid — well done!
+                        Fully paid - well done!
                     @elseif ($isDraft)
                         Draft saved
                     @else
@@ -53,7 +53,7 @@
                 <div class="text-sm text-gray-700">
                     @if ($isPaid)
                         {{ $cust?->name ? "Receipt ready for {$cust->name}." : 'Receipt is ready.' }}
-                        Carry the momentum — book the next sale.
+                        Carry the momentum - book the next sale.
                     @elseif ($isDraft)
                         Issue the invoice to lock the number and share it with {{ $cust?->name ?? 'the customer' }}.
                     @else
@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    {{-- Action tiles. We render up to 4 — most likely action first.
+    {{-- Action tiles. We render up to 4 - most likely action first.
          Mobile: stacks; ≥sm: 2-col grid; ≥md: 4-col when 4 actions exist. --}}
     <div class="p-4 grid grid-cols-1 sm:grid-cols-2 @if (! $isPaid && ! $isDraft) md:grid-cols-4 @else md:grid-cols-3 @endif gap-3">
 
@@ -147,7 +147,7 @@
             {{-- ISSUED + balance > 0 state: the common case. Share → Record → Repeat. --}}
 
             @if ($waLink)
-                <a href="{{ $waLink }}" target="_blank" rel="noopener" class="group flex items-center gap-3 px-4 py-3 bg-[#25D366] hover:bg-[#1ebe5b] text-white rounded-lg shadow-sm text-left transition">
+                <a href="{{ $waLink }}" target="_blank" rel="noopener" class="group flex items-center gap-3 px-4 py-3 bg-[#0f7540] hover:bg-[#0c5f34] text-white rounded-lg shadow-sm text-left transition">
                     <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white/20 group-hover:bg-white/30 transition">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
                     </span>
@@ -173,7 +173,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
                 <span class="flex-1">
-                    <span class="block font-semibold text-gray-900 leading-tight">Record payment</span>
+                    <span class="block font-semibold text-gray-900 leading-tight">Record Receipt</span>
                     <span class="block text-xs text-gray-500">₹{{ inr($invoice->balance) }} balance</span>
                 </span>
             </a>

@@ -20,7 +20,7 @@
                 <div class="flex-1 text-sm">
                     <div class="font-display font-bold text-gray-900 text-base">What you're seeing</div>
                     <p class="mt-1 text-gray-600 leading-relaxed">
-                        Each card below contains a <strong>mini invoice preview</strong> with sample line items, GST calculated correctly for your state, and the real total. Click <strong class="text-brand-700">Preview full PDF</strong> to see exactly what your customer will receive — with <strong>{{ $company->name }}</strong>'s branding. Pick the closest match — you can edit everything afterwards.
+                        Each card below contains a <strong>mini invoice preview</strong> with sample line items, GST calculated correctly for your state, and the real total. Click <strong class="text-brand-700">Preview full PDF</strong> to see exactly what your customer will receive - with <strong>{{ $company->name }}</strong>'s branding. Pick the closest match - you can edit everything afterwards.
                     </p>
                 </div>
             </div>
@@ -35,7 +35,7 @@
                         $gstRates = collect($items)->pluck('gst_rate')->unique()->filter()->sort()->values();
                         $styleKey = $tpl['style'] ?? 'classic';
                         $styleMeta = config('invoice_styles.' . $styleKey, config('invoice_styles.classic'));
-                        // Map style → Tailwind classes for the mini preview header — sober tones
+                        // Map style → Tailwind classes for the mini preview header - sober tones
                         $styleTheme = [
                             'classic' => ['bg' => 'bg-white', 'border' => 'border-b-2 border-[#1e3a8a]', 'text' => 'text-gray-900', 'accent' => 'text-[#1e3a8a]'],
                             'bold'    => ['bg' => 'bg-white', 'border' => 'border-b-[3px] border-[#c2410c]', 'text' => 'text-[#c2410c]', 'accent' => 'text-[#c2410c]'],
@@ -54,7 +54,7 @@
                          clickable target. --}}
                     <div class="group relative bg-white rounded-2xl ring-1 ring-gray-100 hover:ring-brand-400 hover:ring-2 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col cursor-pointer focus-within:ring-2 focus-within:ring-brand-400">
 
-                        {{-- The stretched link — invisible but covers the entire card.
+                        {{-- The stretched link - invisible but covers the entire card.
                              Carries the keyboard focus + screen-reader label. --}}
                         <a href="{{ route('invoices.create', ['template' => $key]) }}"
                            class="absolute inset-0 z-10 rounded-2xl"
@@ -152,9 +152,9 @@
                                 @else
                                     <div class="px-3 py-6 text-center text-xs text-gray-500 bg-white">
                                         <div class="font-medium text-gray-700">{{ $styleMeta['label'] }} style preview</div>
-                                        <div class="mt-1 italic text-gray-400">Your line items, totals and terms will appear here.</div>
+                                        <div class="mt-1 italic text-gray-500">Your line items, totals and terms will appear here.</div>
                                         @if (! empty($tpl['items'][0]['gst_rate']))
-                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
+                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
                                         @endif
                                     </div>
                                 @endif
@@ -205,7 +205,7 @@
                 </div>
                 <div class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-money-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    No commitment — previews don't save
+                    No commitment - previews don't save
                 </div>
             </div>
         </div>

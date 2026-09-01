@@ -11,7 +11,7 @@
     - On 422: shows inline field errors from the JSON response.
     - On any other error: shows a generic message and keeps the form so the user can retry.
 
-    The modal is fully self-contained — drop it into any form, no shared state.
+    The modal is fully self-contained - drop it into any form, no shared state.
     Forms wire it up by:
       1. A button with @click="$dispatch('open-quick-customer')"
       2. A @customer-added.window listener that pushes the new customer into their dropdown
@@ -55,9 +55,9 @@
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div>
                 <h3 class="font-display font-bold text-gray-900">Quick add customer</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Just the basics — you can fill the full address later from Customers.</p>
+                <p class="text-xs text-gray-500 mt-0.5">Just the basics - you can fill the full address later from Customers.</p>
             </div>
-            <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 p-1" aria-label="Close">
+            <button type="button" @click="open = false" class="text-gray-500 hover:text-gray-600 p-1" aria-label="Close">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -81,7 +81,7 @@
                     <select id="qc-state" x-model="form.state_id" required
                             class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500"
                             :class="errors.state_id && '!border-red-400 !ring-red-400'">
-                        <option value="">— Select state —</option>
+                        <option value="">- Select state -</option>
                         @foreach ($states as $s)
                             <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->gst_code }})</option>
                         @endforeach
@@ -89,7 +89,7 @@
                     <p x-show="errors.state_id" x-cloak class="mt-1 text-xs text-red-600" x-text="errors.state_id"></p>
                 </div>
                 <div>
-                    <label for="qc-gstin" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">GSTIN <span class="text-gray-400 font-normal normal-case">(optional, B2B)</span></label>
+                    <label for="qc-gstin" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">GSTIN <span class="text-gray-500 font-normal normal-case">(optional, B2B)</span></label>
                     <input id="qc-gstin" type="text" x-model="form.gstin" maxlength="15"
                            placeholder="27AAACT2727Q1ZW"
                            class="w-full border-gray-300 rounded-md shadow-sm text-sm font-mono uppercase focus:border-brand-500 focus:ring-brand-500"
@@ -100,7 +100,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="qc-phone" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Phone <span class="text-gray-400 font-normal normal-case">(WhatsApp share)</span></label>
+                    <label for="qc-phone" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Phone <span class="text-gray-500 font-normal normal-case">(WhatsApp share)</span></label>
                     <input id="qc-phone" type="tel" inputmode="tel" x-model="form.phone" maxlength="30"
                            placeholder="+91 98765 43210"
                            class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500"
@@ -108,7 +108,7 @@
                     <p x-show="errors.phone" x-cloak class="mt-1 text-xs text-red-600" x-text="errors.phone"></p>
                 </div>
                 <div>
-                    <label for="qc-email" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Email <span class="text-gray-400 font-normal normal-case">(invoice copy)</span></label>
+                    <label for="qc-email" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Email <span class="text-gray-500 font-normal normal-case">(invoice copy)</span></label>
                     <input id="qc-email" type="email" x-model="form.email" maxlength="255"
                            placeholder="billing@customer.com"
                            class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500"
@@ -188,7 +188,7 @@
 
                             this.genericError = `Could not save (status ${res.status}). Please try again.`;
                         } catch (e) {
-                            this.genericError = 'Network problem — check your connection and try again.';
+                            this.genericError = 'Network problem - check your connection and try again.';
                         } finally {
                             this.submitting = false;
                         }

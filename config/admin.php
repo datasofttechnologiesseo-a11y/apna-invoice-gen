@@ -14,7 +14,7 @@ return [
     | unless its email is listed here.
     |
     | Set SUPER_ADMIN_EMAILS in the environment as a comma-separated list to
-    | change who qualifies — no code deploy needed. Defaults to the single
+    | change who qualifies - no code deploy needed. Defaults to the single
     | authorised operator. An empty allowlist falls back to the flag alone
     | (used by the test suite; do NOT leave it empty in production).
     |

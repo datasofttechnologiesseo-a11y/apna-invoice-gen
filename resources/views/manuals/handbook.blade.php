@@ -72,7 +72,7 @@
         <div class="rule"></div>
         <div class="sub">Free GST invoicing for Indian businesses</div>
         <div class="sub" style="font-size:10px; margin-top:4px;">
-            Everything you can do, in plain English &mdash; from your first bill to your GST returns.
+            Everything you can do, in plain English - from your first bill to your GST returns.
         </div>
         <div class="foot">
             Version {{ $version }} &nbsp;&middot;&nbsp; Updated {{ $updated }}<br>
