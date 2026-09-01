@@ -395,3 +395,8 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// TEMP local-only harness - removed before commit.
+if (app()->environment('local')) {
+    Route::get('/__devlogin', fn () => tap(redirect('/dashboard'), fn () => auth()->loginUsingId(1)));
+}
