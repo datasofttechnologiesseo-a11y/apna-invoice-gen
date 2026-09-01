@@ -5,23 +5,23 @@
     <footer class="relative bg-[#04211d] text-gray-300 overflow-hidden">
         {{-- Ambient glows --}}
         <div class="absolute top-0 left-1/4 w-[700px] h-[400px] bg-brand-700 rounded-full blur-[140px] opacity-25 -translate-y-1/2 pointer-events-none"></div>
-        <div class="absolute bottom-0 right-1/4 w-[500px] h-[400px] bg-accent-600 rounded-full blur-[150px] opacity-15 translate-y-1/2 pointer-events-none"></div>
+        <div class="absolute bottom-0 right-1/4 w-[500px] h-[400px] bg-brand-600 rounded-full blur-[150px] opacity-[0.12] translate-y-1/2 pointer-events-none"></div>
         {{-- Dot pattern --}}
         <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 24px 24px;"></div>
 
         {{-- Top accent line --}}
-        <div class="relative h-0.5 bg-gradient-to-r from-transparent via-accent-500 to-transparent"></div>
+        <div class="relative h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
         {{-- Newsletter hero --}}
         <div class="relative">
             <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-20">
-                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-900/90 via-brand-800/60 to-accent-900/40 ring-1 ring-white/10 backdrop-blur-sm">
-                    <div class="absolute -top-16 -right-16 w-64 h-64 bg-accent-500 rounded-full blur-3xl opacity-20"></div>
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-800/70 via-brand-900/70 to-brand-950/80 ring-1 ring-white/10 backdrop-blur-sm">
+                    <div class="absolute -top-16 -right-16 w-64 h-64 bg-brand-500 rounded-full blur-3xl opacity-[0.18]"></div>
                     <div class="absolute -bottom-16 -left-16 w-64 h-64 bg-brand-500 rounded-full blur-3xl opacity-25"></div>
 
                     <div class="relative p-8 md:p-12 grid md:grid-cols-5 gap-8 items-center">
                         <div class="md:col-span-3">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-500/15 text-accent-300 text-[11px] font-bold uppercase tracking-widest ring-1 ring-accent-500/30">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 ring-1 ring-white/15 text-gray-200 text-[11px] font-bold uppercase tracking-widest ring-1 ring-accent-500/30">
                                 <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-shimmer"></span> Stay in the loop
                             </span>
                             <h3 class="mt-4 font-display text-3xl md:text-4xl font-extrabold text-white leading-tight">
@@ -32,7 +32,7 @@
                             </p>
                         </div>
                         <div class="md:col-span-2 flex flex-col gap-3">
-                            <a href="{{ route('pages.contact') }}?subject={{ urlencode('Newsletter, add me to updates') }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-400 hover:to-accent-500 text-accent-950 font-bold rounded-xl transition shadow-lg shadow-accent-500/30">
+                            <a href="{{ route('pages.contact') }}?subject={{ urlencode('Newsletter, add me to updates') }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-accent-500 hover:bg-accent-400 text-accent-950 font-bold rounded-xl transition shadow-lg shadow-black/20">
                                 Get early updates
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M5 12h13"/></svg>
                             </a>
@@ -105,13 +105,6 @@
                         ['href' => route('blog.index'), 'label' => 'Blog'],
                         ['href' => route('pages.faq'), 'label' => 'FAQ'],
                         ['href' => route('pages.partners'), 'label' => 'For CAs & partners'],
-                        // Refund and Press had no inbound internal link anywhere
-                        // on the site after the legal chips came out of the
-                        // sub-footer, so they were crawlable only via the
-                        // sitemap. They sit in the column they belong to rather
-                        // than back in the single-line bar.
-                        ['href' => route('pages.press'), 'label' => 'Press kit'],
-                        ['href' => route('pages.refund'), 'label' => 'Refund policy'],
                         // Auth-gated app pages: they 302 to /login for anonymous
                         // crawlers and /invoices is robots-disallowed, so linking
                         // them publicly just leaks link equity into a dead end.
@@ -124,7 +117,7 @@
                              carrying meaning here, so varying it per column
                              was noise; a single rule reads as hierarchy. --}}
                         <h4 class="text-white font-semibold text-[11px] uppercase tracking-[0.14em] pb-3 border-b border-white/10">
-                            <span class="inline-block w-6 h-px align-middle mr-2 bg-accent-400"></span>{{ $col['title'] }}
+                            <span class="inline-block w-6 h-px align-middle mr-2 bg-white/30"></span>{{ $col['title'] }}
                         </h4>
                         <ul class="mt-4 space-y-2.5 text-sm">
                             @foreach ($col['links'] as $link)
@@ -134,7 +127,7 @@
                                        class="group inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-150">
                                         <span class="relative">
                                             {{ $link['label'] }}
-                                            <span class="absolute inset-x-0 -bottom-0.5 h-px bg-accent-400 scale-x-0 group-hover:scale-x-100 origin-left transition-transform"></span>
+                                            <span class="absolute inset-x-0 -bottom-0.5 h-px bg-white/50 scale-x-0 group-hover:scale-x-100 origin-left transition-transform"></span>
                                         </span>
                                         @if (! empty($link['external']))
                                             <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -169,7 +162,7 @@
                 <div class="flex items-center gap-x-2 text-center md:text-left min-w-0">
                     <span class="font-semibold text-white whitespace-nowrap">&copy; {{ date('Y') }}
                         <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener"
-                           class="hover:text-accent-400 transition">Datasoft Technologies</a>
+                           class="hover:text-white transition">Datasoft Technologies</a>
                     </span>
                     <span class="hidden lg:inline text-white/30">&middot;</span>
                     <span class="hidden lg:inline whitespace-nowrap">All rights reserved</span>
@@ -200,7 +193,7 @@
                             @endif
                         @endforeach
                     </div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-500/15 text-accent-200 text-[11px] font-bold ring-1 ring-accent-500/40 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-gray-200 text-[11px] font-bold ring-1 ring-accent-500/40 whitespace-nowrap">
                         <span class="w-1.5 h-1.5 rounded-full bg-accent-400"></span> Made in India
                     </span>
                 </div>
@@ -213,9 +206,9 @@
     <footer class="mt-16 relative bg-gradient-to-br from-brand-950 via-[#08312c] to-[#04211d] text-gray-200 overflow-hidden">
         {{-- Ambient glow --}}
         <div class="absolute top-0 left-1/2 w-[700px] h-[250px] bg-brand-600 rounded-full blur-[110px] opacity-30 -translate-x-1/2 -translate-y-1/3 pointer-events-none"></div>
-        <div class="absolute bottom-0 right-0 w-[300px] h-[200px] bg-accent-600 rounded-full blur-[100px] opacity-10 pointer-events-none"></div>
+        <div class="absolute bottom-0 right-0 w-[300px] h-[200px] bg-brand-600 rounded-full blur-[100px] opacity-[0.10] pointer-events-none"></div>
         {{-- Top gradient accent --}}
-        <div class="relative h-[2px] bg-gradient-to-r from-transparent via-accent-500 to-transparent"></div>
+        <div class="relative h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
         <div class="relative max-w-7xl mx-auto px-6 lg:px-8 py-10">
             <div class="grid md:grid-cols-3 gap-8 items-center">
@@ -226,7 +219,7 @@
                     </a>
                     <div class="leading-tight hidden sm:block">
                         <div class="font-bold text-white text-sm">Apna Invoice</div>
-                        <div class="mt-0.5 text-xs text-gray-400">By <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-accent-400 transition">Datasoft Technologies</a></div>
+                        <div class="mt-0.5 text-xs text-gray-400">By <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-white transition">Datasoft Technologies</a></div>
                     </div>
                 </div>
 
@@ -260,7 +253,7 @@
                         @endif
                     @endforeach
 
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-500/15 text-accent-200 text-[11px] font-bold ring-1 ring-accent-500/40">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-gray-200 text-[11px] font-bold ring-1 ring-accent-500/40">
                         <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-shimmer"></span> Made in India
                     </span>
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/15 text-brand-200 text-[11px] font-bold ring-1 ring-brand-500/40">
@@ -279,7 +272,7 @@
                  native compose sheet on mobile. --}}
             <div class="rounded-xl bg-white/5 ring-1 ring-white/10 px-4 py-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
                 <div class="flex items-center gap-3 text-gray-200">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-accent-500/15 ring-1 ring-accent-500/40 text-accent-200">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10 ring-1 ring-white/100/40 text-accent-200">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10c0 3.866-3.582 7-8 7a8.84 8.84 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
                     </span>
                     <div class="leading-tight">
@@ -292,7 +285,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         support@datasofttechnologies.com
                     </a>
-                    <a href="{{ route('help') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-500/15 hover:bg-accent-500/25 ring-1 ring-accent-500/40 text-accent-100 text-xs font-semibold transition">
+                    <a href="{{ route('help') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-accent-500/25 ring-1 ring-accent-500/40 text-accent-100 text-xs font-semibold transition">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         Help &amp; FAQ
                     </a>
@@ -302,7 +295,7 @@
             {{-- Bottom strip --}}
             <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">
-                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-accent-400 transition">Datasoft Technologies</a></span>
+                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-white transition">Datasoft Technologies</a></span>
                     <span class="hidden md:inline text-white/40">•</span>
                     <span>All rights reserved</span>
                 </div>
@@ -310,7 +303,7 @@
                     <span>Built with</span>
                     <svg class="w-4 h-4 text-danger-400 animate-shimmer" fill="currentColor" viewBox="0 0 20 20"><path d="M3.2 5.3a5.3 5.3 0 017.5 0l.3.3.3-.3a5.3 5.3 0 017.5 7.5L10.9 17.6a1.3 1.3 0 01-1.8 0L3.2 12.8a5.3 5.3 0 010-7.5z"/></svg>
                     <span>in India by</span>
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-bold hover:text-accent-400 transition">DST</a>
+                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-bold hover:text-whint-400 transition">DST</a>
                 </div>
             </div>
         </div>
