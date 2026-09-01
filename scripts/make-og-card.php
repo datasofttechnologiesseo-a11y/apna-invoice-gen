@@ -31,9 +31,9 @@ if (! $fontBold || ! $fontReg) {
 $im = imagecreatetruecolor($W, $H);
 imageantialias($im, true);
 
-// ---- Background: vertical navy gradient (brand-800 -> near-black navy) ----
-$top = [30, 58, 138];   // #1e3a8a
-$bot = [5, 10, 26];     // #050a1a
+// ---- Background: vertical teal gradient (brand-700 -> near-black teal) ----
+$top = [15, 118, 110];  // #0f766e
+$bot = [4, 33, 29];     // #04211d
 for ($y = 0; $y < $H; $y++) {
     $t = $y / $H;
     $r = (int) round($top[0] + ($bot[0] - $top[0]) * $t);

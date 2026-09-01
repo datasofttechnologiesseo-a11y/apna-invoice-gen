@@ -178,7 +178,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Apna Invoice">
-    <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 
     {{-- Preload the brand logo, it's the LCP element on the landing header. --}}
     <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.webp') }}" as="image" type="image/webp" fetchpriority="high">

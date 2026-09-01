@@ -15,7 +15,7 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="Apna Invoice">
-        <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
+        <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>

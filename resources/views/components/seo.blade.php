@@ -84,7 +84,7 @@
      (landing pages, blog) gets the install prompt + icons, not just the home
      page and the logged-in app shell. --}}
 <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
 
 {{-- Open Graph --}}

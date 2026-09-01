@@ -44,6 +44,8 @@
 
     {{-- Modal --}}
     <div x-show="open"
+         role="dialog" aria-modal="true" aria-label="Add a new customer"
+         @keydown.escape.window="open = false"
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0 translate-y-2 scale-95"
          x-transition:enter-end="opacity-100 translate-y-0 scale-100"
