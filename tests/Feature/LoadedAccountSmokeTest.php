@@ -145,6 +145,55 @@ class LoadedAccountSmokeTest extends TestCase
             ->recycle(Invoice::where('status', 'paid')->first())
             ->create(['product_id' => $billed->id]);
 
+        // --- documents that hang off an invoice -----------------------------
+        // Each of these drives a panel on the invoice detail page that only
+        // renders when a row exists. Unseeded, those panels were as invisible
+        // to the suite as the products table was.
+        $paid = Invoice::where('status', 'paid')->first();
+
+        \App\Models\Payment::create([
+            'user_id' => $this->user->id, 'company_id' => $this->company->id,
+            'invoice_id' => $paid->id, 'receipt_number' => 'RCPT-0001',
+            'received_at' => now()->subDays(20), 'amount' => 11800, 'method' => 'upi',
+        ]);
+
+        \App\Models\CreditNote::create([
+            'user_id' => $this->user->id, 'company_id' => $this->company->id,
+            'invoice_id' => $paid->id, 'credit_note_number' => 'CN-0001',
+            'credit_note_date' => now()->subDays(5), 'amount' => 500,
+            'reason' => 'rate_correction',
+        ]);
+
+        \App\Models\InvoiceReminder::create([
+            'invoice_id' => $paid->id, 'company_id' => $this->company->id,
+            'channel' => 'email', 'recipient' => 'buyer@example.test', 'days_past_due' => 7,
+        ]);
+
+        // Drives the activity timeline, whose tone lookup is data-driven.
+        \App\Models\AuditLog::create(['action' => 'invoice.finalized']);
+
+        // --- cash memo (purchase voucher) -----------------------------------
+        $memo = \App\Models\CashMemo::create([
+            'user_id' => $this->user->id, 'company_id' => $this->company->id,
+            'memo_number' => 'CM-0001', 'memo_date' => now()->subDays(6)->toDateString(),
+            'seller_name' => 'Local Wholesaler', 'subtotal' => 1000,
+            'taxable_value' => 1000, 'grand_total' => 1180, 'itc_eligible' => true,
+        ]);
+        \App\Models\CashMemoItem::create([
+            'cash_memo_id' => $memo->id, 'description' => 'Packing material',
+            'quantity' => 5, 'rate' => 200,
+        ]);
+
+        \App\Models\DataBreach::create([
+            'title' => 'Test incident', 'description' => 'Seeded for route coverage.',
+            'severity' => 'low', 'status' => 'open',
+            'discovered_at' => now()->subDays(2), 'affected_users' => 0,
+        ]);
+
+        // --- blog, so the public list and a post detail have content --------
+        \App\Models\Post::factory()->create(['status' => 'published']);
+        \App\Models\Post::factory()->create(['status' => 'draft']);
+
         // --- a second business run from the same login ----------------------
         Company::factory()->recycle($this->user)->create([
             'state_id' => $ka->id, 'onboarded_at' => now(),
@@ -161,10 +210,24 @@ class LoadedAccountSmokeTest extends TestCase
             'invoice' => $anyInvoice->id,
             'quotation' => Quotation::first()->id,
             'id' => $anyInvoice->id,
+            // Without these, 17 detail routes were silently skipped rather
+            // than checked - including products/{product}/edit, which is one
+            // click from the page that just went down in production.
+            'product' => \App\Models\Product::first()->id,
+            'cashMemo' => \App\Models\CashMemo::first()->id,
+            'creditNote' => \App\Models\CreditNote::first()->id,
+            'expense' => Expense::first()->id,
+            'payment' => \App\Models\Payment::first()->id,
+            'post' => \App\Models\Post::first()->id,
+            'slug' => \App\Models\Post::where('status', 'published')->first()->slug,
+            'breach' => \App\Models\DataBreach::first()->id,
+            'provider' => 'google',
+            'template' => 'classic',
         ];
 
         $checked = 0;
         $failures = [];
+        $skipped = [];
 
         foreach (Route::getRoutes() as $route) {
             if (! in_array('GET', $route->methods(), true)) {
@@ -179,6 +242,7 @@ class LoadedAccountSmokeTest extends TestCase
                 return $bind[$m[1]] ?? '__SKIP__';
             }, $uri);
             if (str_contains($filled, '__SKIP__')) {
+                $skipped[] = $uri;
                 continue;
             }
 
