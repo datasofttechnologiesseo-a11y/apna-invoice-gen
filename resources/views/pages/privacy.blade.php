@@ -3,7 +3,7 @@
     title="Privacy Policy, DPDP Act 2023 Compliant"
     eyebrow="Legal"
     lead="What data we collect, why we collect it, and the controls you have over it. Your records stay in India under the Digital Personal Data Protection Act, 2023."
-    description="DPDP Act 2023 compliant privacy policy for Apna Invoice, data residency in India, your rights as a Data Principal, retention rules, security, subprocessors and grievance contact."
+    description="Our DPDP Act 2023 privacy policy: your data stays in India, your rights as a Data Principal, how long we keep data, security, and our grievance contact."
     keywords="Apna Invoice privacy policy, DPDP Act 2023 compliance, Data Principal rights India, invoice software privacy India, GST data residency, SaaS privacy India, grievance officer DPDP"
     type="article">
 

@@ -124,7 +124,7 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $item->description }}</td>
-                    <td class="mono">{{ $item->hsn_sac ?: '—' }}</td>
+                    <td class="mono">{{ $item->hsn_sac ?: '-' }}</td>
                     <td class="r">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }}@if ($item->unit) <span style="color:#888;">{{ $item->unit }}</span>@endif</td>
                     <td class="r">{{ inr($item->rate) }}</td>
                     <td class="r" style="font-weight: bold;">{{ inr($item->amount) }}</td>

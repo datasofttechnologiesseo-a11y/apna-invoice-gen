@@ -1,9 +1,9 @@
-<x-app-layout>
+<x-app-layout title="Company settings">
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $company->exists ? 'Edit ' . $company->name : 'New company' }}
-            </h2>
+            </h1>
             <a href="{{ route('companies.index') }}" class="text-sm text-gray-500 hover:text-gray-700">All companies</a>
         </div>
     </x-slot>
@@ -24,7 +24,7 @@
                 <input type="hidden" name="default_currency" value="INR">
 
                 @if ($errors->any())
-                    <div class="m-6 mb-0 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" role="alert">
+                    <div class="m-6 mb-0 p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
                         <div class="font-semibold mb-1">Please fix the following before saving:</div>
                         <ul class="list-disc pl-5 space-y-0.5">
                             @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
@@ -34,7 +34,7 @@
 
                 {{-- Business identity --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Business identity</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Business identity</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Appears on your invoice letterhead and drives GST place-of-supply detection.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -56,7 +56,7 @@
                             <label class="inline-flex items-start gap-2 cursor-pointer">
                                 <input type="hidden" name="composition_dealer" value="0">
                                 <input type="checkbox" id="composition_dealer" name="composition_dealer" value="1"
-                                       class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600"
                                        @checked(old('composition_dealer', $company->composition_dealer))>
                                 <span class="text-sm">
                                     <span class="font-semibold text-gray-900">Registered under Composition Scheme</span>
@@ -69,7 +69,7 @@
 
                 {{-- Contact --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Contact</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Contact</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Shown on the invoice so customers can reach you.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -92,7 +92,7 @@
 
                 {{-- Registered address --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Registered address</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Registered address</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Your state sets the GST origin for every invoice.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -109,8 +109,8 @@
                         </div>
                         <div>
                             <x-input-label for="state_id" value="State *" />
-                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
-                                <option value="">— Select —</option>
+                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm">
+                                <option value="">- Select -</option>
                                 @foreach ($states as $state)
                                     <option value="{{ $state->id }}" @selected(old('state_id', $company->state_id) == $state->id)>{{ $state->name }} ({{ $state->gst_code }})</option>
                                 @endforeach
@@ -130,7 +130,7 @@
 
                 {{-- Branding --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Branding</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Branding</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Your logo and signature print on every invoice PDF.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -154,7 +154,7 @@
 
                 {{-- Invoice numbering --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Invoice numbering</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Invoice numbering</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Set a GST-friendly, financial-year series for your invoices.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -171,11 +171,11 @@
                             <x-input-label for="invoice_number_format" value="Invoice number format (recommended for GST: FY-reset)" />
                             <x-text-input id="invoice_number_format" name="invoice_number_format" type="text" class="mt-1 block w-full font-mono" :value="old('invoice_number_format', $company->invoice_number_format)" placeholder="INV/{FY}/{N}" />
                             <p class="text-xs text-gray-500 mt-1">
-                                Tokens: <code class="bg-gray-100 px-1 rounded">{FY}</code> → 2025-26 ·
-                                <code class="bg-gray-100 px-1 rounded">{FY_SHORT}</code> → 25-26 ·
-                                <code class="bg-gray-100 px-1 rounded">{YYYY}</code> → 2025 ·
-                                <code class="bg-gray-100 px-1 rounded">{N}</code> → 0001 (sequence).
-                                Counter auto-resets on 1 April. Leave blank to use the simple <code class="bg-gray-100 px-1 rounded">prefix-0001</code> format.
+                                Tokens: <code class="bg-gray-100 text-gray-700 px-1 rounded">{FY}</code> → 2025-26 ·
+                                <code class="bg-gray-100 text-gray-700 px-1 rounded">{FY_SHORT}</code> → 25-26 ·
+                                <code class="bg-gray-100 text-gray-700 px-1 rounded">{YYYY}</code> → 2025 ·
+                                <code class="bg-gray-100 text-gray-700 px-1 rounded">{N}</code> → 0001 (sequence).
+                                Counter auto-resets on 1 April. Leave blank to use the simple <code class="bg-gray-100 text-gray-700 px-1 rounded">prefix-0001</code> format.
                             </p>
                         </div>
                     </div>
@@ -185,9 +185,9 @@
                         $nextSequenceNumber = $currentCounter + 1;
                         $nextPreview = $company->exists ? $company->nextInvoiceNumber() : '';
                     @endphp
-                    <div class="mt-5 p-4 bg-saffron-50 border border-saffron-200 rounded-lg">
+                    <div class="mt-5 p-4 bg-accent-50 border border-accent-200 rounded-lg">
                         <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-saffron-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            <svg class="w-5 h-5 text-accent-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                             <div class="min-w-0 flex-1">
                                 <div class="font-semibold text-gray-900 text-sm">Continuing a series from another tool?</div>
                                 <p class="mt-0.5 text-xs text-gray-600">
@@ -211,16 +211,16 @@
 
                 {{-- Invoice defaults --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Invoice defaults</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Invoice defaults</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Boilerplate that prints at the foot of every invoice.</p>
                     <div class="mt-5 space-y-5">
                         <div>
                             <x-input-label for="default_terms" value="Default terms & conditions" />
-                            <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" placeholder="1. Payment due within 30 days.&#10;2. Late payment attracts 2% monthly interest.">{{ old('default_terms', $company->default_terms) }}</textarea>
+                            <textarea id="default_terms" name="default_terms" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm" placeholder="1. Payment due within 30 days.&#10;2. Late payment attracts 2% monthly interest.">{{ old('default_terms', $company->default_terms) }}</textarea>
                         </div>
                         <div>
                             <x-input-label for="declaration" value="Declaration" />
-                            <textarea id="declaration" name="declaration" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" placeholder="We declare that this invoice shows the actual price of the goods/services described and that all particulars are true and correct.">{{ old('declaration', $company->declaration) }}</textarea>
+                            <textarea id="declaration" name="declaration" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm" placeholder="We declare that this invoice shows the actual price of the goods/services described and that all particulars are true and correct.">{{ old('declaration', $company->declaration) }}</textarea>
                             <p class="mt-1 text-xs text-gray-500">Standard legal declaration required by CBIC for tax invoices.</p>
                         </div>
                     </div>
@@ -228,7 +228,7 @@
 
                 {{-- Bank / payment --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Bank &amp; payment details</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Bank &amp; payment details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Printed on the invoice PDF so customers know how to pay.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -257,14 +257,14 @@
 
                 {{-- Financial-year lock --}}
                 <section class="p-6 sm:p-8">
-                    <h3 class="text-sm font-bold text-gray-900">Financial-year lock</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Financial-year lock</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Protect closed-year books from accidental edits.</p>
                     <div class="mt-5">
                         <x-input-label for="books_locked_until" value="Lock books up to (optional)" />
                         <x-text-input id="books_locked_until" name="books_locked_until" type="date" class="mt-1 block w-full sm:w-64"
                                       :value="old('books_locked_until', $company->books_locked_until?->toDateString())" />
                         <p class="text-xs text-gray-500 mt-1">
-                            After your CA closes a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash memo dated on or before this date can be added, edited, or deleted. <span class="text-amber-700">Leave empty to keep all entries editable.</span>
+                            After your CA closes a financial year, set this to <strong>31-Mar-YYYY</strong>. No invoice, expense, or cash sale dated on or before this date can be added, edited, or deleted. <span class="text-accent-700">Leave empty to keep all entries editable.</span>
                         </p>
                         <x-input-error :messages="$errors->get('books_locked_until')" class="mt-2" />
                     </div>

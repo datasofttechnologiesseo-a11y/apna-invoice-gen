@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Settings">
     <x-slot name="header">
         <div class="min-w-0">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Settings') }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Settings') }}</h1>
             <p class="text-sm text-gray-500 mt-1">Manage your business details, account, branding and preferences in one place.</p>
         </div>
     </x-slot>
@@ -23,7 +23,7 @@
                                 'sub' => 'Name, email and password',
                                 'href' => route('profile.edit'),
                                 'icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-                                'tone' => 'sky',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                             [
@@ -31,15 +31,15 @@
                                 'sub' => 'Recent logins and sessions',
                                 'href' => route('profile.activity'),
                                 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-                                'tone' => 'indigo',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                             [
-                                'title' => 'Data &amp; Privacy',
-                                'sub' => 'Consent, data export &amp; your DPDP rights',
+                                'title' => 'Data & Privacy',
+                                'sub' => 'Consent, data export & your DPDP rights',
                                 'href' => route('profile.privacy'),
                                 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                'tone' => 'emerald',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                         ],
@@ -60,7 +60,7 @@
                                 'sub' => 'Pick a layout for new invoices',
                                 'href' => route('invoices.templates'),
                                 'icon' => 'M4 6a2 2 0 012-2h12a2 2 0 012 2v2H4V6zM4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z',
-                                'tone' => 'saffron',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                             [
@@ -68,15 +68,15 @@
                                 'sub' => 'Manage saved customers and contacts',
                                 'href' => route('customers.index'),
                                 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
-                                'tone' => 'emerald',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                             \Illuminate\Support\Facades\Route::has('products.index') ? [
-                                'title' => 'Products & services',
+                                'title' => 'Products',
                                 'sub' => 'Reusable items with HSN/SAC and rates',
                                 'href' => route('products.index'),
                                 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
-                                'tone' => 'amber',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ] : null,
                         ]),
@@ -89,15 +89,15 @@
                                 'sub' => 'Documentation and contact us',
                                 'href' => route('pages.contact'),
                                 'icon' => 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
-                                'tone' => 'gray',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                             [
-                                'title' => 'Privacy &amp; security',
+                                'title' => 'Privacy & security',
                                 'sub' => 'How we protect your data',
                                 'href' => route('pages.security'),
                                 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-                                'tone' => 'gray',
+                                'tone' => 'brand',
                                 'badge' => null,
                             ],
                         ],
@@ -105,19 +105,16 @@
                 ];
 
                 $tones = [
-                    'sky'     => ['bg' => 'bg-sky-50',     'text' => 'text-sky-700',     'ring' => 'ring-sky-100'],
-                    'indigo'  => ['bg' => 'bg-indigo-50',  'text' => 'text-indigo-700',  'ring' => 'ring-indigo-100'],
-                    'brand'   => ['bg' => 'bg-brand-50',   'text' => 'text-brand-700',   'ring' => 'ring-brand-100'],
-                    'saffron' => ['bg' => 'bg-saffron-50', 'text' => 'text-saffron-700', 'ring' => 'ring-saffron-100'],
-                    'emerald' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'ring' => 'ring-emerald-100'],
-                    'amber'   => ['bg' => 'bg-amber-50',   'text' => 'text-amber-700',   'ring' => 'ring-amber-100'],
+                    'brand'     => ['bg' => 'bg-brand-50',     'text' => 'text-brand-700',     'ring' => 'ring-brand-100'],
+                    'accent' => ['bg' => 'bg-accent-50', 'text' => 'text-accent-700', 'ring' => 'ring-accent-100'],
+                    'money' => ['bg' => 'bg-money-50', 'text' => 'text-money-700', 'ring' => 'ring-money-100'],
                     'gray'    => ['bg' => 'bg-gray-100',   'text' => 'text-gray-700',    'ring' => 'ring-gray-200'],
                 ];
             @endphp
 
             @foreach ($sections as $section)
                 <section>
-                    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 px-1">{{ $section['group'] }}</h3>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 px-1">{{ $section['group'] }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach ($section['cards'] as $card)
                             @php $t = $tones[$card['tone']]; @endphp
@@ -132,7 +129,7 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <div class="font-semibold text-gray-900 group-hover:text-brand-700 transition">{!! $card['title'] !!}</div>
                                         @if (! empty($card['badge']))
-                                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 ring-1 ring-amber-200">{{ $card['badge'] }}</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-100 text-accent-800 ring-1 ring-accent-200">{{ $card['badge'] }}</span>
                                         @endif
                                     </div>
                                     <div class="text-sm text-gray-500 mt-0.5">{{ $card['sub'] }}</div>

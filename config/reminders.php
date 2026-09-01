@@ -10,7 +10,7 @@
 
 return [
 
-    // Feature toggle — set REMINDERS_ENABLED=false to pause all automation.
+    // Feature toggle - set REMINDERS_ENABLED=false to pause all automation.
     'enabled' => env('REMINDERS_ENABLED', true),
 
     // Time of day (in app timezone) when reminders should go out. Morning in
@@ -29,7 +29,7 @@ return [
     ],
 
     // Channels available for reminders. Email is real; SMS and WhatsApp are
-    // pluggable — drivers live in App\Services\Reminders\*. When a driver has
+    // pluggable - drivers live in App\Services\Reminders\*. When a driver has
     // no credentials configured, it's a silent no-op.
     'channels' => [
         'email'    => ['enabled' => true],

@@ -144,6 +144,7 @@ class User extends Authenticatable
             'is_super_admin' => 'boolean',
             'auto_backup_enabled' => 'boolean',
             'last_backup_sent_at' => 'datetime',
+            'review_prompt_shown_at' => 'datetime',
         ];
     }
 

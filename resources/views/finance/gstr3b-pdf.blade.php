@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>GSTR-3B Summary — {{ $periodLabel }}</title>
+    <title>GSTR-3B Summary - {{ $periodLabel }}</title>
     <style>
         @page { margin: 12mm 10mm; }
         * { box-sizing: border-box; }
@@ -106,10 +106,10 @@
                 <tr>
                     <td><strong>(c)</strong> Other outward supplies <span class="label-sub">(Nil rated, exempted)</span></td>
                     <td class="r muted">0.00</td>
-                    <td class="r muted">—</td>
-                    <td class="r muted">—</td>
-                    <td class="r muted">—</td>
-                    <td class="r muted">—</td>
+                    <td class="r muted">-</td>
+                    <td class="r muted">-</td>
+                    <td class="r muted">-</td>
+                    <td class="r muted">-</td>
                 </tr>
                 <tr class="highlight">
                     <td><strong>(d)</strong> Inward supplies <span class="label-sub">(liable to reverse charge)</span></td>
@@ -122,10 +122,10 @@
                 <tr>
                     <td><strong>(e)</strong> Non-GST outward supplies</td>
                     <td class="r muted">0.00</td>
-                    <td class="r muted">—</td>
-                    <td class="r muted">—</td>
-                    <td class="r muted">—</td>
-                    <td class="r muted">—</td>
+                    <td class="r muted">-</td>
+                    <td class="r muted">-</td>
+                    <td class="r muted">-</td>
+                    <td class="r muted">-</td>
                 </tr>
             </tbody>
         </table>
@@ -163,7 +163,7 @@
                     <td class="r muted">0.00</td>
                     <td class="r muted">0.00</td>
                     <td class="r muted">0.00</td>
-                    <td class="r muted">—</td>
+                    <td class="r muted">-</td>
                 </tr>
                 <tr class="total">
                     <td>(C) Net ITC available <span class="label-sub">(A − B)</span></td>

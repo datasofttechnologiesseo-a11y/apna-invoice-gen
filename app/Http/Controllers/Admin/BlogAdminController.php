@@ -7,7 +7,9 @@ use App\Models\AuditLog;
 use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -158,9 +160,10 @@ class BlogAdminController extends Controller
         ]);
 
         // Stored under posts/inline so it's easy to spot & clean up later.
-        // Storage facade gives us the path; asset('storage/...') turns it
+        // Resized + re-encoded to WebP so a 4 MB camera photo doesn't become
+        // the article's LCP element. asset('storage/...') turns the stored path
         // into a public URL via the public-disk symlink.
-        $path = $data['image']->store('posts/inline', 'public');
+        $path = $this->optimizeImage($data['image'], 'posts/inline');
 
         return response()->json([
             'url' => asset('storage/' . $path),
@@ -224,7 +227,60 @@ class BlogAdminController extends Controller
         if ($existing) {
             Storage::disk('public')->delete($existing);
         }
-        return $request->file($field)->store('posts', 'public');
+        return $this->optimizeImage($request->file($field), 'posts');
+    }
+
+    /**
+     * Downscale to a sane max width and re-encode to WebP (q80) before storing,
+     * so cover/inline images can't ship a multi-MB original as the article's
+     * LCP element. GD is already part of the stack. On any failure (odd format,
+     * animated GIF) we fall back to storing the file verbatim rather than
+     * dropping the upload.
+     */
+    private function optimizeImage(UploadedFile $file, string $dir): string
+    {
+        $maxWidth = 1600;
+        $quality = 80;
+
+        try {
+            $mime = $file->getMimeType();
+            $src = match ($mime) {
+                'image/jpeg' => imagecreatefromjpeg($file->getRealPath()),
+                'image/png'  => imagecreatefrompng($file->getRealPath()),
+                'image/webp' => imagecreatefromwebp($file->getRealPath()),
+                'image/gif'  => imagecreatefromgif($file->getRealPath()),
+                default      => null,
+            };
+            if ($src === null || $src === false) {
+                return $file->store($dir, 'public');
+            }
+
+            $w = imagesx($src);
+            $h = imagesy($src);
+            if ($w > $maxWidth) {
+                $nh = (int) round($h * ($maxWidth / $w));
+                $dst = imagecreatetruecolor($maxWidth, $nh);
+                // Preserve transparency for PNG/WebP sources.
+                imagealphablending($dst, false);
+                imagesavealpha($dst, true);
+                imagecopyresampled($dst, $src, 0, 0, 0, 0, $maxWidth, $nh, $w, $h);
+                imagedestroy($src);
+                $src = $dst;
+            }
+
+            $relative = $dir . '/' . Str::random(40) . '.webp';
+            $absolute = Storage::disk('public')->path($relative);
+            if (! is_dir(dirname($absolute))) {
+                mkdir(dirname($absolute), 0755, true);
+            }
+            imagewebp($src, $absolute, $quality);
+            imagedestroy($src);
+
+            return $relative;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Blog image optimize failed; storing original', ['error' => $e->getMessage()]);
+            return $file->store($dir, 'public');
+        }
     }
 
     /**

@@ -33,7 +33,7 @@
                     <p class="text-sm mt-2 text-gray-800">
                         {{ __('Your email address is unverified.') }}
 
-                        <button form="send-verification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+                        <button form="send-verification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600">
                             {{ __('Click here to re-send the verification email.') }}
                         </button>
                     </p>
@@ -48,7 +48,7 @@
         </div>
 
         <div>
-            <x-input-label for="phone">{{ __('Mobile number') }} <span class="font-normal text-gray-400">({{ __('optional') }})</span></x-input-label>
+            <x-input-label for="phone">{{ __('Mobile number') }} <span class="font-normal text-gray-500">({{ __('optional') }})</span></x-input-label>
             <div class="mt-1 relative">
                 <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-500 text-sm font-semibold">+91</span>
                 <x-text-input id="phone" name="phone" type="tel" inputmode="numeric" maxlength="10" class="block w-full pl-10"

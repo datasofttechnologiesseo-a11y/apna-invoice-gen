@@ -23,7 +23,7 @@ function buildHtml(post: { title: string; published_at: string | null; reading_m
   .post-meta { color: #64748b; font-size: 13px; margin-bottom: 24px; }
   h1, h2, h3 { line-height: 1.3; margin-top: 28px; }
   h2 { font-size: 21px; } h3 { font-size: 18px; }
-  a { color: #2563eb; }
+  a { color: #0f766e; }
   img { max-width: 100%; height: auto; border-radius: 10px; }
   pre { background: #f1f5f9; padding: 14px; border-radius: 10px; overflow-x: auto; font-size: 14px; }
   code { background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-size: 14px; }

@@ -128,7 +128,7 @@ export function CompanyEditModal({
             </Pressable>
             <View style={{ height: 14 }} />
 
-            <TextField label="GSTIN" value={form.gstin} onChangeText={(v) => set('gstin', v)} autoCapitalize="characters" placeholder="15-char GSTIN (optional)" />
+            <TextField label="GSTIN" value={form.gstin} onChangeText={(v) => set('gstin', v.toUpperCase())} autoCapitalize="characters" placeholder="15-char GSTIN (optional)" />
             <TextField label="PAN" value={form.pan} onChangeText={(v) => set('pan', v)} autoCapitalize="characters" placeholder="Optional" />
             <TextField label="Invoice number prefix" value={form.invoice_prefix} onChangeText={(v) => set('invoice_prefix', v)} autoCapitalize="characters" />
 

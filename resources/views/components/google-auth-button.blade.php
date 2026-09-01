@@ -5,7 +5,7 @@
 @if (filled(config('services.google.client_id')))
     <div class="my-5 flex items-center gap-3" aria-hidden="true">
         <div class="h-px flex-1 bg-gray-200"></div>
-        <span class="text-xs text-gray-400 font-semibold uppercase tracking-wide">or</span>
+        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wide">or</span>
         <div class="h-px flex-1 bg-gray-200"></div>
     </div>
 
@@ -21,11 +21,11 @@
     </a>
 
     @if ($showTerms)
-        <p class="mt-3 text-center text-xs text-gray-400">
+        <p class="mt-3 text-center text-xs text-gray-500">
             By continuing with Google you agree to our
-            <a href="{{ route('pages.terms') }}" target="_blank" rel="noopener" class="text-brand-600 hover:underline">Terms</a>
+            <a href="{{ route('pages.terms') }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Terms</a>
             and
-            <a href="{{ route('pages.privacy') }}" target="_blank" rel="noopener" class="text-brand-600 hover:underline">Privacy Policy</a>.
+            <a href="{{ route('pages.privacy') }}" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Privacy Policy</a>.
         </p>
     @endif
 @endif

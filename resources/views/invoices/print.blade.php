@@ -25,7 +25,7 @@
             .invoice-doc * {
                 color: #000 !important;
             }
-            .invoice-doc .text-gray-400,
+            .invoice-doc .text-gray-500,
             .invoice-doc .text-gray-500,
             .invoice-doc .text-gray-600 {
                 color: #444 !important;
@@ -35,7 +35,7 @@
 </head>
 <body class="bg-gray-100">
 <div class="no-print p-4 text-right">
-    <button onclick="window.print()" class="px-4 py-2 bg-brand-600 text-white rounded">Print / Save as PDF</button>
+    <button onclick="window.print()" class="px-4 py-2 bg-brand-700 text-white rounded">Print / Save as PDF</button>
     <a href="{{ route('invoices.show', $invoice) }}" class="ml-2 text-gray-600 underline">Back</a>
 </div>
 <div class="max-w-4xl mx-auto bg-white shadow my-4">

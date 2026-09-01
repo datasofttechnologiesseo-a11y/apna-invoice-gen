@@ -15,7 +15,7 @@
         <td align="center">
             <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
                 <tr>
-                    <td style="padding: 24px 32px; background: #1e3a8a; color: #fff;">
+                    <td style="padding: 24px 32px; background: #0f766e; color: #fff;">
                         <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ $c->name }}</div>
                         <div style="font-size: 22px; font-weight: 700; margin-top: 4px;">
                             {{ $docTitle }} {{ $invoice->displayNumber() }}
@@ -40,12 +40,12 @@
                                         @endif
                                         <tr><td style="padding: 4px 0; color: #6b7280;">Grand total</td><td style="padding: 4px 0; text-align: right; font-weight: 700;">&#8377; {{ inr($invoice->grand_total) }}</td></tr>
                                         @if ($balance > 0 && (float) $invoice->paid_amount > 0)
-                                            <tr><td style="padding: 4px 0; color: #6b7280;">Already paid</td><td style="padding: 4px 0; text-align: right; color: #047857;">&#8377; {{ inr($invoice->paid_amount) }}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #6b7280;">Already paid</td><td style="padding: 4px 0; text-align: right; color: #15803d;">&#8377; {{ inr($invoice->paid_amount) }}</td></tr>
                                         @endif
                                         @if ($balance > 0)
                                             <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #b91c1c; font-weight: 600;">Balance due</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #b91c1c; font-size: 16px;">&#8377; {{ inr($balance) }}</td></tr>
                                         @else
-                                            <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #047857; font-weight: 600;">Status</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #047857; font-size: 14px;">PAID IN FULL</td></tr>
+                                            <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #15803d; font-weight: 600;">Status</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #15803d; font-size: 14px;">PAID IN FULL</td></tr>
                                         @endif
                                     </table>
                                 </td>
@@ -54,7 +54,7 @@
 
                         @if ($publicUrl)
                             <div style="text-align: center; margin-top: 24px;">
-                                <a href="{{ $publicUrl }}" style="display: inline-block; padding: 12px 24px; background: #1e3a8a; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">View invoice online</a>
+                                <a href="{{ $publicUrl }}" style="display: inline-block; padding: 12px 24px; background: #0f766e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">View invoice online</a>
                             </div>
                         @endif
 
@@ -69,7 +69,7 @@
                 <tr>
                     <td style="padding: 16px 32px; background: #f9fafb; color: #6b7280; font-size: 11px; text-align: center;">
                         Sent from {{ $c->name }} · Powered by <a href="{{ url('/') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #4b5563; font-weight: bold; text-decoration: underline;">{{ config('app.name') }}</a>
-                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses — <a href="{{ route('register') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
+                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses - <a href="{{ route('register') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
                     </td>
                 </tr>
             </table>

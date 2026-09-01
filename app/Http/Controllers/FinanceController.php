@@ -573,7 +573,7 @@ class FinanceController extends Controller
         // 3.1(a) — Outward taxable supplies (regular invoices, excludes RCM)
         $invoices = $company->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get();
 
         $regular = $invoices->where('reverse_charge', false);
@@ -592,7 +592,7 @@ class FinanceController extends Controller
         // period). Credit notes against reverse-charge invoices carry ₹0 tax, so
         // they net to zero here and need no special handling.
         $creditNotes = \App\Models\CreditNote::where('company_id', $company->id)
-            ->whereBetween('credit_note_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('credit_note_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get();
         $outward['taxable'] = round($outward['taxable'] - (float) $creditNotes->sum('taxable_value'), 2);
         $outward['igst']    = round($outward['igst'] - (float) $creditNotes->sum('total_igst'), 2);
@@ -630,14 +630,14 @@ class FinanceController extends Controller
         $expensesInPeriod = $company->expenses()
             ->whereNull('cash_memo_id')
             ->where('itc_eligible', true)
-            ->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get(['gst_amount', 'is_interstate']);
 
         $intraExpenseGst = (float) $expensesInPeriod->where('is_interstate', false)->sum('gst_amount');
         $interExpenseGst = (float) $expensesInPeriod->where('is_interstate', true)->sum('gst_amount');
 
         $cashMemos = $company->cashMemos()
-            ->whereBetween('memo_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get();
         // Only ITC-eligible memos feed the claim; all memos still count for the
         // memo tally below.
@@ -666,7 +666,7 @@ class FinanceController extends Controller
             'invoiceCount' => $invoices->count(),
             // Standalone expenses only — cash-memo-linked rows are tallied as
             // cash memos below, so they'd otherwise be counted twice.
-            'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])->count(),
+            'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
             'cashMemoCount' => $cashMemos->count(),
         ];
     }
@@ -696,7 +696,7 @@ class FinanceController extends Controller
     private function filteredExpensesQuery($company, Request $request, Carbon $from, Carbon $to)
     {
         return $company->expenses()
-            ->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->when($request->category, fn ($q, $c) => $q->where('category', $c))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('description', 'like', "%{$s}%")

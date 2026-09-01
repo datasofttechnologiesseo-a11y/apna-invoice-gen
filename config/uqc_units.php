@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit Quantity Codes (UQC) — CBIC-notified unit codes used on GST invoices
+ * Unit Quantity Codes (UQC) - CBIC-notified unit codes used on GST invoices
  * and GSTR-1 filings. Source: CBIC / GSTN taxpayer's manual, Annexure B.
  *
  * Always store the code (e.g. "NOS", "KGS"), show the label in dropdowns.
@@ -51,7 +51,7 @@ return [
     /** Kind: GOODS need HSN (4/6/8 digits), SERVICES need SAC (starts with 99). */
     'kinds' => [
         'goods'    => 'Goods (HSN code)',
-        'service'  => 'Service (SAC code — starts with 99)',
+        'service'  => 'Service (SAC code - starts with 99)',
     ],
 
 ];

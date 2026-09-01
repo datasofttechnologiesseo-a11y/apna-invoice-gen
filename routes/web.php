@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceShareController;
+use App\Http\Controllers\ManualController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -33,6 +34,10 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/',                   'priority' => '1.0', 'changefreq' => 'weekly'],
         ['loc' => $base . '/' . ltrim(route('register', [], false), '/'), 'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/' . ltrim(route('login', [], false), '/'),    'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/features',           'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/how-to-use',         'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/pricing',            'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/faq',                'priority' => '0.7', 'changefreq' => 'monthly'],
         ['loc' => $base . '/gst-calculator',     'priority' => '0.9', 'changefreq' => 'monthly'],
         ['loc' => $base . '/free-gst-invoice-format', 'priority' => '0.8', 'changefreq' => 'monthly'],
         ['loc' => $base . '/free-billing-software', 'priority' => '0.9', 'changefreq' => 'monthly'],
@@ -48,7 +53,21 @@ Route::get('/sitemap.xml', function () {
         ['loc' => $base . '/cookies',            'priority' => '0.3', 'changefreq' => 'yearly'],
         ['loc' => $base . '/security',           'priority' => '0.5', 'changefreq' => 'monthly'],
         ['loc' => $base . '/blog',               'priority' => '0.8', 'changefreq' => 'weekly'],
+        // Downloadable manuals. Free, public, and the kind of reference asset
+        // other sites link to, so they belong in the index like any other page.
+        ['loc' => $base . '/manuals/apna-invoice-handbook.pdf',    'priority' => '0.6', 'changefreq' => 'monthly'],
+        ['loc' => $base . '/manuals/apna-invoice-quick-start.pdf', 'priority' => '0.5', 'changefreq' => 'monthly'],
     ];
+
+    // Static marketing/legal pages change rarely. Stamp a stable content date
+    // so the sitemap doesn't claim the whole site was "modified today" on every
+    // crawl — Google distrusts and ignores an always-fresh lastmod. Bump this
+    // when the landing-page copy is meaningfully revised.
+    $siteLastmod = '2026-07-18';
+    foreach ($urls as &$u) {
+        $u['lastmod'] = $siteLastmod;
+    }
+    unset($u);
 
     // Append every published blog post to the sitemap so search engines can
     // discover and index them as soon as they're live.
@@ -71,19 +90,36 @@ Route::get('/robots.txt', function () {
         'User-agent: *',
         'Allow: /',
         '',
+        // Blog cover + inline images live under /storage/posts — they must stay
+        // crawlable (Google Images, Discover, Article rich results need the
+        // image URL fetchable). Allow them BEFORE the blanket /storage/ block;
+        // Google's parser applies the most-specific matching rule.
+        'Allow: /storage/posts/',
+        '',
+        // Private, auth-gated app areas — no indexing value, and crawling them
+        // just burns crawl budget that should go to blog posts + landing pages.
         'Disallow: /dashboard',
         'Disallow: /invoices',
         'Disallow: /quotations',
         'Disallow: /customers',
         'Disallow: /company',
+        'Disallow: /products',
         'Disallow: /profile',
+        'Disallow: /settings',
         'Disallow: /setup',
-        'Disallow: /forgot-password',
-        'Disallow: /reset-password',
-        'Disallow: /confirm-password',
-        'Disallow: /verify-email',
+        'Disallow: /finance',
+        'Disallow: /payments',
+        'Disallow: /credit-notes',
+        'Disallow: /refer',
+        'Disallow: /backup',
+        'Disallow: /admin',
+        'Disallow: /auth/',
         'Disallow: /storage/',
         'Disallow: /build/',
+        // Note: /forgot-password, /reset-password etc. are intentionally NOT
+        // disallowed — their views carry <meta robots noindex>, and blocking
+        // crawl would stop Google ever reading that tag (letting the URL surface
+        // as a bare, description-less result linked from /login).
         '',
         'Sitemap: ' . $base . '/sitemap.xml',
     ];
@@ -97,17 +133,24 @@ Route::post('/cookie-consent', [CookieConsentController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('cookie-consent.store');
 
-// Public signed invoice link — recipient opens PDF without logging in.
-// The `signed` middleware verifies the URL signature and expiry; the `throttle`
-// limits abuse if a link gets shared in the wild.
+// Public signed invoice link — recipient opens an HTML landing page (with a
+// Download-PDF button + product CTA) without logging in. The `signed`
+// middleware verifies the URL signature and expiry; `throttle` limits abuse if
+// a link gets shared in the wild. The PDF itself streams from the /pdf child.
 Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('invoices.public');
+Route::get('i/{invoice}/pdf', [InvoiceShareController::class, 'publicPdf'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('invoices.public.pdf');
 
 // Public signed quotation link — same threat model as the invoice version.
 Route::get('q/{quotation}', [QuotationShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('quotations.public');
+Route::get('q/{quotation}/pdf', [QuotationShareController::class, 'publicPdf'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('quotations.public.pdf');
 
 // Public blog — drives SEO traffic. Open to everyone, no auth.
 // Throttle each show route to 60/min so a scraper or bot can't hammer the
@@ -121,10 +164,26 @@ Route::get('/blog/{slug}', [BlogController::class, 'show'])
 Route::prefix('/')->name('pages.')->group(function () {
     // Free indexable tools / guides — high-intent organic landing pages.
     Route::view('/gst-calculator', 'pages.gst-calculator')->name('gst-calculator');
+    // Chromeless, iframe-embeddable calculator for third-party sites — a
+    // backlink/referral surface. noindex (set in the view) keeps it out of the
+    // index so it never competes with the full page above.
+    Route::view('/gst-calculator/embed', 'pages.gst-calculator-embed')->name('gst-calculator.embed');
     Route::view('/free-gst-invoice-format', 'pages.gst-invoice-format')->name('gst-invoice-format');
     Route::view('/free-billing-software', 'pages.billing-software')->name('billing-software');
     Route::view('/cash-memo-format', 'pages.cash-memo-format')->name('cash-memo-format');
     Route::view('/gst-credit-note-format', 'pages.credit-note-format')->name('credit-note-format');
+    // Standalone pages for the main home-page sections (previously #anchors) —
+    // each an indexable, separately-rankable page in its own right.
+    Route::view('/features', 'pages.features')->name('features');
+    Route::view('/how-to-use', 'pages.how-to-use')->name('how-to-use');
+    // Downloadable manuals. Public and unauthenticated so a prospect can read
+    // the whole thing before signing up, and so crawlers can reach them.
+    Route::get('/manuals/apna-invoice-handbook.pdf', [ManualController::class, 'handbook'])
+        ->name('manuals.handbook');
+    Route::get('/manuals/apna-invoice-quick-start.pdf', [ManualController::class, 'quickStart'])
+        ->name('manuals.quick-start');
+    Route::view('/pricing', 'pages.pricing')->name('pricing');
+    Route::view('/faq', 'pages.faq')->name('faq');
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/press', 'pages.press')->name('press');
     Route::view('/partners', 'pages.partners')->name('partners');

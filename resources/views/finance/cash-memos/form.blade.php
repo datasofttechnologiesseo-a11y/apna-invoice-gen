@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Cash memo">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit Cash Memo' : 'New Cash Memo' }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit Cash Memo' : 'New Cash Memo' }}</h1>
             <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← All memos</a>
         </div>
     </x-slot>
@@ -23,7 +23,7 @@
                     @if ($isEdit ?? false) @method('PUT') @endif
 
                     @if ($errors->any())
-                        <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                        <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
                             <div class="font-semibold mb-1">Please fix the following:</div>
                             <ul class="list-disc pl-5 space-y-0.5">
                                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
@@ -33,7 +33,7 @@
 
                     {{-- ─── Memo header ─── --}}
                     <section>
-                        <h3 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Memo details</h3>
+                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Memo details</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <x-input-label for="memo_date" value="Date *" />
@@ -44,7 +44,7 @@
                                 <div class="flex items-center justify-between">
                                     <x-input-label for="memo_number" value="Memo number" />
                                     <button type="button" @click="locked = !locked; if (!locked) $nextTick(() => $refs.memoInput.focus())"
-                                            class="text-[11px] font-semibold text-brand-600 hover:underline">
+                                            class="text-[11px] font-semibold text-brand-700 hover:underline">
                                         <span x-show="locked">Edit manually</span>
                                         <span x-show="!locked">Use auto-generated</span>
                                     </button>
@@ -54,19 +54,19 @@
                                        :readonly="locked"
                                        :class="locked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'"
                                        value="{{ old('memo_number', $nextMemoNumber) }}"
-                                       class="mt-1 block w-full font-mono text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                       class="mt-1 block w-full font-mono text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 <p class="mt-1 text-[11px] text-gray-500">
                                     <span x-show="locked">Auto-generated · FY-based sequence. Click <em>Edit manually</em> to override.</span>
-                                    <span x-show="!locked" class="text-amber-700">Custom number — must be unique within your company. Auto counter will <strong>not</strong> advance.</span>
+                                    <span x-show="!locked" class="text-accent-700">Custom number - must be unique within your company. Auto counter will <strong>not</strong> advance.</span>
                                 </p>
-                                @error('memo_number')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                                @error('memo_number')<p class="mt-1 text-xs text-danger-600">{{ $message }}</p>@enderror
                             </div>
                         </div>
                     </section>
 
                     {{-- ─── Purchased From ─── --}}
                     <section>
-                        <h3 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Purchased From <span class="text-red-500">*</span></h3>
+                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Purchased From <span class="text-danger-600">*</span></h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
                                 <x-input-label for="seller_name" value="Seller / Vendor name *" />
@@ -77,7 +77,7 @@
                                 <x-input-label for="seller_address" value="Address" />
                                 <textarea id="seller_address" name="seller_address" rows="2" maxlength="500"
                                           placeholder="Shop / street, city, pin code"
-                                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">{{ old('seller_address', $memo->seller_address) }}</textarea>
+                                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">{{ old('seller_address', $memo->seller_address) }}</textarea>
                             </div>
                             <div>
                                 <x-input-label for="seller_gstin" value="GSTIN (if any)" />
@@ -92,8 +92,8 @@
                             <div>
                                 <x-input-label for="seller_state" value="Seller state" />
                                 <select id="seller_state" name="seller_state" x-model="sellerState"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                    <option value="">— Select —</option>
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                                    <option value="">- Select -</option>
                                     @foreach ($states as $st)
                                         <option value="{{ $st->name }}" @selected(old('seller_state', $memo->seller_state) === $st->name)>{{ $st->name }}</option>
                                     @endforeach
@@ -108,7 +108,7 @@
                     {{-- ─── Particulars / line items ─── --}}
                     <section>
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-semibold text-gray-900 text-sm uppercase tracking-wider text-gray-700">Particulars *</h3>
+                            <h2 class="font-semibold text-gray-900 text-sm uppercase tracking-wider text-gray-700">Particulars *</h2>
                             <button type="button" @click="addRow()" class="text-sm text-brand-700 font-semibold hover:underline">+ Add row</button>
                         </div>
 
@@ -118,11 +118,11 @@
                                 <div class="border rounded-lg p-3 bg-gray-50 space-y-2">
                                     <div class="flex items-center justify-between text-xs text-gray-500">
                                         <span>Item <span x-text="idx + 1"></span></span>
-                                        <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-red-600 text-xs">Remove</button>
+                                        <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-danger-600 text-xs">Remove</button>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Description</label>
-                                        <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="255" class="mt-1 block w-full border-gray-300 rounded text-sm" required>
+                                        <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="255" class="mt-1 block w-full border-gray-300 rounded text-sm" required>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
@@ -131,25 +131,25 @@
                                                 <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                    target="_blank" rel="noopener"
                                                    onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   class="text-brand-600 hover:text-brand-700"
+                                                   class="text-brand-700 hover:text-brand-800"
                                                    aria-label="Search HSN/SAC code on the official GST portal"
                                                    title="Search HSN/SAC code on the official GST portal">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                                                 </a>
                                             </div>
-                                            <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="10" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono">
+                                            <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" maxlength="10" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono">
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500 font-semibold">Unit</label>
-                                            <input :name="`items[${idx}][unit]`" x-model="item.unit" maxlength="20" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS…">
+                                            <input :name="`items[${idx}][unit]`" :aria-label="`Unit for line item ${idx + 1}`" x-model="item.unit" maxlength="20" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS…">
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500 font-semibold">Qty</label>
-                                            <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                            <input :name="`items[${idx}][quantity]`" :aria-label="`Quantity for line item ${idx + 1}`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                         </div>
                                         <div>
                                             <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
-                                            <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                            <input :name="`items[${idx}][rate]`" :aria-label="`Rate for line item ${idx + 1}`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                         </div>
                                     </div>
                                     <div class="flex justify-between text-sm pt-2 border-t">
@@ -173,7 +173,7 @@
                                                 <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                    target="_blank" rel="noopener"
                                                    onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   class="text-brand-600 hover:text-brand-700"
+                                                   class="text-brand-700 hover:text-brand-800"
                                                    aria-label="Search HSN/SAC code on the official GST portal"
                                                    title="Search HSN/SAC code on the official GST portal">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -192,23 +192,23 @@
                                         <tr class="border-t">
                                             <td class="px-3 py-2 text-gray-500" x-text="idx + 1"></td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="255" class="w-full border-gray-300 rounded text-sm" required>
+                                                <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="255" class="w-full border-gray-300 rounded text-sm" required>
                                             </td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="10" class="w-24 border-gray-300 rounded text-sm font-mono">
+                                                <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" maxlength="10" class="w-24 border-gray-300 rounded text-sm font-mono">
                                             </td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][quantity]`" :aria-label="`Quantity for line item ${idx + 1}`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                             </td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][unit]`" x-model="item.unit" maxlength="20" class="w-20 border-gray-300 rounded text-sm" placeholder="NOS">
+                                                <input :name="`items[${idx}][unit]`" :aria-label="`Unit for line item ${idx + 1}`" x-model="item.unit" maxlength="20" class="w-20 border-gray-300 rounded text-sm" placeholder="NOS">
                                             </td>
                                             <td class="px-2 py-2">
-                                                <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" class="w-24 border-gray-300 rounded text-sm text-right" required>
+                                                <input :name="`items[${idx}][rate]`" :aria-label="`Rate for line item ${idx + 1}`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" class="w-24 border-gray-300 rounded text-sm text-right" required>
                                             </td>
                                             <td class="px-3 py-2 text-right font-mono tabular-nums" x-text="fmt(item.quantity * item.rate)"></td>
                                             <td class="px-2 py-2 text-right">
-                                                <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-red-600 hover:text-red-800 text-lg leading-none" title="Remove">×</button>
+                                                <button type="button" @click="removeRow(idx)" x-show="items.length > 1" class="text-danger-600 hover:text-danger-800 text-lg leading-none" title="Remove">×</button>
                                             </td>
                                         </tr>
                                     </template>
@@ -219,7 +219,7 @@
 
                     {{-- ─── Discount + GST + Totals ─── --}}
                     <section>
-                        <h3 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Totals</h3>
+                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Totals</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
@@ -228,32 +228,32 @@
                                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
                                         <input id="discount" name="discount" type="number" step="any" min="0"
                                                x-model.number="discount" @input="recompute()"
-                                               class="block w-full pl-8 border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                               class="block w-full pl-8 border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     </div>
                                 </div>
                                 <div>
                                     <x-input-label for="gst_rate" value="GST rate" />
                                     <select id="gst_rate" name="gst_rate" x-model.number="gstRate" @change="recompute()"
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                        <option value="0">No GST (most cash memos)</option>
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                                        <option value="0">No GST (most cash sales)</option>
                                         <option value="5">5%</option>
                                         <option value="12">12%</option>
                                         <option value="18">18%</option>
                                         <option value="28">28%</option>
                                     </select>
-                                    <p class="mt-1 text-xs text-gray-500">Most cash memos from unregistered vendors carry no GST. Add it only if the seller charged tax.</p>
+                                    <p class="mt-1 text-xs text-gray-500">Most cash sales from unregistered vendors carry no GST. Add it only if the seller charged tax.</p>
                                 </div>
                                 <div x-show="gstRate > 0" class="flex items-center gap-2">
                                     <input id="is_interstate" type="checkbox" x-model="isInterstate" @change="recompute()"
                                            name="is_interstate" value="1"
-                                           class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                           class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                     <label for="is_interstate" class="text-sm text-gray-700">Inter-state purchase (charge IGST instead of CGST/SGST)</label>
                                 </div>
                                 {{-- Warn (don't block) when the seller state and the inter-state
-                                     toggle disagree — catches a silently wrong tax split. --}}
+                                     toggle disagree - catches a silently wrong tax split. --}}
                                 <div x-show="stateMismatch" x-cloak
-                                     class="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
-                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                                     class="flex items-start gap-2 rounded-md bg-accent-50 border border-accent-200 px-3 py-2 text-xs text-accent-800">
+                                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                                     <span x-text="stateMismatch"></span>
                                 </div>
                                 {{-- ITC eligibility (CGST Act §17(5)). Default ticked; untick for
@@ -261,17 +261,17 @@
                                 <div x-show="gstRate > 0" class="flex items-start gap-2">
                                     <input id="itc_eligible" type="checkbox" name="itc_eligible" value="1"
                                            @checked(old('itc_eligible', isset($memo) ? $memo->itc_eligible : true))
-                                           class="mt-0.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                           class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                     <label for="itc_eligible" class="text-sm text-gray-700">
                                         Eligible for input tax credit
-                                        <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) — motor vehicles, staff food/catering, personal-use items — so this GST isn't claimed on GSTR-3B.</span>
+                                        <span class="block text-xs text-gray-500">Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use items - so this GST isn't claimed on GSTR-3B.</span>
                                     </label>
                                 </div>
                             </div>
 
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
                                 <div class="flex justify-between"><span class="text-gray-600">Subtotal</span><span class="font-mono tabular-nums" x-text="'₹ ' + fmt(totals.subtotal)"></span></div>
-                                <div class="flex justify-between"><span class="text-gray-600">Discount</span><span class="font-mono tabular-nums text-red-600" x-text="'− ₹ ' + fmt(totals.discount)"></span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">Discount</span><span class="font-mono tabular-nums text-danger-600" x-text="'− ₹ ' + fmt(totals.discount)"></span></div>
                                 <div class="flex justify-between font-medium"><span>Taxable value</span><span class="font-mono tabular-nums" x-text="'₹ ' + fmt(totals.taxable)"></span></div>
                                 <template x-if="!isInterstate && gstRate > 0">
                                     <div>
@@ -294,12 +294,12 @@
 
                     {{-- ─── Payment + classification ─── --}}
                     <section>
-                        <h3 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Payment &amp; classification</h3>
+                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Payment &amp; classification</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <div>
                                 <x-input-label for="payment_mode" value="Payment mode *" />
                                 <select id="payment_mode" name="payment_mode" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     @foreach (['cash' => 'Cash', 'upi' => 'UPI', 'card' => 'Card', 'bank' => 'Bank transfer', 'cheque' => 'Cheque', 'other' => 'Other'] as $v => $label)
                                         <option value="{{ $v }}" @selected(old('payment_mode', $memo->payment_mode ?? 'cash') === $v)>{{ $label }}</option>
                                     @endforeach
@@ -313,7 +313,7 @@
                             <div>
                                 <x-input-label for="expense_category" value="Expense category" />
                                 <select id="expense_category" name="expense_category"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                     @foreach (config('expense_categories') as $key => $cfg)
                                         <option value="{{ $key }}" @selected(old('expense_category', $memo->expense_category ?? 'misc') === $key)>{{ $cfg['label'] }}</option>
                                     @endforeach
@@ -327,7 +327,7 @@
                     <section>
                         <x-input-label for="notes" value="Notes" />
                         <textarea id="notes" name="notes" rows="2" maxlength="1000"
-                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600"
                                   placeholder="Any additional remarks, terms, etc.">{{ old('notes', $memo->notes) }}</textarea>
                     </section>
 
@@ -354,10 +354,10 @@
                         if (!this.gstRate || !this.sellerState || !this.companyStateName) return null;
                         const sameState = this.sellerState === this.companyStateName;
                         if (sameState && this.isInterstate) {
-                            return `Seller is in ${this.sellerState}, same as your company — same-state purchases are usually CGST + SGST, not IGST. Untick "Inter-state" unless you're sure.`;
+                            return `Seller is in ${this.sellerState}, same as your company - same-state purchases are usually CGST + SGST, not IGST. Untick "Inter-state" unless you're sure.`;
                         }
                         if (!sameState && !this.isInterstate) {
-                            return `Seller is in ${this.sellerState}, a different state from your company (${this.companyStateName}) — inter-state purchases are usually IGST. Tick "Inter-state purchase".`;
+                            return `Seller is in ${this.sellerState}, a different state from your company (${this.companyStateName}) - inter-state purchases are usually IGST. Tick "Inter-state purchase".`;
                         }
                         return null;
                     },

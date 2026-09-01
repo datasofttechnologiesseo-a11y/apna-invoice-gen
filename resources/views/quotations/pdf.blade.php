@@ -1,5 +1,5 @@
 @php
-    // Indian (lakh/crore) money formatter — $inr(1234567) → "12,34,567.00"
+    // Indian (lakh/crore) money formatter - $inr(1234567) → "12,34,567.00"
     $inr = fn ($n, $d = 2) => \App\Support\IndianNumber::format($n, $d);
 
     $c = $quotation->company;
@@ -7,11 +7,11 @@
     $number = $quotation->quote_number ?: 'DRAFT · ' . ($c->nextQuoteNumber() ?? 'preview');
 
     // Ink-saver mode is the DEFAULT. The PDF is mostly downloaded to print and
-    // sign, so we should not burn toner on a navy/saffron design unless the
+    // sign, so we should not burn toner on a teal/amber design unless the
     // operator explicitly asked for color (?color=1).
     //
     // Palette: in print mode everything resolves to greys + a single dark
-    // accent. In color mode we use the brand navy + saffron stripe.
+    // accent. In color mode we use the brand teal + amber stripe.
     $print = $print ?? true;
     $palette = $print ? [
         'accent'        => '#111111',
@@ -32,31 +32,31 @@
         'disc_color'    => '#444444',
         'sig_line'      => '#999999',
     ] : [
-        'accent'        => '#1f3061',
-        'accent_soft'   => '#f5f7fc',
-        'title'         => '#1f3061',
+        'accent'        => '#0f766e',
+        'accent_soft'   => '#f0fdfa',
+        'title'         => '#0f766e',
         'rule'          => '#d4d4d4',
-        'rule_strong'   => '#1f3061',
-        'tbl_head_bg'   => '#1f3061',
+        'rule_strong'   => '#0f766e',
+        'tbl_head_bg'   => '#0f766e',
         'tbl_head_color'=> '#ffffff',
-        'grand_bg'      => '#1f3061',
+        'grand_bg'      => '#0f766e',
         'grand_color'   => '#ffffff',
-        'subject_bar'   => '#1f3061',
-        'subject_bg'    => '#f5f7fc',
-        'bank_border'   => '#1f3061',
-        'bank_bg'       => '#f5f7fc',
-        'disc_border'   => '#b8860b',
-        'disc_bg'       => '#fff8e6',
-        'disc_color'    => '#8a5b00',
+        'subject_bar'   => '#0f766e',
+        'subject_bg'    => '#f0fdfa',
+        'bank_border'   => '#0f766e',
+        'bank_bg'       => '#f0fdfa',
+        'disc_border'   => '#b45309',
+        'disc_bg'       => '#fffbeb',
+        'disc_color'    => '#78350f',
         'sig_line'      => '#999999',
     ];
 
     // Indian convention: prefix B2B (registered) customer names with "M/s".
-    // Skip for B2C (no GSTIN) — looks odd on individual buyers.
-    $custNameDisplay = ($cust?->gstin ? 'M/s ' : '') . ($cust?->name ?? '—');
+    // Skip for B2C (no GSTIN) - looks odd on individual buyers.
+    $custNameDisplay = ($cust?->gstin ? 'M/s ' : '') . ($cust?->name ?? '-');
 
     // Parse Terms into a numbered list when the user has typed lines that
-    // already start with "1." / "1)" — we render them as a clean ordered list.
+    // already start with "1." / "1)" - we render them as a clean ordered list.
     // Otherwise we fall back to whitespace-preserved free text.
     $termLines = [];
     if ($quotation->terms) {
@@ -157,7 +157,7 @@
                 <div class="small muted">
                     @if ($c->address_line1){{ $c->address_line1 }}@endif
                     @if ($c->address_line2), {{ $c->address_line2 }}@endif
-                    @if ($c->city)<br>{{ $c->city }}@if ($c->state), {{ $c->state->name }}@endif @if ($c->postal_code) — {{ $c->postal_code }}@endif @endif
+                    @if ($c->city)<br>{{ $c->city }}@if ($c->state), {{ $c->state->name }}@endif @if ($c->postal_code) - {{ $c->postal_code }}@endif @endif
                     @if ($c->phone)<br>Phone: {{ $c->phone }}@endif
                     @if ($c->email) · {{ $c->email }}@endif
                     @if ($c->gstin)<br>GSTIN: <span class="mono">{{ $c->gstin }}</span>@endif
@@ -181,7 +181,7 @@
         </tr>
         <tr>
             <td class="lbl">Valid until</td>
-            <td>{{ $quotation->valid_until?->format('d M Y') ?? '—' }}</td>
+            <td>{{ $quotation->valid_until?->format('d M Y') ?? '-' }}</td>
             <td class="lbl">Tax mode</td>
             <td>{{ $quotation->is_interstate ? 'Inter-state (IGST)' : 'Intra-state (CGST + SGST)' }}</td>
         </tr>
@@ -208,7 +208,7 @@
                 <div class="small muted">
                     @if ($cust?->billing_address_line1){{ $cust->billing_address_line1 }}@endif
                     @if ($cust?->billing_address_line2), {{ $cust->billing_address_line2 }}@endif
-                    @if ($cust?->billing_city)<br>{{ $cust->billing_city }}@if ($cust?->state), {{ $cust->state->name }}@endif @if ($cust?->billing_postal_code) — {{ $cust->billing_postal_code }}@endif @endif
+                    @if ($cust?->billing_city)<br>{{ $cust->billing_city }}@if ($cust?->state), {{ $cust->state->name }}@endif @if ($cust?->billing_postal_code) - {{ $cust->billing_postal_code }}@endif @endif
                     @if ($cust?->phone)<br>Phone: {{ $cust->phone }}@endif
                     @if ($cust?->email) · {{ $cust->email }}@endif
                     @if ($cust?->gstin)<br>GSTIN: <span class="mono">{{ $cust->gstin }}</span>@endif
@@ -216,9 +216,9 @@
             </td>
             <td>
                 <div class="label">Place of supply</div>
-                <div class="bold">{{ $cust?->state?->name ?? '—' }}</div>
+                <div class="bold">{{ $cust?->state?->name ?? '-' }}</div>
                 <div class="small muted" style="margin-top: 4px;">
-                    Tax determined by your state ({{ $c->state?->name ?? '—' }}) vs the customer's state. Place of supply is informational on this quotation; the formal tax invoice will record it on GSTR-1.
+                    Tax determined by your state ({{ $c->state?->name ?? '-' }}) vs the customer's state. Place of supply is informational on this quotation; the formal tax invoice will record it on GSTR-1.
                 </div>
             </td>
         </tr>
@@ -336,7 +336,7 @@
         </div>
     @endif
 
-    {{-- ─── Bank details (only if company has them — for advance payment) ──── --}}
+    {{-- ─── Bank details (only if company has them - for advance payment) ──── --}}
     @if ($hasBankDetails)
         <div class="bank-block">
             <div class="label">Bank details for advance payment</div>
@@ -385,7 +385,7 @@
 
     {{-- ─── Acceptance block (sign-back) ───────────────────────────────── --}}
     <div class="acceptance">
-        <div class="head">Acceptance — to confirm this order, please sign &amp; return</div>
+        <div class="head">Acceptance - to confirm this order, please sign &amp; return</div>
         <div class="body">
             <div>I/We accept this quotation and request you to proceed with the order on the terms set out above.</div>
             <table class="signrow">
@@ -400,6 +400,11 @@
             </table>
         </div>
     </div>
+
+    {{-- Viral loop: quotations reach prospects while they're comparing vendors -
+         a high-attention reader. One tasteful, clickable byline (DomPDF renders
+         <a href> as a real PDF link annotation). --}}
+    <div style="margin-top: 6mm; text-align: center; font-size: 8px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=quotation_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com - free GST invoicing for Indian businesses</a></div>
 </div>
 </body>
 </html>

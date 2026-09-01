@@ -61,7 +61,7 @@ Edit `.env`:
 ### 3. Database
 
 ```bash
-php artisan migrate --force     # runs all 26 migrations, including the legacy paid_amount back-fill
+php artisan migrate --force     # runs all 53 migrations, including the legacy paid_amount back-fill
 ```
 
 ### 4. Storage symlink
@@ -146,6 +146,18 @@ For hardened deployments, replace the `'*'` in
 `bootstrap/app.php` → `$middleware->trustProxies(at: '*')` with an
 explicit list of your proxy IPs.
 
+### 11. Performance & SEO server config (nginx)
+
+`public/.htaccess` carries gzip, immutable asset caching and the
+www/http → https-apex 301, but those are **Apache-only** — this stack
+runs nginx, so they are ignored in production. Fold
+[`docs/nginx-performance-seo.conf`](docs/nginx-performance-seo.conf) into
+your `server` block to get the same wins (compression alone takes the
+~213 KB home page to ~30 KB on the wire). The app already forces every
+generated URL to `APP_URL` in production (`AppServiceProvider`), so make
+sure `APP_URL=https://apnainvoice.com` is set — canonicals, `og:url`,
+the sitemap and signed links all derive from it.
+
 ## Daily operations
 
 ### Monitoring
@@ -179,6 +191,30 @@ Consider wiring an exception tracker — Sentry, Bugsnag, or Flare — to
 | Mail provider down                         | Set `MAIL_MAILER=log` temporarily so auth still works |
 | Need to take the site offline              | `php artisan down --render="errors::503"`           |
 | Bring it back                              | `php artisan up`                                     |
+
+## Watch on the next deploy
+
+This release adds response security headers (`app/Http/Middleware/SecurityHeaders.php`),
+which is the change most likely to break something silently: a Content-Security-Policy
+blocks resources in the *browser*, so the server logs stay clean while a page quietly
+loses a script or a font.
+
+Checked before release: every external host the app loads is on the allowlist
+(fonts.bunny.net, googletagmanager, google-analytics, challenges.cloudflare.com), and
+23 routes were swept with zero CSP violations. Two things that could still bite:
+
+- **Tags added inside the GTM container.** Anything GTM injects from a host not on the
+  allowlist will be blocked. If a marketing tag stops reporting, this is why.
+- **`/gst-calculator/embed` is deliberately exempt** from the framing restriction so
+  third-party sites can still iframe it. `SecurityHeadersTest` asserts this; if that
+  test is ever "fixed" by removing the exemption, partner embeds go blank.
+
+To confirm after deploying: open the site, check the browser console for `Refused to
+load`, and load the embed inside a third-party page.
+
+Rollback for the headers alone is one line - remove `SecurityHeaders::class` from the
+`web` group in `bootstrap/app.php` and run `php artisan optimize:clear`. No migration
+or data change is involved.
 
 ## Subsequent deploys
 

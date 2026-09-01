@@ -7,7 +7,11 @@
     x-transition:enter-start="opacity-0 translate-y-4"
     x-transition:enter-end="opacity-100 translate-y-0"
     class="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4 pointer-events-none"
-    role="dialog" aria-labelledby="cookie-banner-title" aria-describedby="cookie-banner-body">
+    {{-- Deliberately NOT role="dialog": this banner is pointer-events-none
+         and never blocks the page, so announcing it as a modal dialog would
+         tell a screen reader user they are trapped in something they are
+         not. A labelled region is what it actually is. --}}
+    role="region" aria-labelledby="cookie-banner-title" aria-describedby="cookie-banner-body">
     {{-- max-h + overflow so the banner can't cover form fields when the mobile keyboard pushes it up --}}
     <div class="pointer-events-auto mx-auto max-w-3xl bg-white rounded-xl shadow-2xl ring-1 ring-gray-200 p-4 sm:p-5 max-h-[50vh] overflow-y-auto">
         <div class="flex flex-col sm:flex-row sm:items-start gap-4">

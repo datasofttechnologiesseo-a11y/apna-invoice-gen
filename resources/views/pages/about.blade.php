@@ -32,10 +32,10 @@
     ];
 @endphp
 <x-layouts.marketing
-    title="About Apna Invoice, Built in India for MSMEs, SMEs & Startups"
+    title="About Us: Made in India for MSMEs"
     eyebrow="Company"
     lead="Made in India by Datasoft Technologies, an Indian SaaS startup based in Delhi NCR. Apna Invoice is built for Indian MSMEs, SMEs, startups, freelancers and CAs, practical software for people who'd rather be billing customers than wrestling spreadsheets."
-    description="About Apna Invoice, a free GST invoice generator made in India by Datasoft Technologies. Built for Indian MSMEs, SMEs, startups, freelancers and CAs operating below ₹5 crore turnover."
+    description="Apna Invoice is a free GST invoice generator made in India for MSMEs, SMEs, startups, freelancers and CAs. Simple GST billing, built by Datasoft Technologies."
     keywords="about Apna Invoice, made in India invoice software, Indian SaaS company, GST invoicing India, MSME SaaS India, Datasoft Technologies, Delhi NCR SaaS"
     :json-ld="[$aboutSchema]">
 

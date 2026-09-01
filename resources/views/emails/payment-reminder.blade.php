@@ -5,11 +5,11 @@
     $overdueLabel = $daysPastDue <= 0
         ? 'due today'
         : ($daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue');
-    $accent = $daysPastDue >= 15 ? '#b91c1c' : ($daysPastDue >= 7 ? '#c2410c' : '#1e3a8a');
+    $accent = $daysPastDue >= 15 ? '#b91c1c' : ($daysPastDue >= 7 ? '#b45309' : '#0f766e');
 @endphp
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Payment reminder — {{ $invoice->invoice_number }}</title></head>
+<head><meta charset="utf-8"><title>Payment reminder - {{ $invoice->invoice_number }}</title></head>
 <body style="margin: 0; padding: 0; background: #f4f4f5; font-family: Helvetica, Arial, sans-serif; color: #111;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f4f5; padding: 24px 12px;">
     <tr>
@@ -20,7 +20,7 @@
                         <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ $c->name }}</div>
                         <div style="font-size: 20px; font-weight: 700; margin-top: 4px;">Payment reminder</div>
                         <div style="font-size: 13px; margin-top: 4px; opacity: 0.9;">
-                            Invoice {{ $invoice->invoice_number }} — <strong>{{ $overdueLabel }}</strong>
+                            Invoice {{ $invoice->invoice_number }} - <strong>{{ $overdueLabel }}</strong>
                         </div>
                     </td>
                 </tr>
@@ -33,7 +33,7 @@
                                 Please arrange the payment at your earliest convenience.</p>
                         @else
                             <p>Our records show that invoice <strong>{{ $invoice->invoice_number }}</strong>
-                                @if ($invoice->due_date) was due on <strong>{{ $invoice->due_date->format('d M Y') }}</strong> — it's now <strong>{{ $daysPastDue }} day{{ $daysPastDue > 1 ? 's' : '' }} overdue</strong>@endif.
+                                @if ($invoice->due_date) was due on <strong>{{ $invoice->due_date->format('d M Y') }}</strong> - it's now <strong>{{ $daysPastDue }} day{{ $daysPastDue > 1 ? 's' : '' }} overdue</strong>@endif.
                                 If you've already paid, please ignore this note.</p>
                         @endif
 
@@ -72,7 +72,8 @@
                 </tr>
                 <tr>
                     <td style="padding: 16px 32px; background: #f9fafb; color: #6b7280; font-size: 11px; text-align: center;">
-                        Sent from {{ $c->name }} · Powered by {{ config('app.name') }}
+                        Sent from {{ $c->name }} · Powered by <a href="{{ url('/') }}?utm_source=reminder_email&utm_medium=email&utm_campaign=powered_by" style="color: #4b5563; font-weight: bold; text-decoration: underline;">{{ config('app.name') }}</a>
+                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses - <a href="{{ route('register') }}?utm_source=reminder_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
                     </td>
                 </tr>
             </table>

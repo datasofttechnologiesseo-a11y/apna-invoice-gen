@@ -27,8 +27,8 @@ return [
     'max_resends' => (int) env('OTP_MAX_RESENDS', 3),
 
     // OTP delivery driver:
-    //   'log'   — dev: writes the code to the log (and exposes it in the UI).
-    //   'email' — always email the code.
+    //   'log'   - dev: writes the code to the log (and exposes it in the UI).
+    //   'email' - always email the code.
     //   (a real SMS gateway like 'msg91' can be added later).
     'driver' => env('OTP_SMS_DRIVER', 'log'),
 

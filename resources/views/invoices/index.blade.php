@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Invoices">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Invoices') }}</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Invoices') }}</h1>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 text-sm font-medium rounded-md transition"
@@ -24,9 +24,13 @@
             @include('partials.sales-tabs', ['active' => 'invoices', 'stats' => $salesStats ?? []])
 
             <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                {{-- Nothing to filter until there is something in the list. Showing an
+                     empty search bar to a new user is noise in front of the one thing
+                     they actually came here to do. --}}
+                @if (! $invoices->isEmpty() || request('search') || request('status') || request('from') || request('to'))
                 <form method="GET" class="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
-                    <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80" aria-label="Search by invoice #, customer name or mobile">
+                    <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         <option value="outstanding" @selected(request('status') === 'outstanding')>⚠ Outstanding (unpaid)</option>
                         @foreach (['draft','final','partially_paid','paid','cancelled'] as $s)
@@ -38,28 +42,29 @@
                         <a href="{{ route('invoices.index') }}" class="text-gray-500 text-sm">clear</a>
                     @endif
                 </form>
+                @endif
 
                 @if ($invoices->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done — share on WhatsApp from the next screen.' }}"
-                        actionHref="{{ request('search') || request('status') ? route('invoices.index') : route('invoices.create') }}"
-                        actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Create invoice' }}"
+                        :title="request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!'"
+                        :description="request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.'"
+                        :actionHref="request('search') || request('status') ? route('invoices.index') : route('invoices.create')"
+                        :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Create invoice'"
                         :secondaryHref="request('search') || request('status') ? null : route('invoices.create', ['sample' => 1])"
                         :secondaryLabel="request('search') || request('status') ? null : 'Try a sample invoice'"
                     />
                 @else
-                    {{-- Mobile card view — one card per invoice, no horizontal scroll --}}
+                    {{-- Mobile card view - one card per invoice, no horizontal scroll --}}
                     <ul class="md:hidden divide-y divide-gray-100">
                         @foreach ($invoices as $inv)
                             @php
                                 $colors = [
                                     'draft' => 'bg-gray-100 text-gray-600',
                                     'final' => 'bg-brand-50 text-brand-700',
-                                    'partially_paid' => 'bg-amber-50 text-amber-700',
+                                    'partially_paid' => 'bg-accent-50 text-accent-700',
                                     'paid' => 'bg-money-50 text-money-700',
-                                    'cancelled' => 'bg-rose-50 text-rose-700',
+                                    'cancelled' => 'bg-danger-50 text-danger-700',
                                 ];
                             @endphp
                             <li class="p-4 flex flex-col gap-2">
@@ -67,12 +72,12 @@
                                     <div class="min-w-0 flex-1">
                                         <div class="font-mono text-sm">
                                             @if ($inv->isDraft())
-                                                <span class="text-gray-400 italic">Draft #{{ $inv->id }}</span>
+                                                <span class="text-gray-500 italic">Draft #{{ $inv->id }}</span>
                                             @else
                                                 <span class="font-semibold text-gray-900">{{ $inv->invoice_number }}</span>
                                             @endif
                                         </div>
-                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '—' }}</div>
+                                        <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '-' }}</div>
                                         <div class="text-xs text-gray-500">{{ $inv->invoice_date?->format('d M Y') }}</div>
                                     </div>
                                     <span class="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
@@ -80,7 +85,7 @@
                                 <div class="flex items-baseline justify-between text-sm">
                                     <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($inv->grand_total) }}</span></span>
                                     @if ((float) $inv->balance > 0)
-                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-amber-700 ml-1">₹{{ inr($inv->balance) }}</span></span>
+                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-accent-700 ml-1">₹{{ inr($inv->balance) }}</span></span>
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-3 pt-1 text-sm">
@@ -93,9 +98,9 @@
                                             title="Delete draft #{{ $inv->id }}?"
                                             message="This draft and all its line items are permanently deleted. This cannot be undone."
                                             confirm-label="Delete draft"
-                                            confirm-class="bg-red-600 hover:bg-red-700"
+                                            confirm-class="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="inline-flex items-center min-h-[36px] text-red-600">Delete</button>
+                                            <button type="button" class="inline-flex items-center min-h-[36px] text-danger-600">Delete</button>
                                         </x-confirm-form>
                                     @endif
                                 </div>
@@ -123,7 +128,7 @@
                                 <tr>
                                     <td class="px-4 py-3 font-mono text-sm">
                                         @if ($inv->isDraft())
-                                            <span class="text-gray-400 italic">Draft #{{ $inv->id }}</span>
+                                            <span class="text-gray-500 italic">Draft #{{ $inv->id }}</span>
                                         @else
                                             <span class="font-semibold text-gray-900">{{ $inv->invoice_number }}</span>
                                         @endif
@@ -133,9 +138,9 @@
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <span>{{ $inv->customer?->name }}</span>
                                             @if ($inv->customer?->gstin)
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" title="Customer has GSTIN — B2B reportable in GSTR-1">B2B</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-money-50 text-money-700 font-bold uppercase tracking-wider" title="Customer has GSTIN - B2B reportable in GSTR-1">B2B</span>
                                             @else
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer — B2C">B2C</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer - B2C">B2C</span>
                                             @endif
                                         </div>
                                         @if ($inv->customer?->phone)
@@ -148,29 +153,29 @@
                                         @php
                                             $colors = [
                                                 'draft' => 'bg-gray-100 text-gray-700',
-                                                'final' => 'bg-blue-100 text-blue-800',
-                                                'partially_paid' => 'bg-amber-100 text-amber-800',
+                                                'final' => 'bg-brand-100 text-brand-800',
+                                                'partially_paid' => 'bg-accent-100 text-accent-800',
                                                 'paid' => 'bg-green-100 text-green-800',
-                                                'cancelled' => 'bg-red-100 text-red-800',
+                                                'cancelled' => 'bg-danger-100 text-danger-800',
                                             ];
                                         @endphp
                                         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
-                                        <a href="{{ route('invoices.show', $inv) }}" class="text-brand-600 hover:underline">View</a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <a href="{{ route('invoices.show', $inv) }}" class="text-brand-700 hover:underline">View</a>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
                                         @if ($inv->isEditable())
-                                            <span class="text-gray-300 mx-1">·</span>
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                             <x-confirm-form
                                                 :action="route('invoices.destroy', $inv)"
                                                 method="DELETE"
                                                 title="Delete draft #{{ $inv->id }}?"
                                                 message="This draft and all its line items are permanently deleted. This cannot be undone."
                                                 confirm-label="Delete draft"
-                                                confirm-class="bg-red-600 hover:bg-red-700"
+                                                confirm-class="bg-danger-600 hover:bg-danger-700"
                                                 tone="danger">
-                                                <button type="button" class="text-red-600 hover:underline">Delete</button>
+                                                <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                             </x-confirm-form>
                                         @endif
                                     </td>

@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo title="Set up your account" :noindex="true" />
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @include('partials.google-analytics')
@@ -17,7 +17,7 @@
 <header class="bg-white border-b border-gray-100">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-3">
         <a href="{{ url('/') }}" class="inline-flex items-center bg-white rounded" aria-label="Apna Invoice home">
-            <x-brand-logo class="h-10 md:h-12 w-auto block" />
+            <x-brand-logo class="h-10 w-auto block" />
         </a>
         <div class="flex items-center gap-4 text-sm">
             <span class="hidden md:inline text-gray-500">Hi, {{ auth()->user()->name }}</span>
@@ -56,7 +56,7 @@
             <div class="flex items-center gap-3 flex-1 {{ $i < count($steps) - 1 ? '' : '' }}">
                 <div @class([
                     'w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ring-4',
-                    'bg-money-500 text-white ring-money-100' => $done,
+                    'bg-money-700 text-white ring-money-100' => $done,
                     'bg-brand-700 text-white ring-brand-100' => $active,
                     'bg-gray-200 text-gray-500 ring-transparent' => ! $done && ! $active,
                 ])>

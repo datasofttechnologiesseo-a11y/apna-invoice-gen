@@ -1,17 +1,17 @@
-<x-app-layout>
+<x-app-layout :title="$invoice->exists ? 'Edit invoice' : 'New invoice'">
     @php $restricted = $restricted ?? false; $isSample = ! $invoice->exists && request()->boolean('sample'); @endphp
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
                 {{ $invoice->exists ? 'Edit ' . $invoice->displayNumber() : 'New invoice' }}
                 @if ($restricted)
-                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 uppercase font-bold tracking-wider">Limited edit</span>
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-accent-50 text-accent-700 uppercase font-bold tracking-wider">Limited edit</span>
                 @elseif ($isSample)
                     <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Sample · edit &amp; save</span>
                 @elseif (! $invoice->exists && ! empty($templateLabel))
                     <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Using template: {{ $templateLabel }}</span>
                 @endif
-            </h2>
+            </h1>
             @unless ($invoice->exists || $restricted)
                 <a href="{{ route('invoices.templates') }}" class="text-sm text-brand-700 hover:text-brand-800 hover:underline self-start sm:self-auto inline-flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v2H4V6zM4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z"/></svg>
@@ -51,9 +51,9 @@
         // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
         $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
         $companyStateId = $company->state_id;
-        // Lean customer index for the typeahead combobox — searchable on name,
+        // Lean customer index for the typeahead combobox - searchable on name,
         // phone, GSTIN, city, and state name (matches how Indian SMEs look up
-        // customers — by phone or trade name, not by formal database lookup).
+        // customers - by phone or trade name, not by formal database lookup).
         $customerIndex = $customers->map(fn ($c) => [
             'id' => $c->id,
             'name' => $c->name,
@@ -65,7 +65,7 @@
         ])->values();
         // With the typeahead combobox, we no longer pre-render every product into
         // the DOM. Only seed productMap with the products that are actually
-        // referenced by the current invoice rows — needed for the search box to
+        // referenced by the current invoice rows - needed for the search box to
         // display "selected" names in edit mode. Everything else is fetched
         // on-demand via /products/search. Big speedup for shops with 1000+ items.
         $itemProductIds = collect($oldItems)->pluck('product_id')->filter()->unique()->values();
@@ -93,7 +93,7 @@
               etc.). The handler inspects $event.target so we don't hijack
               Ctrl+S while the user is typing in a textarea. --}}
          @keydown.window="onShortcut($event)">
-        {{-- Wider container for the invoice form than the rest of the app —
+        {{-- Wider container for the invoice form than the rest of the app -
              line-item table needs ~1200px to fit Product/Desc/HSN/Qty/Rate/Disc/GST/Amount
              without horizontal scroll on standard laptop widths. --}}
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -102,14 +102,14 @@
                 ['label' => $invoice->exists ? $invoice->displayNumber() : 'New invoice'],
             ]" />
             @if ($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">
                     <div class="flex items-start gap-2">
-                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                         <div>
                             <div class="font-semibold">Please fix {{ $errors->count() === 1 ? 'this' : 'these' }} before saving:</div>
                             <ul class="list-disc pl-6 mt-1">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                             @if (! empty($itemErrors))
-                                <div class="mt-1.5 text-xs text-red-600">The affected {{ count($itemErrors) === 1 ? 'row is' : 'rows are' }} highlighted below.</div>
+                                <div class="mt-1.5 text-xs text-danger-600">The affected {{ count($itemErrors) === 1 ? 'row is' : 'rows are' }} highlighted below.</div>
                             @endif
                         </div>
                     </div>
@@ -117,10 +117,10 @@
             @endif
 
             @if ($restricted)
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded flex items-start gap-3">
-                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded flex items-start gap-3">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                     <div class="text-sm">
-                        <div class="font-semibold">This invoice is issued — limited editing only.</div>
+                        <div class="font-semibold">This invoice is issued - limited editing only.</div>
                         <div class="mt-0.5">You can update <strong>notes, terms, due date, and transporter details</strong>. Amounts, line items, customer, and invoice number are legally locked per GST rules. To change those, cancel this invoice and issue a credit note / revised invoice.</div>
                     </div>
                 </div>
@@ -131,19 +131,19 @@
             @unless ($invoice->exists)
                 <div x-data="{ show: !localStorage.getItem('hideFirstInvoiceTip') }" x-show="show" x-cloak
                      class="p-4 bg-brand-50 border border-brand-200 text-brand-900 rounded-lg flex items-start gap-3">
-                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div class="text-sm flex-1">
                         <div class="font-semibold">New to invoicing? Here's all you need to do:</div>
                         <ol class="mt-1 list-decimal pl-5 space-y-0.5">
                             <li>Pick a <strong>customer</strong> (or click <em>+ New</em> to add one).</li>
-                            <li>Fill <strong>at least one line item</strong> — description, HSN/SAC, qty, rate, GST%.</li>
-                            <li>Click <strong>Create draft</strong> — it stays editable. <strong>Issue</strong> locks the invoice number and makes the PDF.</li>
+                            <li>Fill <strong>at least one line item</strong> - description, HSN/SAC, qty, rate, GST%.</li>
+                            <li>Click <strong>Create draft</strong> - it stays editable. <strong>Issue</strong> locks the invoice number and makes the PDF.</li>
                         </ol>
-                        <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to fields are optional — open them only if needed.</div>
+                        <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to fields are optional - open them only if needed.</div>
                     </div>
-                    <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-500 hover:text-brand-800 hover:bg-brand-100 rounded-lg text-2xl leading-none" aria-label="Dismiss tip">×</button>
+                    <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-700 hover:text-brand-900 hover:bg-brand-100 rounded-lg text-2xl leading-none" aria-label="Dismiss tip">×</button>
                 </div>
             @endunless
 
@@ -151,15 +151,15 @@
                  the customer picker is empty, but the "+ New" button opens the inline
                  modal so the user never has to leave this page. --}}
             @if ($customers->isEmpty() && ! $restricted)
-                <div class="p-4 bg-saffron-50 border border-saffron-200 text-saffron-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
-                    <svg class="w-5 h-5 flex-shrink-0 text-saffron-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">No customers yet.</span>
-                        Click <strong>+ New</strong> next to the Customer field below — takes 10 seconds, no need to leave this page.
+                        Click <strong>+ New</strong> next to the Customer field below - takes 10 seconds, no need to leave this page.
                     </div>
-                    <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center px-3 py-1.5 bg-saffron-600 hover:bg-saffron-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
+                    <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         + Add customer
                     </button>
                 </div>
@@ -171,15 +171,15 @@
                  (CGST/SGST), so an inter-state sale would be split incorrectly. We block
                  finalisation of a taxed invoice until the state is set (see InvoiceController). --}}
             @if (! $company->state_id && ! $restricted)
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
-                    <svg class="w-5 h-5 flex-shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/>
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">Your business state is not set.</span>
                         Until you set it, we can't tell a same-state sale from an inter-state one, so GST defaults to intra-state (CGST/SGST) and an inter-state sale would be split incorrectly. Set your state so CGST/SGST and IGST apply correctly. You'll need it set before issuing a GST invoice.
                     </div>
-                    <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
+                    <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         Set business state
                     </a>
                 </div>
@@ -199,7 +199,7 @@
                                 @php $lockedCustomer = $customers->firstWhere('id', $invoice->customer_id); @endphp
                                 <input type="hidden" name="customer_id" value="{{ $invoice->customer_id }}">
                                 <div class="mt-1 px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-sm text-gray-800">
-                                    {{ $lockedCustomer?->name }}{{ $lockedCustomer?->state?->name ? ' — ' . $lockedCustomer->state->name : '' }}
+                                    {{ $lockedCustomer?->name }}{{ $lockedCustomer?->state?->name ? ' - ' . $lockedCustomer->state->name : '' }}
                                 </div>
                             @else
                                 {{-- Combobox: type-to-search across name/phone/GSTIN/city/state.
@@ -212,6 +212,7 @@
                                         <div class="relative flex-1">
                                             <input id="customer_search"
                                                    type="text"
+                                                   aria-label="Search customers by name, phone or GSTIN"
                                                    x-model="customerCombo.search"
                                                    @focus="openCustomerCombo()"
                                                    @input="onCustomerComboInput()"
@@ -222,12 +223,12 @@
                                                    placeholder="Type customer name, phone, or GSTIN…"
                                                    autocomplete="off"
                                                    class="block w-full border-gray-300 rounded-md shadow-sm pr-10">
-                                            {{-- Clear button — only visible when a customer is selected. Lets
+                                            {{-- Clear button - only visible when a customer is selected. Lets
                                                  the user re-type without using the keyboard. --}}
                                             <button type="button"
                                                     x-show="customerId"
                                                     @click="clearCustomer()"
-                                                    class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-700"
+                                                    class="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-gray-700"
                                                     aria-label="Clear customer">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                             </button>
@@ -251,11 +252,11 @@
                                                         </div>
                                                     </button>
                                                 </template>
-                                                {{-- Sticky "Add new" footer — always shows when search has text --}}
+                                                {{-- Sticky "Add new" footer - always shows when search has text --}}
                                                 <button type="button"
                                                         x-show="customerCombo.search.trim()"
                                                         @click="quickAddCustomer(customerCombo.search.trim())"
-                                                        class="block w-full text-left px-3 py-2 text-sm bg-saffron-50 hover:bg-saffron-100 text-saffron-900 font-semibold border-t border-saffron-200 sticky bottom-0">
+                                                        class="block w-full text-left px-3 py-2 text-sm bg-accent-50 hover:bg-accent-100 text-accent-900 font-semibold border-t border-accent-200 sticky bottom-0">
                                                     + Use new customer: "<span x-text="customerCombo.search.trim()"></span>"
                                                 </button>
                                             </div>
@@ -265,7 +266,7 @@
                                                 title="Add a new customer without leaving this page">+ New</button>
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500" x-show="customerId && selectedCustomerLabel">
-                                        <span class="text-emerald-700 font-medium">✓ Selected:</span>
+                                        <span class="text-money-700 font-medium">✓ Selected:</span>
                                         <span x-text="selectedCustomerLabel"></span>
                                     </p>
                                 </div>
@@ -315,15 +316,15 @@
                             <x-input-label value="Tax mode (auto)" />
                             <div class="mt-2 text-sm">
                                 <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
-                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded">Inter-state (IGST)</span>
-                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">Intra-state (CGST + SGST)</span>
+                                <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded">Inter-state (IGST)</span>
+                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + SGST)</span>
                             </div>
                             <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
                                 <input type="checkbox" name="reverse_charge" value="1" x-model="reverseCharge" @change="recompute()"
-                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-500">
+                                       class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Reverse charge applicable</span>
-                                    <span class="block text-xs text-gray-500">Section 9(3)/9(4) — recipient pays GST. CGST/SGST/IGST will be set to ₹0 on the invoice; the recipient self-assesses.</span>
+                                    <span class="block text-xs text-gray-500">Section 9(3)/9(4) - recipient pays GST. CGST/SGST/IGST will be set to ₹0 on the invoice; the recipient self-assesses.</span>
                                 </span>
                             </label>
                         </div>
@@ -332,10 +333,10 @@
 
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
-                        <h3 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-amber-700 font-normal">🔒 Locked — amounts are immutable</span>@endif</h3>
+                        <h2 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-accent-700 font-normal">🔒 Locked - amounts are immutable</span>@endif</h2>
                         <div class="flex items-center gap-3">
                             @if (! $restricted)
-                                <span class="hidden md:inline text-xs text-gray-500">Tip: type a product name in the row — pick existing or save a new one inline.</span>
+                                <span class="hidden md:inline text-xs text-gray-500">Tip: type a product name in the row - pick existing or save a new one inline.</span>
                                 <button type="button" @click="addRow" class="inline-flex items-center justify-center min-h-[40px] px-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-md text-sm font-semibold">+ Add row</button>
                             @endif
                         </div>
@@ -347,18 +348,18 @@
                          table, which fits comfortably from ~1024px wide. --}}
                     <div class="lg:hidden divide-y divide-gray-100">
                         {{-- Key by stable _uid (not idx) so Alpine doesn't reuse the
-                             same DOM node — and the nested productRowCombobox's
-                             captured idx — for a different logical row after a splice. --}}
+                             same DOM node - and the nested productRowCombobox's
+                             captured idx - for a different logical row after a splice. --}}
                         <template x-for="(item, idx) in items" :key="item._uid">
                             <div class="p-4 space-y-3 transition-colors" :data-row-index="idx"
                                  @input="clearRowError(idx)" @change="clearRowError(idx)"
-                                 :class="rowHasError(idx) && 'bg-red-50 ring-1 ring-red-300 rounded-lg'">
+                                 :class="rowHasError(idx) && 'bg-danger-50 ring-1 ring-danger-300 rounded-lg'">
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
                                     @if (! $restricted)
                                         <button type="button" @click="removeRow(idx)"
                                                 :disabled="items.length <= 1"
-                                                :class="items.length <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-red-600'"
+                                                :class="items.length <= 1 ? 'text-gray-400 cursor-not-allowed' : 'text-danger-600'"
                                                 class="text-sm font-medium transition"
                                                 aria-label="Remove row">Remove</button>
                                     @endif
@@ -370,6 +371,7 @@
                                         <div class="relative">
                                             <input type="text"
                                                    x-ref="comboInput"
+                                                   :aria-label="`Product or service for line item ${idx + 1}`"
                                                    x-model="combo.search"
                                                    @focus="openCombo()"
                                                    @input.debounce.250ms="onInput()"
@@ -382,7 +384,7 @@
                                                    autocomplete="off"
                                                    class="mt-1 block w-full border-gray-300 rounded text-sm pr-8">
                                             <button type="button" x-show="item.product_id || combo.search" @click="clearRow()"
-                                                    class="absolute inset-y-0 right-0 top-1 px-2 text-gray-400 hover:text-gray-700" aria-label="Clear product">
+                                                    class="absolute inset-y-0 right-0 top-1 px-2 text-gray-500 hover:text-gray-700" aria-label="Clear product">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                             </button>
                                         </div>
@@ -390,58 +392,58 @@
                                     </div>
                                 @endunless
                                 <div>
-                                    <label class="text-xs text-gray-500 font-semibold">Description <span class="text-gray-400 font-normal">(max 150)</span></label>
+                                    <label class="text-xs text-gray-500 font-semibold">Description <span class="text-gray-500 font-normal">(max 150)</span></label>
                                     {{-- Description is optional. If left blank and a product is picked,
                                          the server backfills it from the product's name. The user can also
                                          leave it blank entirely for a one-line custom charge. --}}
-                                    <input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                    <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <div class="inline-flex items-center gap-1.5">
                                             <label class="text-xs text-gray-500 font-semibold">
-                                                HSN/SAC<span x-show="!hsnRequired" class="font-normal text-gray-400"> (optional)</span>
+                                                HSN/SAC<span x-show="!hsnRequired" class="font-normal text-gray-500"> (optional)</span>
                                             </label>
                                             <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                target="_blank" rel="noopener"
                                                onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                               class="text-brand-600 hover:text-brand-700"
+                                               class="text-brand-700 hover:text-brand-800"
                                                aria-label="Search HSN/SAC code on the official GST portal"
                                                title="Search HSN/SAC code on the official GST portal">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                                             </a>
                                         </div>
-                                        <input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" :required="hsnRequired">
-                                        <p class="mt-1 text-[10px]" :class="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4 ? 'text-amber-700 font-semibold' : 'text-gray-400'">
+                                        <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" placeholder="e.g. 998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono" :required="hsnRequired">
+                                        <p class="mt-1 text-[10px]" :class="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4 ? 'text-accent-700 font-semibold' : 'text-gray-500'">
                                             <template x-if="!item.hsn_sac || item.hsn_sac.length === 0">
                                                 <span x-text="hsnRequired
                                                     ? 'Required. 4 digits if turnover < ₹5 Cr · 6 if > ₹5 Cr · 8 for exports.'
-                                                    : 'Optional — neither you nor the customer is GST-registered.'"></span>
+                                                    : 'Optional - neither you nor the customer is GST-registered.'"></span>
                                             </template>
                                             <template x-if="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4">
                                                 <span>⚠ HSN should be at least 4 digits per Rule 46(g).</span>
                                             </template>
                                             <template x-if="item.hsn_sac && item.hsn_sac.length >= 4">
-                                                <span class="text-emerald-700">✓ <span x-text="item.hsn_sac.length"></span>-digit HSN — valid format.</span>
+                                                <span class="text-money-700">✓ <span x-text="item.hsn_sac.length"></span>-digit HSN - valid format.</span>
                                             </template>
                                         </p>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Unit</label>
-                                        <input :name="`items[${idx}][unit]`" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS, HRS…">
+                                        <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, KGS, HRS…">
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
-                                        <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
-                                        <input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
-                                        <input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
-                                        <p class="mt-0.5 text-[10px] text-gray-400">Section 15(3) — pre-tax</p>
+                                        <input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
+                                        <p class="mt-0.5 text-[10px] text-gray-500">Section 15(3) - pre-tax</p>
                                     </div>
                                 </div>
                                 <div>
@@ -456,30 +458,31 @@
                                         $commonRates = [0, 5, 12, 18, 28];
                                         $rareRates = collect(config('gst.rates'))->whereNotIn('value', $commonRates)->values();
                                     @endphp
-                                    <input type="hidden" :name="`items[${idx}][gst_rate]`" :value="item.gst_rate">
+                                    <input type="hidden" :name="`items[${idx}][gst_rate]`" :aria-label="`GST rate for line item ${idx + 1}`" :value="item.gst_rate">
                                     <div class="mt-1 grid grid-cols-5 gap-1 p-1 bg-gray-100 rounded-lg">
                                         @foreach ($commonRates as $r)
                                             <button type="button"
                                                     @click="item.gst_rate = {{ $r }}; recompute()"
-                                                    :class="(parseFloat(item.gst_rate) === {{ $r }}) ? 'bg-brand-600 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
+                                                    :class="(parseFloat(item.gst_rate) === {{ $r }}) ? 'bg-brand-700 text-white shadow' : 'text-gray-700 hover:text-gray-900 hover:bg-white/70'"
                                                     class="inline-flex items-center justify-center min-h-[40px] text-sm font-extrabold rounded transition tabular-nums">
                                                 {{ $r }}%
                                             </button>
                                         @endforeach
                                     </div>
-                                    {{-- "Other rate" select — only used for the rare slabs.
+                                    {{-- "Other rate" select - only used for the rare slabs.
                                          Its current value reflects the row's rate when it's not
                                          one of the common 5, so the user always sees what's set. --}}
                                     <div class="mt-1.5 flex items-center gap-2 text-[11px] text-gray-500">
                                         <span>Or pick a special rate:</span>
                                         <select @change="item.gst_rate = parseFloat($event.target.value); recompute()"
+                                                aria-label="Pick a special GST rate"
                                                 class="flex-1 border-gray-300 rounded text-xs py-1">
-                                            <option value="">— Other —</option>
+                                            <option value="">- Other -</option>
                                             @foreach ($rareRates as $r)
                                                 <option value="{{ $r['value'] }}"
                                                         :selected="parseFloat(item.gst_rate) === {{ $r['value'] }}"
-                                                        title="{{ $r['label'] . ' — ' . $r['note'] }}">
-                                                    {{ (float) $r['value'] }}% — {{ Str::after($r['label'], '· ') }}
+                                                        title="{{ $r['label'] . ' - ' . $r['note'] }}">
+                                                    {{ (float) $r['value'] }}% - {{ Str::after($r['label'], '· ') }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -508,7 +511,7 @@
                                             <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                target="_blank" rel="noopener"
                                                onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                               class="text-brand-600 hover:text-brand-700"
+                                               class="text-brand-700 hover:text-brand-800"
                                                aria-label="Search HSN/SAC code on the official GST portal"
                                                title="Search HSN/SAC code on the official GST portal">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -524,11 +527,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- Stable _uid keying — see mobile section above. --}}
+                                {{-- Stable _uid keying - see mobile section above. --}}
                                 <template x-for="(item, idx) in items" :key="`d-${item._uid}`">
                                     <tr class="border-t transition-colors" :data-row-index="idx"
                                         @input="clearRowError(idx)" @change="clearRowError(idx)"
-                                        :class="rowHasError(idx) && 'bg-red-50'">
+                                        :class="rowHasError(idx) && 'bg-danger-50'">
                                         @unless ($restricted)
                                             <td class="px-2 py-2 relative">
                                                 <div x-data="productRowCombobox(idx)" class="relative w-48" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
@@ -536,6 +539,7 @@
                                                     <div class="relative">
                                                         <input type="text"
                                                                x-ref="comboInput"
+                                                               :aria-label="`Product or service for line item ${idx + 1}`"
                                                                x-model="combo.search"
                                                                @focus="openCombo()"
                                                                @input.debounce.250ms="onInput()"
@@ -548,7 +552,7 @@
                                                                autocomplete="off"
                                                                class="w-full border-gray-300 rounded text-sm pr-7">
                                                         <button type="button" x-show="item.product_id || combo.search" @click="clearRow()"
-                                                                class="absolute inset-y-0 right-0 px-2 text-gray-400 hover:text-gray-700" aria-label="Clear product">
+                                                                class="absolute inset-y-0 right-0 px-2 text-gray-500 hover:text-gray-700" aria-label="Clear product">
                                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                                         </button>
                                                     </div>
@@ -556,25 +560,25 @@
                                                 </div>
                                             </td>
                                         @endunless
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" x-model="item.description" maxlength="150" placeholder="Optional — auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" :required="hsnRequired"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
-                                                <input :name="`items[${idx}][quantity]`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required>
-                                                <input :name="`items[${idx}][unit]`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
+                                                <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required>
+                                                <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
                                             </div>
                                         </td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
-                                            {{-- Compact GST cell — just "18%". Full descriptive text + regulatory
+                                            {{-- Compact GST cell - just "18%". Full descriptive text + regulatory
                                                  note are in the option's `title` so a hover still tells the user
                                                  which slab they're picking. Was w-36 (144px) with long labels
                                                  like "18% · Standard rate" causing the table to overflow the
                                                  container at common laptop widths. --}}
-                                            <select :name="`items[${idx}][gst_rate]`" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
+                                            <select :name="`items[${idx}][gst_rate]`" aria-label="GST rate" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
-                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' — ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' - ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -588,8 +592,8 @@
                                                         :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
                                                         class="inline-flex items-center justify-center w-9 h-9 rounded-md ring-1 transition"
                                                         :class="items.length <= 1
-                                                            ? 'text-gray-300 ring-gray-200 bg-gray-50 cursor-not-allowed'
-                                                            : 'text-red-600 ring-red-200 bg-red-50 hover:text-white hover:bg-red-600 hover:ring-red-600'"
+                                                            ? 'text-gray-400 ring-gray-200 bg-gray-50 cursor-not-allowed'
+                                                            : 'text-danger-600 ring-danger-200 bg-danger-50 hover:text-white hover:bg-danger-600 hover:ring-danger-600'"
                                                         aria-label="Remove row">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 </button>
@@ -615,7 +619,7 @@
                                 class="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-100 transition"
                                 :aria-expanded="open">
                             <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6 0a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
                                 </svg>
@@ -624,7 +628,7 @@
                                     <div class="text-xs text-gray-500">Skip this if you're billing for services. Used for e-way bill and goods delivery.</div>
                                 </div>
                             </div>
-                            <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-gray-500 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -645,7 +649,7 @@
                                 <div>
                                     <x-input-label for="transport_mode" value="Mode" />
                                     <select id="transport_mode" name="transport_mode" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="">— Select —</option>
+                                        <option value="">- Select -</option>
                                         @foreach (['Road', 'Rail', 'Air', 'Ship'] as $m)
                                             <option value="{{ $m }}" @selected(old('transport_mode', $invoice->transport_mode) === $m)>{{ $m }}</option>
                                         @endforeach
@@ -678,7 +682,7 @@
                                     <div class="text-xs text-gray-500">For goods delivered to a site that isn't the customer's billing address (warehouse, branch, project site…).</div>
                                 </div>
                             </div>
-                            <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-gray-500 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
@@ -703,7 +707,7 @@
                                 <div>
                                     <x-input-label for="ship_to_state_id" value="State" />
                                     <select id="ship_to_state_id" name="ship_to_state_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="">— Select —</option>
+                                        <option value="">- Select -</option>
                                         @foreach ($states as $s)
                                             <option value="{{ $s->id }}" @selected(old('ship_to_state_id', $invoice->ship_to_state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                                         @endforeach
@@ -720,17 +724,17 @@
                             </div>
                             <p class="text-xs text-gray-500">
                                 If the consignee's state differs from the Bill-to state, GST is still determined by the <strong>place of supply</strong>
-                                (the customer's state on record), not the ship-to state. This is correct per the IGST Act — use the Bill-to state for tax mode.
+                                (the customer's state on record), not the ship-to state. This is correct per the IGST Act - use the Bill-to state for tax mode.
                             </p>
                         </div>
                     </div>
 
                     {{-- B2C > ₹2.5L warning (Rule 46(e) requires recipient name/address/state) --}}
-                    <div x-show="showB2cWarning" x-cloak class="border-t bg-amber-50 px-6 py-3">
-                        <div class="flex items-start gap-2 text-sm text-amber-900">
-                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+                    <div x-show="showB2cWarning" x-cloak class="border-t bg-accent-50 px-6 py-3">
+                        <div class="flex items-start gap-2 text-sm text-accent-900">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
-                                <div class="font-semibold">B2C invoice over ₹2.5 lakh — Rule 46(e) applies</div>
+                                <div class="font-semibold">B2C invoice over ₹2.5 lakh - Rule 46(e) applies</div>
                                 <div class="mt-0.5">The customer has no GSTIN and the invoice total exceeds ₹2,50,000. Per CGST Rule 46(e), you must include the recipient's <strong>name, full delivery address, and state</strong>. Double-check the customer record has those filled in.</div>
                             </div>
                         </div>
@@ -750,8 +754,8 @@
 
                         <div class="md:pl-6 space-y-2 text-sm">
                             <div class="flex justify-between"><span>Subtotal</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
-                            <div x-show="reverseCharge" class="p-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-900">
-                                🛈 <strong>Reverse charge:</strong> CGST/SGST/IGST set to ₹0 on this invoice — recipient pays GST directly (Section 9(3)/9(4)).
+                            <div x-show="reverseCharge" class="p-2 rounded bg-accent-50 border border-accent-200 text-xs text-accent-900">
+                                🛈 <strong>Reverse charge:</strong> CGST/SGST/IGST set to ₹0 on this invoice - recipient pays GST directly (Section 9(3)/9(4)).
                             </div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>SGST</span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
@@ -770,7 +774,7 @@
                      knows whether to redirect to the show page or auto-trigger PDF. --}}
                 <input type="hidden" name="post_save_action" x-ref="postSaveAction" value="">
 
-                {{-- Legacy bottom action row — kept for mobile (where the sticky bar is hidden)
+                {{-- Legacy bottom action row - kept for mobile (where the sticky bar is hidden)
                      and as a fallback in case sticky positioning is unsupported. --}}
                 <div class="flex items-center justify-between lg:hidden">
                     <a href="{{ route('invoices.index') }}" class="text-gray-500 hover:underline">← Cancel</a>
@@ -783,13 +787,13 @@
                 </div>
             </form>
 
-            {{-- Sticky bottom totals + save bar. Desktop only — gives users the
+            {{-- Sticky bottom totals + save bar. Desktop only - gives users the
                  Grand Total + primary action visible at all times no matter how
                  far down the form they've scrolled. On mobile we already show
                  totals inline + the FAB. --}}
             @unless ($restricted)
             <div class="hidden lg:block fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-                {{-- power-user keyboard shortcut strip — kept subtle so it doesn't
+                {{-- power-user keyboard shortcut strip - kept subtle so it doesn't
                      compete with the action buttons, but always visible for power
                      users (a common complaint in Indian billing apps is missing shortcuts). --}}
                 <div class="max-w-7xl mx-auto px-6 py-1 text-[11px] text-gray-500 border-b border-gray-100 flex items-center gap-x-4 gap-y-0.5 flex-wrap">
@@ -802,7 +806,7 @@
                 <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
                     <div class="text-xs text-gray-500">
                         Subtotal <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.subtotal)"></span>
-                        <span class="mx-1 text-gray-300">·</span>
+                        <span class="mx-1 text-gray-400" aria-hidden="true">·</span>
                         <span x-show="!isInterstate">CGST <span class="font-mono text-gray-900" x-text="fmt(totals.cgst)"></span> · SGST <span class="font-mono text-gray-900" x-text="fmt(totals.sgst)"></span></span>
                         <span x-show="isInterstate">IGST <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.igst)"></span></span>
                     </div>
@@ -812,11 +816,11 @@
                         <div class="font-display text-2xl font-extrabold text-gray-900" x-text="'₹ ' + fmt(totals.grandTotal)"></div>
                     </div>
                     <div class="flex items-center gap-2">
-                        {{-- type="button" + @click="submitForm(...)" — routes through the
+                        {{-- type="button" + @click="submitForm(...)" - routes through the
                              central submit so document.activeElement.blur() fires and any
                              pending @blur handlers (combobox commitTypedText etc.) flush
                              before the form posts. Was previously type="submit" with the
-                             native form-submit racing the blur — pending typed combobox
+                             native form-submit racing the blur - pending typed combobox
                              text could be lost on click. --}}
                         <button type="button"
                                 @click="submitForm('')"
@@ -837,10 +841,10 @@
             @endunless
 
             @if ($invoice->exists && $invoice->isEditable() && ! $restricted)
-                <div class="mt-6 p-5 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                <div class="mt-6 p-5 bg-danger-50 border border-danger-200 rounded-lg flex items-center justify-between">
                     <div class="text-sm">
-                        <div class="font-semibold text-red-800">Delete this draft</div>
-                        <div class="text-red-700">Once deleted, the draft and its line items are gone permanently.</div>
+                        <div class="font-semibold text-danger-800">Delete this draft</div>
+                        <div class="text-danger-700">Once deleted, the draft and its line items are gone permanently.</div>
                     </div>
                     <x-confirm-form
                         :action="route('invoices.destroy', $invoice)"
@@ -848,16 +852,16 @@
                         title="Delete this draft?"
                         message="This draft and all its line items are permanently removed. This cannot be undone."
                         confirm-label="Delete draft"
-                        confirm-class="bg-red-600 hover:bg-red-700"
+                        confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
-                        <button type="button" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-semibold text-sm">Delete draft</button>
+                        <button type="button" class="px-4 py-2 bg-danger-600 text-white rounded hover:bg-danger-700 font-semibold text-sm">Delete draft</button>
                     </x-confirm-form>
                 </div>
             @endif
         </div>
     </div>
 
-    {{-- Inline "+ New customer" modal — opens when the dropdown's "+ New" is clicked.
+    {{-- Inline "+ New customer" modal - opens when the dropdown's "+ New" is clicked.
          Self-contained: dispatches `customer-added` on success, the form listens
          and updates the dropdown without losing typed data. --}}
     <x-quick-customer-modal :states="$states" />
@@ -870,7 +874,7 @@
             // Coerce ids to strings for consistent comparison (HTML inputs are strings).
             const customers = (customerIndex || []).map(c => ({...c, id: String(c.id)}));
             // Generate a row-stable id so x-for keys survive splice() without
-            // Alpine reusing the wrong DOM node — see "row drift" bug where
+            // Alpine reusing the wrong DOM node - see "row drift" bug where
             // deleting row 1 left row 0's combobox showing the deleted row's
             // typed text. crypto.randomUUID exists in all modern browsers; the
             // Math.random fallback is good enough for purely-local keys.
@@ -899,7 +903,7 @@
                 companyStateId,
                 companyHasGstin: !! companyHasGstin,
                 productMap,
-                // Reactive customer list — combobox iterates this. Mutated by addCustomer()
+                // Reactive customer list - combobox iterates this. Mutated by addCustomer()
                 // when a new customer is created inline, so the dropdown updates without reload.
                 customers,
                 customerCombo: { search: '', open: false, highlight: 0 },
@@ -920,7 +924,7 @@
                  * HSN/SAC is legally required only when at least one party is
                  * GST-registered (Rule 46(g)). For supplier-not-registered AND
                  * customer-not-registered transactions (effectively non-GST
-                 * cash sales), HSN is optional — making users type it adds
+                 * cash sales), HSN is optional - making users type it adds
                  * friction with no compliance value. Reactive so it updates the
                  * moment a B2B customer is picked.
                  */
@@ -931,7 +935,7 @@
                 },
                 /**
                  * Filtered customer list shown in the dropdown. Searches across name,
-                 * phone, GSTIN, city, and state name — matches how Indian SMEs look
+                 * phone, GSTIN, city, and state name - matches how Indian SMEs look
                  * up customers (often by phone number or trade name). Case-insensitive.
                  * Empty search returns the first 20 entries so the list isn't huge.
                  */
@@ -1003,7 +1007,7 @@
                     if (list.length > 0 && this.customerCombo.highlight >= 0 && this.customerCombo.highlight < list.length) {
                         this.selectCustomer(list[this.customerCombo.highlight]);
                     } else if (this.customerCombo.search.trim()) {
-                        // No matches but text typed — quick-add it.
+                        // No matches but text typed - quick-add it.
                         this.quickAddCustomer(this.customerCombo.search.trim());
                     }
                 },
@@ -1030,7 +1034,7 @@
                  * Called by the @customer-added.window listener after the inline
                  * "Quick add customer" modal saves a new customer. Pushes the new
                  * customer into the reactive list, updates the place-of-supply maps,
-                 * and selects it — without losing any typed line items.
+                 * and selects it - without losing any typed line items.
                  */
                 addCustomer(c) {
                     if (!c || !c.id) return;
@@ -1057,7 +1061,7 @@
                 },
 
                 /**
-                 * Keyboard shortcuts (power-user — common in Indian SME billing apps).
+                 * Keyboard shortcuts (power-user - common in Indian SME billing apps).
                  *   F2          → add a new row
                  *   F9          → save & download PDF
                  *   Ctrl+S      → save draft  (overrides browser save-as)
@@ -1087,7 +1091,7 @@
                         return;
                     }
                     if ((e.ctrlKey || e.metaKey) && (key === 's' || key === 'S')) {
-                        // Skip if focus is in a textarea — Ctrl+S in a textarea
+                        // Skip if focus is in a textarea - Ctrl+S in a textarea
                         // is harmless but some users use it for autosave plugins.
                         if (isTextarea) return;
                         e.preventDefault();
@@ -1101,7 +1105,7 @@
                  * requestSubmit() so HTML5 validation still runs (required fields,
                  * GSTIN format, etc.) and is identical to a click on the button.
                  *
-                 * First we force the active element to blur — this triggers any
+                 * First we force the active element to blur - this triggers any
                  * pending @blur handlers, most importantly the combobox's
                  * commitTypedText() which mirrors typed-but-not-picked product
                  * names into the line description. Without this, Ctrl+S / F9
@@ -1161,7 +1165,7 @@
                         const rate = parseFloat(item.rate) || 0;
                         const gst = parseFloat(item.gst_rate) || 0;
                         const gross = +(qty * rate).toFixed(2);
-                        // Pre-tax discount per Section 15(3) — clamp to gross
+                        // Pre-tax discount per Section 15(3) - clamp to gross
                         const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
                         const amount = +(gross - disc).toFixed(2);
                         let c = 0, s = 0, ig = 0;
@@ -1207,7 +1211,7 @@
          *   - GET  /products/search?q=...     → typeahead results
          *   - POST /products/quick-create     → inline "+ Save as new product"
          *
-         * Designed for Indian SMEs who often want "Cement bag — 500 — 18%" saved
+         * Designed for Indian SMEs who often want "Cement bag - 500 - 18%" saved
          * in 5 seconds without leaving the invoice.
          */
         function productRowCombobox(idx) {
@@ -1225,7 +1229,7 @@
 
                 init() {
                     // Alpine v3 caveat: nested x-data does NOT inherit parent
-                    // scope into JS *methods* — inheritance only applies in
+                    // scope into JS *methods* - inheritance only applies in
                     // directive expressions (x-text, x-show, etc.). So we grab
                     // an explicit reference to the parent invoiceForm scope on
                     // mount via Alpine.$data() walked up the DOM tree. Every
@@ -1236,7 +1240,7 @@
                         ? window.Alpine.$data(outerEl)
                         : null;
                     if (!this.parent || typeof this.parent.pickProduct !== 'function') {
-                        // Loud failure — if you see this in DevTools, the combobox can't
+                        // Loud failure - if you see this in DevTools, the combobox can't
                         // reach the invoice form. Common cause: outer Alpine root was
                         // removed or restructured. Picks will be no-ops until fixed.
                         console.error('[invoice-form] productRowCombobox could not reach parent invoiceForm scope. Picks will not propagate to row data.', { idx: this.idx, outerEl });
@@ -1249,7 +1253,7 @@
                     //
                     // Path 2 is what makes "I typed Cement bag last week as a one-off"
                     // reappear on edit instead of looking like a blank field. We don't
-                    // touch item.description here — display only.
+                    // touch item.description here - display only.
                     this.$nextTick(() => {
                         if (!this.parent) return;
                         const item = this.parent.items?.[this.idx];
@@ -1257,7 +1261,7 @@
                         if (item.product_id && this.parent.productMap?.[item.product_id]) {
                             this.combo.search = this.parent.productMap[item.product_id].name;
                         } else if (item.description) {
-                            // Custom-typed line item — mirror the saved description into
+                            // Custom-typed line item - mirror the saved description into
                             // the combobox text so the user sees what they originally entered.
                             this.combo.search = item.description;
                         }
@@ -1308,7 +1312,7 @@
                     this.combo.highlight = 0;
                     this.quickAdd.open = false;
                     // If the user is editing and the search text no longer matches
-                    // the selected product, drop the selection — they're choosing again.
+                    // the selected product, drop the selection - they're choosing again.
                     const item = this.parent?.items?.[this.idx];
                     if (item && item.product_id) {
                         const cur = this.parent.productMap?.[item.product_id];
@@ -1320,7 +1324,7 @@
                 },
 
                 async fetchResults(q) {
-                    // Token-based race-condition guard — if a newer fetch starts before
+                    // Token-based race-condition guard - if a newer fetch starts before
                     // this one finishes, the old result is discarded on arrival.
                     const token = Symbol('fetch');
                     this.combo.lastFetch = token;
@@ -1343,7 +1347,7 @@
                             }
                         }
                     } catch (e) {
-                        // Silent fail — combobox just shows no matches.
+                        // Silent fail - combobox just shows no matches.
                     } finally {
                         if (this.combo.lastFetch === token) this.combo.loading = false;
                     }
@@ -1365,7 +1369,7 @@
                     if (list.length > 0 && this.combo.highlight >= 0 && this.combo.highlight < list.length) {
                         this.pick(list[this.combo.highlight]);
                     } else if (this.combo.search.trim()) {
-                        // No matches — open quick-add panel with typed text as the name.
+                        // No matches - open quick-add panel with typed text as the name.
                         this.openQuickAdd();
                     }
                 },
@@ -1394,7 +1398,7 @@
                     }
                     // Only wipe the description when we WERE clearing a linked
                     // product (so the lingering product-name text gets removed).
-                    // For custom-typed rows the description IS the row's data —
+                    // For custom-typed rows the description IS the row's data -
                     // clearing it on × would silently destroy what the user typed.
                     if (item && hadProduct) {
                         item.description = '';
@@ -1407,7 +1411,7 @@
                  * Why this exists: a user can type "Cement bag" into the product
                  * combobox without ever clicking "+ Save as new product" or picking
                  * an existing match. Without this method, the typed text only lives
-                 * in `combo.search` (combobox-local state) and is LOST on submit —
+                 * in `combo.search` (combobox-local state) and is LOST on submit -
                  * the saved invoice ends up with a blank description column.
                  *
                  * Strategy: on blur / click-outside, if the user typed something
@@ -1434,7 +1438,7 @@
                 openQuickAdd() {
                     // Seed the form with the search text + any guesses from the current
                     // invoice row. Pre-filling row's rate/gst_rate/hsn lets users save
-                    // a new product by simply typing the name — fields are already filled.
+                    // a new product by simply typing the name - fields are already filled.
                     const item = this.parent?.items?.[this.idx];
                     this.quickAdd.name = this.combo.search.trim();
                     this.quickAdd.rate = item && parseFloat(item.rate) > 0 ? item.rate : '';
@@ -1473,7 +1477,7 @@
                         if (res.status === 201) {
                             const p = await res.json();
                             // Cache so pickProduct() finds it. Use the parent's productMap
-                            // (captured in init()) — Alpine v3 nested scope doesn't merge
+                            // (captured in init()) - Alpine v3 nested scope doesn't merge
                             // into JS method context.
                             if (this.parent?.productMap) {
                                 this.parent.productMap[p.id] = p;
@@ -1493,7 +1497,7 @@
                         }
                         this.quickAdd.error = 'Could not save (status ' + res.status + '). Try again.';
                     } catch (e) {
-                        this.quickAdd.error = 'Network error — check your connection.';
+                        this.quickAdd.error = 'Network error - check your connection.';
                     } finally {
                         this.quickAdd.submitting = false;
                     }

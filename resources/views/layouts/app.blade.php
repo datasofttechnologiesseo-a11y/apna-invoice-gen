@@ -1,3 +1,4 @@
+@props(['title' => null])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -9,17 +10,16 @@
             :title="$title ?? 'Dashboard'"
             :noindex="true" />
 
-        {{-- PWA — installable on mobile/desktop, offline-capable for assets --}}
-        <link rel="manifest" href="/manifest.json">
-        <meta name="theme-color" content="#1e3a8a">
+        {{-- PWA manifest now comes from <x-seo>. --}}
+        <meta name="theme-color" content="#0f766e">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="Apna Invoice">
-        <link rel="apple-touch-icon" href="/brand/apna-invoice-logo.png">
+        <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -29,14 +29,14 @@
     <body class="font-sans antialiased">
         <a href="#main-content" class="skip-link">Skip to main content</a>
         @if (session('impersonator_id'))
-            <div class="bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-between text-sm font-semibold">
+            <div class="bg-accent-500 text-accent-950 px-4 py-2 flex items-center justify-between text-sm font-semibold">
                 <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
-                    <span>You're viewing as <strong>{{ auth()->user()->name }}</strong> — super-admin impersonation active</span>
+                    <span>You're viewing as <strong>{{ auth()->user()->name }}</strong> - super-admin impersonation active</span>
                 </div>
                 <form method="POST" action="{{ route('admin.impersonation.stop') }}">
                     @csrf
-                    <button class="px-3 py-1 bg-amber-950 text-amber-100 rounded text-xs font-bold uppercase tracking-wider hover:bg-amber-900">Stop impersonating</button>
+                    <button class="px-3 py-1 bg-accent-950 text-accent-100 rounded text-xs font-bold uppercase tracking-wider hover:bg-accent-900">Stop impersonating</button>
                 </form>
             </div>
         @endif

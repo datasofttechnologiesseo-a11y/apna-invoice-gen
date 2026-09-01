@@ -4,7 +4,7 @@
     :description="'Confirm the one-time code we sent you to finish creating your free Apna Invoice account.'">
 
     <div class="mb-6 text-center">
-        <div class="mx-auto w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+        <div class="mx-auto w-12 h-12 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center">
             @if ($isEmail)
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
@@ -22,10 +22,31 @@
             Enter the {{ config('otp.length', 6) }}-digit code we sent to <strong class="text-gray-700">{{ $sentTo }}</strong>.
         </p>
         @if ($isEmail)
-            <p class="mt-2 text-xs text-gray-400">
-                Not in your inbox? Check <strong>Spam</strong> or <strong>Promotions</strong> — it can take up to a minute to arrive.
+            <p class="mt-2 text-xs text-gray-500">
+                Not in your inbox? Check <strong>Spam</strong> or <strong>Promotions</strong> - it can take up to a minute to arrive.
             </p>
         @endif
+
+        {{-- Waiting on a code is the loneliest moment in the whole sign-up: the
+             user has handed over their details and has no idea how much is
+             left. Showing the rest of the journey makes the wait finite. --}}
+        <ol class="mt-5 flex items-center justify-center gap-2 text-[11px] font-semibold">
+            @foreach ([
+                ['label' => 'Verify', 'state' => 'current'],
+                ['label' => 'Your business', 'state' => 'next'],
+                ['label' => 'First invoice', 'state' => 'next'],
+            ] as $i => $stepItem)
+                @if ($i > 0)
+                    <li aria-hidden="true" class="w-4 h-px bg-gray-200"></li>
+                @endif
+                <li @class([
+                    'px-2.5 py-1 rounded-full ring-1',
+                    'bg-brand-50 text-brand-700 ring-brand-200' => $stepItem['state'] === 'current',
+                    'text-gray-500 ring-gray-200' => $stepItem['state'] !== 'current',
+                ])>{{ $stepItem['label'] }}</li>
+            @endforeach
+        </ol>
+        <p class="mt-2 text-xs text-gray-500">About a minute from here to your first invoice.</p>
     </div>
 
     @if (session('status'))
@@ -35,10 +56,10 @@
     @endif
 
     @if (! empty($devCode))
-        <div class="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+        <div class="mb-4 p-3 rounded-md bg-accent-50 border border-accent-200 text-accent-800 text-sm">
             <strong>Dev mode:</strong> your code is
             <span class="font-mono font-bold tracking-widest text-base">{{ $devCode }}</span>
-            <div class="text-xs mt-1 text-amber-700">Shown only because no SMS gateway is configured yet. This never appears in production.</div>
+            <div class="text-xs mt-1 text-accent-700">Shown only because no SMS gateway is configured yet. This never appears in production.</div>
         </div>
     @endif
 
@@ -59,7 +80,7 @@
     <div class="mt-5 flex items-center justify-between text-sm">
         <form method="POST" action="{{ route('register.resend') }}">
             @csrf
-            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline focus:outline-none disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed">
+            <button type="submit" id="resend-btn" class="text-brand-700 font-semibold hover:underline disabled:text-gray-500 disabled:no-underline disabled:cursor-not-allowed">
                 {{ __('Resend code') }}
             </button>
         </form>
@@ -68,9 +89,11 @@
         </a>
     </div>
 
+    <x-signup-help note="Code not arriving, or entered the wrong number? Message us and we'll get you in - we can verify you manually." />
+
     <script>
         (function () {
-            // Auto-submit the moment all 6 digits are in — one less tap.
+            // Auto-submit the moment all 6 digits are in - one less tap.
             var input = document.getElementById('code');
             var form = document.getElementById('otp-form');
             var len = {{ (int) config('otp.length', 6) }};

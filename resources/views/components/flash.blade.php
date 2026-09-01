@@ -29,12 +29,12 @@
 
     $palette = [
         'success' => 'bg-money-50 border-money-200 text-money-800',
-        'error'   => 'bg-red-50 border-red-200 text-red-800',
+        'error'   => 'bg-danger-50 border-danger-200 text-danger-800',
         'info'    => 'bg-brand-50 border-brand-200 text-brand-800',
-        'warning' => 'bg-amber-50 border-amber-200 text-amber-800',
+        'warning' => 'bg-accent-50 border-accent-200 text-accent-800',
     ][$type] ?? 'bg-gray-50 border-gray-200 text-gray-800';
 
-    // Errors and warnings stay visible until manually dismissed — they often
+    // Errors and warnings stay visible until manually dismissed - they often
     // describe something the user needs to act on, and a 6-second auto-dismiss
     // means a distracted reader misses the message entirely.
     $shouldAutoDismiss = $auto && in_array($type, ['success', 'info'], true);

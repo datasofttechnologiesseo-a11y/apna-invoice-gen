@@ -153,7 +153,7 @@ class FinanceController extends Controller
 
         $invoices = $company->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->with('customer:id,name,gstin')
             ->get();
 
@@ -253,7 +253,7 @@ class FinanceController extends Controller
     {
         $invoices = $company->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get();
 
         $regular = $invoices->where('reverse_charge', false);
@@ -274,14 +274,14 @@ class FinanceController extends Controller
         ];
 
         $expensesInPeriod = $company->expenses()
-            ->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get(['gst_amount', 'is_interstate']);
 
         $intraExpenseGst = (float) $expensesInPeriod->where('is_interstate', false)->sum('gst_amount');
         $interExpenseGst = (float) $expensesInPeriod->where('is_interstate', true)->sum('gst_amount');
 
         $cashMemos = $company->cashMemos()
-            ->whereBetween('memo_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get();
 
         $itc = [
@@ -304,7 +304,7 @@ class FinanceController extends Controller
             'itc' => $itc,
             'net_cash' => $netCash,
             'invoice_count' => $invoices->count(),
-            'expense_count' => $company->expenses()->whereBetween('entry_date', [$from->toDateString(), $to->toDateString()])->count(),
+            'expense_count' => $company->expenses()->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
             'cash_memo_count' => $cashMemos->count(),
         ];
     }

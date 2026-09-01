@@ -2,8 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ----------------------------------------------------------------
+ * Global scale
+ *
+ * Everything renders at 90%. Because Tailwind sizes type AND spacing
+ * in rem, one root change shrinks both together, so the layout keeps
+ * its proportions instead of text shrinking inside unchanged padding.
+ * That is what makes a UI read as dense and professional rather than
+ * merely small.
+ *
+ * Using a percentage, not a px value, keeps the browser's own font-size
+ * preference working for anyone who has changed it.
+ *
+ * Deliberate floor: a handful of labels are set in absolute px
+ * (text-[10px], text-[11px]) and are unaffected here, so nothing drops
+ * below 10px. Headings carry a further zoom below, applied on top.
+ * -------------------------------------------------------------- */
+html {
+    font-size: 90%;
+}
+
+/* ----------------------------------------------------------------
+ * Typography
+ *
+ * Inter is the interface face. These three settings are what separate
+ * software-grade type from default web type:
+ *
+ *  - Crisper rasterisation, so Inter's thin strokes hold at 14px.
+ *  - Tighter tracking on large headings. Inter is spaced for body copy,
+ *    so display sizes look loose unless pulled in.
+ *  - Tabular figures in tables and on anything tagged as a number, so
+ *    currency columns line up digit-for-digit down an invoice instead of
+ *    drifting. This is the detail that reads as "accounting software".
+ * -------------------------------------------------------------- */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1 { letter-spacing: -0.022em; }
+h2 { letter-spacing: -0.018em; }
+h3, h4 { letter-spacing: -0.011em; }
+
+table th,
+table td,
+input[type="number"],
+.font-mono {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Money should never re-flow as digits change (a total ticking from
+   9 to 10 must not shift the column). */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+/* ----------------------------------------------------------------
+ * Control borders — WCAG 1.4.11 (non-text contrast)
+ *
+ * The boundary of an input has to reach 3:1 against the surface behind
+ * it, or people cannot see where the field is. Tailwind's border-gray-300
+ * (#d1d5db) manages 1.47:1 on white, so every form in the app failed.
+ *
+ * #878fa0 measures 3.09:1 on white — it clears the bar while staying far
+ * lighter than gray-500 (4.83:1), which would read as a heavy outline.
+ * Scoped to form controls by element + class so card edges, table rules
+ * and dividers, which are decorative and exempt, are left alone. The
+ * class in the selector is what lets this beat the utility it overrides.
+ * -------------------------------------------------------------- */
+input:not([type="checkbox"]):not([type="radio"]).border-gray-300,
+select.border-gray-300,
+textarea.border-gray-300 {
+    border-color: #878fa0;
+}
+
+/* Checkboxes and radios ship with a transparent border, so their outline
+   comes from the box itself and must carry the same 3:1. */
+input[type="checkbox"],
+input[type="radio"] {
+    border-color: #878fa0;
+}
+
 /* Alpine.js: hide elements tagged with x-cloak until Alpine initialises. */
 [x-cloak] { display: none !important; }
+
+/* ----------------------------------------------------------------
+ * Global heading scale
+ * Render every heading 10% smaller than its Tailwind utility class
+ * specifies. `zoom` scales the rendered size uniformly regardless of
+ * which text-* utility set it, so the responsive hierarchy (h1 > h2,
+ * md: breakpoints, etc.) is preserved and we don't have to edit the
+ * class string on every heading across the site.
+ * Note: the invoice/quotation/memo PDFs render via DomPDF with their
+ * own inline styles and do NOT load this stylesheet, so printed
+ * documents are unaffected.
+ * -------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+    zoom: 0.9;
+}
 
 /* ----------------------------------------------------------------
  * Global form-submit loading state
@@ -38,7 +135,7 @@ form[data-submitting] button[type="submit"]::after {
  * element. Uses :focus-visible so mouse clicks don't get a ring.
  * -------------------------------------------------------------- */
 :focus-visible {
-    outline: 2px solid theme('colors.brand.500', #3b82f6);
+    outline: 2px solid theme('colors.brand.700', #0f766e);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -52,14 +149,14 @@ form[data-submitting] button[type="submit"]::after {
     background: #fff;
     padding: 0.75rem 1rem;
     font-weight: 600;
-    color: #1e3a8a;
+    color: #0f766e;
     text-decoration: none;
     border-radius: 0 0 0.5rem 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .skip-link:focus {
     left: 0;
-    outline: 2px solid #1e3a8a;
+    outline: 2px solid #0f766e;
     outline-offset: 2px;
 }
 
@@ -81,7 +178,7 @@ html {
 /* Brand-tinted text selection. */
 ::selection {
     background: #dbe3f5; /* brand-100 */
-    color: #0f1f4f;      /* brand-900 */
+    color: #134e4a;      /* brand-900 */
 }
 
 /* Subtle, premium scrollbar (desktop pointers only). */
@@ -198,7 +295,7 @@ html {
     [class*="rounded"] { border-radius: 0 !important; }
     [class*="bg-gray-50"], [class*="bg-gray-100"],
     [class*="bg-white"], [class*="bg-brand-"],
-    [class*="bg-saffron-"], [class*="bg-amber-"],
+    [class*="bg-accent-"],
     [class*="bg-emerald-"], [class*="bg-blue-"],
     [class*="bg-red-"], [class*="bg-purple-"] {
         background: #fff !important;
@@ -207,7 +304,7 @@ html {
 
     /* Coloured text labels — drop to grey/black so colour ink isn't burnt.
        Status badges still keep a thin border so they remain legible. */
-    [class*="text-brand-"], [class*="text-saffron-"],
+    [class*="text-brand-"], [class*="text-accent-"],
     [class*="text-amber-"], [class*="text-emerald-"],
     [class*="text-blue-"], [class*="text-red-"],
     [class*="text-purple-"], [class*="text-money-"] {

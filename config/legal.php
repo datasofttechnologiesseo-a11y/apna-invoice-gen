@@ -15,7 +15,7 @@ return [
     // The data fiduciary (the legal operator of the Service).
     'operator' => env('LEGAL_OPERATOR', 'Datasoft Technologies'),
 
-    // Grievance Officer — must be a real, monitored mailbox.
+    // Grievance Officer - must be a real, monitored mailbox.
     'grievance' => [
         'name' => env('LEGAL_GRIEVANCE_NAME', 'Grievance Officer'),
         'email' => env('LEGAL_GRIEVANCE_EMAIL', 'grievance@datasofttechnologies.com'),

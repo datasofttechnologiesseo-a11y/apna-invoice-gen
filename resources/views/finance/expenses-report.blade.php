@@ -104,7 +104,7 @@
 
     {{-- ─── Category breakdown ─── --}}
     @if ($byCategory->isNotEmpty())
-        <h3>Category-wise summary</h3>
+        <h2>Category-wise summary</h2>
         <table class="cat-table">
             <thead>
                 <tr>
@@ -122,9 +122,9 @@
                         <td>{{ $cat['label'] }}</td>
                         <td class="r">{{ $cat['count'] }}</td>
                         <td class="r">{{ inr($cat['taxable']) }}</td>
-                        <td class="r">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '—' }}</td>
+                        <td class="r">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '-' }}</td>
                         <td class="r">{{ inr($cat['taxable'] + $cat['gst']) }}</td>
-                        <td class="r">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '—' }}</td>
+                        <td class="r">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '-' }}</td>
                     </tr>
                 @endforeach
                 <tr class="tot">
@@ -140,7 +140,7 @@
     @endif
 
     {{-- ─── Detailed entries ─── --}}
-    <h3>Detailed entries ({{ $summary['count'] }})</h3>
+    <h2>Detailed entries ({{ $summary['count'] }})</h2>
     @if ($rows->isEmpty())
         <div style="text-align: center; padding: 30px; color: #888; border: 1px dashed #ccc;">No expenses recorded for this period.</div>
     @else
@@ -169,9 +169,9 @@
                             @if ($e->reference_number)<span class="ref">Ref: {{ $e->reference_number }}</span>@endif
                         </td>
                         <td class="r">{{ inr($e->amount) }}</td>
-                        <td class="r">{{ (float) $e->gst_amount > 0 ? inr($e->gst_amount) : '—' }}</td>
+                        <td class="r">{{ (float) $e->gst_amount > 0 ? inr($e->gst_amount) : '-' }}</td>
                         <td class="r" style="font-weight: bold;">{{ inr($e->amount + (float) $e->gst_amount) }}</td>
-                        <td style="text-transform: uppercase; font-size: 8px;">{{ $e->payment_method ?: '—' }}</td>
+                        <td style="text-transform: uppercase; font-size: 8px;">{{ $e->payment_method ?: '-' }}</td>
                     </tr>
                 @endforeach
                 <tr class="tot">
@@ -196,7 +196,7 @@
             <tr>
                 <td style="width: 50%;">
                     <div style="font-size: 8.5px; color: #666;">
-                        Notes: This is a computer-generated expense statement. Figures shown are taxable value and GST as recorded against each entry. Total cash out = taxable + GST. Subject to verification of underlying invoices and cash memos. E&amp;OE.
+                        Notes: This is a computer-generated expense statement. Figures shown are taxable value and GST as recorded against each entry. Total cash out = taxable + GST. Subject to verification of underlying invoices and cash sales. E&amp;OE.
                     </div>
                 </td>
                 <td style="width: 50%; text-align: right;">

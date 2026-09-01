@@ -1,6 +1,6 @@
 <x-onboarding-layout step="customer">
     <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-        <div class="p-6 md:p-8 bg-gradient-to-br from-saffron-600 to-accent-700 text-white">
+        <div class="p-6 md:p-8 bg-gradient-to-br from-accent-600 to-accent-700 text-white">
             <div class="text-xs font-bold uppercase tracking-widest text-accent-100">Step 2 of 3</div>
             <h1 class="mt-2 font-display text-2xl md:text-3xl font-extrabold">Add your first customer</h1>
             <p class="mt-2 text-accent-100">Save customer details once, we'll auto-fill them on every future invoice. You can add more any time.</p>
@@ -10,7 +10,7 @@
             @csrf
 
             @if ($errors->any())
-                <div class="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
                     <div class="font-semibold mb-1">Please fix the following before saving:</div>
                     <ul class="list-disc pl-5 space-y-0.5">
                         @foreach ($errors->all() as $error)
@@ -21,7 +21,7 @@
             @endif
 
             <div>
-                <h3 class="font-display font-bold text-gray-900 text-lg">Customer basics</h3>
+                <h2 class="font-display font-bold text-gray-900 text-lg">Customer basics</h2>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
                         <x-input-label for="name" value="Customer name *" />
@@ -52,11 +52,11 @@
             </div>
 
             <div class="border-t pt-6">
-                <h3 class="font-display font-bold text-gray-900 text-lg">Billing address</h3>
+                <h2 class="font-display font-bold text-gray-900 text-lg">Billing address</h2>
                 <p class="text-sm text-gray-500 mt-0.5">The customer's state determines whether GST is split (CGST+SGST) or consolidated (IGST)</p>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
-                        <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-400">(optional)</span></x-input-label>
+                        <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-500">(optional)</span></x-input-label>
                         <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1')" />
                         <x-input-error :messages="$errors->get('address_line1')" class="mt-2" />
                     </div>
@@ -65,7 +65,7 @@
                         <x-text-input id="address_line2" name="address_line2" type="text" class="mt-1 block w-full" :value="old('address_line2')" />
                     </div>
                     <div>
-                        <x-input-label for="city">City <span class="font-normal text-gray-400">(optional)</span></x-input-label>
+                        <x-input-label for="city">City <span class="font-normal text-gray-500">(optional)</span></x-input-label>
                         <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city')" />
                         <x-input-error :messages="$errors->get('city')" class="mt-2" />
                     </div>

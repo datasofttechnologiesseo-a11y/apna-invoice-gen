@@ -1,13 +1,13 @@
-<x-app-layout>
+<x-app-layout title="Quotation">
     @php
         $eff = $quotation->effectiveStatus();
         $statusColors = [
             'draft' => 'bg-gray-100 text-gray-700',
-            'sent' => 'bg-blue-100 text-blue-800',
-            'accepted' => 'bg-emerald-100 text-emerald-800',
-            'declined' => 'bg-red-100 text-red-800',
-            'converted' => 'bg-purple-100 text-purple-800',
-            'expired' => 'bg-amber-100 text-amber-800',
+            'sent' => 'bg-brand-100 text-brand-800',
+            'accepted' => 'bg-money-100 text-money-800',
+            'declined' => 'bg-danger-100 text-danger-800',
+            'converted' => 'bg-brand-100 text-brand-800',
+            'expired' => 'bg-accent-100 text-accent-800',
         ];
     @endphp
 
@@ -17,17 +17,17 @@
             ['label' => $quotation->displayNumber()],
         ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
                 @if ($quotation->quote_number)
                     <span>Quotation {{ $quotation->quote_number }}</span>
                 @else
                     <span class="text-gray-500">Draft #{{ $quotation->id }}</span>
                 @endif
                 <span class="text-xs px-2 py-0.5 rounded uppercase font-bold tracking-wider {{ $statusColors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
-            </h2>
+            </h1>
 
             <div class="flex flex-wrap items-center gap-2">
-                {{-- Utility group: edit/PDF — neutral grays, lowest visual priority --}}
+                {{-- Utility group: edit/PDF - neutral grays, lowest visual priority --}}
                 @if ($quotation->isEditable())
                     <a href="{{ route('quotations.edit', $quotation) }}" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 rounded text-sm font-medium transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -55,7 +55,7 @@
                         confirm-label="Mark as sent"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default">
-                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-accent-300 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             Mark as sent
                         </button>
@@ -67,18 +67,18 @@
                         :action="route('quotations.accept', $quotation)"
                         method="POST"
                         title="Mark as accepted?"
-                        message="The customer has confirmed this quote — record their acceptance. You can then convert it to a tax invoice."
+                        message="The customer has confirmed this quote - record their acceptance. You can then convert it to a tax invoice."
                         confirm-label="Mark as accepted"
-                        confirm-class="bg-emerald-700 hover:bg-emerald-800"
+                        confirm-class="bg-money-700 hover:bg-money-800"
                         tone="default">
-                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-sm font-semibold shadow-sm transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-money-700 hover:bg-money-800 text-white rounded text-sm font-semibold shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Mark as accepted
                         </button>
                     </x-confirm-form>
 
                     <button type="button" onclick="document.getElementById('decline-quote-modal').showModal()"
-                            class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-red-300 text-red-700 rounded text-sm font-medium hover:bg-red-50 transition">
+                            class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-danger-300 text-danger-700 rounded text-sm font-medium hover:bg-danger-50 transition">
                         Decline
                     </button>
                 @endif
@@ -90,10 +90,10 @@
                         title="Convert to tax invoice?"
                         message="A new draft invoice will be created with these line items. The quote is then locked. Review and click Issue to send the tax invoice."
                         confirm-label="Convert to invoice"
-                        confirm-class="bg-purple-700 hover:bg-purple-800"
+                        confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default">
-                        {{-- Convert is the most-valuable workflow action — saffron CTA --}}
-                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-saffron-400 to-saffron-500 hover:from-saffron-500 hover:to-saffron-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-saffron-300 transition">
+                        {{-- Convert is the most-valuable workflow action - amber CTA --}}
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-gradient-to-br from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-brand-900 rounded text-sm font-semibold shadow-sm ring-1 ring-accent-300 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                             Convert to invoice
                         </button>
@@ -109,9 +109,9 @@
                         title="Delete this draft?"
                         message="This draft quotation and its line items are permanently removed. This cannot be undone."
                         confirm-label="Delete draft"
-                        confirm-class="bg-red-600 hover:bg-red-700"
+                        confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
-                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-red-300 hover:bg-red-50 text-red-700 rounded text-sm font-medium transition">
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-white ring-1 ring-danger-300 hover:bg-danger-50 text-danger-700 rounded text-sm font-medium transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             Delete
                         </button>
@@ -125,15 +125,15 @@
         <dialog id="decline-quote-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100vh-3rem)]">
             <form method="POST" action="{{ route('quotations.decline', $quotation) }}" class="p-5 sm:p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
-                <h3 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h3>
-                <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why — useful for follow-ups.</p>
+                <h2 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h2>
+                <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why - useful for follow-ups.</p>
                 <div>
                     <x-input-label for="decline_reason" value="Reason (optional)" />
                     <textarea id="decline_reason" name="decline_reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" maxlength="500" placeholder="e.g. Going with a different vendor"></textarea>
                 </div>
                 <div class="flex items-center justify-end gap-2 pt-2">
                     <button type="button" onclick="this.closest('dialog').close()" class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded transition">Cancel</button>
-                    <button type="submit" class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-semibold shadow-sm transition">Mark as declined</button>
+                    <button type="submit" class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 bg-danger-600 hover:bg-danger-700 text-white rounded text-sm font-semibold shadow-sm transition">Mark as declined</button>
                 </div>
             </form>
         </dialog>
@@ -147,7 +147,7 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
-            {{-- Subject + validity countdown — the two pieces of information a
+            {{-- Subject + validity countdown - the two pieces of information a
                  customer/owner needs to recognise this quote at a glance. --}}
             @if ($quotation->subject)
                 <div class="bg-white shadow sm:rounded-lg px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
@@ -158,7 +158,7 @@
                     @if ($daysLeft !== null && in_array($quotation->status, ['draft', 'sent']))
                         <div class="shrink-0 text-right">
                             <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Validity</div>
-                            <div class="mt-0.5 text-sm font-semibold {{ $daysLeft < 0 ? 'text-red-700' : ($daysLeft < 3 ? 'text-amber-700' : ($daysLeft < 7 ? 'text-amber-600' : 'text-emerald-700')) }}">
+                            <div class="mt-0.5 text-sm font-semibold {{ $daysLeft < 0 ? 'text-danger-700' : ($daysLeft < 3 ? 'text-accent-700' : ($daysLeft < 7 ? 'text-accent-600' : 'text-money-700')) }}">
                                 @if ($daysLeft < 0)
                                     Expired {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago
                                 @elseif ($daysLeft === 0)
@@ -172,42 +172,42 @@
                 </div>
             @elseif ($daysLeft !== null && in_array($quotation->status, ['draft', 'sent']) && $daysLeft < 7)
                 {{-- Even without a subject, surface a near-expiry warning. --}}
-                <div class="rounded-lg p-3 text-sm flex items-center gap-2 {{ $daysLeft < 0 ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-amber-50 text-amber-900 border border-amber-200' }}">
+                <div class="rounded-lg p-3 text-sm flex items-center gap-2 {{ $daysLeft < 0 ? 'bg-danger-50 text-danger-800 border border-danger-200' : 'bg-accent-50 text-accent-900 border border-accent-200' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>
                         @if ($daysLeft < 0)
-                            <strong>Expired</strong> {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago — the quote can still be marked accepted or converted, but the price you committed to has lapsed.
+                            <strong>Expired</strong> {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago - the quote can still be marked accepted or converted, but the price you committed to has lapsed.
                         @else
-                            Expires in <strong>{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }}</strong> — follow up with the customer.
+                            Expires in <strong>{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }}</strong> - follow up with the customer.
                         @endif
                     </span>
                 </div>
             @endif
 
             @if ($quotation->isConverted() && $quotation->convertedInvoice)
-                <div class="p-4 bg-purple-50 border border-purple-200 text-purple-900 rounded-lg flex items-center justify-between gap-4">
+                <div class="p-4 bg-brand-50 border border-brand-200 text-brand-900 rounded-lg flex items-center justify-between gap-4">
                     <div class="text-sm">
                         <div class="font-semibold">This quotation has been converted.</div>
                         <div class="mt-0.5">A draft invoice was created from these line items.</div>
                     </div>
-                    <a href="{{ route('invoices.show', $quotation->convertedInvoice) }}" class="px-3 py-1.5 bg-purple-700 text-white rounded text-sm hover:bg-purple-800">Open invoice →</a>
+                    <a href="{{ route('invoices.show', $quotation->convertedInvoice) }}" class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Open invoice →</a>
                 </div>
             @endif
 
             @if ($quotation->isDeclined())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-900 rounded-lg text-sm">
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-900 rounded-lg text-sm">
                     <span class="font-semibold">Declined</span>
                     @if ($quotation->declined_at)
                         on {{ $quotation->declined_at->format('d M Y') }}
                     @endif
                     @if ($quotation->decline_reason)
-                        — {{ $quotation->decline_reason }}
+                        - {{ $quotation->decline_reason }}
                     @endif
                 </div>
             @endif
 
             @if ($eff === 'expired')
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-sm">
+                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-lg text-sm">
                     <span class="font-semibold">This quotation has expired.</span>
                     Validity ended on {{ $quotation->valid_until->format('d M Y') }}. You can still mark it accepted or convert it if the customer agrees, or duplicate it as a fresh quote.
                 </div>
@@ -247,9 +247,9 @@
                     <div class="text-xs text-gray-500 uppercase tracking-wider">Tax mode</div>
                     <div class="mt-1">
                         @if ($quotation->is_interstate)
-                            <span class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-medium">Inter-state (IGST)</span>
+                            <span class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded text-xs font-medium">Inter-state (IGST)</span>
                         @else
-                            <span class="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">Intra-state (CGST + SGST)</span>
+                            <span class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded text-xs font-medium">Intra-state (CGST + SGST)</span>
                         @endif
                     </div>
                     <div class="mt-3 text-xs text-gray-500 uppercase tracking-wider">Grand total</div>
@@ -267,7 +267,7 @@
 
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                 <div class="px-6 py-4 border-b">
-                    <h3 class="font-medium text-gray-900">Line items</h3>
+                    <h2 class="font-medium text-gray-900">Line items</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">

@@ -63,7 +63,10 @@ class OnboardingController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
-            'invoice_prefix' => ['required', 'string', 'max:10'],
+            // Prefix lives behind the collapsed "more details" panel on the
+            // setup form, so a user who never opens it must not be blocked by
+            // a required-field error on a control they cannot see.
+            'invoice_prefix' => ['nullable', 'string', 'max:10'],
             'default_currency' => ['required', 'string', 'size:3'],
             'bank_name' => ['nullable', 'string', 'max:120'],
             'bank_account_number' => ['nullable', 'string', 'max:30'],
@@ -74,6 +77,9 @@ class OnboardingController extends Controller
             'address_line1.required_with' => 'A registered address is required on GST tax invoices. Please add your address (or clear the GSTIN and add it later).',
             'city.required_with' => 'City is required on GST tax invoices when a GSTIN is set.',
         ]);
+
+        $data['invoice_prefix'] = trim((string) ($data['invoice_prefix'] ?? ''))
+            ?: ($company->invoice_prefix ?: 'INV');
 
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {

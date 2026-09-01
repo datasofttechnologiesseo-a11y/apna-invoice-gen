@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout :title="$customer->exists ? 'Edit customer' : 'New customer'">
     <x-slot name="header">
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
             {{ $customer->exists ? 'Edit customer' : 'New customer' }}
-        </h2>
+        </h1>
     </x-slot>
 
     <div class="py-10">
@@ -18,7 +18,7 @@
                 @if ($customer->exists) @method('PATCH') @endif
 
                 @if ($errors->any())
-                    <div class="m-6 mb-0 p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" role="alert">
+                    <div class="m-6 mb-0 p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
                         <div class="font-semibold mb-1">Please fix the following before saving:</div>
                         <ul class="list-disc pl-5 space-y-0.5">
                             @foreach ($errors->all() as $error)
@@ -30,7 +30,7 @@
 
                 {{-- Section: Customer details --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Customer details</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Customer details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">How this customer appears on your invoices.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
@@ -50,7 +50,7 @@
 
                 {{-- Section: Contact --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-gray-900">Contact</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Contact</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Where we send invoices and payment reminders.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -70,7 +70,7 @@
 
                 {{-- Section: Billing address --}}
                 <section class="p-6 sm:p-8">
-                    <h3 class="text-sm font-bold text-gray-900">Billing address</h3>
+                    <h2 class="text-sm font-bold text-gray-900">Billing address</h2>
                     <p class="text-xs text-gray-500 mt-0.5">The state determines the GST place of supply.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
@@ -90,8 +90,8 @@
                         </div>
                         <div>
                             <x-input-label for="state_id" value="State *" />
-                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-500 focus:ring-brand-500">
-                                <option value="">— Select state —</option>
+                            <select id="state_id" name="state_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                                <option value="">- Select state -</option>
                                 @foreach ($states as $s)
                                     <option value="{{ $s->id }}" @selected(old('state_id', $customer->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                                 @endforeach

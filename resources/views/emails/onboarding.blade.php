@@ -1,6 +1,6 @@
 @php
     $firstName = \Illuminate\Support\Str::of($user->name)->before(' ')->trim();
-    $brand = '#1e3a8a';
+    $brand = '#0f766e';
 @endphp
 <!DOCTYPE html>
 <html>

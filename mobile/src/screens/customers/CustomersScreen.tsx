@@ -173,7 +173,7 @@ function CustomerFormModal({
             </Text>
           </Pressable>
           <View style={{ height: 14 }} />
-          <TextField label="GSTIN" value={gstin} onChangeText={setGstin} autoCapitalize="characters" placeholder="Optional" />
+          <TextField label="GSTIN" value={gstin} onChangeText={(v) => setGstin(v.toUpperCase())} autoCapitalize="characters" placeholder="Optional" />
           <TextField label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="Optional" />
           <TextField label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="Optional" />
           <Button title={isEdit ? 'Save changes' : 'Save customer'} onPress={save} loading={saveMut.isPending} />

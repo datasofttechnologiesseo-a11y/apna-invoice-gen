@@ -84,7 +84,7 @@ export default function BottomTabBar({ state, navigation }: BottomTabBarProps) {
             <Defs>
               {/* Shadow follows the notched pill shape (no rectangular box). */}
               <Filter id="pillShadow" x="-20%" y="-20%" width="140%" height="170%">
-                <FeDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#1e3a8a" floodOpacity="0.35" />
+                <FeDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#0f766e" floodOpacity="0.35" />
               </Filter>
             </Defs>
             <Path d={barPath(pillW, notchCx)} fill={colors.primary} filter="url(#pillShadow)" />

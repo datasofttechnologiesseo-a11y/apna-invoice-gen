@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Blog admin">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Blogs · Admin</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Blogs · Admin</h1>
             <a href="{{ route('admin.blog.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 New post
@@ -15,7 +15,7 @@
 
             <div class="bg-white shadow sm:rounded-lg">
                 <form method="GET" class="p-4 border-b flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by title or slug" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by title or slug" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80" aria-label="Search by title or slug">
                     <select name="status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         <option value="draft" @selected(request('status') === 'draft')>Draft</option>
@@ -30,10 +30,10 @@
                 @if ($posts->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        title="{{ request('search') || request('status') ? 'No posts match' : 'No blog posts yet' }}"
-                        description="{{ request('search') || request('status') ? 'Try a different filter.' : 'Write your first article to start driving SEO traffic. Use clear titles, meta descriptions, and keywords.' }}"
-                        actionHref="{{ request('search') || request('status') ? route('admin.blog.index') : route('admin.blog.create') }}"
-                        actionLabel="{{ request('search') || request('status') ? 'Clear filters' : 'Write first post' }}"
+                        :title="request('search') || request('status') ? 'No posts match' : 'No blog posts yet'"
+                        :description="request('search') || request('status') ? 'Try a different filter.' : 'Write your first article to start driving SEO traffic. Use clear titles, meta descriptions, and keywords.'"
+                        :actionHref="request('search') || request('status') ? route('admin.blog.index') : route('admin.blog.create')"
+                        :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Write first post'"
                     />
                 @else
                     <div class="overflow-x-auto">
@@ -56,22 +56,22 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         @if ($p->isPublished())
-                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">Published</span>
+                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-money-100 text-money-800">Published</span>
                                         @elseif ($p->isScheduled())
-                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Scheduled</span>
+                                            <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-brand-100 text-brand-800">Scheduled</span>
                                         @else
                                             <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">Draft</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $p->published_at?->format('d M Y') ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $p->published_at?->format('d M Y') ?? '-' }}</td>
                                     <td class="px-4 py-3 text-right font-mono text-sm">{{ number_format($p->view_count) }}</td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         @if ($p->isPublished())
                                             <a href="{{ route('blog.show', $p->slug) }}" target="_blank" class="text-gray-600 hover:underline">View</a>
-                                            <span class="text-gray-300 mx-1">·</span>
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         @endif
-                                        <a href="{{ route('admin.blog.edit', $p) }}" class="text-brand-600 hover:underline">Edit</a>
-                                        <span class="text-gray-300 mx-1">·</span>
+                                        <a href="{{ route('admin.blog.edit', $p) }}" class="text-brand-700 hover:underline">Edit</a>
+                                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <form method="POST" action="{{ route('admin.blog.toggle', $p) }}" class="inline">
                                             @csrf
                                             <button class="text-gray-600 hover:underline">{{ $p->isDraft() ? 'Publish' : 'Unpublish' }}</button>

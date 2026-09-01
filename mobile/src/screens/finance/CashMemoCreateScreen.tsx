@@ -103,7 +103,7 @@ export default function CashMemoCreateScreen({ navigation }: Props) {
     <ScrollView style={{ flex: 1, backgroundColor: colors.bg }} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <Text style={styles.section}>Seller</Text>
       <TextField label="Seller name *" value={seller} onChangeText={setSeller} placeholder="Who you bought from" />
-      <TextField label="Seller GSTIN" value={gstin} onChangeText={setGstin} autoCapitalize="characters" placeholder="Optional" />
+      <TextField label="Seller GSTIN" value={gstin} onChangeText={(v) => setGstin(v.toUpperCase())} autoCapitalize="characters" placeholder="Optional" />
       <TextField label="Seller state" value={sellerState} onChangeText={setSellerState} placeholder="Optional" />
       <TextField label="Date *" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" autoCapitalize="none" />
 

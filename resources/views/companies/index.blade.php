@@ -1,7 +1,7 @@
-<x-app-layout>
+<x-app-layout title="Your firms">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Your companies</h2>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Your firms</h1>
             <a href="{{ route('companies.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Add company
@@ -15,18 +15,24 @@
                 <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded">{{ session('status') }}</div>
             @endif
             @if ($errors->has('company'))
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">{{ $errors->first('company') }}</div>
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">{{ $errors->first('company') }}</div>
             @endif
 
             <div class="p-4 rounded-lg bg-brand-50 border border-brand-100 text-sm text-brand-900">
-                <strong>Active company:</strong> {{ $active->name }}
+                <strong>Active firm:</strong> {{ $active->name }}
                 <span class="text-brand-700">· New invoices and customers are created under this company.</span>
             </div>
 
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                 @if ($companies->isEmpty())
                     <div class="p-8 text-center text-gray-500">
-                        No companies yet. <a href="{{ route('companies.create') }}" class="text-brand-700 hover:underline">Add your first →</a>
+                        <x-empty-state
+                            icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                            title="No businesses yet"
+                            description="Run more than one firm from a single login. Each keeps its own GSTIN, invoice numbering, logo and books, and you switch between them from the top bar."
+                            :actionHref="route('companies.create')"
+                            actionLabel="Add your first business"
+                        />
                     </div>
                 @else
                     <ul class="divide-y divide-gray-100">
@@ -74,9 +80,9 @@
                                             title="Delete {{ $company->name }}?"
                                             message="Its customers will also be removed. This cannot be undone."
                                             confirmLabel="Delete company"
-                                            confirmClass="bg-red-600 hover:bg-red-700"
+                                            confirmClass="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
-                                            <button type="button" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded">Delete</button>
+                                            <button type="button" class="px-3 py-1.5 bg-danger-50 hover:bg-danger-100 text-danger-700 text-sm font-semibold rounded">Delete</button>
                                         </x-confirm-form>
                                     @endif
                                 </div>

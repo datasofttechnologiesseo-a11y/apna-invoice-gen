@@ -1,8 +1,8 @@
-<x-app-layout>
+<x-app-layout title="Invoice templates">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Pick a starting template</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Pick a starting template</h1>
                 <p class="mt-1 text-sm text-gray-500">Every template shows a realistic sample below, pre-filled with your company. Use it as-is or tweak before finalising.</p>
             </div>
             <a href="{{ route('invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">← Back to invoices</a>
@@ -20,7 +20,7 @@
                 <div class="flex-1 text-sm">
                     <div class="font-display font-bold text-gray-900 text-base">What you're seeing</div>
                     <p class="mt-1 text-gray-600 leading-relaxed">
-                        Each card below contains a <strong>mini invoice preview</strong> with sample line items, GST calculated correctly for your state, and the real total. Click <strong class="text-brand-700">Preview full PDF</strong> to see exactly what your customer will receive — with <strong>{{ $company->name }}</strong>'s branding. Pick the closest match — you can edit everything afterwards.
+                        Each card below contains a <strong>mini invoice preview</strong> with sample line items, GST calculated correctly for your state, and the real total. Click <strong class="text-brand-700">Preview full PDF</strong> to see exactly what your customer will receive - with <strong>{{ $company->name }}</strong>'s branding. Pick the closest match - you can edit everything afterwards.
                     </p>
                 </div>
             </div>
@@ -35,13 +35,13 @@
                         $gstRates = collect($items)->pluck('gst_rate')->unique()->filter()->sort()->values();
                         $styleKey = $tpl['style'] ?? 'classic';
                         $styleMeta = config('invoice_styles.' . $styleKey, config('invoice_styles.classic'));
-                        // Map style → Tailwind classes for the mini preview header — sober tones
+                        // Map style → Tailwind classes for the mini preview header - sober tones
                         $styleTheme = [
-                            'classic' => ['bg' => 'bg-white', 'border' => 'border-b-2 border-[#1e3a8a]', 'text' => 'text-gray-900', 'accent' => 'text-[#1e3a8a]'],
-                            'bold'    => ['bg' => 'bg-white', 'border' => 'border-b-[3px] border-[#c2410c]', 'text' => 'text-[#c2410c]', 'accent' => 'text-[#c2410c]'],
-                            'minimal' => ['bg' => 'bg-white', 'border' => 'border-b border-emerald-200', 'text' => 'text-gray-900', 'accent' => 'text-emerald-700'],
-                            'retail'  => ['bg' => 'bg-white', 'border' => 'border-b-2 border-slate-900', 'text' => 'text-slate-900 font-mono', 'accent' => 'text-slate-700 font-mono'],
-                            'warm'    => ['bg' => 'bg-white', 'border' => 'border-b-2 border-double border-red-700', 'text' => 'text-red-700', 'accent' => 'text-red-700'],
+                            'classic' => ['bg' => 'bg-white', 'border' => 'border-b-2 border-[#0f766e]', 'text' => 'text-gray-900', 'accent' => 'text-[#0f766e]'],
+                            'bold'    => ['bg' => 'bg-white', 'border' => 'border-b-[3px] border-[#b45309]', 'text' => 'text-[#b45309]', 'accent' => 'text-[#b45309]'],
+                            'minimal' => ['bg' => 'bg-white', 'border' => 'border-b border-money-200', 'text' => 'text-gray-900', 'accent' => 'text-money-700'],
+                            'retail'  => ['bg' => 'bg-white', 'border' => 'border-b-2 border-gray-900', 'text' => 'text-gray-900 font-mono', 'accent' => 'text-gray-700 font-mono'],
+                            'warm'    => ['bg' => 'bg-white', 'border' => 'border-b-2 border-double border-danger-700', 'text' => 'text-danger-700', 'accent' => 'text-danger-700'],
                         ][$styleKey] ?? null;
                         $styleTheme ??= ['bg' => 'bg-white', 'border' => 'border-b border-gray-200', 'text' => 'text-gray-900', 'accent' => 'text-brand-700'];
                     @endphp
@@ -54,7 +54,7 @@
                          clickable target. --}}
                     <div class="group relative bg-white rounded-2xl ring-1 ring-gray-100 hover:ring-brand-400 hover:ring-2 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col cursor-pointer focus-within:ring-2 focus-within:ring-brand-400">
 
-                        {{-- The stretched link — invisible but covers the entire card.
+                        {{-- The stretched link - invisible but covers the entire card.
                              Carries the keyboard focus + screen-reader label. --}}
                         <a href="{{ route('invoices.create', ['template' => $key]) }}"
                            class="absolute inset-0 z-10 rounded-2xl"
@@ -68,7 +68,7 @@
                                 </div>
                                 <span class="px-2.5 py-1 rounded-full bg-white/20 ring-1 ring-white/30 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{{ $tpl['tag'] }}</span>
                             </div>
-                            <h3 class="mt-3 font-display font-extrabold text-lg leading-tight">{{ $tpl['label'] }}</h3>
+                            <h2 class="mt-3 font-display font-extrabold text-lg leading-tight">{{ $tpl['label'] }}</h2>
                             <p class="mt-1 text-white/85 text-sm leading-snug">{{ $tpl['tagline'] }}</p>
                         </div>
 
@@ -152,9 +152,9 @@
                                 @else
                                     <div class="px-3 py-6 text-center text-xs text-gray-500 bg-white">
                                         <div class="font-medium text-gray-700">{{ $styleMeta['label'] }} style preview</div>
-                                        <div class="mt-1 italic text-gray-400">Your line items, totals and terms will appear here.</div>
+                                        <div class="mt-1 italic text-gray-500">Your line items, totals and terms will appear here.</div>
                                         @if (! empty($tpl['items'][0]['gst_rate']))
-                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
+                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
                                         @endif
                                     </div>
                                 @endif
@@ -205,7 +205,7 @@
                 </div>
                 <div class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-money-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    No commitment — previews don't save
+                    No commitment - previews don't save
                 </div>
             </div>
         </div>

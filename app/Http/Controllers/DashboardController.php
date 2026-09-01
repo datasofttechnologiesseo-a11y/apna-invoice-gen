@@ -187,11 +187,29 @@ class DashboardController extends Controller
             ];
         }
 
+        // First run — the account has produced nothing yet, so every KPI, the
+        // P&L and the revenue trend would read ₹0. A wall of zeroes tells a new
+        // user nothing and makes the product feel empty, so the view swaps them
+        // for a single "make your first invoice" panel until there is data.
+        $isFirstRun = $stats['total'] === 0
+            && $stats['receipts_issued'] === 0
+            && ! $company->expenses()->exists();
+
+        // Ask for a Google review once, on the first dashboard visit after the
+        // user has actually issued an invoice. By now the bill has been sent
+        // and the product has proved itself, and nothing here is blocked by
+        // the modal the way the invoice screen's share buttons would be.
+        $reviewPrompt = app(\App\Services\ReviewPrompt::class);
+        $showReviewInvite = $reviewPrompt->shouldPrompt($user, $stats['issued']);
+        if ($showReviewInvite) {
+            $reviewPrompt->markShown($user);
+        }
+
         return view('dashboard', compact(
             'stats', 'recent', 'currency', 'company', 'setup', 'setupComplete',
             'setupProgress', 'pnl', 'trend30',
             'greeting', 'firstName', 'festival', 'todayIssued', 'todayCollected',
-            'actionItems'
+            'actionItems', 'isFirstRun', 'showReviewInvite'
         ));
     }
 }

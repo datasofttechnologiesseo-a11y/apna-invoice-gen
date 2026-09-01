@@ -4,6 +4,105 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+/* ------------------------------------------------------------------
+ * Modal focus management.
+ *
+ * Our dialogs handled Escape and carried aria-modal, but focus stayed on
+ * whatever was behind them: opening "Delete this customer?" with a keyboard
+ * left you tabbing through the page underneath, unable to reach the two
+ * buttons you were being asked to choose between.
+ *
+ * This keys off the semantics that are already in the markup -
+ * [role="dialog"][aria-modal="true"] - rather than a custom directive, so it
+ * works no matter how a dialog is shown (Alpine x-show, a class toggle, or
+ * plain JS) and covers dialogs added later without anyone remembering to opt
+ * in. A first attempt used an Alpine directive and silently never fired;
+ * observing the DOM is harder to get subtly wrong.
+ * ---------------------------------------------------------------- */
+const FOCUSABLE = [
+    'a[href]', 'button:not([disabled])', 'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])', 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+const isVisible = (n) => n.offsetWidth > 0 || n.offsetHeight > 0 || n.getClientRects().length > 0;
+// A Set as well as the WeakMap, because a dialog can leave by being REMOVED
+// from the DOM rather than hidden. querySelectorAll cannot see those, so
+// without a list of what is currently open the listener leaks and focus is
+// never handed back.
+const trapped = new WeakMap();
+const openDialogs = new Set();
+
+function focusablesIn(dialog) {
+    return Array.from(dialog.querySelectorAll(FOCUSABLE)).filter(isVisible);
+}
+
+function openTrap(dialog) {
+    if (trapped.has(dialog)) return;
+
+    const onKeydown = (e) => {
+        if (e.key !== 'Tab') return;
+        const items = focusablesIn(dialog);
+        if (!items.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        // Wrap both ways so focus can never escape behind the dialog.
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    };
+
+    trapped.set(dialog, { onKeydown, previous: document.activeElement });
+    openDialogs.add(dialog);
+    document.addEventListener('keydown', onKeydown, true);
+
+    // Move focus in. A dialog may still be mid-transition, so retry for a few
+    // frames rather than guessing a delay.
+    const grab = (tries = 0) => {
+        if (!trapped.has(dialog)) return;
+        const first = focusablesIn(dialog)[0];
+        if (first) { first.focus(); return; }
+        if (tries < 30) requestAnimationFrame(() => grab(tries + 1));
+    };
+    grab();
+}
+
+function closeTrap(dialog) {
+    const state = trapped.get(dialog);
+    if (!state) return;
+    document.removeEventListener('keydown', state.onKeydown, true);
+    trapped.delete(dialog);
+    openDialogs.delete(dialog);
+    // Send focus back to whatever opened it, rather than dumping the user at
+    // the top of the document.
+    if (state.previous && document.contains(state.previous) && isVisible(state.previous)) {
+        state.previous.focus();
+    }
+}
+
+function syncTraps() {
+    // Close any dialog that was detached from the document entirely.
+    openDialogs.forEach((dialog) => {
+        if (!document.contains(dialog)) closeTrap(dialog);
+    });
+
+    document.querySelectorAll('[role="dialog"][aria-modal="true"]').forEach((dialog) => {
+        isVisible(dialog) ? openTrap(dialog) : closeTrap(dialog);
+    });
+}
+
+const dialogObserver = new MutationObserver(syncTraps);
+document.addEventListener('DOMContentLoaded', () => {
+    dialogObserver.observe(document.body, {
+        subtree: true, childList: true,
+        attributes: true, attributeFilter: ['style', 'class', 'hidden', 'aria-modal', 'role'],
+    });
+    syncTraps();
+});
+
 Alpine.start();
 
 /* ------------------------------------------------------------------

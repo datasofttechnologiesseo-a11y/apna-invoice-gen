@@ -1,7 +1,7 @@
 @php
     $ogImage = $post->effectiveOgImage()
         ? asset('storage/' . $post->effectiveOgImage())
-        : asset('brand/apna-invoice-logo-sm.jpg');
+        : asset('brand/apna-invoice-logo-sm.webp');
 
     $articleJsonLd = [
         '@context' => 'https://schema.org',
@@ -21,7 +21,7 @@
             'url' => url('/'),
             'logo' => [
                 '@type' => 'ImageObject',
-                'url' => asset('brand/apna-invoice-logo-sm.jpg'),
+                'url' => asset('brand/apna-invoice-logo-sm.webp'),
             ],
         ],
         'mainEntityOfPage' => [
@@ -59,10 +59,19 @@
         :modified-time="$post->updated_at?->toIso8601String()"
         section="Blog"
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    {{-- Lora (serif) added for the article body, long-form reading typography.
-         figtree stays for chrome/UI, plus-jakarta-sans stays for display headlines. --}}
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800|lora:400,500,600,700&display=swap" rel="stylesheet">
+    {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
+         connection must match. Non-blocking load (media=print → all onload)
+         with a noscript fallback keeps fonts off the critical render path -
+         blog articles are the primary organic entry pages. Weights trimmed to
+         those actually used (lora body 400/500/700; inter UI; jakarta display). --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800|lora:400,500,700&display=swap" rel="stylesheet"></noscript>
+    @if ($post->featured_image_path)
+        {{-- Preload the cover - it's the article LCP on posts that have one. --}}
+        <link rel="preload" as="image" href="{{ asset('storage/' . $post->featured_image_path) }}" fetchpriority="high">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Article body, long-read typography. Serif body font, generous
@@ -86,7 +95,7 @@
             line-height: 0.85;
             padding: 0.08em 0.12em 0 0;
             font-weight: 800;
-            color: #075985;  /* brand-700 */
+            color: #0f766e;  /* brand-700 */
         }
 
         /* Anchor link for headings, small § that fades in on hover, lets
@@ -101,7 +110,7 @@
         }
         .article-body h2:hover .heading-anchor,
         .article-body h3:hover .heading-anchor { opacity: 1; }
-        .article-body .heading-anchor:hover { color: #075985; }
+        .article-body .heading-anchor:hover { color: #0f766e; }
 
         /* Reading progress bar, pinned to top, brand gradient. */
         #reading-progress {
@@ -125,7 +134,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <a href="{{ url('/') }}" class="flex items-center gap-3 py-4" aria-label="Apna Invoice home">
             <span class="inline-block bg-white rounded">
-                <x-brand-logo class="h-12 md:h-14 w-auto block" />
+                <x-brand-logo class="h-10 w-auto block" />
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">
@@ -147,7 +156,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
         <nav aria-label="Breadcrumb" class="text-xs uppercase tracking-wider font-bold text-gray-500 mb-3">
             <a href="{{ url('/') }}" class="hover:text-brand-700">Home</a>
-            <span class="mx-1.5 text-gray-300">/</span>
+            <span class="mx-1.5 text-gray-400" aria-hidden="true">/</span>
             <a href="{{ route('blog.index') }}" class="hover:text-brand-700">Blogs</a>
         </nav>
         <h1 class="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">{{ $post->title }}</h1>
@@ -168,15 +177,17 @@
 
 @if ($post->featured_image_path)
     <figure class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 md:-mt-4">
+        {{-- Above-the-fold cover = the article LCP. fetchpriority high +
+             eager so the preload scanner starts it immediately. --}}
         <img src="{{ asset('storage/' . $post->featured_image_path) }}"
              alt="{{ $post->featured_image_alt ?: $post->title }}"
              class="w-full rounded-xl shadow-lg ring-1 ring-gray-200 aspect-[16/9] object-cover"
-             width="1200" height="675">
+             width="1200" height="675" fetchpriority="high" loading="eager" decoding="async">
     </figure>
 @endif
 
 <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-    {{-- Table of contents — crawlable jump links (ids stamped server-side in
+    {{-- Table of contents - crawlable jump links (ids stamped server-side in
          renderedBody), shown only when the post has enough structure. --}}
     @php $toc = $post->tableOfContents(); @endphp
     @if (count($toc) >= 3)
@@ -186,7 +197,7 @@
                 @foreach ($toc as $i => $item)
                     <li>
                         <a href="#{{ $item['id'] }}" class="group inline-flex items-baseline gap-2 text-gray-700 hover:text-brand-700">
-                            <span class="text-[11px] font-bold text-gray-400 group-hover:text-brand-500 tabular-nums">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                            <span class="text-[11px] font-bold text-gray-500 group-hover:text-brand-500 tabular-nums">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
                             <span class="group-hover:underline decoration-brand-300 underline-offset-2">{{ $item['text'] }}</span>
                         </a>
                     </li>
@@ -210,7 +221,7 @@
                 [&_ol]:list-decimal [&_ol]:pl-7 [&_ol]:my-6 [&_ol]:space-y-3
                 [&_strong]:text-gray-900 [&_strong]:font-bold
                 [&_em]:italic
-                [&_blockquote]:border-l-4 [&_blockquote]:border-saffron-400 [&_blockquote]:pl-6 [&_blockquote]:my-8 [&_blockquote]:italic [&_blockquote]:text-gray-700 [&_blockquote]:bg-saffron-50/40 [&_blockquote]:py-2 [&_blockquote]:rounded-r
+                [&_blockquote]:border-l-4 [&_blockquote]:border-accent-400 [&_blockquote]:pl-6 [&_blockquote]:my-8 [&_blockquote]:italic [&_blockquote]:text-gray-700 [&_blockquote]:bg-accent-50/40 [&_blockquote]:py-2 [&_blockquote]:rounded-r
                 [&_code]:bg-gray-100 [&_code]:text-brand-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_code]:font-mono
                 [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-5 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:my-8 [&_pre]:text-sm [&_pre]:leading-relaxed
                 [&_pre_code]:bg-transparent [&_pre_code]:text-gray-100 [&_pre_code]:p-0 [&_pre_code]:text-inherit
@@ -236,11 +247,11 @@
         </div>
     @endif
 
-    {{-- Share row — WhatsApp first (how content actually spreads in India),
+    {{-- Share row - WhatsApp first (how content actually spreads in India),
          then X / LinkedIn / copy link. Plain links, no tracking scripts. --}}
     @php
         $shareUrl = route('blog.show', $post->slug);
-        $shareText = $post->title . ' — ' . $shareUrl;
+        $shareText = $post->title . ' - ' . $shareUrl;
     @endphp
     <div class="mt-8 flex flex-wrap items-center gap-2 text-sm">
         <span class="font-semibold text-gray-500 mr-1">Share:</span>
@@ -267,13 +278,13 @@
         </button>
     </div>
 
-    {{-- Previous / next — chronological path through the archive for readers
+    {{-- Previous / next - chronological path through the archive for readers
          and crawlers alike. --}}
     @if (($previous ?? null) || ($next ?? null))
         <nav aria-label="More articles" class="mt-10 grid sm:grid-cols-2 gap-3">
             @if ($previous ?? null)
                 <a href="{{ route('blog.show', $previous->slug) }}" class="group rounded-xl ring-1 ring-gray-200 p-4 hover:ring-brand-300 hover:shadow-sm transition">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">← Previous</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">← Previous</div>
                     <div class="mt-1 text-sm font-semibold text-gray-800 group-hover:text-brand-700 leading-snug">{{ $previous->title }}</div>
                 </a>
             @else
@@ -281,7 +292,7 @@
             @endif
             @if ($next ?? null)
                 <a href="{{ route('blog.show', $next->slug) }}" class="group rounded-xl ring-1 ring-gray-200 p-4 hover:ring-brand-300 hover:shadow-sm transition sm:text-right">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Next →</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Next →</div>
                     <div class="mt-1 text-sm font-semibold text-gray-800 group-hover:text-brand-700 leading-snug">{{ $next->title }}</div>
                 </a>
             @endif
@@ -294,9 +305,9 @@
         <p class="mt-2 text-brand-100 max-w-xl">Apna Invoice is a free GST invoicing tool for Indian SMEs, MSMEs and freelancers. Auto CGST/SGST, HSN/SAC search, UPI QR, WhatsApp share, all in 60 seconds.</p>
         <div class="mt-5 flex flex-wrap gap-3">
             @auth
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-saffron-500 hover:bg-saffron-600 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-accent-700 hover:bg-accent-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
             @else
-                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-saffron-500 hover:bg-saffron-600 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
+                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-accent-700 hover:bg-accent-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
                 <a href="{{ route('login') }}" class="inline-flex items-center px-5 py-3 bg-white/10 hover:bg-white/20 ring-1 ring-white/30 text-white rounded-lg font-semibold transition">Log in</a>
             @endauth
         </div>

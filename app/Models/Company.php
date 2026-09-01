@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,6 +34,25 @@ class Company extends Model
         'composition_dealer' => 'boolean',
         'books_locked_until' => 'date',
     ];
+
+    // GSTIN and PAN are statutory identifiers whose canonical form is upper
+    // case. Normalise on write and on read so every document (invoice, PDF,
+    // cash memo, GSTR-3B) shows them correctly even for pre-existing rows.
+    protected function gstin(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $v) => $v === null ? null : strtoupper($v),
+            set: fn (?string $v) => $v === null ? null : strtoupper(trim($v)),
+        );
+    }
+
+    protected function pan(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $v) => $v === null ? null : strtoupper($v),
+            set: fn (?string $v) => $v === null ? null : strtoupper(trim($v)),
+        );
+    }
 
     /**
      * True if the given date falls inside a period that has been locked
@@ -263,6 +283,48 @@ class Company extends Model
      *
      * Returns the invoice number to stamp on the row.
      */
+    /**
+     * Learn the numbering series from an invoice number the user typed.
+     *
+     * Only businesses without a GSTIN can set their own number (a GST tax
+     * invoice must follow a consecutive statutory series), and this is what
+     * lets such a business carry on from an existing bill book: type 5464
+     * once and the next auto-generated bill is 5465, not INV-0001.
+     *
+     * Rules:
+     *   - the trailing group of digits becomes the counter, so "INV-0120"
+     *     continues at 121 and a bare "5464" continues at 5465;
+     *   - the counter only ever moves forward, so re-issuing an older number
+     *     can never rewind the series;
+     *   - a format is only derived when none has been chosen, so a deliberate
+     *     setting is never overwritten.
+     */
+    public function learnSeriesFrom(string $number): void
+    {
+        if (! preg_match('/^(.*?)(\d+)$/', trim($number), $m)) {
+            return;   // no trailing number to continue from
+        }
+
+        [, $prefix, $digits] = $m;
+        $value = (int) $digits;
+
+        $changes = [];
+
+        if ($value > (int) ($this->invoice_counter ?? 0)) {
+            $changes['invoice_counter'] = $value;
+            $changes['invoice_counter_fy'] = self::financialYearFor(now())[0];
+        }
+
+        if (blank($this->invoice_number_format)) {
+            $changes['invoice_number_format'] = $prefix . '{N}';
+            $changes['invoice_number_padding'] = strlen($digits);
+        }
+
+        if ($changes) {
+            $this->forceFill($changes)->save();
+        }
+    }
+
     public function bumpCounterForFinalize(?string $referenceDate = null): string
     {
         $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();

@@ -27,13 +27,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo
-        title="GST & Invoicing Blog, Tips for Indian Small Businesses · Apna Invoice"
+        :url="$posts->currentPage() > 1 ? $posts->url($posts->currentPage()) : route('blog.index')"
+        title="GST & Invoicing Blog for Small Business"
         description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow, written for Indian MSMEs, freelancers and CAs."
         keywords="GST blog India, invoicing tips, HSN SAC guide, GSTR-1 filing, MSME finance, free GST invoice software"
         type="website"
-        :json-ld="$blogJsonLd" />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900|plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet">
+        :json-ld="[$blogJsonLd]" />
+    {{-- Non-blocking font load with crossorigin preconnect (see blog/show). --}}
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.google-analytics')
 </head>
@@ -43,7 +47,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <a href="{{ url('/') }}" class="flex items-center gap-3 py-4" aria-label="Apna Invoice home">
             <span class="inline-block bg-white rounded">
-                <x-brand-logo class="h-12 md:h-14 w-auto block" />
+                <x-brand-logo class="h-10 w-auto block" />
             </span>
         </a>
         <nav class="flex items-center gap-2 md:gap-6 text-sm">
@@ -73,8 +77,8 @@
             <div class="relative">
                 <input id="blog-search" type="search" name="search" value="{{ request('search') }}"
                        placeholder="Search articles…"
-                       class="block w-full pl-10 pr-4 py-3 border-gray-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+                       class="block w-full pl-10 pr-4 py-3 border-gray-300 rounded-lg shadow-sm focus:border-brand-600 focus:ring-brand-600 text-sm" aria-label="Search articles…">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
             </div>
         </form>
     </div>
@@ -99,7 +103,7 @@
                                  loading="lazy" width="800" height="450">
                         </a>
                     @else
-                        <a href="{{ route('blog.show', $post->slug) }}" class="block aspect-[16/9] bg-gradient-to-br from-brand-100 via-brand-50 to-saffron-50 flex items-center justify-center">
+                        <a href="{{ route('blog.show', $post->slug) }}" class="block aspect-[16/9] bg-gradient-to-br from-brand-100 via-brand-50 to-accent-50 flex items-center justify-center">
                             <span class="font-display font-extrabold text-3xl text-brand-700/30">{{ Str::limit($post->title, 22) }}</span>
                         </a>
                     @endif

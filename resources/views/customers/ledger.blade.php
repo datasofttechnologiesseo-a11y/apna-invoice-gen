@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Customer ledger">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 print:hidden">
             <div>
@@ -7,7 +7,7 @@
                     ['label' => $customer->name],
                     ['label' => 'Ledger'],
                 ]" />
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight mt-1">{{ $customer->name }} · Ledger</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight mt-1">{{ $customer->name }} · Ledger</h1>
                 @if ($customer->gstin)
                     <p class="text-xs text-gray-500 mt-1">GSTIN: <span class="font-mono">{{ $customer->gstin }}</span></p>
                 @endif
@@ -44,15 +44,15 @@
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Received</div>
-                    <div class="mt-1 text-xl font-bold text-emerald-700 font-mono tabular-nums">₹{{ inr($totals['received']) }}</div>
+                    <div class="mt-1 text-xl font-bold text-money-700 font-mono tabular-nums">₹{{ inr($totals['received']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Credit Notes</div>
-                    <div class="mt-1 text-xl font-bold text-blue-700 font-mono tabular-nums">₹{{ inr($totals['credited']) }}</div>
+                    <div class="mt-1 text-xl font-bold text-brand-700 font-mono tabular-nums">₹{{ inr($totals['credited']) }}</div>
                 </div>
-                <div class="bg-white border-2 border-amber-300 bg-amber-50 rounded-lg p-4">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-amber-800">Outstanding</div>
-                    <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-amber-800' : 'text-emerald-700' }} font-mono tabular-nums">₹{{ inr($totals['outstanding']) }}</div>
+                <div class="bg-white border-2 border-accent-300 bg-accent-50 rounded-lg p-4">
+                    <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">Outstanding</div>
+                    <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-accent-800' : 'text-money-700' }} font-mono tabular-nums">₹{{ inr($totals['outstanding']) }}</div>
                 </div>
             </div>
 
@@ -112,17 +112,17 @@
                                         <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 ml-1">{{ str_replace('_', ' ', $e['type']) }}</span>
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['debit'] > 0 ? '' : 'text-gray-300' }}">
-                                        {{ $e['debit'] > 0 ? inr($e['debit']) : '—' }}
+                                        {{ $e['debit'] > 0 ? inr($e['debit']) : '-' }}
                                     </td>
-                                    <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-emerald-700' : 'text-gray-300' }}">
-                                        {{ $e['credit'] > 0 ? inr($e['credit']) : '—' }}
+                                    <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-money-700' : 'text-gray-300' }}">
+                                        {{ $e['credit'] > 0 ? inr($e['credit']) : '-' }}
                                     </td>
-                                    <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold {{ $e['balance'] > 0 ? 'text-amber-800' : ($e['balance'] < 0 ? 'text-emerald-700' : 'text-gray-500') }}">
+                                    <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold {{ $e['balance'] > 0 ? 'text-accent-800' : ($e['balance'] < 0 ? 'text-money-700' : 'text-gray-500') }}">
                                         {{ inr(abs($e['balance'])) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-12 text-center text-gray-400">No invoices or payments yet for this customer.</td></tr>
+                                <tr><td colspan="6" class="px-4 py-12 text-center text-gray-500">No invoices or payments yet for this customer.</td></tr>
                             @endforelse
                         </tbody>
                         @if ($entries->isNotEmpty())
@@ -130,8 +130,8 @@
                                 <tr class="font-bold border-t-2 border-gray-300">
                                     <td colspan="3" class="px-4 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Closing balance</td>
                                     <td class="px-4 py-3 text-right font-mono tabular-nums">₹{{ inr($totals['invoiced']) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums text-emerald-700">₹{{ inr($totals['received'] + $totals['credited']) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums {{ $totals['outstanding'] > 0 ? 'text-amber-800' : 'text-emerald-700' }}">
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums text-money-700">₹{{ inr($totals['received'] + $totals['credited']) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums {{ $totals['outstanding'] > 0 ? 'text-accent-800' : 'text-money-700' }}">
                                         ₹{{ inr($totals['outstanding']) }} {{ $totals['outstanding'] > 0 ? 'Dr' : ($totals['outstanding'] < 0 ? 'Cr' : '') }}
                                     </td>
                                 </tr>

@@ -176,7 +176,7 @@ class QuotationShareTest extends TestCase
         $this->assertStringContainsString('signature=', $payload['url']);
     }
 
-    public function test_public_view_streams_pdf_with_valid_signed_url(): void
+    public function test_public_view_shows_html_landing_page_with_valid_signed_url(): void
     {
         ['user' => $user, 'company' => $company, 'customer' => $customer] = $this->setupOwner();
         $q = Quotation::factory()->sent()->create([
@@ -188,7 +188,27 @@ class QuotationShareTest extends TestCase
         $url = QuotationShareController::makePublicUrl($q);
         $this->get($url)
             ->assertOk()
-            ->assertHeader('content-type', 'application/pdf');
+            ->assertSee('Download PDF', false)
+            ->assertSee('noindex', false);
+    }
+
+    public function test_public_pdf_subroute_streams_pdf_with_noindex_header(): void
+    {
+        ['user' => $user, 'company' => $company, 'customer' => $customer] = $this->setupOwner();
+        $q = Quotation::factory()->sent()->create([
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'customer_id' => $customer->id,
+        ]);
+
+        $pdfUrl = \Illuminate\Support\Facades\URL::signedRoute(
+            'quotations.public.pdf',
+            ['quotation' => $q->id],
+            now()->addDays(30)
+        );
+        $response = $this->get($pdfUrl);
+        $response->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('noindex', $response->headers->get('X-Robots-Tag'));
     }
 
     public function test_unsigned_public_url_is_rejected(): void

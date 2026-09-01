@@ -1,13 +1,13 @@
-<x-app-layout>
+<x-app-layout title="GSTR-3B summary">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-3B Summary</h2>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-3B Summary</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $periodLabel }} · {{ $company->name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <a href="{{ route('finance.gstr3b.export.pdf', ['month' => $periodStart->format('Y-m')]) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded shadow-sm">
+                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-money-600 hover:bg-money-700 text-white text-sm font-semibold rounded shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download PDF
                 </a>
@@ -32,7 +32,7 @@
             <form method="GET" class="bg-white rounded-xl ring-1 ring-gray-200 p-4 flex flex-wrap items-end gap-3 print:hidden">
                 <div>
                     <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Filing month</label>
-                    <input type="month" name="month" value="{{ $periodStart->format('Y-m') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-500 focus:ring-brand-500" max="{{ now()->format('Y-m') }}">
+                    <input type="month" name="month" aria-label="Return period (month and year)" value="{{ $periodStart->format('Y-m') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" max="{{ now()->format('Y-m') }}">
                 </div>
                 <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Recalculate</button>
                 <div class="text-xs text-gray-500 ml-auto">
@@ -40,12 +40,12 @@
                 </div>
             </form>
 
-            {{-- Notice — what this is, and what it isn't --}}
-            <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-900 leading-relaxed">
+            {{-- Notice - what this is, and what it isn't --}}
+            <div class="p-4 rounded-xl bg-brand-50 border border-brand-200 text-sm text-brand-900 leading-relaxed">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 shrink-0 text-blue-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg class="w-5 h-5 shrink-0 text-brand-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div>
-                        <strong>What this is:</strong> a return-ready summary computed from your invoices, expenses, and cash memos for the selected month — laid out to mirror the GSTR-3B form on the GST portal.
+                        <strong>What this is:</strong> a return-ready summary computed from your invoices, expenses, and cash sales for the selected month - laid out to mirror the GSTR-3B form on the GST portal.
                         <br><strong>What this is not:</strong> a filing tool. We don't submit to GSTN. Verify against your GSTR-1 and ITC ledgers before you (or your CA) file on the portal. The figures are accurate as far as your books go.
                     </div>
                 </div>
@@ -67,11 +67,11 @@
                 </div>
             </div>
 
-            {{-- ═══ Section 3.1 — Outward + RCM supplies ═══ --}}
+            {{-- ═══ Section 3.1 - Outward + RCM supplies ═══ --}}
             <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-brand-700 to-brand-800 text-white">
                     <div class="text-[10px] uppercase tracking-widest font-bold text-accent-300">Section 3.1</div>
-                    <h3 class="font-display text-lg font-extrabold">Details of outward supplies and inward supplies liable to reverse charge</h3>
+                    <h2 class="font-display text-lg font-extrabold">Details of outward supplies and inward supplies liable to reverse charge</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[700px]">
@@ -92,39 +92,39 @@
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['igst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['cgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($outward['sgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
                             </tr>
                             <tr>
                                 <td class="px-5 py-3"><strong>(b)</strong> Outward taxable supplies <span class="text-xs text-gray-500">(zero rated)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
                             </tr>
                             <tr>
                                 <td class="px-5 py-3"><strong>(c)</strong> Other outward supplies <span class="text-xs text-gray-500">(Nil rated, exempted)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
                             </tr>
-                            <tr class="bg-amber-50/40">
+                            <tr class="bg-accent-50/40">
                                 <td class="px-5 py-3"><strong>(d)</strong> Inward supplies <span class="text-xs text-gray-500">(liable to reverse charge)</span></td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ inr($rcm_outward['taxable']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['igst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['cgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($rcm_outward['sgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
                             </tr>
                             <tr>
                                 <td class="px-5 py-3"><strong>(e)</strong> Non-GST outward supplies</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
                             </tr>
                         </tbody>
                     </table>
@@ -134,11 +134,11 @@
                 </div>
             </section>
 
-            {{-- ═══ Section 4 — Eligible ITC ═══ --}}
+            {{-- ═══ Section 4 - Eligible ITC ═══ --}}
             <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-money-700 to-money-800 text-white">
                     <div class="text-[10px] uppercase tracking-widest font-bold text-money-200">Section 4</div>
-                    <h3 class="font-display text-lg font-extrabold">Eligible ITC</h3>
+                    <h2 class="font-display text-lg font-extrabold">Eligible ITC</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[600px]">
@@ -153,40 +153,40 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             <tr class="bg-money-50/30">
-                                <td class="px-5 py-3"><strong>(A)(5)</strong> All other ITC <span class="text-xs text-gray-500">(from your expenses + cash memos)</span></td>
+                                <td class="px-5 py-3"><strong>(A)(5)</strong> All other ITC <span class="text-xs text-gray-500">(from your expenses + cash sales)</span></td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($itc['igst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($itc['cgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ inr($itc['sgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
                             </tr>
                             <tr>
                                 <td class="px-5 py-3"><strong>(B)</strong> ITC reversed</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">—</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
                             </tr>
                             <tr class="bg-money-100/50 border-t-2 border-money-300">
                                 <td class="px-5 py-3 font-bold">(C) Net ITC available <span class="text-xs font-normal text-gray-500">(A − B)</span></td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ inr($itc['igst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ inr($itc['cgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ inr($itc['sgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-400">0.00</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0.00</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
-                    ITC is the GST you paid on purchases (cash memos with seller GSTIN + expenses with GST input). Cross-verify against GSTR-2B on the portal — only matched ITC is claimable.
-                    <span class="block mt-1">Excludes purchases you marked as <strong>not eligible for ITC</strong> — blocked credits under §17(5) such as motor vehicles, staff food/catering and personal-use items. Mark those on the expense or cash-memo so they don't inflate this figure.</span>
+                    ITC is the GST you paid on purchases (cash sales with seller GSTIN + expenses with GST input). Cross-verify against GSTR-2B on the portal - only matched ITC is claimable.
+                    <span class="block mt-1">Excludes purchases you marked as <strong>not eligible for ITC</strong> - blocked credits under §17(5) such as motor vehicles, staff food/catering and personal-use items. Mark those on the expense or cash-memo so they don't inflate this figure.</span>
                 </div>
             </section>
 
-            {{-- ═══ Section 6.1 — Payment of tax ═══ --}}
+            {{-- ═══ Section 6.1 - Payment of tax ═══ --}}
             <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-4 bg-gradient-to-r from-accent-700 to-accent-800 text-white">
                     <div class="text-[10px] uppercase tracking-widest font-bold text-accent-200">Section 6.1</div>
-                    <h3 class="font-display text-lg font-extrabold">Payment of tax</h3>
+                    <h2 class="font-display text-lg font-extrabold">Payment of tax</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[500px]">
@@ -222,7 +222,7 @@
                 </div>
 
                 {{-- Big total --}}
-                <div class="px-5 py-5 bg-gradient-to-r from-accent-100 to-saffron-50 border-t border-accent-200 flex items-center justify-between flex-wrap gap-4">
+                <div class="px-5 py-5 bg-gradient-to-r from-accent-100 to-accent-50 border-t border-accent-200 flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <div class="text-[11px] uppercase tracking-widest font-bold text-accent-800">Total cash to deposit</div>
                         <div class="text-xs text-accent-700 mt-0.5">Sum of IGST + CGST + SGST · Pay via PMT-06 challan on the GST portal</div>
@@ -232,9 +232,9 @@
             </section>
 
             {{-- Filing reminder --}}
-            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-900 print:hidden">
+            <div class="p-4 rounded-xl bg-accent-50 border border-accent-200 text-sm text-accent-900 print:hidden">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div>
                         <strong>Filing window:</strong> GSTR-3B for {{ $periodLabel }} is due by <strong>{{ $periodEnd->copy()->addMonth()->day(20)->format('d M Y') }}</strong> (20th of the next month). Late filing attracts ₹50/day late fee per Act + 18% p.a. interest on unpaid tax under Section 50 CGST.
                     </div>

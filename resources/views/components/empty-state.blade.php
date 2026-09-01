@@ -9,12 +9,12 @@
 ])
 
 <div class="p-10 sm:p-14 text-center">
-    <div class="mx-auto w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $icon }}"/>
         </svg>
     </div>
-    <h3 class="mt-5 font-display text-lg font-bold text-gray-900">{{ $title }}</h3>
+    <h2 class="mt-5 font-display text-lg font-bold text-gray-900">{{ $title }}</h2>
     @if ($description)
         <p class="mt-1 text-sm text-gray-500 max-w-md mx-auto leading-relaxed">{{ $description }}</p>
     @endif

@@ -93,15 +93,43 @@ class InvoiceShareController extends Controller
     }
 
     /**
-     * Public signed view — accessible without login by whoever has the link.
-     * Handy for WhatsApp / email sharing: customer opens PDF directly.
+     * Public signed landing page — accessible without login by whoever has the
+     * link. Renders an HTML wrapper (recipient name, amount, PAID/DUE, a
+     * Download-PDF button, a UPI pay button and a "make your own" CTA) instead
+     * of streaming a bare PDF. That turns every shared invoice into a link that
+     * unfurls in WhatsApp and quietly advertises the product to the recipient —
+     * who is themselves a business owner, the highest-intent prospect we reach.
+     * The PDF itself now lives at the signed `invoices.public.pdf` sub-route.
      */
     public function publicView(Request $request, Invoice $invoice): Response
     {
         // Signed URL middleware handles the signature check (applied in routes).
-        // Cancelled invoices must NOT be downloadable through the public link —
+        // Cancelled invoices must NOT be viewable through the public link —
         // otherwise a customer could still open an old WhatsApp link and treat
         // the cancelled bill as payable.
+        abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
+
+        $invoice->load(['customer:id,name', 'company:id,name,upi_id']);
+
+        // Sign a fresh PDF link with the same TTL — the recipient reached this
+        // page through a valid signature, so they're entitled to the document.
+        $pdfUrl = URL::signedRoute(
+            'invoices.public.pdf',
+            ['invoice' => $invoice->id],
+            now()->addDays(self::SHARE_TTL_DAYS)
+        );
+
+        return response()->view('invoices.public', compact('invoice', 'pdfUrl'));
+    }
+
+    /**
+     * Stream the invoice PDF for a public signed link. Carries X-Robots-Tag:
+     * noindex — these signed URLs contain customer names, GSTINs and amounts,
+     * so if one ever leaks onto a public page Google must not index it (a meta
+     * tag is impossible inside a binary PDF; only the HTTP header works).
+     */
+    public function publicPdf(Request $request, Invoice $invoice): Response
+    {
         abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
 
         $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
@@ -115,7 +143,10 @@ class InvoiceShareController extends Controller
 
         $filename = 'invoice-' . $invoice->filenameSafeNumber() . '.pdf';
 
-        return $pdf->stream($filename);
+        $response = $pdf->stream($filename);
+        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+        return $response;
     }
 
     /**

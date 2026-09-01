@@ -1,6 +1,6 @@
-<x-app-layout>
+<x-app-layout title="Backup your data">
     <x-slot name="header">
-        <h2 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Backups</h2>
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Backups</h1>
     </x-slot>
 
     <div class="py-10">
@@ -9,15 +9,15 @@
                 <div class="p-4 bg-money-50 border border-money-200 text-money-800 rounded">{{ session('status') }}</div>
             @endif
             @if ($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded">
+                <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">
                     <ul class="list-disc pl-6">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                 </div>
             @endif
 
             <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 p-6">
-                <h3 class="font-display text-lg font-bold text-gray-900">Weekly auto-backup</h3>
+                <h2 class="font-display text-lg font-bold text-gray-900">Weekly auto-backup</h2>
                 <p class="mt-1 text-sm text-gray-600 leading-relaxed">
-                    Every Sunday morning, we zip up your business data — invoices, customers, products, payments, expenses — as CSV files and email it to your registered address, <strong class="font-mono">{{ $user->email }}</strong>.
+                    Every Sunday morning, we zip up your business data - invoices, customers, products, payments, expenses - as CSV files and email it to your registered address, <strong class="font-mono">{{ $user->email }}</strong>.
                 </p>
 
                 <form method="POST" action="{{ route('backup.toggle') }}" class="mt-4 flex items-center gap-3">
@@ -40,7 +40,7 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 p-6">
-                <h3 class="font-display text-lg font-bold text-gray-900">Manual backup</h3>
+                <h2 class="font-display text-lg font-bold text-gray-900">Manual backup</h2>
                 <p class="mt-1 text-sm text-gray-600 leading-relaxed">
                     Download or email a backup right now. Useful before big changes, at tax filing time, or if you need a clean CSV export for your CA.
                 </p>
@@ -60,15 +60,15 @@
                 </div>
             </div>
 
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900">
+            <div class="bg-accent-50 border border-accent-200 rounded-xl p-5 text-sm text-accent-900">
                 <div class="font-semibold">Keep your backup ZIPs secure.</div>
                 <p class="mt-1">They contain customer GSTINs and payment history. Store them on an encrypted drive or password-protected cloud folder, and never share them publicly.</p>
             </div>
 
             <div class="bg-white rounded-xl ring-1 ring-gray-100 p-5 text-sm text-gray-600">
-                <h4 class="font-semibold text-gray-900 mb-2">How long do we keep your data?</h4>
+                <h3 class="font-semibold text-gray-900 mb-2">How long do we keep your data?</h3>
                 <ul class="space-y-1.5 list-disc pl-5">
-                    <li><strong>Your invoices, customers, payments and ledger</strong> stay in your account for as long as it's active — you control the data.</li>
+                    <li><strong>Your invoices, customers, payments and ledger</strong> stay in your account for as long as it's active - you control the data.</li>
                     <li><strong>Emailed backup ZIPs</strong> sit in your own inbox; we don't keep a server-side copy after sending.</li>
                     <li><strong>If you delete your account</strong>, all your data is permanently removed from our servers within 30 days, including any cached backups.</li>
                     <li><strong>We never sell or share</strong> your data. All data is hosted in Indian jurisdiction.</li>

@@ -1,7 +1,7 @@
 @props(['series'])
 
 @php
-    // Pure inline-SVG sparkline — zero JS deps, accessible, prints fine.
+    // Pure inline-SVG sparkline - zero JS deps, accessible, prints fine.
     // Expects $series as an array of ['date' => 'YYYY-MM-DD', 'label' => 'd M', 'amount' => float].
     $series = collect($series);
     $count = $series->count();
@@ -61,7 +61,7 @@
     </div>
 
     @if ($total <= 0)
-        <div class="mt-6 py-8 text-center text-sm text-gray-400">
+        <div class="mt-6 py-8 text-center text-sm text-gray-500">
             No payments received in the last 30 days. Once receipts come in, you'll see the trend here.
         </div>
     @else
@@ -85,7 +85,7 @@
             </svg>
 
             {{-- Axis labels: first / mid / last day --}}
-            <div class="mt-2 flex justify-between text-[10px] text-gray-400 font-mono">
+            <div class="mt-2 flex justify-between text-[10px] text-gray-500 font-mono">
                 <span>{{ $series->first()['label'] ?? '' }}</span>
                 <span>{{ $series->get((int) floor($count / 2))['label'] ?? '' }}</span>
                 <span>{{ $series->last()['label'] ?? '' }}</span>
