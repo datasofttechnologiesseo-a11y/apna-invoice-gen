@@ -123,7 +123,7 @@ class DashboardController extends Controller
         $actionItems = [];
         if ($overdueCount > 0) {
             $actionItems[] = [
-                'tone' => 'red',
+                'tone' => 'danger',
                 'icon' => 'overdue',
                 'title' => $overdueCount === 1
                     ? '1 invoice is overdue'
@@ -135,7 +135,7 @@ class DashboardController extends Controller
         }
         if ($staleDrafts > 0) {
             $actionItems[] = [
-                'tone' => 'amber',
+                'tone' => 'accent',
                 'icon' => 'draft',
                 'title' => $staleDrafts === 1
                     ? '1 draft older than a week'
@@ -147,7 +147,7 @@ class DashboardController extends Controller
         }
         if ($unsentRecent > 0) {
             $actionItems[] = [
-                'tone' => 'blue',
+                'tone' => 'brand',
                 'icon' => 'send',
                 'title' => $unsentRecent === 1
                     ? '1 invoice not shared yet'
