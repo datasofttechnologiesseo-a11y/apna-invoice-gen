@@ -117,7 +117,7 @@
                     <h2 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 px-1">{{ $section['group'] }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach ($section['cards'] as $card)
-                            @php $t = $tones[$card['tone']]; @endphp
+                            @php $t = $tones[$card['tone']] ?? $tones['brand']; @endphp
                             <a href="{{ $card['href'] }}"
                                class="group relative bg-white rounded-2xl shadow-card ring-1 ring-gray-200 hover:ring-brand-300 hover:shadow-md transition p-5 flex items-start gap-4">
                                 <div class="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center {{ $t['bg'] }} ring-1 {{ $t['ring'] }}">

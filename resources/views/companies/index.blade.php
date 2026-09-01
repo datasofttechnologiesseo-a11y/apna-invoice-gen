@@ -12,7 +12,7 @@
     <div class="py-10">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
-                <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded">{{ session('status') }}</div>
+                <div class="p-4 bg-money-50 border border-money-200 text-money-800 rounded">{{ session('status') }}</div>
             @endif
             @if ($errors->has('company'))
                 <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">{{ $errors->first('company') }}</div>

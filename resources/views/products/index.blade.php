@@ -79,7 +79,7 @@
                                     <td class="px-4 py-3 text-right text-sm">{{ rtrim(rtrim(number_format((float) $p->gst_rate, 2, '.', ''), '0'), '.') }}%</td>
                                     <td class="px-4 py-3 text-right space-x-2">
                                         <a href="{{ route('products.edit', $p) }}" class="text-brand-700 hover:underline text-sm">Edit</a>
-                                        @php $willArchive = $p->invoiceProducts()->exists(); @endphp
+                                        @php $willArchive = $p->invoiceItems()->exists(); @endphp
                                         <x-confirm-form
                                             :action="route('products.destroy', $p)"
                                             method="DELETE"
