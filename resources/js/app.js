@@ -1,4 +1,5 @@
 import './bootstrap';
+import './html-to-markdown';
 
 import Alpine from 'alpinejs';
 

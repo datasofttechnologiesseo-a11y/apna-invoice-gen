@@ -142,6 +142,12 @@ class Post extends Model
 
         $this->tocCache = $toc;
 
+        // Contextual internal links. Runs last so it sees the finished markup
+        // and can avoid headings and existing links; see InternalLinker for
+        // the first-occurrence-only and cap rules.
+        $html = \App\Services\Blog\InternalLinker::fromConfig()
+            ->apply($html, $this->slug ? route('blog.show', $this->slug, false) : null);
+
         return $html;
     }
 

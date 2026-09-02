@@ -188,6 +188,12 @@
                                   class="block w-full border-0 focus:ring-0 font-mono text-sm leading-relaxed p-5 sm:p-6 resize-y">{{ $bodyVal }}</textarea>
                     </div>
 
+                    <div x-show="pasteNotice" x-cloak x-transition
+                         class="bg-money-50 border border-money-200 text-money-800 rounded-lg px-4 py-3 text-sm flex items-start gap-2">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span x-text="pasteNotice"></span>
+                    </div>
+
                     {{-- Restore-from-localStorage banner - shown if a newer autosave
                          exists than what the server gave us. One-click to restore. --}}
                     <div x-show="autosaveAvailable" x-cloak
@@ -461,6 +467,10 @@
                 // Body-image upload state - disables the toolbar Image button
                 // while a request is in flight (prevents double-uploads).
                 imageUploading: false,
+                // Confirmation that a rich-text paste kept its structure, so
+                // the author knows the conversion happened rather than
+                // wondering whether the formatting survived.
+                pasteNotice: '',
 
                 init() {
                     this.updateBodyStats();
@@ -728,7 +738,33 @@
                             return;
                         }
                     }
-                    // No image in the paste → let the textarea handle it normally.
+
+                    // Rich text: a textarea only receives the text/plain half of
+                    // a paste, so an article written in Docs, Word or ChatGPT
+                    // arrived here with every heading, bold run, list and link
+                    // flattened. That is why posts had no structure. Convert the
+                    // text/html half to Markdown instead.
+                    const html = ev.clipboardData?.getData('text/html');
+                    if (html && html.trim() && window.htmlToMarkdown) {
+                        const md = window.htmlToMarkdown(html);
+                        const plain = (ev.clipboardData.getData('text/plain') || '').trim();
+
+                        // Only take over when the conversion actually recovered
+                        // structure. Pasting a plain sentence should stay a
+                        // plain sentence, not gain escapes it never needed.
+                        const gainedStructure = /(^|
+)(#{2,6} |[-*] |\d+\. |> |```)|\*\*|\[.+\]\(/.test(md);
+                        if (md && gainedStructure && md !== plain) {
+                            ev.preventDefault();
+                            this.insertAtCaret(md);
+                            this.updateBodyStats();
+                            this.scheduleAutosave();
+                            this.pasteNotice = 'Pasted with formatting kept - headings, lists and links converted to Markdown.';
+                            setTimeout(() => { this.pasteNotice = ''; }, 6000);
+                            return;
+                        }
+                    }
+                    // Nothing structured to recover → let the textarea handle it.
                 },
 
                 /**
