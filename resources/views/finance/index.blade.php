@@ -6,7 +6,7 @@
                 <p class="text-sm text-gray-500 mt-1 truncate">{{ $company->name }} · {{ $periodLabel }}</p>
             </div>
             <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center justify-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm text-sm whitespace-nowrap">
-                + Add expense
+                + Add purchase
             </a>
         </div>
     </x-slot>

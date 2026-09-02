@@ -1,8 +1,8 @@
-<x-app-layout title="Expenses">
+<x-app-layout title="Purchases &amp; Expenses">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Expenses</h1>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Purchases &amp; Expenses</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $expenses->total() }} entries · {{ $periodLabel }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -11,7 +11,7 @@
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Cash Memos
                 </a>
-                <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ Add expense</a>
+                <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ Add purchase</a>
             </div>
         </div>
     </x-slot>

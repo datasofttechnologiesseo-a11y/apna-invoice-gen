@@ -405,7 +405,7 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-medium text-gray-900">Add expense</div>
+                                    <div class="font-medium text-gray-900">Add purchase</div>
                                     <div class="text-xs text-gray-500">Bank · UPI · Card · Cheque</div>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-500 group-hover:text-danger-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
