@@ -279,24 +279,21 @@
                                 <div class="mt-1 py-2 font-mono text-sm">
                                     <span class="text-gray-900 font-semibold">{{ $invoice->invoice_number }}</span>
                                 </div>
-                            @elseif (blank($company->gstin))
-                                {{-- Non-GST business: the number series isn't bound by
-                                     Rule 46, so the operator may pick their own number.
-                                     Blank = auto. Custom numbers don't advance the counter. --}}
+                            @else
+                                {{-- Editable for every business, GST-registered or not.
+                                     A firm moving over mid-year has to continue the
+                                     series its books and its buyers already carry.
+                                     Blank = auto-number at issue; a number typed here
+                                     teaches the counter so later ones follow the same
+                                     series. Duplicates within a company are refused. --}}
                                 <x-input-label for="invoice_number" value="Invoice no." />
                                 <x-text-input id="invoice_number" name="invoice_number" type="text"
                                     class="mt-1 block w-full font-mono"
                                     :value="old('invoice_number', $invoice->invoice_number)"
                                     maxlength="40"
                                     placeholder="{{ $previewNumber ?? $company->nextInvoiceNumber() }}" />
-                                <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">Leave blank to auto-number · custom numbers don't advance the counter</p>
+                                <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">Leave blank to auto-number · a number you type continues your series</p>
                                 <x-input-error :messages="$errors->get('invoice_number')" class="mt-1" />
-                            @else
-                                <x-input-label value="Invoice no." />
-                                <div class="mt-1 py-2 font-mono text-sm">
-                                    <span class="text-brand-700 font-semibold">{{ $previewNumber ?? $company->nextInvoiceNumber() }}</span>
-                                    <span class="block text-[10px] text-gray-500 uppercase tracking-wider font-sans">Auto-assigned when issued (GST series)</span>
-                                </div>
                             @endif
                         </div>
 

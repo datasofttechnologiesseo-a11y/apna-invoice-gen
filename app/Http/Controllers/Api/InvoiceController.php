@@ -243,7 +243,27 @@ class InvoiceController extends Controller
 
         DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
-            $number = $company->bumpCounterForFinalize($invoice->invoice_date?->toDateString());
+
+            // Same rule as the web path: a number the business already put on
+            // the draft is kept, and the series is carried forward from it.
+            // This branch was missing here, so an invoice issued through the
+            // API silently lost a custom number that the web app would have
+            // honoured - the same document, numbered differently depending on
+            // which door it went out of.
+            if (filled($invoice->invoice_number)) {
+                $number = $invoice->invoice_number;
+                $company->learnSeriesFrom($number);
+            } else {
+                // Skip past any number a custom-numbered invoice already claimed,
+                // or the unique (company_id, invoice_number) index rejects the
+                // update.
+                do {
+                    $number = $company->bumpCounterForFinalize($invoice->invoice_date?->toDateString());
+                } while (Invoice::where('company_id', $company->id)
+                    ->where('id', '!=', $invoice->id)
+                    ->where('invoice_number', $number)
+                    ->exists());
+            }
 
             $invoice->update([
                 'invoice_number' => $number,
