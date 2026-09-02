@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -38,6 +39,34 @@ class BlogController extends Controller
         abort_if($posts->currentPage() > $posts->lastPage(), 404);
 
         return view('blog.index', compact('posts'));
+    }
+
+    /**
+     * RSS 2.0 feed.
+     *
+     * Feed readers, aggregators and a few SEO tools all expect one, and its
+     * absence is one of the few things that reads as "this blog is not really
+     * maintained". Cheap to serve and it costs nothing to keep correct.
+     */
+    public function feed(): Response
+    {
+        $posts = Post::published()
+            ->with('author:id,name')
+            ->orderByDesc('published_at')
+            ->limit(30)
+            ->get();
+
+        $xml = view('blog.feed', [
+            'posts' => $posts,
+            'updated' => $posts->first()?->published_at ?? now(),
+        ])->render();
+
+        return response($xml, 200, [
+            'Content-Type' => 'application/rss+xml; charset=UTF-8',
+            // Half an hour is long enough to matter under load and short
+            // enough that a new post is not stale in readers.
+            'Cache-Control' => 'public, max-age=1800',
+        ]);
     }
 
     public function show(string $slug): View

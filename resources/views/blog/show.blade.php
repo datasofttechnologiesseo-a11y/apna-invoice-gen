@@ -79,6 +79,7 @@
         section="Blog"
         :author="$post->author?->name"
         :json-ld="array_values(array_filter([$articleJsonLd, $breadcrumbJsonLd, $faqJsonLd]))" />
+    <link rel="alternate" type="application/rss+xml" title="{{ config('seo.name', config('app.name')) }} Blog" href="{{ route('blog.feed') }}">
     {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
          connection must match. Non-blocking load (media=print → all onload)
          with a noscript fallback keeps fonts off the critical render path -
@@ -276,7 +277,11 @@
             @foreach (explode(',', $post->meta_keywords) as $kw)
                 @php $k = trim($kw); @endphp
                 @if ($k)
-                    <span class="inline-block px-2.5 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-medium ring-1 ring-brand-100">{{ $k }}</span>
+                    {{-- The blog index already searches meta_keywords, so a tag
+                         becomes working topic navigation for free rather than a
+                         chip that looks clickable and is not. --}}
+                    <a href="{{ route('blog.index', ['search' => $k]) }}"
+                       class="inline-block px-2.5 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-medium ring-1 ring-brand-100 hover:bg-brand-100 hover:ring-brand-300 transition">{{ $k }}</a>
                 @endif
             @endforeach
         </div>

@@ -156,6 +156,9 @@ Route::get('q/{quotation}/pdf', [QuotationShareController::class, 'publicPdf'])
 // Throttle each show route to 60/min so a scraper or bot can't hammer the
 // per-post view counter.
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+// Declared before /blog/{slug} so the feed is not captured as a post slug.
+Route::get('/blog/feed.xml', [BlogController::class, 'feed'])->name('blog.feed');
+
 Route::get('/blog/{slug}', [BlogController::class, 'show'])
     ->where('slug', '[a-z0-9-]+')
     ->middleware('throttle:60,1')
