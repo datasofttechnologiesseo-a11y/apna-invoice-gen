@@ -69,6 +69,10 @@
         email <a href="mailto:hello@datasofttechnologies.com">hello@datasofttechnologies.com</a>,
         or visit <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener">datasofttechnologies.com</a>.
     </p>
+    <p>
+        Writing about us? Our <a href="{{ route('pages.press') }}">press kit</a> has the logo, brand colours and a
+        short description you can quote.
+    </p>
 
     <p class="mt-10 text-sm text-gray-500">Last updated: {{ $effectiveDate }}</p>
 </x-layouts.marketing>

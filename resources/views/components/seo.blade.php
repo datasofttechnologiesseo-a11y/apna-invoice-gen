@@ -10,6 +10,7 @@
     'publishedTime' => null,
     'modifiedTime' => null,
     'section' => null,
+    'author' => null,
     // Optional richer social title/description (link unfurls) without changing
     // the <title> shown in the browser tab / SERP. Falls back to $title/$descr.
     'ogTitle' => null,
@@ -35,7 +36,27 @@
     // A page that needs a query string in its canonical (e.g. blog pagination)
     // passes an explicit :url, which wins.
     $canonical = $url ?: ($appUrl . (request()->path() === '/' ? '/' : '/' . request()->path()));
-    $imgPath = $image ?: config('seo.og_image');
+    // Per-page share card, resolved from the route name: pages.gst-calculator
+    // uses brand/og/gst-calculator.png. Every page sharing one card meant a
+    // link to the calculator unfurled exactly like a link to pricing, and the
+    // thumbnail told the reader nothing about where they were going.
+    //
+    // Resolved by convention rather than a prop on every page, so adding a
+    // card later is dropping a file in - and the file_exists check means a
+    // missing card silently falls back to the default rather than emitting an
+    // og:image that 404s, which is worse than a generic one.
+    $autoCard = null;
+    if (! $image && ($routeName = request()->route()?->getName())) {
+        $slug = str_starts_with($routeName, 'pages.')
+            ? substr($routeName, strlen('pages.'))
+            : null;
+        if ($slug && preg_match('/^[a-z0-9-]+$/', $slug)
+            && is_file(public_path("brand/og/{$slug}.png"))) {
+            $autoCard = "/brand/og/{$slug}.png";
+        }
+    }
+
+    $imgPath = $image ?: ($autoCard ?: config('seo.og_image'));
     $ogImage = $imgPath && str_starts_with($imgPath, 'http')
         ? $imgPath
         : $appUrl . '/' . ltrim($imgPath, '/');
@@ -105,6 +126,7 @@
     @if ($publishedTime)<meta property="article:published_time" content="{{ $publishedTime }}">@endif
     @if ($modifiedTime)<meta property="article:modified_time" content="{{ $modifiedTime }}">@endif
     @if ($section)<meta property="article:section" content="{{ $section }}">@endif
+    @if ($author)<meta property="article:author" content="{{ $author }}">@endif
     <meta property="article:publisher" content="{{ config('seo.organization.url') }}">
 @endif
 

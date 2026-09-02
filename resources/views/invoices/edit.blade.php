@@ -798,10 +798,10 @@
                      users (a common complaint in Indian billing apps is missing shortcuts). --}}
                 <div class="max-w-7xl mx-auto px-6 py-1 text-[11px] text-gray-500 border-b border-gray-100 flex items-center gap-x-4 gap-y-0.5 flex-wrap">
                     <span class="font-semibold text-gray-700 uppercase tracking-wider text-[10px]">Shortcuts</span>
-                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px]">F2</kbd> add row</span>
-                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px]">Ctrl+S</kbd> save draft</span>
-                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px]">F9</kbd> save &amp; download PDF</span>
-                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px]">Esc</kbd> close dropdown</span>
+                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">F2</kbd> add row</span>
+                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">Ctrl+S</kbd> save draft</span>
+                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">F9</kbd> save &amp; download PDF</span>
+                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">Esc</kbd> close dropdown</span>
                 </div>
                 <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
                     <div class="text-xs text-gray-500">

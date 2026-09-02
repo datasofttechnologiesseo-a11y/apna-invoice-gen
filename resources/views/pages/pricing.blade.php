@@ -87,6 +87,12 @@
         billing under LUT/Bond, SEZ supplies or multi-currency, those are intentionally out of scope for now.
     </p>
 
+    <h2>What if I pay for something later and change my mind?</h2>
+    <p>
+        Nothing is chargeable during beta, so there is nothing to refund today. When paid tiers arrive, our
+        <a href="{{ route('pages.refund') }}">refund policy</a> sets out how cancellations and refunds work.
+    </p>
+
     <h2>Get started</h2>
     <p>
         <a href="{{ route('register') }}">Create your free account</a> in about a minute. Not sure yet? See the full
