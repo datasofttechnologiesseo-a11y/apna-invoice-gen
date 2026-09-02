@@ -165,6 +165,57 @@ class Post extends Model
     protected ?array $tocCache = null;
 
     /**
+     * Question-and-answer pairs in the body, for FAQPage structured data.
+     *
+     * Posts in this subject area are written as questions - "Can a GST invoice
+     * be sent through WhatsApp?", "What must appear on the invoice?" - and
+     * Google renders FAQPage markup as an expandable block in the results,
+     * which is a large click-through difference on exactly this kind of query.
+     *
+     * Only h2/h3 headings that are genuine questions count, and each needs a
+     * real answer under it: Google's guidance is that the markup must reflect
+     * visible content, and thin or invented answers risk a manual action.
+     *
+     * @return array<int, array{question:string, answer:string}>
+     */
+    public function faqPairs(): array
+    {
+        $html = $this->renderedBody();
+        if ($html === '') {
+            return [];
+        }
+
+        // Split on question headings, keeping what follows each one.
+        // [^<]*\? rather than .*?\? - the latter runs past the closing tag and
+        // swallows every heading up to the next question mark, turning three
+        // sections into one enormous "question".
+        $pattern = '#<h[23][^>]*>([^<]*\?)\s*</h[23]>(.*?)(?=<h[23][\s>]|$)#si';
+        if (! preg_match_all($pattern, $html, $matches, PREG_SET_ORDER)) {
+            return [];
+        }
+
+        $pairs = [];
+        foreach ($matches as $m) {
+            $question = trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES, 'UTF-8'));
+            $answer = trim(preg_replace('/\s+/u', ' ',
+                html_entity_decode(strip_tags($m[2]), ENT_QUOTES, 'UTF-8')));
+
+            // An answer too short to be useful would be thin content in the
+            // eyes of the guidance, so it is left out of the markup entirely.
+            if ($question === '' || mb_strlen($answer) < 40) {
+                continue;
+            }
+
+            $pairs[] = [
+                'question' => $question,
+                'answer' => mb_substr($answer, 0, 900),
+            ];
+        }
+
+        return $pairs;
+    }
+
+    /**
      * The post's table of contents: [['id' => ..., 'text' => ...], …] for
      * every h2 in the rendered body. Ids are stamped in the same pass as
      * renderedBody(), so anchor links always resolve.

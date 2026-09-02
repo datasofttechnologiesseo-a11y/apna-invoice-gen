@@ -752,8 +752,12 @@
                         // Only take over when the conversion actually recovered
                         // structure. Pasting a plain sentence should stay a
                         // plain sentence, not gain escapes it never needed.
-                        const gainedStructure = /(^|
-)(#{2,6} |[-*] |\d+\. |> |```)|\*\*|\[.+\]\(/.test(md);
+                        // Multiline flag rather than an inline newline: a regex literal
+                        // cannot span lines, and writing one that did took the whole
+                        // script block down with it.
+                        const hasBlockSyntax = /^(#{2,6} |[-*] |\d+\. |> |```)/m.test(md);
+                        const hasInlineSyntax = md.includes('**') || /\[[^\]]+\]\(/.test(md);
+                        const gainedStructure = hasBlockSyntax || hasInlineSyntax;
                         if (md && gainedStructure && md !== plain) {
                             ev.preventDefault();
                             this.insertAtCaret(md);

@@ -104,14 +104,22 @@ class CustomInvoiceNumberTest extends TestCase
         $this->assertNotSame($nextAuto, $auto->invoice_number);
     }
 
-    public function test_gst_registered_business_cannot_set_custom_number(): void
+    public function test_a_gst_registered_business_can_set_its_own_number(): void
     {
-        // Give the company a GSTIN matching its state code so ValidGstin-style
-        // constraints elsewhere stay coherent; here only presence matters.
+        // Deliberate policy change. This previously asserted the opposite: a
+        // GST-registered supplier had the field stripped, on the reading that
+        // Rule 46(b) demands a consecutive series.
+        //
+        // The rule does demand that, and the supplier stays responsible for it.
+        // But the series belongs to the business. A firm moving over mid-year
+        // has to continue the numbering its books and its buyers already carry,
+        // and refusing that forces it to restart the series or stay on its old
+        // tool. The outcome that actually produces a defective document - two
+        // invoices sharing a number - is refused separately, below.
         $this->company->forceFill(['gstin' => '27AAPFU0939F1ZV'])->save();
 
         $this->actingAs($this->user)->post(route('invoices.store'), $this->payload([
-            'invoice_number' => 'HACK-001',
+            'invoice_number' => 'SHARMA/2026-27/0042',
             // GSTIN present → HSN becomes required on items.
             'items' => [
                 ['description' => 'Service', 'hsn_sac' => '998311', 'quantity' => 1, 'rate' => 1000, 'gst_rate' => 18],
@@ -119,13 +127,33 @@ class CustomInvoiceNumberTest extends TestCase
         ]))->assertSessionHasNoErrors();
 
         $invoice = Invoice::latest('id')->first();
-        // The submitted number is excluded by validation — draft stays unnumbered.
-        $this->assertNull($invoice->invoice_number);
+        $this->assertSame('SHARMA/2026-27/0042', $invoice->invoice_number);
 
         $this->actingAs($this->user)->post(route('invoices.finalize', $invoice));
         $invoice->refresh();
-        // Auto series number assigned, not the smuggled one.
-        $this->assertNotNull($invoice->invoice_number);
-        $this->assertNotSame('HACK-001', $invoice->invoice_number);
+        $this->assertSame('SHARMA/2026-27/0042', $invoice->invoice_number,
+            'issuing must keep the number the business chose');
+    }
+
+    public function test_a_gst_business_cannot_reuse_a_number_it_has_already_issued(): void
+    {
+        // The one outcome that must stay impossible whoever the supplier is:
+        // two invoices carrying the same number break the buyer's input credit
+        // and are a problem at assessment.
+        $this->company->forceFill(['gstin' => '27AAPFU0939F1ZV'])->save();
+
+        $items = [
+            ['description' => 'Service', 'hsn_sac' => '998311', 'quantity' => 1, 'rate' => 1000, 'gst_rate' => 18],
+        ];
+
+        $this->actingAs($this->user)->post(route('invoices.store'), $this->payload([
+            'invoice_number' => 'SHARMA/2026-27/0042', 'items' => $items,
+        ]))->assertSessionHasNoErrors();
+
+        $this->actingAs($this->user)->post(route('invoices.store'), $this->payload([
+            'invoice_number' => 'SHARMA/2026-27/0042', 'items' => $items,
+        ]))->assertSessionHasErrors('invoice_number');
+
+        $this->assertSame(1, Invoice::where('invoice_number', 'SHARMA/2026-27/0042')->count());
     }
 }

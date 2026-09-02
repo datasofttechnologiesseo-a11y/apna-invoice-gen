@@ -16,19 +16,31 @@
  * can call it from a Blade template.
  */
 
-/** Characters that would otherwise be read as Markdown syntax. */
+/**
+ * Escape only what would actually change the meaning of the Markdown.
+ *
+ * The first version escaped every special character, which put a backslash in
+ * front of ordinary prose: a text node beginning with "." - the full stop
+ * after a link, say - came out as "\." because the node looked like the
+ * start of a line. It rendered correctly but the author saw the noise in the
+ * editor, which reads as broken.
+ *
+ * So each character is escaped only in the position where it is ambiguous:
+ * a bullet or heading marker at the very start of a line, a digit-dot that
+ * would open an ordered list, and the inline pairs that carry emphasis.
+ */
 function escapeText(text) {
     return text
-        .replace(/([\\`*_{}[\]()#+\-.!])/g, (m, ch, offset, s) => {
-            // Only escape - . + # when they start a line, or they would turn
-            // ordinary prose into a list or heading.
-            if ('-.+#'.includes(ch)) {
-                const lineStart = s.lastIndexOf('\n', offset - 1) + 1;
-                const before = s.slice(lineStart, offset);
-                return /^\s*$/.test(before) ? '\\' + ch : ch;
-            }
-            return '\\' + ch;
-        });
+        // Backslash first, or the escapes added below get double-escaped.
+        .replace(/\\/g, '\\\\')
+        // Inline emphasis and code: ambiguous wherever they appear.
+        .replace(/([`*_])/g, '\\$1')
+        // Link and image brackets: ambiguous wherever they appear.
+        .replace(/([[\]])/g, '\\$1')
+        // Block markers: ambiguous only at the start of a line.
+        .replace(/(^|\n)([ \t]*)([-+>#])(?= )/g, '$1$2\\$3')
+        // "1. " would open an ordered list; "in 2026. " would not.
+        .replace(/(^|\n)([ \t]*)(\d+)\.(?= )/g, '$1$2$3\\.');
 }
 
 /** Collapse runs of whitespace the way HTML rendering does. */

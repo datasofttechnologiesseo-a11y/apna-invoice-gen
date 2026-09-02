@@ -581,9 +581,14 @@ class InvoiceController extends Controller
         DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
 
-            if (filled($invoice->invoice_number) && blank($company->gstin)) {
-                // Non-GST business chose a custom number on the draft — keep it,
-                // and carry the series forward from it so the next auto-numbered
+            if (filled($invoice->invoice_number)) {
+                // The business chose a number on the draft - keep it, whether or
+                // not it is GST-registered. Overwriting it here was the half of
+                // the change that would have been missed: the field accepts a
+                // number, the draft stores it, and then issuing silently
+                // replaced it with the auto series.
+                //
+                // The series is carried forward from it so the next auto-numbered
                 // bill continues (5464 -> 5465) instead of restarting at 0001.
                 $number = $invoice->invoice_number;
                 $company->learnSeriesFrom($number);
@@ -1049,16 +1054,25 @@ class InvoiceController extends Controller
 
         $rules = [
             'customer_id' => ['required', Rule::exists('customers', 'id')->where('company_id', $companyId)],
-            // Custom invoice number — non-GST businesses only. Rule 46 requires a
-            // consecutive series for GST-registered suppliers, so for them the
-            // field is stripped (exclude) and the auto counter stays in charge.
-            // Unique per company; blank = auto-number at issue.
-            'invoice_number' => blank($company->gstin)
-                ? ['nullable', 'string', 'max:40',
-                    Rule::unique('invoices', 'invoice_number')
-                        ->where(fn ($q) => $q->where('company_id', $companyId))
-                        ->ignore($request->route('invoice')?->id)]
-                : ['exclude'],
+            // Custom invoice number, available to every business.
+            //
+            // Rule 46(b) requires a consecutive series unique to the financial
+            // year, and a GST-registered supplier remains responsible for that.
+            // But the series belongs to the business, not to us: a firm moving
+            // over mid-year has to continue the numbering its books and its
+            // buyers already carry, and refusing that forces them to either
+            // restart their series or stay on their old tool.
+            //
+            // So the field is editable and the one thing that would actually
+            // produce a defective document - two invoices sharing a number,
+            // which breaks the buyer's input credit - is refused outright.
+            // A custom number also teaches the counter (see
+            // Company::learnSeriesFrom) so later auto-numbers continue the
+            // same series rather than diverging from it.
+            'invoice_number' => ['nullable', 'string', 'max:40',
+                Rule::unique('invoices', 'invoice_number')
+                    ->where(fn ($q) => $q->where('company_id', $companyId))
+                    ->ignore($request->route('invoice')?->id)],
             'invoice_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['nullable', 'string', 'size:3'],

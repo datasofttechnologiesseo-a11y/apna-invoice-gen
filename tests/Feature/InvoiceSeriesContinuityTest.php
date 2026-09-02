@@ -118,19 +118,30 @@ class InvoiceSeriesContinuityTest extends TestCase
         $this->assertNull($company->invoice_number_format);
     }
 
-    public function test_a_gst_registered_business_still_gets_the_statutory_series(): void
+    public function test_a_gst_registered_business_continues_the_series_it_arrived_with(): void
     {
+        // Deliberate policy change. This previously asserted that a typed
+        // number was ignored for a GST-registered supplier, on the reading that
+        // Rule 46(b) demands a consecutive series.
+        //
+        // It does, and the supplier still owns that duty. But the commonest
+        // real case is a firm moving over mid-year at bill 5464: ignoring the
+        // number restarts them at 0001, so their books show two invoices for
+        // the same period numbered from different series - which is the very
+        // thing Rule 46 is trying to prevent. Continuing from 5464 is both
+        // what they need and the more compliant outcome.
         $this->setUpCompany([
             'gstin' => '27ABCDE1234F1Z5',
             'invoice_number_format' => 'INV/{FY}/{N}',
             'invoice_number_padding' => 4,
         ]);
 
-        // Rule 46 requires a consecutive series, so a typed number is ignored.
-        $invoice = $this->issue('5464');
+        $first = $this->issue('5464');
+        $this->assertSame('5464', $first->invoice_number, 'the number they typed is kept');
 
-        $this->assertNotSame('5464', $invoice->invoice_number);
-        $this->assertStringContainsString('INV/', $invoice->invoice_number);
-        $this->assertStringEndsWith('0001', $invoice->invoice_number);
+        // And the series carries on from there rather than restarting.
+        $next = $this->issue(null);
+        $this->assertStringEndsWith('5465', $next->invoice_number,
+            'the next auto-numbered bill must continue the series it was given');
     }
 }

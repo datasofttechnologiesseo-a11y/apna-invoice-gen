@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
-                {{ $expense->exists ? 'Edit expense' : 'Add expense' }}
+                {{ $expense->exists ? 'Edit purchase' : 'Add purchase' }}
             </h1>
             <a href="{{ route('finance.expenses') }}" class="text-sm text-gray-500 hover:text-gray-700">← All expenses</a>
         </div>
@@ -219,7 +219,7 @@
                                     <button type="button" class="px-3 py-2 text-danger-600 hover:bg-danger-50 rounded text-sm font-semibold">Delete</button>
                                 </x-confirm-form>
                             @endif
-                            <x-primary-button>{{ $expense->exists ? 'Save changes' : 'Add expense' }}</x-primary-button>
+                            <x-primary-button>{{ $expense->exists ? 'Save changes' : 'Add purchase' }}</x-primary-button>
                         </div>
                     </div>
                 </form>

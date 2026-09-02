@@ -26,7 +26,7 @@
     $tabs = [
         [
             'key' => 'invoices',
-            'label' => 'Tax Sales',
+            'label' => 'Sales Bills',
             'href' => route('invoices.index'),
             'desc' => 'GSTR-1 reportable · official sale documents',
             // Document with embedded check - distinct from quotation envelope
