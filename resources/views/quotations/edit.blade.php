@@ -290,7 +290,7 @@
                                                     :title="items.length <= 1 ? 'At least one line item is required' : 'Remove this row'"
                                                     class="inline-flex items-center justify-center w-8 h-8 rounded-md text-lg leading-none transition"
                                                     :class="items.length <= 1
-                                                        ? 'text-gray-400 cursor-not-allowed'
+                                                        ? 'text-gray-500 cursor-not-allowed'
                                                         : 'text-danger-500 hover:text-white hover:bg-danger-500'"
                                                     aria-label="Remove row">×</button>
                                         </td>

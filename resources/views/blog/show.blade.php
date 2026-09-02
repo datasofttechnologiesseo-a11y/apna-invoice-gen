@@ -58,6 +58,7 @@
         :published-time="$post->published_at?->toIso8601String()"
         :modified-time="$post->updated_at?->toIso8601String()"
         section="Blog"
+        :author="$post->author?->name"
         :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
     {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
          connection must match. Non-blocking load (media=print → all onload)
@@ -305,9 +306,9 @@
         <p class="mt-2 text-brand-100 max-w-xl">Apna Invoice is a free GST invoicing tool for Indian SMEs, MSMEs and freelancers. Auto CGST/SGST, HSN/SAC search, UPI QR, WhatsApp share, all in 60 seconds.</p>
         <div class="mt-5 flex flex-wrap gap-3">
             @auth
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-accent-700 hover:bg-accent-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-5 py-3 bg-accent-500 hover:bg-accent-400 text-accent-950 rounded-lg font-bold shadow-sm transition">Go to dashboard →</a>
             @else
-                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-accent-700 hover:bg-accent-800 text-brand-900 rounded-lg font-bold shadow-sm transition">Start free →</a>
+                <a href="{{ route('register') }}" class="inline-flex items-center px-5 py-3 bg-accent-500 hover:bg-accent-400 text-accent-950 rounded-lg font-bold shadow-sm transition">Start free →</a>
                 <a href="{{ route('login') }}" class="inline-flex items-center px-5 py-3 bg-white/10 hover:bg-white/20 ring-1 ring-white/30 text-white rounded-lg font-semibold transition">Log in</a>
             @endauth
         </div>

@@ -142,6 +142,16 @@ class Post extends Model
 
         $this->tocCache = $toc;
 
+        // Wide tables must scroll inside their own box, not push the page
+        // sideways. Code blocks already had overflow-x; tables did not, and
+        // the paste-to-Markdown converter now produces them routinely.
+        $html = preg_replace(
+            '#<table>#',
+            '<div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0"><table>',
+            $html
+        );
+        $html = str_replace('</table>', '</table></div>', $html);
+
         // Contextual internal links. Runs last so it sees the finished markup
         // and can avoid headings and existing links; see InternalLinker for
         // the first-occurrence-only and cap rules.

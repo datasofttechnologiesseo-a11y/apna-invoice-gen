@@ -10,6 +10,7 @@
     'publishedTime' => null,
     'modifiedTime' => null,
     'section' => null,
+    'author' => null,
     // Optional richer social title/description (link unfurls) without changing
     // the <title> shown in the browser tab / SERP. Falls back to $title/$descr.
     'ogTitle' => null,
@@ -105,6 +106,7 @@
     @if ($publishedTime)<meta property="article:published_time" content="{{ $publishedTime }}">@endif
     @if ($modifiedTime)<meta property="article:modified_time" content="{{ $modifiedTime }}">@endif
     @if ($section)<meta property="article:section" content="{{ $section }}">@endif
+    @if ($author)<meta property="article:author" content="{{ $author }}">@endif
     <meta property="article:publisher" content="{{ config('seo.organization.url') }}">
 @endif
 
