@@ -41,6 +41,25 @@
             ['@type' => 'ListItem', 'position' => 3, 'name' => $post->title, 'item' => route('blog.show', $post->slug)],
         ],
     ];
+
+    // FAQPage markup, built from the question headings the author actually
+    // wrote. Google renders it as an expandable block in the results, which is
+    // a real click-through difference on "can I / what is / how do I" queries -
+    // which is most of this subject.
+    //
+    // Two pairs is the floor: a single Q&A is not a FAQ, and marking one up as
+    // though it were invites the "invalid FAQ" warnings in Search Console.
+    $faqPairs = $post->faqPairs();
+    $faqJsonLd = count($faqPairs) >= 2 ? [
+        '@context' => 'https://schema.org',
+        '@type' => 'FAQPage',
+        'mainEntity' => array_map(fn ($pair) => [
+            '@type' => 'Question',
+            'name' => $pair['question'],
+            'acceptedAnswer' => ['@type' => 'Answer', 'text' => $pair['answer']],
+        ], $faqPairs),
+    ] : null;
+
 @endphp
 <!DOCTYPE html>
 <html lang="en-IN">
@@ -59,7 +78,7 @@
         :modified-time="$post->updated_at?->toIso8601String()"
         section="Blog"
         :author="$post->author?->name"
-        :json-ld="[$articleJsonLd, $breadcrumbJsonLd]" />
+        :json-ld="array_values(array_filter([$articleJsonLd, $breadcrumbJsonLd, $faqJsonLd]))" />
     {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
          connection must match. Non-blocking load (media=print → all onload)
          with a noscript fallback keeps fonts off the critical render path -
@@ -168,9 +187,24 @@
             <span class="font-semibold text-gray-700">{{ $post->author?->name ?? config('app.name') }}</span>
             <span class="w-1 h-1 rounded-full bg-gray-300"></span>
             <time datetime="{{ $post->published_at?->toIso8601String() }}">{{ $post->published_at?->format('d M Y') }}</time>
-            @if ($post->reading_minutes)
+            @php
+                // Fall back to computing it, the way the API already does. A
+                // post saved outside the admin form has no stored value, and
+                // showing no reading time at all is worse than a computed one.
+                $minutes = $post->reading_minutes ?: $post->computeReadingMinutes();
+                // "Updated" only when the edit is meaningfully later than
+                // publication - a same-day typo fix is not a freshness signal
+                // and dating it twice just looks noisy.
+                $updated = $post->updated_at && $post->published_at
+                    && $post->updated_at->gt($post->published_at->copy()->addDays(1));
+            @endphp
+            @if ($minutes)
                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                <span>{{ $post->reading_minutes }} min read</span>
+                <span>{{ $minutes }} min read</span>
+            @endif
+            @if ($updated)
+                <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                <span>Updated <time datetime="{{ $post->updated_at->toIso8601String() }}">{{ $post->updated_at->format('d M Y') }}</time></span>
             @endif
         </div>
     </div>
