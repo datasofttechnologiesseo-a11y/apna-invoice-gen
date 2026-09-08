@@ -155,7 +155,7 @@
                 </div>
             </div>
             @php $max = max(1, max(array_column($trend, 'count'))); @endphp
-            <div class="mt-4 flex items-end gap-1 h-32">
+            <div class="mt-4 flex items-stretch gap-1 h-32">
                 @foreach ($trend as $d)
                     @php $h = $d['count'] > 0 ? max(6, round(($d['count'] / $max) * 100)) : 2; @endphp
                     <div class="flex-1 flex items-end" title="{{ $d['label'] }}: {{ $d['count'] }}">

@@ -40,11 +40,25 @@
 
     $overdueCount = $overdue->count();
     $totalCount = $overdueCount + $recentPayments->count() + $recentFinalized->count();
+
+    // Is there anything here the user has not already looked at? The dot used
+    // to be driven purely by the time windows above, so it lit up for a week
+    // whether or not you had opened the bell, and there was no way to clear
+    // it. Overdue is deliberately not part of this: a bill that is still
+    // overdue after you have looked is not old news, and its red badge stays.
+    $latestActivity = collect([
+        $recentPayments->max('created_at'),
+        $recentFinalized->max('finalized_at'),
+    ])->filter()->max();
+
+    $hasUnseen = $latestActivity !== null
+        && ($user->notifications_seen_at === null || $latestActivity->gt($user->notifications_seen_at));
 @endphp
 
-<div x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false" class="relative">
+<div x-data="{ open: false, unseen: {{ $hasUnseen ? 'true' : 'false' }} }"
+     @click.outside="open = false" @keydown.escape.window="open = false" class="relative">
     <button type="button"
-            @click="open = !open"
+            @click="open = !open; if (open && unseen) { unseen = false; fetch('{{ route('notifications.seen') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).catch(() => {}) }"
             class="relative inline-flex items-center justify-center w-9 h-9 rounded-lg ring-1 ring-accent-300 bg-white hover:bg-accent-50 hover:ring-accent-400 text-brand-900 shadow-md focus:outline-none focus:ring-2 focus:ring-accent-400 transition"
             :aria-expanded="open.toString()"
             aria-label="Notifications {{ $overdueCount > 0 ? '(' . $overdueCount . ' need attention)' : '' }}">
@@ -55,8 +69,10 @@
             <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-danger-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
                 {{ $overdueCount > 9 ? '9+' : $overdueCount }}
             </span>
-        @elseif ($totalCount > 0)
-            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-money-500 ring-2 ring-white"></span>
+        @elseif ($hasUnseen)
+            {{-- x-show as well as the server check, so the dot goes the moment
+                 the dropdown opens rather than on the next page load. --}}
+            <span x-show="unseen" class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-money-500 ring-2 ring-white"></span>
         @endif
     </button>
 

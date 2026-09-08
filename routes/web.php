@@ -13,6 +13,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoiceShareController;
 use App\Http\Controllers\ManualController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -217,6 +218,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/help', 'help.index')->name('help');
 
     Route::get('/refer', [ReferralController::class, 'index'])->name('referrals.index');
+
+    // Clears the bell's "new activity" dot. Fired by the dropdown itself,
+    // so it is throttled - tapping the bell repeatedly should not write a
+    // row per tap.
+    Route::post('/notifications/seen', [NotificationController::class, 'seen'])
+        ->middleware('throttle:30,1')
+        ->name('notifications.seen');
 
     // Backups (download + email + toggle). Building a backup ZIP is expensive
     // and sending email is rate-limited by every provider, so we cap both.

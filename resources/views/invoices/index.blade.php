@@ -1,3 +1,11 @@
+@php
+    // One definition of "the list is filtered", used by the clear link and the
+    // empty state below. Date bounds count: a month-filtered list that shows
+    // "create your first invoice" and no way back is the worst of both.
+    $hasFilters = filled(request('search')) || filled(request('status'))
+        || filled(request('from')) || filled(request('to'));
+@endphp
+
 <x-app-layout title="Invoices">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -27,9 +35,9 @@
                 {{-- Nothing to filter until there is something in the list. Showing an
                      empty search bar to a new user is noise in front of the one thing
                      they actually came here to do. --}}
-                @if (! $invoices->isEmpty() || request('search') || request('status') || request('from') || request('to'))
+                @if (! $invoices->isEmpty() || $hasFilters)
                 <form method="GET" class="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer name or mobile" class="border-gray-300 rounded-md shadow-sm w-full sm:w-80" aria-label="Search by invoice #, customer name or mobile">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer, mobile, GSTIN or amount" class="border-gray-300 rounded-md shadow-sm w-full sm:w-96" aria-label="Search by invoice number, customer, mobile, GSTIN or amount">
                     <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         <option value="outstanding" @selected(request('status') === 'outstanding')>⚠ Outstanding (unpaid)</option>
@@ -37,8 +45,16 @@
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                         @endforeach
                     </select>
+                    <label class="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                        <span class="hidden sm:inline">From</span>
+                        <input type="date" name="from" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm" aria-label="Invoices dated from">
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                        <span class="hidden sm:inline">to</span>
+                        <input type="date" name="to" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm" aria-label="Invoices dated up to">
+                    </label>
                     <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
-                    @if (request('search') || request('status'))
+                    @if ($hasFilters)
                         <a href="{{ route('invoices.index') }}" class="text-gray-500 text-sm">clear</a>
                     @endif
                 </form>
@@ -47,12 +63,12 @@
                 @if ($invoices->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        :title="request('search') || request('status') ? 'No invoices match that filter' : 'Apna pehla invoice banayein!'"
-                        :description="request('search') || request('status') ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.'"
-                        :actionHref="request('search') || request('status') ? route('invoices.index') : route('invoices.create')"
-                        :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Create invoice'"
-                        :secondaryHref="request('search') || request('status') ? null : route('invoices.create', ['sample' => 1])"
-                        :secondaryLabel="request('search') || request('status') ? null : 'Try a sample invoice'"
+                        :title="$hasFilters ? 'No invoices match that filter' : 'Apna pehla invoice banayein!'"
+                        :description="$hasFilters ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.'"
+                        :actionHref="$hasFilters ? route('invoices.index') : route('invoices.create')"
+                        :actionLabel="$hasFilters ? 'Clear filters' : 'Create invoice'"
+                        :secondaryHref="$hasFilters ? null : route('invoices.create', ['sample' => 1])"
+                        :secondaryLabel="$hasFilters ? null : 'Try a sample invoice'"
                     />
                 @else
                     {{-- Mobile card view - one card per invoice, no horizontal scroll --}}

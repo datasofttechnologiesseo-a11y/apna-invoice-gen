@@ -308,11 +308,27 @@
                     <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-accent-900 tabular-nums" title="₹{{ inr($stats['outstanding']) }}"><x-inr-compact :amount="$stats['outstanding']" /></div>
                     <div class="mt-3 text-xs text-accent-700 group-hover:text-accent-900 transition">{{ $stats['outstanding'] > 0 ? 'click to follow up →' : 'payment not received yet' }}</div>
                 </a>
-                <div class="relative p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                    <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
-                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums" title="₹{{ inr($stats['paid_this_month']) }}"><x-inr-compact :amount="$stats['paid_this_month']" /></div>
-                    <div class="mt-3 text-xs text-gray-500">paid on {{ now()->format('F') }} bills</div>
-                </div>
+                {{-- The headline is what was invoiced this month; the line under
+                     it is how much of that has been collected. It used to show
+                     the collected figure under the invoiced heading, which read
+                     as a month of missing sales. --}}
+                <a href="{{ route('invoices.index', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
+                   class="group relative block p-6 bg-white rounded-2xl shadow-card ring-1 ring-gray-100 hover:ring-brand-300 hover:shadow-lg transition overflow-hidden"
+                   title="View {{ now()->format('F') }}'s invoices">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Invoiced this month</div>
+                        <svg class="w-4 h-4 text-brand-700 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-display font-extrabold mt-2 text-gray-900 tabular-nums" title="₹{{ inr($stats['invoiced_this_month']) }}"><x-inr-compact :amount="$stats['invoiced_this_month']" /></div>
+                    <div class="mt-3 text-xs text-gray-500" title="₹{{ inr($stats['paid_this_month']) }} received">
+                        @if ($stats['invoiced_this_month'] > 0)
+                            <x-inr-compact :amount="$stats['paid_this_month']" /> received
+                            <span class="text-gray-400">· {{ round($stats['paid_this_month'] / $stats['invoiced_this_month'] * 100) }}%</span>
+                        @else
+                            no bills raised in {{ now()->format('F') }} yet
+                        @endif
+                    </div>
+                </a>
             </div>
 
             <x-revenue-sparkline :series="$trend30" />

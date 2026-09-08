@@ -31,6 +31,13 @@
     // Closed area under the line: start at bottom-left, polyline, end at bottom-right.
     $area = '0,' . ($vbH - $padBottom) . ' ' . $polyline . ' ' . $vbW . ',' . ($vbH - $padBottom);
 
+    // preserveAspectRatio="none" stretches the viewBox horizontally, which is
+    // fine for the line (vector-effect keeps the stroke even) but turns a
+    // circle into an ellipse. The end dot is drawn in HTML over the chart
+    // instead, so it stays round at every width.
+    $lastY = $count > 0 ? (float) explode(',', end($points))[1] : 0;
+    $lastTopPct = round($lastY / $vbH * 100, 2);
+
     // Format INR shortform for big numbers (₹12.5L, ₹1.2Cr) so the labels
     // stay readable inside the card.
     $fmtInr = function ($n) {
@@ -44,7 +51,7 @@
 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
     <div class="flex items-start justify-between gap-4 flex-wrap">
         <div>
-            <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Revenue · last 30 days</div>
+            <div class="text-xs uppercase font-bold tracking-wider text-gray-500">Payments received · last 30 days</div>
             <div class="mt-1 flex items-baseline gap-3 flex-wrap">
                 <div class="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">{{ $fmtInr($total) }}</div>
                 @if ($total > 0)
@@ -66,7 +73,8 @@
         </div>
     @else
         <div class="mt-5">
-            <svg viewBox="0 0 {{ $vbW }} {{ $vbH }}" preserveAspectRatio="none" class="w-full h-20" role="img" aria-label="Daily revenue, last 30 days">
+            <div class="relative">
+            <svg viewBox="0 0 {{ $vbW }} {{ $vbH }}" preserveAspectRatio="none" class="w-full h-20 block" role="img" aria-label="Payments received per day, last 30 days">
                 <defs>
                     <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0%" stop-color="rgb(16, 185, 129)" stop-opacity="0.25"/>
@@ -77,12 +85,24 @@
                 <polyline points="{{ $area }}" fill="url(#spark-fill)" stroke="none"/>
                 {{-- Line --}}
                 <polyline points="{{ $polyline }}" fill="none" stroke="rgb(5, 150, 105)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-                {{-- Last point dot --}}
-                @if ($count > 0)
-                    @php $last = explode(',', end($points)); @endphp
-                    <circle cx="{{ $last[0] }}" cy="{{ $last[1] }}" r="3" fill="rgb(5, 150, 105)"/>
-                @endif
             </svg>
+
+                {{-- One hover target per day, so a reader can put a number to a
+                     spike instead of guessing it off the shape. Native title
+                     tooltips: no JS, and they work on the printed-out cases
+                     where a custom tooltip would not. --}}
+                <div class="absolute inset-0 flex" aria-hidden="true">
+                    @foreach ($series as $row)
+                        <div class="flex-1 hover:bg-money-500/10 transition-colors" title="{{ $row['label'] }} — {{ $fmtInr($row['amount']) }}"></div>
+                    @endforeach
+                </div>
+
+                {{-- End-of-series dot, in HTML so it stays circular. --}}
+                @if ($count > 0)
+                    <span class="absolute w-2.5 h-2.5 rounded-full bg-money-600 ring-2 ring-white -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                          style="left: 100%; top: {{ $lastTopPct }}%"></span>
+                @endif
+            </div>
 
             {{-- Axis labels: first / mid / last day --}}
             <div class="mt-2 flex justify-between text-[10px] text-gray-500 font-mono">
@@ -93,7 +113,7 @@
 
             {{-- Hidden screen-reader / SEO data table --}}
             <table class="sr-only">
-                <caption>Daily revenue for the last 30 days</caption>
+                <caption>Payments received per day for the last 30 days</caption>
                 <thead><tr><th>Date</th><th>Amount (INR)</th></tr></thead>
                 <tbody>
                     @foreach ($series as $row)

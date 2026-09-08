@@ -145,6 +145,7 @@ class User extends Authenticatable
             'auto_backup_enabled' => 'boolean',
             'last_backup_sent_at' => 'datetime',
             'review_prompt_shown_at' => 'datetime',
+            'notifications_seen_at' => 'datetime',
         ];
     }
 

@@ -261,6 +261,9 @@
             <div class="text-xs font-semibold uppercase text-gray-500">Bank details for payment</div>
             <div class="mt-2 flex gap-4 items-start">
                 <div class="flex-1 grid grid-cols-2 gap-y-1 gap-x-6 text-xs">
+                    @if ($c->bank_account_name)
+                        <div class="col-span-2"><strong>Payee:</strong> {{ $c->bank_account_name }}</div>
+                    @endif
                     @if ($c->bank_name)
                         <div><strong>Bank:</strong> {{ $c->bank_name }}</div>
                     @endif
@@ -268,7 +271,7 @@
                         <div><strong>Branch:</strong> {{ $c->bank_branch }}</div>
                     @endif
                     @if ($c->bank_account_number)
-                        <div><strong>A/c:</strong> <span class="font-mono">{{ $c->bank_account_number }}</span></div>
+                        <div><strong>A/c:</strong> <span class="font-mono">{{ $c->bank_account_number }}</span>@if ($c->bankAccountTypeLabel()) <span class="text-gray-500">({{ $c->bankAccountTypeLabel() }})</span>@endif</div>
                     @endif
                     @if ($c->bank_ifsc)
                         <div><strong>IFSC:</strong> <span class="font-mono">{{ $c->bank_ifsc }}</span></div>

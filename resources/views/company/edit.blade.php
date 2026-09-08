@@ -231,6 +231,12 @@
                     <h2 class="text-sm font-bold text-gray-900">Bank &amp; payment details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Printed on the invoice PDF so customers know how to pay.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="md:col-span-2">
+                            <x-input-label for="bank_account_name" value="Payee name (as in bank)" />
+                            <x-text-input id="bank_account_name" name="bank_account_name" type="text" class="mt-1 block w-full" :value="old('bank_account_name', $company->bank_account_name)" maxlength="120" :placeholder="$company->name" />
+                            <p class="mt-1 text-xs text-gray-500">The name your bank holds on the account &mdash; what customers put on a cheque or NEFT. Leave blank to omit it from the invoice.</p>
+                            <x-input-error :messages="$errors->get('bank_account_name')" class="mt-2" />
+                        </div>
                         <div>
                             <x-input-label for="bank_name" value="Bank name" />
                             <x-text-input id="bank_name" name="bank_name" type="text" class="mt-1 block w-full" :value="old('bank_name', $company->bank_name)" placeholder="HDFC Bank" />
@@ -240,6 +246,17 @@
                             <x-text-input id="bank_branch" name="bank_branch" type="text" class="mt-1 block w-full" :value="old('bank_branch', $company->bank_branch)" placeholder="Powai" />
                         </div>
                         <div>
+                            <x-input-label for="bank_account_type" value="Account type" />
+                            <select id="bank_account_type" name="bank_account_type"
+                                    class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm">
+                                @php $accountType = old('bank_account_type', $company->bank_account_type); @endphp
+                                <option value="">Not specified</option>
+                                <option value="current" @selected($accountType === 'current')>Current</option>
+                                <option value="savings" @selected($accountType === 'savings')>Savings</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('bank_account_type')" class="mt-2" />
+                        </div>
+                        <div>
                             <x-input-label for="bank_account_number" value="Account number" />
                             <x-text-input id="bank_account_number" name="bank_account_number" type="text" class="mt-1 block w-full font-mono" :value="old('bank_account_number', $company->bank_account_number)" />
                         </div>
@@ -247,7 +264,7 @@
                             <x-input-label for="bank_ifsc" value="IFSC code" />
                             <x-text-input id="bank_ifsc" name="bank_ifsc" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('bank_ifsc', $company->bank_ifsc)" maxlength="11" placeholder="HDFC0001234" />
                         </div>
-                        <div class="md:col-span-2">
+                        <div>
                             <x-input-label for="upi_id" value="UPI ID (optional)" />
                             <x-text-input id="upi_id" name="upi_id" type="text" class="mt-1 block w-full font-mono" :value="old('upi_id', $company->upi_id)" placeholder="yourname@okhdfcbank" />
                             <p class="mt-1 text-xs text-gray-500">Customers can scan-and-pay from the invoice PDF.</p>
