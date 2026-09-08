@@ -23,6 +23,26 @@ class InvoiceController extends Controller
 {
     public function __construct(private readonly InvoiceCalculator $calculator) {}
 
+    /**
+     * Parse a ?from / ?to query value into a date, or null.
+     *
+     * Returns null for anything unparseable rather than throwing: these come
+     * off links, bookmarks and hand-edited URLs, and a mistyped date should
+     * quietly widen the list, not 500 the invoice page.
+     */
+    private function parseFilterDate(?string $value): ?\Illuminate\Support\Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        try {
+            return \Illuminate\Support\Carbon::parse($value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     public function index(Request $request): View
     {
         $company = $request->user()->ensureCompany();
@@ -41,25 +61,27 @@ class InvoiceController extends Controller
             })
             ->when($request->search, function ($q, $s) {
                 $term = trim($s);
-                // Normalize phone: strip spaces, dashes, + and parentheses so that
-                // "+91 98765-43210" matches a stored "9876543210" (and vice versa).
-                $digits = preg_replace('/[^0-9]/', '', $term);
+                // A bank statement gives you an amount, not a bill number, so
+                // "11,800" and "₹11800" have to find the invoice too.
+                $amount = str_replace([',', ' ', "₹"], '', $term);
 
-                $q->where(function ($w) use ($term, $digits) {
+                $q->where(function ($w) use ($term, $amount) {
                     $w->where('invoice_number', 'like', "%{$term}%")
-                      ->orWhereHas('customer', function ($c) use ($term, $digits) {
-                          $c->where('name', 'like', "%{$term}%")
-                            ->orWhere('phone', 'like', "%{$term}%");
-                          if ($digits !== '' && strlen($digits) >= 4) {
-                              // Match the digit-only form of the stored phone too.
-                              $c->orWhereRaw(
-                                  "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone,''),' ',''),'-',''),'+',''),'(',''),')','') LIKE ?",
-                                  ["%{$digits}%"]
-                              );
-                          }
-                      });
+                      // Customer matching is Customer::scopeSearch, shared with
+                      // the customer list so both screens find the same person.
+                      ->orWhereHas('customer', fn ($c) => $c->search($term));
+
+                    if (is_numeric($amount)) {
+                        $w->orWhere('grand_total', (float) $amount);
+                    }
                 });
             })
+            // ?from / ?to bound the list by invoice date - the dashboard's
+            // "Invoiced this month" card links straight in with them. They
+            // arrive from links and bookmarks rather than a validated form, so
+            // unparseable input is ignored instead of thrown at the user.
+            ->when($this->parseFilterDate($request->query('from')), fn ($q, $d) => $q->where('invoice_date', '>=', $d->toDateString()))
+            ->when($this->parseFilterDate($request->query('to')), fn ($q, $d) => $q->where('invoice_date', '<=', $d->toDateString()))
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)

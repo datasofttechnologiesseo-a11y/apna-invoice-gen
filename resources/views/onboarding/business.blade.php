@@ -9,7 +9,8 @@
     $advancedFields = [
         'pan', 'address_line1', 'address_line2', 'city', 'postal_code', 'country',
         'email', 'phone', 'website', 'logo', 'invoice_prefix',
-        'bank_name', 'bank_branch', 'bank_account_number', 'bank_ifsc', 'upi_id',
+        'bank_name', 'bank_account_name', 'bank_branch', 'bank_account_number',
+        'bank_account_type', 'bank_ifsc', 'upi_id',
     ];
     $advancedHasError = collect($advancedFields)->contains(fn ($f) => $errors->has($f));
     // A GSTIN makes the address statutory (Rule 46), so open the panel for
@@ -206,6 +207,12 @@
                             Shown in the "Payment details" block on every invoice. Add a UPI ID to auto-generate a Scan-to-Pay QR on bills.
                         </p>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <x-input-label for="bank_account_name" value="Payee name (as in bank)" />
+                                <x-text-input id="bank_account_name" name="bank_account_name" type="text" class="mt-1 block w-full" :value="old('bank_account_name', $company->bank_account_name)" maxlength="120" :placeholder="$company->name ?: 'Name on the bank account'" />
+                                <p class="mt-1 text-xs text-gray-500">The name your bank holds on the account, if it differs from your business name.</p>
+                                <x-input-error :messages="$errors->get('bank_account_name')" class="mt-2" />
+                            </div>
                             <div>
                                 <x-input-label for="bank_name" value="Bank name" />
                                 <x-text-input id="bank_name" name="bank_name" type="text" class="mt-1 block w-full" :value="old('bank_name', $company->bank_name)" maxlength="120" placeholder="HDFC Bank" />
@@ -217,6 +224,17 @@
                                 <x-input-error :messages="$errors->get('bank_branch')" class="mt-2" />
                             </div>
                             <div>
+                                <x-input-label for="bank_account_type" value="Account type" />
+                                <select id="bank_account_type" name="bank_account_type"
+                                        class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm">
+                                    @php $accountType = old('bank_account_type', $company->bank_account_type); @endphp
+                                    <option value="">Not specified</option>
+                                    <option value="current" @selected($accountType === 'current')>Current</option>
+                                    <option value="savings" @selected($accountType === 'savings')>Savings</option>
+                                </select>
+                                <x-input-error :messages="$errors->get('bank_account_type')" class="mt-2" />
+                            </div>
+                            <div>
                                 <x-input-label for="bank_account_number" value="Account number" />
                                 <x-text-input id="bank_account_number" name="bank_account_number" type="text" class="mt-1 block w-full font-mono" :value="old('bank_account_number', $company->bank_account_number)" maxlength="30" />
                                 <x-input-error :messages="$errors->get('bank_account_number')" class="mt-2" />
@@ -226,7 +244,7 @@
                                 <x-text-input id="bank_ifsc" name="bank_ifsc" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('bank_ifsc', $company->bank_ifsc)" maxlength="15" placeholder="HDFC0001234" />
                                 <x-input-error :messages="$errors->get('bank_ifsc')" class="mt-2" />
                             </div>
-                            <div class="md:col-span-2">
+                            <div>
                                 <x-input-label for="upi_id" value="UPI ID (VPA)" />
                                 <x-text-input id="upi_id" name="upi_id" type="text" class="mt-1 block w-full font-mono" :value="old('upi_id', $company->upi_id)" maxlength="60" placeholder="yourname@okhdfcbank" />
                                 <p class="mt-1 text-xs text-gray-500">If set, a QR code is auto-generated on each invoice so clients can scan and pay via any UPI app.</p>

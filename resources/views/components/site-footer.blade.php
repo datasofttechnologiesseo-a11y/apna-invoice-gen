@@ -202,108 +202,33 @@
     </footer>
 
 @else
-    {{-- ======================= MINIMAL FOOTER (app pages) ======================= --}}
-    <footer class="mt-16 relative bg-gradient-to-br from-brand-950 via-[#08312c] to-[#04211d] text-gray-200 overflow-hidden">
-        {{-- Ambient glow --}}
-        <div class="absolute top-0 left-1/2 w-[700px] h-[250px] bg-brand-600 rounded-full blur-[110px] opacity-30 -translate-x-1/2 -translate-y-1/3 pointer-events-none"></div>
-        <div class="absolute bottom-0 right-0 w-[300px] h-[200px] bg-brand-600 rounded-full blur-[100px] opacity-[0.10] pointer-events-none"></div>
-        {{-- Top gradient accent --}}
-        <div class="relative h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+    {{-- ======================= MINIMAL FOOTER (app pages) =======================
+         Signed-in pages get a quiet strip, not the marketing footer. What used
+         to sit here was the full dark-green block: brand panel, Home/Blogs
+         links, social icons, "Made in India" and "GST Ready" badges and a
+         support card, under every invoice list and every settings page. None
+         of it is anything a logged-in user came here for, and it competed
+         with the page it was sitting under.
 
-        <div class="relative max-w-7xl mx-auto px-6 lg:px-8 py-10">
-            <div class="grid md:grid-cols-3 gap-8 items-center">
-                {{-- Brand --}}
-                <div class="flex items-center gap-4">
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" aria-label="Apna Invoice" class="inline-block bg-white rounded-lg p-1.5 ring-1 ring-white/10 hover:ring-white/30 transition">
-                        <x-brand-logo class="h-8 w-auto" />
-                    </a>
-                    <div class="leading-tight hidden sm:block">
-                        <div class="font-bold text-white text-sm">Apna Invoice</div>
-                        <div class="mt-0.5 text-xs text-gray-400">By <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-white transition">Datasoft Technologies</a></div>
-                    </div>
+         What stays is the part that is still useful once you are inside the
+         product: how to get help, and the legal links. ------------------- --}}
+    <footer class="mt-16 border-t border-gray-200 bg-white">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-5">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+                <div class="text-center sm:text-left">
+                    &copy; {{ now()->year }}
+                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener"
+                       class="font-semibold text-gray-600 hover:text-brand-700 transition">Datasoft Technologies</a>
+                    <span class="text-gray-300">&middot;</span> Apna Invoice
                 </div>
-
-                {{-- Center links (flex-wrap: five links exceed 320px small phones) --}}
-                <div class="flex items-center justify-center gap-1 text-sm flex-wrap">
-                    @foreach ([['/','Home'], [route('blog.index'),'Blogs'], ['/#faq','Help'], [route('pages.privacy'),'Privacy'], [route('pages.terms'),'Terms']] as $item)
-                        <a href="{{ $item[0] }}" class="px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition font-medium">{{ $item[1] }}</a>
-                    @endforeach
-                </div>
-
-                {{-- Badges + social --}}
-                <div class="flex items-center justify-center md:justify-end gap-2 flex-wrap">
-                    @php
-                        $social = [
-                            ['key' => 'facebook',  'label' => 'Facebook',
-                             'path' => 'M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.51 1.5-3.9 3.77-3.9 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.9h-2.33V22c4.78-.79 8.44-4.93 8.44-9.94z'],
-                            ['key' => 'instagram', 'label' => 'Instagram',
-                             'path' => 'M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0 5.68a4.16 4.16 0 100 8.32 4.16 4.16 0 000-8.32zm0 6.86a2.7 2.7 0 110-5.4 2.7 2.7 0 010 5.4zm5.3-7.02a.97.97 0 11-1.94 0 .97.97 0 011.94 0z'],
-                            ['key' => 'linkedin',  'label' => 'LinkedIn',
-                             'path' => 'M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z'],
-                        ];
-                    @endphp
-                    @foreach ($social as $s)
-                        @if ($url = config('seo.social.' . $s['key']))
-                            <a href="{{ $url }}" target="_blank" rel="noopener"
-                               aria-label="{{ $s['label'] }}"
-                               title="{{ $s['label'] }}"
-                               class="inline-flex items-center justify-center w-9 h-9 rounded-full text-gray-300 ring-1 ring-white/15 hover:text-white hover:bg-white/10 hover:ring-white/30 transition">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="{{ $s['path'] }}"/></svg>
-                            </a>
-                        @endif
-                    @endforeach
-
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-gray-200 text-[11px] font-bold ring-1 ring-accent-500/40">
-                        <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-shimmer"></span> Made in India
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/15 text-brand-200 text-[11px] font-bold ring-1 ring-brand-500/40">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1L3 4v6c0 4.5 3 8.3 7 9 4-.7 7-4.5 7-9V4l-7-3zm-.7 12.3L6 10l1.4-1.4 1.9 1.9 4.4-4.4L15 7.5l-5.7 5.8z" clip-rule="evenodd"/></svg>
-                        GST Ready
-                    </span>
-                </div>
-            </div>
-
-            {{-- Divider --}}
-            <div class="my-6 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></div>
-
-            {{-- "We're here for you" support row, keeps the user from feeling
-                 stranded. Sits above the legal line so it reads as the primary
-                 message, not boilerplate. Mailto on email so a tap opens the
-                 native compose sheet on mobile. --}}
-            <div class="rounded-xl bg-white/5 ring-1 ring-white/10 px-4 py-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-                <div class="flex items-center gap-3 text-gray-200">
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10 ring-1 ring-white/100/40 text-accent-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10c0 3.866-3.582 7-8 7a8.84 8.84 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg>
-                    </span>
-                    <div class="leading-tight">
-                        <div class="font-semibold text-white">Need help? We're a message away.</div>
-                        <div class="text-xs text-gray-400">No bots, no queues, real humans from the Datasoft team.</div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <a href="mailto:support@datasofttechnologies.com" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        support@datasofttechnologies.com
-                    </a>
-                    <a href="{{ route('help') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-accent-500/25 ring-1 ring-accent-500/40 text-accent-100 text-xs font-semibold transition">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Help &amp; FAQ
-                    </a>
-                </div>
-            </div>
-
-            {{-- Bottom strip --}}
-            <div class="flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white">
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-center md:text-left">
-                    <span class="font-semibold">© 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-white transition">Datasoft Technologies</a></span>
-                    <span class="hidden md:inline text-white/40">•</span>
-                    <span>All rights reserved</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span>Built with</span>
-                    <svg class="w-4 h-4 text-danger-400 animate-shimmer" fill="currentColor" viewBox="0 0 20 20"><path d="M3.2 5.3a5.3 5.3 0 017.5 0l.3.3.3-.3a5.3 5.3 0 017.5 7.5L10.9 17.6a1.3 1.3 0 01-1.8 0L3.2 12.8a5.3 5.3 0 010-7.5z"/></svg>
-                    <span>in India by</span>
-                    <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-bold hover:text-whint-400 transition">DST</a>
+                <div class="flex flex-wrap items-center justify-center gap-x-1 gap-y-1">
+                    <a href="{{ route('help') }}" class="px-2 py-1 rounded hover:text-brand-700 hover:bg-gray-50 transition">Help &amp; FAQ</a>
+                    <span class="text-gray-300">&middot;</span>
+                    <a href="mailto:support@datasofttechnologies.com" class="px-2 py-1 rounded hover:text-brand-700 hover:bg-gray-50 transition">Support</a>
+                    <span class="text-gray-300">&middot;</span>
+                    <a href="{{ route('pages.privacy') }}" class="px-2 py-1 rounded hover:text-brand-700 hover:bg-gray-50 transition">Privacy</a>
+                    <span class="text-gray-300">&middot;</span>
+                    <a href="{{ route('pages.terms') }}" class="px-2 py-1 rounded hover:text-brand-700 hover:bg-gray-50 transition">Terms</a>
                 </div>
             </div>
         </div>

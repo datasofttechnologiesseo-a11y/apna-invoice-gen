@@ -343,9 +343,9 @@
             <table class="bank-grid">
                 <tr>
                     <td class="lbl">Beneficiary</td>
-                    <td>{{ $c->name }}</td>
+                    <td>{{ $c->bank_account_name ?: $c->name }}</td>
                     <td class="lbl">A/c no.</td>
-                    <td class="mono">{{ $c->bank_account_number }}</td>
+                    <td class="mono">{{ $c->bank_account_number }}@if ($c->bankAccountTypeLabel()) ({{ $c->bankAccountTypeLabel() }})@endif</td>
                 </tr>
                 <tr>
                     <td class="lbl">Bank</td>

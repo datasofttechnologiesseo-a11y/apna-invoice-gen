@@ -54,7 +54,9 @@ export interface Company {
   email: string | null;
   website: string | null;
   bank_name: string | null;
+  bank_account_name: string | null;
   bank_account_number: string | null;
+  bank_account_type: 'savings' | 'current' | null;
   bank_ifsc: string | null;
   bank_branch: string | null;
   upi_id: string | null;
@@ -137,7 +139,9 @@ export interface CompanyInput {
   email?: string | null;
   website?: string | null;
   bank_name?: string | null;
+  bank_account_name?: string | null;
   bank_account_number?: string | null;
+  bank_account_type?: 'savings' | 'current' | null;
   bank_ifsc?: string | null;
   bank_branch?: string | null;
   upi_id?: string | null;

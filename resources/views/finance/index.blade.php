@@ -139,7 +139,7 @@
                 @php
                     $maxVal = max(collect($trend)->max('revenue'), collect($trend)->max('expenses'), 1);
                 @endphp
-                <div class="mt-5 flex items-end gap-1 h-40">
+                <div class="mt-5 flex items-stretch gap-1 h-40">
                     @foreach ($trend as $m)
                         @php
                             $rh = $m['revenue'] > 0 ? max(4, round(($m['revenue'] / $maxVal) * 100)) : 1;

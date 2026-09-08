@@ -75,7 +75,17 @@ class DashboardController extends Controller
             'received_this_month' => (clone $payments)
                 ->whereBetween('received_at', [$monthStart, $monthEnd])->sum('amount'),
             'receipts_issued' => (clone $payments)->count(),
+            // Two halves of one card: what this month's bills add up to, and
+            // how much of it has come in. Both exclude drafts (not issued) and
+            // cancelled bills (not owed), so the pair is comparable - a
+            // collection figure against an invoiced figure counted differently
+            // is a ratio that means nothing.
+            'invoiced_this_month' => (clone $invoices)->where('currency', $currency)
+                ->whereNotIn('status', ['draft', 'cancelled'])
+                ->whereBetween('invoice_date', [$monthStart, $monthEnd])
+                ->sum('grand_total'),
             'paid_this_month' => (clone $invoices)->where('currency', $currency)
+                ->whereNotIn('status', ['draft', 'cancelled'])
                 ->whereBetween('invoice_date', [$monthStart, $monthEnd])
                 ->sum('paid_amount'),
         ];

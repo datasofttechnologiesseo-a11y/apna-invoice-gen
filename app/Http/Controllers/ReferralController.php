@@ -33,6 +33,11 @@ class ReferralController extends Controller
             'shareUrl' => $shareUrl,
             'shareText' => $shareText,
             'waShare' => 'https://wa.me/?text=' . rawurlencode($shareText),
+            // rawurlencode, not urlencode: a mailto: URI is not a form body,
+            // so RFC 6068 reads "+" as a literal plus. urlencode() turns every
+            // space into one, and the invite opens as "Try+Apna+Invoice".
+            'mailShare' => 'mailto:?subject=' . rawurlencode('Try Apna Invoice')
+                . '&body=' . rawurlencode($shareText),
         ]);
     }
 }

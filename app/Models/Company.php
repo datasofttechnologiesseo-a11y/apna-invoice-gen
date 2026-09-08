@@ -17,7 +17,8 @@ class Company extends Model
         'address_line1', 'address_line2', 'city', 'state_id', 'postal_code', 'country',
         'phone', 'email', 'website',
         'logo_path', 'signature_path',
-        'bank_name', 'bank_account_number', 'bank_ifsc', 'bank_branch', 'upi_id',
+        'bank_name', 'bank_account_name', 'bank_account_number', 'bank_account_type',
+        'bank_ifsc', 'bank_branch', 'upi_id',
         'default_currency', 'default_terms', 'declaration',
         'invoice_prefix', 'invoice_counter', 'invoice_number_padding',
         'invoice_number_format', 'invoice_counter_fy',
@@ -52,6 +53,20 @@ class Company extends Model
             get: fn (?string $v) => $v === null ? null : strtoupper($v),
             set: fn (?string $v) => $v === null ? null : strtoupper(trim($v)),
         );
+    }
+
+    /**
+     * Display label for the account type, or null when the owner never
+     * chose one. Stored lower case so the value is stable; the mapping
+     * lives here so no view has to know how to capitalise it.
+     */
+    public function bankAccountTypeLabel(): ?string
+    {
+        return match ($this->bank_account_type) {
+            'savings' => 'Savings',
+            'current' => 'Current',
+            default => null,
+        };
     }
 
     /**

@@ -17,9 +17,9 @@ class CustomerController extends Controller
 
         $customers = $company->customers()
             ->with('state')
-            ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
-            }))
+            // Customer::scopeSearch - name, mobile, email or GSTIN, and the
+            // same definition the invoice list searches customers by.
+            ->when($request->search, fn ($q, $s) => $q->search($s))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();

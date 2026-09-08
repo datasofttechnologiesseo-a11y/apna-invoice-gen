@@ -572,6 +572,12 @@
                 <tr>
                     <td style="vertical-align: top; {{ $showUpiQr ? 'width: 72%; padding-right: 12px;' : '' }}">
                         <table style="width: 100%; font-size: 9px; line-height: 1.6;">
+                            @if ($c->bank_account_name)
+                                <tr>
+                                    <td class="x-small muted upper" style="width: 70px; padding-right: 8px;">Payee</td>
+                                    <td class="bold">{{ $c->bank_account_name }}</td>
+                                </tr>
+                            @endif
                             @if ($c->bank_name)
                                 <tr>
                                     <td class="x-small muted upper" style="width: 70px; padding-right: 8px;">Bank</td>
@@ -581,7 +587,7 @@
                             @if ($c->bank_account_number)
                                 <tr>
                                     <td class="x-small muted upper" style="padding-right: 8px;">A/c no.</td>
-                                    <td class="mono bold">{{ $c->bank_account_number }}</td>
+                                    <td class="mono bold">{{ $c->bank_account_number }}@if ($c->bankAccountTypeLabel())<span class="x-small muted"> ({{ $c->bankAccountTypeLabel() }})</span>@endif</td>
                                 </tr>
                             @endif
                             @if ($c->bank_ifsc)

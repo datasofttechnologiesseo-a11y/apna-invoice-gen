@@ -283,7 +283,9 @@ return [
         'paid_amount' => 'Paid amount',
 
         'bank_name' => 'Bank name',
+        'bank_account_name' => 'Payee name',
         'bank_account_number' => 'Bank account number',
+        'bank_account_type' => 'Account type',
         'bank_ifsc' => 'IFSC code',
         'bank_branch' => 'Bank branch',
         'upi_id' => 'UPI ID',

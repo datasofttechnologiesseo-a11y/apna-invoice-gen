@@ -36,7 +36,9 @@ export function CompanyEditModal({
     phone: '',
     email: '',
     bank_name: '',
+    bank_account_name: '',
     bank_account_number: '',
+    bank_account_type: '',
     bank_ifsc: '',
     upi_id: '',
     invoice_prefix: 'INV',
@@ -58,7 +60,9 @@ export function CompanyEditModal({
         phone: c.phone ?? '',
         email: c.email ?? '',
         bank_name: c.bank_name ?? '',
+        bank_account_name: c.bank_account_name ?? '',
         bank_account_number: c.bank_account_number ?? '',
+        bank_account_type: c.bank_account_type ?? '',
         bank_ifsc: c.bank_ifsc ?? '',
         upi_id: c.upi_id ?? '',
         invoice_prefix: c.invoice_prefix ?? 'INV',
@@ -85,7 +89,9 @@ export function CompanyEditModal({
         phone: form.phone || null,
         email: form.email || null,
         bank_name: form.bank_name || null,
+        bank_account_name: form.bank_account_name || null,
         bank_account_number: form.bank_account_number || null,
+        bank_account_type: (form.bank_account_type || null) as 'savings' | 'current' | null,
         bank_ifsc: form.bank_ifsc || null,
         upi_id: form.upi_id || null,
       }),
@@ -140,7 +146,22 @@ export function CompanyEditModal({
             <TextField label="Email" value={form.email} onChangeText={(v) => set('email', v)} keyboardType="email-address" autoCapitalize="none" />
 
             <Text style={styles.section}>Bank / payment (shown on invoice)</Text>
+            <TextField label="Payee name (as in bank)" value={form.bank_account_name} onChangeText={(v) => set('bank_account_name', v)} placeholder={form.name || 'Name on the bank account'} />
             <TextField label="Bank name" value={form.bank_name} onChangeText={(v) => set('bank_name', v)} />
+            <Text style={styles.label}>Account type</Text>
+            <View style={styles.chipRow}>
+              {[['', 'Not set'], ['current', 'Current'], ['savings', 'Savings']].map(([value, label]) => (
+                <Pressable
+                  key={label}
+                  style={[styles.chip, form.bank_account_type === value && styles.chipOn]}
+                  onPress={() => set('bank_account_type', value)}
+                >
+                  <Text style={form.bank_account_type === value ? styles.chipTextOn : styles.chipText}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={{ height: 14 }} />
+
             <TextField label="Account number" value={form.bank_account_number} onChangeText={(v) => set('bank_account_number', v)} />
             <TextField label="IFSC" value={form.bank_ifsc} onChangeText={(v) => set('bank_ifsc', v)} autoCapitalize="characters" />
             <TextField label="UPI ID" value={form.upi_id} onChangeText={(v) => set('upi_id', v)} autoCapitalize="none" placeholder="name@bank" />
@@ -179,4 +200,9 @@ const styles = StyleSheet.create({
   picker: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 14, backgroundColor: colors.card },
   pickerText: { fontSize: 16, color: colors.text },
   pickerPlaceholder: { fontSize: 16, color: colors.muted },
+  chipRow: { flexDirection: 'row', gap: 8 },
+  chip: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16, backgroundColor: colors.card },
+  chipOn: { borderColor: colors.primary, backgroundColor: colors.primary },
+  chipText: { fontSize: 15, color: colors.text },
+  chipTextOn: { fontSize: 15, color: '#fff', fontWeight: '700' },
 });
