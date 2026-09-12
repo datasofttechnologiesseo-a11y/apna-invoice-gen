@@ -116,7 +116,7 @@
             line-height: 0.85;
             padding: 0.08em 0.12em 0 0;
             font-weight: 800;
-            color: #0f766e;  /* brand-700 */
+            color: #167c88;  /* brand-700 */
         }
 
         /* Anchor link for headings, small § that fades in on hover, lets
@@ -131,7 +131,7 @@
         }
         .article-body h2:hover .heading-anchor,
         .article-body h3:hover .heading-anchor { opacity: 1; }
-        .article-body .heading-anchor:hover { color: #0f766e; }
+        .article-body .heading-anchor:hover { color: #167c88; }
 
         /* Reading progress bar, pinned to top, brand gradient. */
         #reading-progress {

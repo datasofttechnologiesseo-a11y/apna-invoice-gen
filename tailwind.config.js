@@ -22,17 +22,17 @@ export default {
             colors: {
                 // Apna Invoice primary - deep teal. Same trust as navy, but
                 brand: {
-                    50:   '#f0fdfa',
-                    100:  '#ccfbf1',
-                    200:  '#99f6e4',
-                    300:  '#5eead4',
-                    400:  '#2dd4bf',
-                    500:  '#14b8a6',
-                    600:  '#0d9488',
-                    700:  '#0f766e',
-                    800:  '#115e59',
-                    900:  '#134e4a',
-                    950:  '#042f2e',
+                    50:   '#eefbfc',
+                    100:  '#d4f4f7',
+                    200:  '#a9e8ef',
+                    300:  '#70d5e1',
+                    400:  '#34c5d5',
+                    500:  '#1ea9b8',
+                    600:  '#1892a0',
+                    700:  '#167c88',
+                    800:  '#13636c',
+                    900:  '#114e55',
+                    950:  '#0a2f33',
                 },
                 // Warm sand/amber accent - carries the India cue the saffron did.
                 accent: {

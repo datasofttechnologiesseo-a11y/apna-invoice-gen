@@ -118,7 +118,7 @@
                 cursor: pointer;
             }
             .no-print button {
-                background: #0f766e;
+                background: #167c88;
                 color: #fff;
                 border: 0;
             }

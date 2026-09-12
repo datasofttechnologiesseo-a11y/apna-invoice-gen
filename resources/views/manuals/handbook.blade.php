@@ -11,21 +11,21 @@
         /* ---- cover ---- */
         .cover { text-align: center; padding-top: 55mm; page-break-after: always; }
         .cover .kicker { font-size: 8.5px; letter-spacing: 3px; text-transform: uppercase; color: #b45309; font-weight: bold; }
-        .cover h1 { font-size: 32px; color: #134e4a; margin: 10px 0 0; letter-spacing: -0.5px; }
+        .cover h1 { font-size: 32px; color: #114e55; margin: 10px 0 0; letter-spacing: -0.5px; }
         .cover .sub { font-size: 12px; color: #6b7490; margin-top: 10px; }
         .cover .rule { width: 60px; height: 3px; background: #f97316; margin: 22px auto; }
         .cover .foot { font-size: 8.5px; color: #6b7490; margin-top: 40mm; line-height: 1.9; }
 
         /* ---- contents ---- */
-        .toc-h { font-size: 16px; color: #134e4a; margin: 0 0 12px; }
+        .toc-h { font-size: 16px; color: #114e55; margin: 0 0 12px; }
         table.toc { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
         table.toc td { padding: 5px 0; border-bottom: 1px solid #edf0f7; font-size: 10.5px; vertical-align: top; }
         table.toc td.n { width: 26px; color: #b45309; font-weight: bold; }
 
         /* ---- chapters ---- */
         h2 {
-            font-size: 15px; color: #134e4a; margin: 0 0 8px;
-            padding-bottom: 5px; border-bottom: 2px solid #0f766e;
+            font-size: 15px; color: #114e55; margin: 0 0 8px;
+            padding-bottom: 5px; border-bottom: 2px solid #167c88;
         }
         h2 .cn { color: #b45309; font-size: 11px; }
         .chapter { page-break-before: always; }
@@ -36,23 +36,23 @@
         table.steps { width: 100%; border-collapse: collapse; margin: 2px 0 9px; }
         table.steps td { padding: 3px 0; vertical-align: top; }
         table.steps td.step-n {
-            width: 18px; color: #0f766e; font-weight: bold; font-size: 10px;
+            width: 18px; color: #167c88; font-weight: bold; font-size: 10px;
         }
         table.steps td.step-t { padding-left: 4px; }
 
         table.note { width: 100%; border-collapse: collapse; margin: 9px 0; }
         table.note td {
-            background: #f3f6fc; border-left: 3px solid #0f766e;
+            background: #f3f6fc; border-left: 3px solid #167c88;
             padding: 7px 9px; font-size: 9.5px;
         }
         .note-label {
             font-size: 7.5px; letter-spacing: 1.2px; text-transform: uppercase;
-            font-weight: bold; color: #0f766e; margin-bottom: 3px;
+            font-weight: bold; color: #167c88; margin-bottom: 3px;
         }
 
         table.data { width: 100%; border-collapse: collapse; margin: 9px 0; }
         table.data thead th {
-            background: #134e4a; color: #fff; text-align: left;
+            background: #114e55; color: #fff; text-align: left;
             padding: 5px 7px; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px;
         }
         table.data tbody td {
