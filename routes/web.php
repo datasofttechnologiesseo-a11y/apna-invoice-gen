@@ -275,6 +275,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     // Lightweight inline create from the invoice form — same pattern as customers.quick-create.
     Route::post('products/quick-create', [ProductController::class, 'quickStore'])->name('products.quick-create');
+    // Un-archive. Archiving happens through destroy() when a product has
+    // invoice history; without this there is no way back from the list.
+    Route::post('products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
     Route::resource('products', ProductController::class)->except(['show']);
 
     Route::get('invoices/export/gstr1', [InvoiceController::class, 'gstr1Csv'])->name('invoices.gstr1');

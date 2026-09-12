@@ -112,7 +112,7 @@
                             'tips' => [
                                 '<strong>HSN vs SAC.</strong> Goods use HSN (4/6/8 digits). Services use SAC, which starts with 99.',
                                 '<strong>UQC units.</strong> We list the exact CBIC-notified codes (NOS, KGS, LTR…) so your GSTR-1 reconciles cleanly.',
-                                '<strong>Archived, not deleted.</strong> Products that were ever invoiced get archived, history stays intact.',
+                                '<strong>Archived, not deleted.</strong> Delete a product that has been on an invoice and it is archived instead: the invoice keeps its line and the product stops being offered on new ones. Find it under the <em>Archived</em> tab on Products and press Restore to put it back.',
                             ],
                         ],
                         [
