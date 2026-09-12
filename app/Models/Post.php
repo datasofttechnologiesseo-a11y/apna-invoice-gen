@@ -71,6 +71,84 @@ class Post extends Model
         return $this->status === 'draft';
     }
 
+    /**
+     * Topic tags for this post, lower-cased and de-duplicated.
+     *
+     * meta_keywords doubles as the tag list - the article footer renders them
+     * as chips and the index searches the same column, so a tag is already
+     * working navigation. This is the one place that decides how the string
+     * splits.
+     */
+    public function topics(): array
+    {
+        return collect(explode(',', (string) $this->meta_keywords))
+            ->map(fn ($t) => mb_strtolower(trim($t)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Other published posts worth reading after this one.
+     *
+     * This used to be "the three newest posts", which cost twice over: a
+     * reader finishing a piece on e-way bills was offered whatever happened to
+     * ship last week, and the three newest posts collected an internal link
+     * from every article in the archive while everything older collected none.
+     *
+     * Candidates are narrowed in SQL by a LIKE on any shared tag, then ranked
+     * in PHP - LIKE cannot count how many tags actually overlap, and it also
+     * matches inside words ("transport" inside "transporter"), so the exact
+     * intersection is recomputed here and non-matches drop out. The candidate
+     * set is capped, so this stays two queries however big the archive gets.
+     *
+     * Short of a full set, it tops up with recent posts: the end of an article
+     * should never be a dead end.
+     */
+    public function relatedPosts(int $limit = 3): \Illuminate\Support\Collection
+    {
+        $topics = $this->topics();
+        $picked = collect();
+
+        if ($topics !== []) {
+            $picked = static::published()
+                ->where('id', '!=', $this->id)
+                ->where(function (Builder $q) use ($topics) {
+                    foreach ($topics as $topic) {
+                        $q->orWhere('meta_keywords', 'like', '%' . $topic . '%');
+                    }
+                })
+                ->orderByDesc('published_at')
+                ->limit(max($limit * 4, 12))
+                ->get()
+                ->map(fn (self $post) => [
+                    'post' => $post,
+                    'shared' => count(array_intersect($topics, $post->topics())),
+                ])
+                ->filter(fn (array $row) => $row['shared'] > 0)
+                // More shared tags first; recency breaks the tie, which the
+                // query already ordered by.
+                ->sortByDesc('shared')
+                ->take($limit)
+                ->map(fn (array $row) => $row['post'])
+                ->values();
+        }
+
+        if ($picked->count() < $limit) {
+            $picked = $picked->concat(
+                static::published()
+                    ->where('id', '!=', $this->id)
+                    ->whereNotIn('id', $picked->pluck('id')->all())
+                    ->orderByDesc('published_at')
+                    ->limit($limit - $picked->count())
+                    ->get()
+            );
+        }
+
+        return $picked->values();
+    }
+
     /** Effective <title> — falls back to the heading title. */
     public function effectiveMetaTitle(): string
     {

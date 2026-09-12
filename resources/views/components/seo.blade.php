@@ -6,6 +6,11 @@
     'image' => null,
     'type' => 'website',
     'noindex' => false,
+    // Only meaningful with noindex. A search-results or filtered list wants
+    // noindex + follow: keep it out of the index, but let the crawler walk
+    // through it to the pages it links. Defaults false so the signed-in app
+    // keeps the noindex, nofollow it has always had.
+    'follow' => false,
     'jsonLd' => [],
     'publishedTime' => null,
     'modifiedTime' => null,
@@ -83,7 +88,7 @@
 <link rel="alternate" hreflang="x-default" href="{{ $canonical }}">
 
 @if ($noindex)
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="noindex, {{ $follow ? 'follow' : 'nofollow' }}">
 @else
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 @endif
