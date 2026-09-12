@@ -333,6 +333,138 @@
 
             <x-revenue-sparkline :series="$trend30" />
 
+            {{-- Insights panel.
+
+                 Two switches, each sitting on what it controls: Sales/Purchases
+                 swaps both cards, Monthly/Yearly changes only the bars. The
+                 rings are deliberately NOT period-scoped and each states its
+                 own window, because "what is owed to me right now" stops being
+                 a useful number the moment a period filter can quietly drop an
+                 overdue bill out of it.
+
+                 All four bar charts are rendered server-side and toggled with
+                 x-show, so switching is instant and costs no extra request. The
+                 pair without x-cloak is what a reader gets if Alpine never
+                 boots - sales, monthly, the sensible default. --}}
+            <div x-data="dashboardCharts()" x-init="boot()" id="insights" class="scroll-mt-24">
+                <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+                    <div class="inline-flex rounded-lg ring-1 ring-gray-300 overflow-hidden text-sm bg-white shadow-sm"
+                         role="group" aria-label="Show sales or purchases">
+                        <button type="button" @click="setView('sales')" :aria-pressed="(view === 'sales').toString()"
+                                class="px-4 py-1.5 border-r border-gray-300 font-medium transition"
+                                :class="view === 'sales' ? 'bg-brand-700 text-white' : 'text-gray-600 hover:bg-gray-50'">Sales</button>
+                        <button type="button" @click="setView('purchases')" :aria-pressed="(view === 'purchases').toString()"
+                                class="px-4 py-1.5 font-medium transition"
+                                :class="view === 'purchases' ? 'bg-brand-700 text-white' : 'text-gray-600 hover:bg-gray-50'">Purchases</button>
+                    </div>
+
+                    <div class="inline-flex rounded-lg ring-1 ring-gray-300 overflow-hidden text-sm bg-white shadow-sm"
+                         role="group" aria-label="Show by month or by financial year">
+                        <button type="button" @click="setSpan('monthly')" :aria-pressed="(span === 'monthly').toString()"
+                                class="px-4 py-1.5 border-r border-gray-300 font-medium transition"
+                                :class="span === 'monthly' ? 'bg-brand-700 text-white' : 'text-gray-600 hover:bg-gray-50'">Monthly</button>
+                        <button type="button" @click="setSpan('yearly')" :aria-pressed="(span === 'yearly').toString()"
+                                class="px-4 py-1.5 font-medium transition"
+                                :class="span === 'yearly' ? 'bg-brand-700 text-white' : 'text-gray-600 hover:bg-gray-50'">Yearly</button>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-5 gap-6">
+                    <div class="lg:col-span-2 min-w-0">
+                        <div x-show="view === 'sales'">
+                            <x-donut-chart
+                                title="Where your money stands"
+                                subtitle="Every issued bill, as of today · drafts and cancelled excluded"
+                                center-label="Billed"
+                                empty="Nothing billed yet. Once you issue a bill, this ring shows how much of it has actually come in."
+                                :href="route('finance.index')"
+                                href-label="Finance →"
+                                :segments="[
+                                    [
+                                        'label' => 'Collected',
+                                        'amount' => $receivables['collected'],
+                                        'color' => '#16a34a',
+                                        'href' => route('finance.index'),
+                                        'note' => 'Received against issued bills',
+                                    ],
+                                    [
+                                        'label' => 'Due',
+                                        'amount' => $receivables['due'],
+                                        'color' => '#f59e0b',
+                                        'href' => route('invoices.index', ['status' => 'outstanding']),
+                                        'note' => 'Owed, not yet past the due date',
+                                    ],
+                                    [
+                                        'label' => 'Overdue',
+                                        'amount' => $receivables['overdue'],
+                                        'color' => '#dc2626',
+                                        'href' => route('invoices.index', ['status' => 'outstanding']),
+                                        'note' => 'Owed and late — chase these first',
+                                    ],
+                                ]" />
+                        </div>
+
+                        <div x-show="view === 'purchases'" x-cloak>
+                            <x-donut-chart
+                                title="Where your money went"
+                                subtitle="Spend by category · last 12 months · GST included"
+                                center-label="Spent"
+                                empty="No purchases recorded yet. Add an expense and this ring shows what the money goes on."
+                                :href="route('finance.expenses')"
+                                href-label="All expenses →"
+                                :segments="$spendByCategory" />
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-3 min-w-0">
+                        <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
+                            <div class="flex items-start justify-between gap-4 flex-wrap">
+                                <div>
+                                    {{-- Initial text is the no-JS default; x-text
+                                         takes over the moment Alpine boots. --}}
+                                    <div class="text-xs uppercase font-bold tracking-wider text-gray-500"
+                                         x-text="heading">Invoiced vs collected</div>
+                                    <div class="text-xs text-gray-500 mt-0.5"
+                                         x-text="caption">Last 6 months · tap a bar to open that period</div>
+                                </div>
+                                <a href="{{ route('finance.index') }}"
+                                   :href="view === 'sales' ? @js(route('finance.index')) : @js(route('finance.expenses'))"
+                                   class="text-xs font-semibold text-brand-700 hover:text-brand-800 whitespace-nowrap">Analytics →</a>
+                            </div>
+
+                            <div class="mt-4">
+                                <div x-show="combo === 'sales-monthly'">
+                                    <x-monthly-bars
+                                        :rows="$chartSeries['sales']['monthly']"
+                                        label-a="Invoiced" label-b="Collected"
+                                        empty="No bills or receipts in the last six months. The comparison appears once there is something to compare." />
+                                </div>
+                                <div x-show="combo === 'sales-yearly'" x-cloak>
+                                    <x-monthly-bars
+                                        :rows="$chartSeries['sales']['yearly']"
+                                        label-a="Invoiced" label-b="Collected"
+                                        empty="Nothing billed in the last three financial years yet." />
+                                </div>
+                                <div x-show="combo === 'purchases-monthly'" x-cloak>
+                                    <x-monthly-bars
+                                        :rows="$chartSeries['purchases']['monthly']"
+                                        label-a="Spend" label-b="GST paid"
+                                        color-a="#fcd34d" color-b="#b45309"
+                                        empty="No purchases in the last six months. Record an expense and it shows up here." />
+                                </div>
+                                <div x-show="combo === 'purchases-yearly'" x-cloak>
+                                    <x-monthly-bars
+                                        :rows="$chartSeries['purchases']['yearly']"
+                                        label-a="Spend" label-b="GST paid"
+                                        color-a="#fcd34d" color-b="#b45309"
+                                        empty="No purchases in the last three financial years yet." />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- This month's P&L snapshot --}}
             <a href="{{ route('finance.index') }}" class="block bg-white rounded-2xl shadow-card ring-1 ring-gray-100 hover:ring-brand-300 hover:shadow-brand transition p-6">
                 <div class="flex items-center justify-between flex-wrap gap-4">
@@ -634,4 +766,75 @@
     <x-review-invite :show="$showReviewInvite" />
 
     <x-quick-action-fab />
+
+@push('scripts')
+<script>
+    /**
+     * The Sales/Purchases and Monthly/Yearly switches on the insights panel.
+     *
+     * Every combination is already in the DOM, so this only decides which one
+     * is visible - no fetching, no redrawing, no chart library. The choice is
+     * remembered per browser, because someone who runs a purchase-heavy
+     * business should not have to click Purchases on every single visit.
+     */
+    function dashboardCharts() {
+        return {
+            view: 'sales',
+            span: 'monthly',
+
+            boot: function () {
+                // localStorage throws outright in some privacy modes, so every
+                // read and write here is allowed to fail into the default.
+                try {
+                    var v = localStorage.getItem('dashboard.chart.view');
+                    var s = localStorage.getItem('dashboard.chart.span');
+                    if (v === 'sales' || v === 'purchases') { this.view = v; }
+                    if (s === 'monthly' || s === 'yearly') { this.span = s; }
+                } catch (e) { /* first-party storage blocked; defaults stand */ }
+            },
+
+            remember: function (key, value) {
+                try { localStorage.setItem('dashboard.chart.' + key, value); } catch (e) {}
+            },
+
+            setView: function (value) {
+                this.view = value;
+                this.remember('view', value);
+            },
+
+            setSpan: function (value) {
+                this.span = value;
+                this.remember('span', value);
+            },
+
+            /**
+             * One string instead of two comparisons.
+             *
+             * The bar blocks used to test view and span in one expression,
+             * ANDed together. That looks harmless and is not: && short-circuits,
+             * so an effect
+             * whose view half was false never read span, never registered it as
+             * a dependency, and never ran again when the Monthly/Yearly switch
+             * moved. Reading both halves through one getter means both are
+             * always tracked.
+             */
+            get combo() {
+                return this.view + '-' + this.span;
+            },
+
+            get heading() {
+                return this.view === 'sales' ? 'Invoiced vs collected' : 'Spend vs GST paid';
+            },
+
+            get caption() {
+                var window = this.span === 'monthly'
+                    ? 'Last 6 months'
+                    : 'Last 3 financial years';
+                var target = this.view === 'sales' ? 'invoices' : 'expenses';
+                return window + ' \u00b7 tap a bar to open that period\u2019s ' + target;
+            }
+        };
+    }
+</script>
+@endpush
 </x-app-layout>
