@@ -145,6 +145,12 @@
 <meta name="geo.region" content="IN">
 <meta name="geo.placename" content="India">
 
+{{-- JSON_HEX_TAG is load-bearing, not tidiness. Without it a value
+     containing "</script>" - a blog post title is enough - closes this block
+     early: the structured data is silently lost and everything after the
+     sequence is parsed as HTML, so the title becomes a script the browser
+     runs. JSON_UNESCAPED_SLASHES stays (readable URLs) and does not help
+     here, because it is the "<" that ends the tag, not the slash. --}}
 @foreach ((array) $jsonLd as $schema)
-    <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
 @endforeach
