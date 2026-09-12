@@ -20,6 +20,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\QuotationShareController;
 use App\Http\Controllers\ReferralController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -266,6 +267,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // JSON endpoint for the inline "+ New customer" modal on invoice/quotation
     // forms — keeps the user from losing their typed work to a page navigation.
     Route::post('customers/quick-create', [CustomerController::class, 'quickStore'])->name('customers.quick-create');
+
+    // Typeahead behind the search boxes on the invoice and customer lists.
+    // Read-only, scoped to the signed-in user's active company.
+    Route::get('search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 
     Route::get('products/search', [ProductController::class, 'search'])->name('products.search');
     // Lightweight inline create from the invoice form — same pattern as customers.quick-create.

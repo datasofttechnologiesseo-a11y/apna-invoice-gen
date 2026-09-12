@@ -37,7 +37,11 @@
                      they actually came here to do. --}}
                 @if (! $invoices->isEmpty() || $hasFilters)
                 <form method="GET" class="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by invoice #, customer, mobile, GSTIN or amount" class="border-gray-300 rounded-md shadow-sm w-full sm:w-96" aria-label="Search by invoice number, customer, mobile, GSTIN or amount">
+                    <x-search-suggest
+                        scope="invoices"
+                        placeholder="Search by invoice #, customer, mobile, GSTIN or amount"
+                        label="Search by invoice number, customer, mobile, GSTIN or amount"
+                        all-label="See all invoices matching" />
                     <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         <option value="outstanding" @selected(request('status') === 'outstanding')>⚠ Outstanding (unpaid)</option>
