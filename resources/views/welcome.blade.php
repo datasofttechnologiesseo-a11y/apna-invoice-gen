@@ -174,7 +174,7 @@
         type="website"
         :json-ld="$jsonLd" />
     {{-- PWA manifest + theme-color now come from <x-seo>. --}}
-    <meta name="theme-color" content="#0f766e">
+    <meta name="theme-color" content="#167c88">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Apna Invoice">

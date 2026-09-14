@@ -37,7 +37,7 @@
                         $styleMeta = config('invoice_styles.' . $styleKey, config('invoice_styles.classic'));
                         // Map style → Tailwind classes for the mini preview header - sober tones
                         $styleTheme = [
-                            'classic' => ['bg' => 'bg-white', 'border' => 'border-b-2 border-[#0f766e]', 'text' => 'text-gray-900', 'accent' => 'text-[#0f766e]'],
+                            'classic' => ['bg' => 'bg-white', 'border' => 'border-b-2 border-[#167c88]', 'text' => 'text-gray-900', 'accent' => 'text-[#167c88]'],
                             'bold'    => ['bg' => 'bg-white', 'border' => 'border-b-[3px] border-[#b45309]', 'text' => 'text-[#b45309]', 'accent' => 'text-[#b45309]'],
                             'minimal' => ['bg' => 'bg-white', 'border' => 'border-b border-money-200', 'text' => 'text-gray-900', 'accent' => 'text-money-700'],
                             'retail'  => ['bg' => 'bg-white', 'border' => 'border-b-2 border-gray-900', 'text' => 'text-gray-900 font-mono', 'accent' => 'text-gray-700 font-mono'],

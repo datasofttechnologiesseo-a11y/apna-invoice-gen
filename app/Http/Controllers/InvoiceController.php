@@ -59,23 +59,9 @@ class InvoiceController extends Controller
                 }
                 return $q->where('status', $s);
             })
-            ->when($request->search, function ($q, $s) {
-                $term = trim($s);
-                // A bank statement gives you an amount, not a bill number, so
-                // "11,800" and "₹11800" have to find the invoice too.
-                $amount = str_replace([',', ' ', "₹"], '', $term);
-
-                $q->where(function ($w) use ($term, $amount) {
-                    $w->where('invoice_number', 'like', "%{$term}%")
-                      // Customer matching is Customer::scopeSearch, shared with
-                      // the customer list so both screens find the same person.
-                      ->orWhereHas('customer', fn ($c) => $c->search($term));
-
-                    if (is_numeric($amount)) {
-                        $w->orWhere('grand_total', (float) $amount);
-                    }
-                });
-            })
+            // Invoice::scopeSearch — shared with the search box's typeahead so
+            // the dropdown can never offer a bill this filter then fails to find.
+            ->when($request->search, fn ($q, $s) => $q->search($s))
             // ?from / ?to bound the list by invoice date - the dashboard's
             // "Invoiced this month" card links straight in with them. They
             // arrive from links and bookmarks rather than a validated form, so

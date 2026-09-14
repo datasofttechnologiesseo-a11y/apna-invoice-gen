@@ -6,6 +6,11 @@
     'image' => null,
     'type' => 'website',
     'noindex' => false,
+    // Only meaningful with noindex. A search-results or filtered list wants
+    // noindex + follow: keep it out of the index, but let the crawler walk
+    // through it to the pages it links. Defaults false so the signed-in app
+    // keeps the noindex, nofollow it has always had.
+    'follow' => false,
     'jsonLd' => [],
     'publishedTime' => null,
     'modifiedTime' => null,
@@ -83,7 +88,7 @@
 <link rel="alternate" hreflang="x-default" href="{{ $canonical }}">
 
 @if ($noindex)
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="noindex, {{ $follow ? 'follow' : 'nofollow' }}">
 @else
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 @endif
@@ -98,7 +103,7 @@
 
 <meta name="author" content="{{ config('seo.organization.name') }}">
 <meta name="publisher" content="{{ config('seo.organization.name') }}">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#167c88">
 <meta http-equiv="Content-Language" content="en-IN">
 
 {{-- Favicon / app icons + PWA manifest. Living here means every public page
@@ -145,6 +150,12 @@
 <meta name="geo.region" content="IN">
 <meta name="geo.placename" content="India">
 
+{{-- JSON_HEX_TAG is load-bearing, not tidiness. Without it a value
+     containing "</script>" - a blog post title is enough - closes this block
+     early: the structured data is silently lost and everything after the
+     sequence is parsed as HTML, so the title becomes a script the browser
+     runs. JSON_UNESCAPED_SLASHES stays (readable URLs) and does not help
+     here, because it is the "<" that ends the tag, not the slash. --}}
 @foreach ((array) $jsonLd as $schema)
-    <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
 @endforeach

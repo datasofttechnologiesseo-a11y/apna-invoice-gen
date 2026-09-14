@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -136,6 +137,36 @@ class Invoice extends Model
             ->where('status', '!=', 'cancelled')
             ->whereNull('cancelled_at')
             ->where('balance', '>', 0);
+    }
+
+    /**
+     * Free-text match on what someone actually has in front of them when they
+     * go looking for a bill: the invoice number, the customer, or the amount
+     * off a bank statement.
+     *
+     * It lives on the model because two callers need the same answer - the
+     * invoice list filter and the search box's typeahead. If they drifted, the
+     * dropdown would offer a bill that pressing Enter then failed to find,
+     * which is worse than having no dropdown at all.
+     *
+     * Customer matching delegates to Customer::scopeSearch so the name, mobile,
+     * email and GSTIN rules stay in one place too.
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+        // A bank statement gives you an amount, not a bill number, so "11,800"
+        // and "₹11800" have to find the invoice too.
+        $amount = str_replace([',', ' ', '₹'], '', $term);
+
+        return $query->where(function (Builder $w) use ($term, $amount) {
+            $w->where('invoice_number', 'like', "%{$term}%")
+              ->orWhereHas('customer', fn (Builder $c) => $c->search($term));
+
+            if (is_numeric($amount)) {
+                $w->orWhere('grand_total', (float) $amount);
+            }
+        });
     }
 
     public function isDraft(): bool

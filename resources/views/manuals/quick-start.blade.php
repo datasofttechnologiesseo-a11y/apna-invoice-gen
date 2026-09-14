@@ -8,22 +8,22 @@
         * { box-sizing: border-box; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; line-height: 1.55; color: #23262f; margin: 0; }
 
-        .head { border-bottom: 3px solid #0f766e; padding-bottom: 9px; margin-bottom: 14px; }
+        .head { border-bottom: 3px solid #167c88; padding-bottom: 9px; margin-bottom: 14px; }
         .kicker { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: #b45309; font-weight: bold; }
-        h1 { font-size: 24px; color: #134e4a; margin: 6px 0 3px; letter-spacing: -0.4px; }
+        h1 { font-size: 24px; color: #114e55; margin: 6px 0 3px; letter-spacing: -0.4px; }
         .sub { font-size: 11px; color: #6b7490; }
 
         table.steps { width: 100%; border-collapse: collapse; }
         table.steps td { vertical-align: top; padding: 0 0 13px; }
         td.n {
-            width: 26px; font-size: 15px; font-weight: bold; color: #0f766e;
+            width: 26px; font-size: 15px; font-weight: bold; color: #167c88;
         }
-        .st { font-size: 12px; font-weight: bold; color: #134e4a; margin-bottom: 2px; }
+        .st { font-size: 12px; font-weight: bold; color: #114e55; margin-bottom: 2px; }
         .sd { font-size: 10.5px; color: #383d4d; }
 
         table.split { width: 100%; border-collapse: collapse; margin: 4px 0 12px; }
         table.split thead th {
-            background: #134e4a; color: #fff; text-align: left;
+            background: #114e55; color: #fff; text-align: left;
             padding: 5px 7px; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px;
         }
         table.split tbody td { padding: 5px 7px; border-bottom: 1px solid #e3e7f0; font-size: 10px; }

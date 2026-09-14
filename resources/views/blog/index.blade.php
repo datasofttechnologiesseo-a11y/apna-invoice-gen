@@ -26,8 +26,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php $filtered = filled(request('search')); @endphp
     <x-seo
-        :url="$posts->currentPage() > 1 ? $posts->url($posts->currentPage()) : route('blog.index')"
+        {{-- The search box can mint an unbounded number of URLs. Page 1 of a
+             search already canonicalised to /blog, but page 2 self-canonicalised
+             - the same filter de-duplicated on one page and advertised as its
+             own on the next. Every filtered page now points at /blog and is
+             noindex, follow: kept out of the index, still walked through to the
+             posts. Unfiltered pagination is unaffected and stands on its own. --}}
+        :url="$filtered ? route('blog.index') : ($posts->currentPage() > 1 ? $posts->url($posts->currentPage()) : route('blog.index'))"
+        :noindex="$filtered"
+        :follow="true"
         title="GST & Invoicing Blog for Small Business"
         description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow, written for Indian MSMEs, freelancers and CAs."
         keywords="GST blog India, invoicing tips, HSN SAC guide, GSTR-1 filing, MSME finance, free GST invoice software"

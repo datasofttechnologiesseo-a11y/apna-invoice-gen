@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
+use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Quotation;
 use App\Models\State;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -146,6 +148,47 @@ class CompanyBankDetailsTest extends TestCase
         $setup = $this->actingAs($user)->get(route('onboarding.business', ['edit' => 1]))->assertOk();
         $setup->assertSee('name="bank_account_name"', false);
         $setup->assertSee('name="bank_account_type"', false);
+    }
+
+    public function test_the_quotation_keeps_naming_a_beneficiary_when_no_payee_is_set(): void
+    {
+        // The quotation already printed a "Beneficiary" row filled from the
+        // company name, so unlike the invoice it cannot simply go blank -
+        // dropping the line would take information off a document that had
+        // it. It uses the payee name where one exists and keeps the old
+        // fallback where one does not.
+        $state = State::firstOrCreate(['gst_code' => '27'], State::factory()->raw(['gst_code' => '27']));
+        $user = User::factory()->create();
+
+        $bank = [
+            'name' => 'SLS IT Solutions',
+            'state_id' => $state->id,
+            'bank_name' => 'SVC Cooperative Bank Ltd',
+            'bank_account_number' => '125204180000070',
+            'bank_ifsc' => 'SVCB0000252',
+            'bank_account_type' => 'current',
+        ];
+
+        $render = function (Company $company) use ($user, $state) {
+            $customer = Customer::factory()->recycle($user)->recycle($company)->create(['state_id' => $state->id]);
+            $quotation = Quotation::factory()->recycle($user)->recycle($company)->recycle($customer)->sent()->create();
+
+            return view('quotations.pdf', [
+                'quotation' => $quotation->load(['customer.state', 'company.state', 'items']),
+                'amountInWords' => 'One thousand one hundred eighty rupees only',
+                'print' => true,
+            ])->render();
+        };
+
+        $withPayee = Company::factory()->recycle($user)->create($bank + ['bank_account_name' => 'Arbaz Khan']);
+        $html = $render($withPayee);
+        $this->assertStringContainsString('Arbaz Khan', $html);
+        $this->assertStringContainsString('(Current)', $html);
+
+        $withoutPayee = Company::factory()->recycle($user)->create($bank + ['bank_account_name' => null]);
+        $html = $render($withoutPayee);
+        $this->assertStringContainsString('Beneficiary', $html);
+        $this->assertStringContainsString('SLS IT Solutions', $html);
     }
 
     public function test_the_api_accepts_and_returns_both_fields(): void

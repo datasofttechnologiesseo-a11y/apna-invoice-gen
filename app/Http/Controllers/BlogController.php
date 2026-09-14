@@ -81,11 +81,10 @@ class BlogController extends Controller
         // to ignore, killing recrawl prioritisation for genuinely edited posts.
         Post::withoutTimestamps(fn () => $post->increment('view_count'));
 
-        $related = Post::published()
-            ->where('id', '!=', $post->id)
-            ->orderByDesc('published_at')
-            ->limit(3)
-            ->get();
+        // Posts sharing this one's topics, topped up with recent ones - see
+        // Post::relatedPosts(). Ordering by date alone sent every article's
+        // internal links to the same three newest posts.
+        $related = $post->relatedPosts(3);
 
         // Previous / next published posts — keeps readers on the site and
         // gives crawlers a chronological path through the whole archive.

@@ -15,20 +15,42 @@ class ProductController extends Controller
     {
         $company = $request->user()->ensureCompany();
 
+        // active | archived | all.
+        //
+        // This used to be a single "Show archived" checkbox, which did not say
+        // what it did: ticking it did not add the archived products to the list,
+        // it replaced the list with only them. Three named states say plainly
+        // which set you are looking at.
+        //
+        // `only_inactive=1` was the old spelling and is still sitting in
+        // bookmarks and browser history, so it keeps working and means archived.
+        $status = $request->query('status');
+        if (! in_array($status, ['active', 'archived', 'all'], true)) {
+            $status = $request->boolean('only_inactive') ? 'archived' : 'active';
+        }
+
         $products = $company->products()
+            // The list asks each row whether it has invoice history, to
+            // decide between Archive and Delete. Counting here keeps that
+            // one query instead of one per row.
+            ->withCount('invoiceItems')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('name', 'like', "%{$s}%")
                   ->orWhere('sku', 'like', "%{$s}%")
                   ->orWhere('hsn_sac', 'like', "%{$s}%");
             }))
             ->when($request->kind, fn ($q, $k) => $q->where('kind', $k))
-            ->when($request->boolean('only_inactive'), fn ($q) => $q->where('is_active', false))
-            ->when(! $request->boolean('only_inactive'), fn ($q) => $q->where('is_active', true))
+            ->when($status === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($status === 'archived', fn ($q) => $q->where('is_active', false))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
-        return view('products.index', compact('products', 'company'));
+        // Shown on the Archived tab. Without it there is no way to tell an
+        // empty archive from a filter that is hiding things from you.
+        $archivedCount = $company->products()->where('is_active', false)->count();
+
+        return view('products.index', compact('products', 'company', 'status', 'archivedCount'));
     }
 
     public function create(Request $request): View
@@ -92,11 +114,31 @@ class ProductController extends Controller
         if ($product->invoiceItems()->exists()) {
             $product->update(['is_active' => false]);
             return redirect()->route('products.index')
-                ->with('status', "Product archived (has invoice history). It won't appear in new invoices.");
+                ->with('status', "'{$product->name}' is archived, not deleted - it has been on an invoice, so the records stay intact for GST. It will stop appearing when you make a new invoice. Restore it any time from the Archived tab.");
         }
 
         $product->delete();
-        return redirect()->route('products.index')->with('status', 'Product deleted.');
+        return redirect()->route('products.index')
+            ->with('status', "'{$product->name}' deleted. It had never been invoiced, so nothing was left to keep.");
+    }
+
+    /**
+     * Put an archived product back in the catalogue.
+     *
+     * Archiving was reachable from the list but un-archiving was not. The only
+     * route back was to tick a checkbox labelled "Show archived", open Edit on
+     * the row, and happen to notice an "Active" tick box further down the form.
+     * People reasonably read that as "archived means gone", which is the
+     * opposite of what archiving is for.
+     */
+    public function restore(Request $request, Product $product): RedirectResponse
+    {
+        $this->authorize($request, $product);
+
+        $product->update(['is_active' => true]);
+
+        return redirect()->route('products.index')
+            ->with('status', "'{$product->name}' is back in your catalogue and will show up in the invoice autocomplete again.");
     }
 
     /**

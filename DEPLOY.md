@@ -61,7 +61,7 @@ Edit `.env`:
 ### 3. Database
 
 ```bash
-php artisan migrate --force     # runs all 54 migrations, including the legacy paid_amount back-fill
+php artisan migrate --force     # runs all 55 migrations, including the legacy paid_amount back-fill
 ```
 
 ### 4. Storage symlink

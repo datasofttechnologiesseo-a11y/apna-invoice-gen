@@ -106,6 +106,20 @@ class SearchAndFiltersTest extends TestCase
         }
     }
 
+    public function test_an_amount_with_paise_still_matches(): void
+    {
+        // grand_total is DECIMAL(*,2). Searching it means comparing a typed
+        // number against that column, and a whole-rupee fixture would not
+        // notice if the comparison lost the paise.
+        [$user, $company, $customer] = $this->fixture();
+        Invoice::factory()->recycle($user)->recycle($company)->recycle($customer)->finalized()
+            ->create(['invoice_number' => 'INV/26-27/0011', 'grand_total' => 1180.35, 'finalized_at' => now()->subDays(3)]);
+
+        $this->actingAs($user)->get(route('invoices.index', ['search' => '1,180.35']))
+            ->assertOk()
+            ->assertSee('INV/26-27/0011');
+    }
+
     public function test_the_invoice_list_can_be_bounded_by_invoice_date(): void
     {
         [$user, $company, $customer] = $this->fixture();

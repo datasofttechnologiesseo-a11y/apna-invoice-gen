@@ -342,6 +342,28 @@ class FinanceController extends Controller
         return $out;
     }
 
+    /**
+     * Parse a ?from / ?to query value into a date, falling back rather than
+     * throwing.
+     *
+     * These arrive from links, bookmarks and hand-edited URLs - the dashboard's
+     * spend bars link straight in with ?period=custom - so a mistyped date has
+     * to widen the range back to its default, not 500 the page. Same rule the
+     * invoice list already follows.
+     */
+    private function parseCustomDate(?string $value, Carbon $fallback): Carbon
+    {
+        if (blank($value)) {
+            return $fallback;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return $fallback;
+        }
+    }
+
     private function resolveGstr3bPeriod(Request $request): array
     {
         $month = $request->input('month');
@@ -382,8 +404,8 @@ class FinanceController extends Controller
             'last_fy' => [$fyStart->copy()->subYear(), $fyEnd->copy()->subYear(), 'Last FY', $key],
             'ytd' => [$fyStart, $now->copy()->endOfDay(), 'FY to date', $key],
             'custom' => [
-                Carbon::parse($request->query('from', $now->copy()->startOfMonth()->toDateString()))->startOfDay(),
-                Carbon::parse($request->query('to', $now->toDateString()))->endOfDay(),
+                $this->parseCustomDate($request->query('from'), $now->copy()->startOfMonth())->startOfDay(),
+                $this->parseCustomDate($request->query('to'), $now->copy())->endOfDay(),
                 'Custom period',
                 $key,
             ],
