@@ -7,13 +7,15 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\State;
 use App\Models\User;
+use App\Services\ReviewPrompt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * The Google review invite appears once, on the first dashboard visit after
- * the user has issued an invoice - never on the invoice screen itself, whose
- * job is to get the bill sent.
+ * The Google review invite appears on the dashboard once the user has issued
+ * an invoice - never on the invoice screen itself, whose job is to get the
+ * bill sent. Put off, it returns a week later; once the user says the review
+ * is given, it never returns.
  */
 class ReviewInviteTest extends TestCase
 {
@@ -81,7 +83,7 @@ class ReviewInviteTest extends TestCase
             ->assertSee(self::POSTER, false);
 
         $this->assertNotNull($this->user->fresh()->review_prompt_shown_at,
-            'showing it must be recorded so it cannot repeat');
+            'showing it must be recorded so the snooze clock starts');
     }
 
     public function test_it_is_not_shown_before_any_invoice_is_issued(): void
@@ -109,22 +111,50 @@ class ReviewInviteTest extends TestCase
             ->assertDontSee(self::POSTER, false);
     }
 
-    public function test_it_is_shown_only_once(): void
+    public function test_put_off_it_waits_a_week_and_then_asks_again(): void
     {
         $this->issueInvoice();
 
         $this->actingAs($this->user)->get(route('dashboard'))->assertSee(self::POSTER, false);
+        // Same day, next visit: left alone. A reminder on every page load is a nag.
         $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+
+        $this->travel(ReviewPrompt::SNOOZE_DAYS - 1)->days();
         $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+
+        $this->travel(2)->days();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertSee(self::POSTER, false);
     }
 
-    public function test_someone_already_asked_is_never_asked_again(): void
+    public function test_someone_asked_long_ago_who_never_reviewed_is_asked_again(): void
     {
+        // Users from before this change were shown it once and then dropped.
+        // They have issued bills, so they are owed the same weekly ask.
         $this->user->forceFill(['review_prompt_shown_at' => now()->subMonth()])->save();
         $this->issueInvoice();
 
         $this->actingAs($this->user)->get(route('dashboard'))
-            ->assertDontSee(self::POSTER, false);
+            ->assertSee(self::POSTER, false);
+    }
+
+    public function test_once_the_review_is_given_it_never_returns(): void
+    {
+        $this->issueInvoice();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertSee(self::POSTER, false);
+
+        // "Write a review" / "I've already reviewed" both hit this.
+        $this->actingAs($this->user)->post(route('review-invite.given'))->assertNoContent();
+        $this->assertNotNull($this->user->fresh()->review_given_at);
+
+        $this->travel(1)->year();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+        $this->issueInvoice();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+    }
+
+    public function test_marking_the_review_given_requires_a_signed_in_user(): void
+    {
+        $this->post(route('review-invite.given'))->assertRedirect(route('login'));
     }
 
     public function test_the_review_link_points_at_the_real_listing(): void
@@ -133,7 +163,8 @@ class ReviewInviteTest extends TestCase
 
         $this->actingAs($this->user)->get(route('dashboard'))
             ->assertSee('g.page/r/CTvUSP6MtrMaEBM/review', false)
-            ->assertSee('Write a review');
+            ->assertSee('Write a review')
+            ->assertSee("I've already reviewed", false);
     }
 
     public function test_the_button_is_hidden_when_no_review_url_is_configured(): void
@@ -143,6 +174,7 @@ class ReviewInviteTest extends TestCase
 
         $this->actingAs($this->user)->get(route('dashboard'))
             ->assertSee(self::POSTER, false)      // poster and its QR still show
-            ->assertDontSee('Write a review');
+            ->assertDontSee('Write a review')
+            ->assertSee("I've already reviewed", false); // still a way to retire it
     }
 }

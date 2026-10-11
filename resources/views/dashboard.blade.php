@@ -762,7 +762,7 @@
         </div>
     </div>
 
-    {{-- Asked once, after the user has actually issued an invoice. --}}
+    {{-- Asked after the first issued invoice, then weekly until the review is given. --}}
     <x-review-invite :show="$showReviewInvite" />
 
     <x-quick-action-fab />

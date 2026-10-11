@@ -142,6 +142,8 @@
                     <th class="px-2 py-2 text-right">Discount</th>
                 @endif
                 <th class="px-2 py-2 text-right">GST%</th>
+                <th class="px-2 py-2 text-right">Taxable value</th>
+                <th class="px-2 py-2 text-right">{{ $invoice->is_interstate ? 'IGST' : 'CGST + SGST' }}</th>
                 <th class="px-2 py-2 text-right">Amount</th>
             </tr>
         </thead>
@@ -182,7 +184,19 @@
                         <td class="px-2 py-2 text-right font-mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . inr($item->discount) : '-' }}</td>
                     @endif
                     <td class="px-2 py-2 text-right">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
-                    <td class="px-2 py-2 text-right font-mono font-medium">{{ inr($item->amount) }}</td>
+                    {{-- Taxable value is the Rule 46 figure; Amount is what the
+                         line actually costs the buyer, GST included. Under reverse
+                         charge no GST is collected, so the two are equal. --}}
+                    @php $lineTax = (float) $item->cgst_amount + (float) $item->sgst_amount + (float) $item->igst_amount; @endphp
+                    <td class="px-2 py-2 text-right font-mono">{{ inr($item->amount) }}</td>
+                    <td class="px-2 py-2 text-right font-mono text-gray-700">
+                        @if ($invoice->reverse_charge)
+                            <span class="text-xs text-gray-500" title="Payable by the recipient under reverse charge">RCM</span>
+                        @else
+                            {{ inr($lineTax) }}
+                        @endif
+                    </td>
+                    <td class="px-2 py-2 text-right font-mono font-medium">{{ inr($item->total) }}</td>
                 </tr>
             @endforeach
         </tbody>

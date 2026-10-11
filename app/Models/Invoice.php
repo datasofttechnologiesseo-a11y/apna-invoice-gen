@@ -348,7 +348,7 @@ class Invoice extends Model
         return match ($count) {
             1 => ['Original for Recipient'],
             2 => ['Original for Recipient', 'Duplicate for Supplier'],
-            3 => ['Original for Recipient', 'Duplicate for Supplier', 'Triplicate for Transporter'],
+            3 => ['Original for Recipient', 'Duplicate for Transporter', 'Triplicate for Supplier'],
         };
     }
 
@@ -361,20 +361,64 @@ class Invoice extends Model
      */
     public function copyLabelsFor(array $types): array
     {
+        // Rule 48(1), goods: Original/Recipient, Duplicate/Transporter,
+        // Triplicate/Supplier. Rule 48(2), services: Original/Recipient,
+        // Duplicate/Supplier - there is no transporter copy.
+        $services = $this->defaultCopyCount() === 2;
         $map = [
             'recipient' => 'Original for Recipient',
-            'supplier' => 'Duplicate for Supplier',
-            'transporter' => 'Triplicate for Transporter',
+            'transporter' => 'Duplicate for Transporter',
+            'supplier' => $services ? 'Duplicate for Supplier' : 'Triplicate for Supplier',
         ];
 
         $labels = [];
         foreach ($map as $key => $label) {
+            if ($services && $key === 'transporter') {
+                continue;
+            }
             if (in_array($key, $types, true)) {
                 $labels[] = $label;
             }
         }
 
         return $labels ?: ['Original for Recipient'];
+    }
+
+    /**
+     * A draft can carry an advance - the "Paid amount" box on the form - with
+     * no Payment row behind it. Give it one when the invoice is issued, so
+     * every later recompute from payments()->sum('amount') still counts the
+     * advance instead of wiping it on the first recorded payment. Returns
+     * the receipt created, or null when there was nothing to book.
+     *
+     * Caller must hold the transaction; the company row is locked here for
+     * the receipt counter, as recordPayment does.
+     */
+    public function bookAdvanceAsPayment(): ?Payment
+    {
+        $advance = round((float) $this->paid_amount - (float) $this->payments()->sum('amount'), 2);
+        if ($advance <= 0) {
+            return null;
+        }
+
+        $company = $this->company()->lockForUpdate()->first();
+        $company->increment('receipt_counter');
+        $receiptNumber = $company->receipt_prefix . '-' .
+            str_pad((string) $company->receipt_counter, $company->receipt_number_padding, '0', STR_PAD_LEFT);
+
+        $methods = array_keys(config('payment_methods.methods', []));
+
+        return Payment::create([
+            'user_id' => $this->user_id,
+            'company_id' => $this->company_id,
+            'invoice_id' => $this->id,
+            'receipt_number' => $receiptNumber,
+            'received_at' => ($this->invoice_date ?? now())->toDateString(),
+            'amount' => $advance,
+            'tds_amount' => 0,
+            'method' => in_array('cash', $methods, true) ? 'cash' : ($methods[0] ?? 'cash'),
+            'notes' => 'Advance recorded on the invoice',
+        ]);
     }
 
     /**

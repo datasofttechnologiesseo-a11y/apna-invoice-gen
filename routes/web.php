@@ -223,6 +223,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Clears the bell's "new activity" dot. Fired by the dropdown itself,
     // so it is throttled - tapping the bell repeatedly should not write a
     // row per tap.
+    // Review invite: the user says they have left (or gone to leave) the
+    // Google review, which retires the pop-up for good.
+    Route::post('/review-invite/given', [\App\Http\Controllers\ReviewInviteController::class, 'given'])
+        ->name('review-invite.given');
     Route::post('/notifications/seen', [NotificationController::class, 'seen'])
         ->middleware('throttle:30,1')
         ->name('notifications.seen');

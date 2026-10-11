@@ -75,7 +75,7 @@ class InvoiceController extends Controller
 
         // Section-tab stats — total + a "needs attention" sub-stat per doc
         // type. Two extra count() queries; cheap and lets the tab strip show
-        // useful info ("3 outstanding", "2 awaiting reply") without nav.
+        // useful info ("3 outstanding", "4 this month") without nav.
         $salesStats = [
             'invoices' => [
                 'total' => $company->invoices()->count(),
@@ -85,11 +85,12 @@ class InvoiceController extends Controller
                     ->where('balance', '>', 0)
                     ->count(),
             ],
-            'quotations' => [
-                'total' => $company->quotations()->count(),
-                // Awaiting reply = sent but not yet accepted/declined/converted
-                'awaiting' => $company->quotations()
-                    ->where('status', 'sent')
+            'purchases' => [
+                'total' => $company->expenses()->count(),
+                // The purchase side has no status to count, so recency is the
+                // useful number: bills recorded this month.
+                'this_month' => $company->expenses()
+                    ->whereBetween('entry_date', [now()->startOfMonth(), now()->endOfMonth()])
                     ->count(),
             ],
         ];
@@ -618,6 +619,11 @@ class InvoiceController extends Controller
                 'status' => (float) $invoice->paid_amount >= (float) $invoice->grand_total ? 'paid' : ((float) $invoice->paid_amount > 0 ? 'partially_paid' : 'final'),
                 'finalized_at' => now(),
             ]);
+
+            // The advance typed on the draft becomes a real receipt, so the
+            // first recorded payment no longer wipes it (paid is recomputed
+            // from the payments table from here on).
+            $invoice->bookAdvanceAsPayment();
         });
 
         \App\Models\AuditLog::record('invoice.finalized',
@@ -865,7 +871,11 @@ class InvoiceController extends Controller
                 $totalIgst += $igst;
                 $totalGrand += $grand;
 
-                $invoiceType = ($company->composition_dealer || ($inv->total_tax ?? 0) == 0) ? 'Bill of Supply' : 'Tax Invoice';
+                // A reverse-charge invoice carries ₹0 tax but is still a tax
+                // invoice (the recipient pays); only composition dealers and
+                // exempt/nil supplies issue a bill of supply (Rule 49).
+                $invoiceType = ($company->composition_dealer || (($inv->total_tax ?? 0) == 0 && ! $inv->reverse_charge))
+                    ? 'Bill of Supply' : 'Tax Invoice';
 
                 fputcsv($out, [
                     $inv->invoice_number,

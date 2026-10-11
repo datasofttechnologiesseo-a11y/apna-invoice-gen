@@ -126,20 +126,22 @@ class AccountantReconciliationTest extends TestCase
 
     public function test_rounding_splits_to_paisa_with_no_leak(): void
     {
-        // 7 × 142.85 = 999.95 · 18% = 179.991 → 179.99 → CGST/SGST 89.995-ish.
+        // 7 × 142.85 = 999.95 · each head at 9% = 89.9955 → 90.00, so CGST and
+        // SGST are 90.00 each and the tax is 180.00 (NIC e-invoice schema:
+        // SGST = taxable × rate/2, rounded per head - never "total halved").
         $inv = $this->createInvoice([
             ['description' => 'Odd-amount item', 'hsn_sac' => '998311', 'quantity' => 7, 'rate' => 142.85, 'gst_rate' => 18],
         ], $this->customer());
 
         $this->assertEqualsWithDelta(999.95, (float) $inv->subtotal, 0.001);
-        $this->assertEqualsWithDelta(179.99, (float) $inv->total_tax, 0.001);
-        // No paisa lost in the half-split, and the two halves differ by at most 1 paisa.
+        $this->assertEqualsWithDelta(180.00, (float) $inv->total_tax, 0.001);
+        // No paisa lost in the split, and the two heads are identical.
         $this->assertEqualsWithDelta((float) $inv->total_tax,
             (float) $inv->total_cgst + (float) $inv->total_sgst, 0.001);
-        $this->assertLessThanOrEqual(0.011, abs((float) $inv->total_cgst - (float) $inv->total_sgst));
+        $this->assertEqualsWithDelta((float) $inv->total_cgst, (float) $inv->total_sgst, 0.001);
         // Grand total rounds to the nearest rupee; round_off captures the difference.
         $this->assertEqualsWithDelta(1180.0, (float) $inv->grand_total, 0.001);
-        $this->assertEqualsWithDelta(0.06, (float) $inv->round_off, 0.001);
+        $this->assertEqualsWithDelta(0.05, (float) $inv->round_off, 0.001);
     }
 
     public function test_payment_lifecycle_reconciles(): void

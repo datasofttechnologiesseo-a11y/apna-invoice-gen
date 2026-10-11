@@ -1,16 +1,16 @@
 {{--
-    Sales section tabs - established Indian invoicing tools
-    group sales documents under a single section. Each tab gets its own
-    color theme, distinct icon, a live stat (Outstanding / Awaiting), and
-    a quick "+ New" CTA on the active tab.
+    Sales / purchase section tabs - the two sides of the GST ledger side by
+    side: bills you issued (GSTR-1) and bills you received (ITC in GSTR-3B).
+    Each tab gets its own color theme, distinct icon, a live stat, and a
+    quick "+ New" CTA on the active tab.
 
     Required:
-        $active = 'invoices' | 'quotations'
+        $active = 'invoices' | 'purchases'
 
     Optional:
         $stats = [
-            'invoices'   => ['total' => 12, 'open' => 3],          // open = outstanding (unpaid)
-            'quotations' => ['total' => 5,  'awaiting' => 2],       // awaiting = sent but not yet accepted
+            'invoices'  => ['total' => 12, 'open' => 3],         // open = outstanding (unpaid)
+            'purchases' => ['total' => 40, 'this_month' => 4],   // bills recorded this month
         ]
         Backwards-compat: if a legacy `$counts` array is passed
         (`['invoices' => 12, ...]`) it's normalised into the new shape so
@@ -52,12 +52,12 @@
             'stat_tone'  => 'accent',
         ],
         [
-            'key' => 'quotations',
-            'label' => 'Quotations',
-            'href' => route('quotations.index'),
-            'desc' => 'Pre-sale proposals · convert to invoice on accept',
-            // Receipt-with-arrow / "send proposal" icon
-            'icon' => 'M9 17h6l-3-3m0 0l3-3m-3 3H3m18 0a9 9 0 11-18 0 9 9 0 0118 0z',
+            'key' => 'purchases',
+            'label' => 'Purchase Bills',
+            'href' => route('finance.expenses'),
+            'desc' => 'Bills you received · input tax credit for GSTR-3B',
+            // Inbox-tray / "bills coming in" icon
+            'icon' => 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
             'theme' => [
                 'pill_bg'         => 'bg-brand-700',
                 'pill_to'         => 'to-brand-900',
@@ -70,11 +70,11 @@
                 'cta_bg'          => 'bg-brand-700 hover:bg-brand-800',
                 'bg_active'       => 'bg-gradient-to-br from-brand-50/80 via-white to-accent-50/30',
             ],
-            'create_route' => route('quotations.create'),
-            'create_label' => 'New quote',
-            'stat_key'   => 'awaiting',
-            'stat_label' => 'awaiting reply',
-            'stat_zero'  => 'No pending',
+            'create_route' => route('finance.expenses.create'),
+            'create_label' => 'Add purchase',
+            'stat_key'   => 'this_month',
+            'stat_label' => 'this month',
+            'stat_zero'  => 'None this month',
             'stat_tone'  => 'accent',
         ],
     ];
@@ -89,7 +89,7 @@
          glance at the strip and instantly see which doc type they're in. --}}
     <div class="h-1 {{ $activeStripe }}"></div>
 
-    <div class="grid grid-cols-2 divide-x divide-gray-200" role="tablist" aria-label="Invoices documents">
+    <div class="grid grid-cols-2 divide-x divide-gray-200" role="tablist" aria-label="Sales and purchase documents">
         @foreach ($tabs as $tab)
             @php
                 $isActive = ($active ?? null) === $tab['key'];

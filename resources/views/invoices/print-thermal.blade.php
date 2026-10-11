@@ -213,7 +213,7 @@
             $rate = (float) $item->rate;
             $disc = (float) ($item->discount ?? 0);
             $gst = (float) ($item->gst_rate ?? 0);
-            $amt = (float) $item->amount;
+            $amt = (float) $item->total; // what the line costs, GST included (equals taxable under RCM)
             $qtyStr = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.');
         @endphp
         @php

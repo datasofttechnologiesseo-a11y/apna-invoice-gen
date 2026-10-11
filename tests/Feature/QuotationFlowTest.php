@@ -232,6 +232,9 @@ class QuotationFlowTest extends TestCase
         $this->assertSame(1180.0, (float) $invoice->grand_total);
         $this->assertCount(1, $invoice->items);
         $this->assertSame('Design', $invoice->items->first()->description);
+        // The line's GST-inclusive Amount is printed from `total`; a converted
+        // line once arrived with total = 0 and printed as 0.00.
+        $this->assertEqualsWithDelta(1180.0, (float) $invoice->items->first()->total, 0.01);
     }
 
     public function test_already_converted_quotation_cannot_be_converted_again(): void

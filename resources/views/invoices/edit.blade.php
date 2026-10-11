@@ -486,8 +486,11 @@
                                     </div>
                                 </div>
                                 <div class="flex justify-between pt-2 border-t text-sm">
-                                    <span class="text-gray-500">Line amount</span>
-                                    <span class="font-mono font-semibold text-gray-900" x-text="'₹ ' + fmt(item.amount)"></span>
+                                    <span class="text-gray-500">Line amount <span x-show="item.tax > 0" class="text-xs">(incl. GST)</span></span>
+                                    <span class="text-right">
+                                        <span class="block font-mono font-semibold text-gray-900" x-text="'₹ ' + fmt(item.total)"></span>
+                                        <span x-show="item.tax > 0" class="block font-mono text-[11px] text-gray-500" x-text="'Taxable ₹ ' + fmt(item.amount)"></span>
+                                    </span>
                                 </div>
                             </div>
                         </template>
@@ -519,7 +522,7 @@
                                     <th class="px-3 py-2 text-right">Rate (₹)</th>
                                     <th class="px-3 py-2 text-right" title="Pre-tax discount per Section 15(3) CGST">Disc (₹)</th>
                                     <th class="px-3 py-2 text-right">GST%</th>
-                                    <th class="px-3 py-2 text-right">Amount</th>
+                                    <th class="px-3 py-2 text-right">Amount <span class="font-normal normal-case">(incl. GST)</span></th>
                                     <th class="px-3 py-2"></th>
                                 </tr>
                             </thead>
@@ -579,7 +582,10 @@
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td class="px-2 py-2 text-right font-mono text-sm font-medium" x-text="fmt(item.amount)"></td>
+                                        <td class="px-2 py-2 text-right font-mono text-sm">
+                                            <div class="font-medium" x-text="fmt(item.total)"></div>
+                                            <div x-show="item.tax > 0" class="text-[11px] text-gray-500" x-text="'Taxable ' + fmt(item.amount)"></div>
+                                        </td>
                                         <td class="px-2 py-2 text-right w-14">
                                             @if (! $restricted)
                                                 {{-- Always render so the column doesn't collapse; disabled
@@ -726,13 +732,13 @@
                         </div>
                     </div>
 
-                    {{-- B2C > ₹2.5L warning (Rule 46(e) requires recipient name/address/state) --}}
+                    {{-- B2C taxable value ≥ ₹50,000 warning (Rule 46(e) requires recipient name/address/state) --}}
                     <div x-show="showB2cWarning" x-cloak class="border-t bg-accent-50 px-6 py-3">
                         <div class="flex items-start gap-2 text-sm text-accent-900">
                             <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
-                                <div class="font-semibold">B2C invoice over ₹2.5 lakh - Rule 46(e) applies</div>
-                                <div class="mt-0.5">The customer has no GSTIN and the invoice total exceeds ₹2,50,000. Per CGST Rule 46(e), you must include the recipient's <strong>name, full delivery address, and state</strong>. Double-check the customer record has those filled in.</div>
+                                <div class="font-semibold">B2C invoice of ₹50,000 or more - Rule 46(e) applies</div>
+                                <div class="mt-0.5">The customer has no GSTIN and the taxable value is ₹50,000 or more. Per CGST Rule 46(e), the invoice must carry the recipient's <strong>name, full address, delivery address, and state name with code</strong>. Double-check the customer record has those filled in.</div>
                             </div>
                         </div>
                     </div>
@@ -914,8 +920,9 @@
                 },
                 get showB2cWarning() {
                     if (!this.customerId) return false;
-                    // Shown only when customer has NO GSTIN and grand total > 2.5 lakh
-                    return !this.customerHasGstin[this.customerId] && this.totals.grandTotal > 250000;
+                    // Shown only when the customer has NO GSTIN and the taxable value
+                    // is ₹50,000 or more - Rule 46(e) is keyed on taxable value.
+                    return !this.customerHasGstin[this.customerId] && this.totals.subtotal >= 50000;
                 },
                 /**
                  * HSN/SAC is legally required only when at least one party is
@@ -1168,12 +1175,13 @@
                         let c = 0, s = 0, ig = 0;
                         // Section 9(3)/9(4) RCM: supplier collects no tax; recipient self-assesses.
                         if (gst > 0 && !rcm) {
-                            const tax = +(amount * gst / 100).toFixed(2);
                             if (inter) {
-                                ig = tax;
+                                ig = +(amount * gst / 100).toFixed(2);
                             } else {
-                                c = +(tax / 2).toFixed(2);
-                                s = +(tax - c).toFixed(2);
+                                // Each head at half the rate, rounded on its own
+                                // (mirrors InvoiceCalculator; keeps CGST = SGST).
+                                c = +(amount * gst / 200).toFixed(2);
+                                s = c;
                             }
                         }
                         item.amount = amount;

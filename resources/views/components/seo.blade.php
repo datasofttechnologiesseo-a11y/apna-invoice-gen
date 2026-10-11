@@ -109,8 +109,15 @@
 {{-- Favicon / app icons + PWA manifest. Living here means every public page
      (landing pages, blog) gets the install prompt + icons, not just the home
      page and the logged-in app shell. --}}
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+{{-- Icons are the logo MARK only (document + rupee arrow) - the wordmark is
+     unreadable at 16-48px. Google wants a square icon in a multiple of 48px,
+     hence the 48/96 PNGs. Bump ?v= when the artwork changes so browsers and
+     Google's favicon cache drop the old one. --}}
+<link rel="icon" href="/favicon.ico?v=2" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" type="image/png" sizes="48x48" href="/brand/favicon-48.png?v=2">
+<link rel="icon" type="image/png" sizes="96x96" href="/brand/favicon-96.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png?v=2">
 <link rel="manifest" href="/manifest.json">
 
 {{-- Open Graph --}}

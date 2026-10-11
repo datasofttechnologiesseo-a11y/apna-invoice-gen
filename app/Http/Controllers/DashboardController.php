@@ -400,10 +400,11 @@ class DashboardController extends Controller
             && $stats['receipts_issued'] === 0
             && ! $company->expenses()->exists();
 
-        // Ask for a Google review once, on the first dashboard visit after the
-        // user has actually issued an invoice. By now the bill has been sent
-        // and the product has proved itself, and nothing here is blocked by
-        // the modal the way the invoice screen's share buttons would be.
+        // Ask for a Google review on the dashboard once the user has actually
+        // issued an invoice - and again a week later if they put it off, until
+        // they say the review is done. By now the bill has been sent and the
+        // product has proved itself, and nothing here is blocked by the modal
+        // the way the invoice screen's share buttons would be.
         $reviewPrompt = app(\App\Services\ReviewPrompt::class);
         $showReviewInvite = $reviewPrompt->shouldPrompt($user, $stats['issued']);
         if ($showReviewInvite) {

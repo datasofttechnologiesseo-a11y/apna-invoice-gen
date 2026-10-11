@@ -273,6 +273,8 @@ class QuotationController extends Controller
                     'cgst_amount' => $qi->cgst_amount,
                     'sgst_amount' => $qi->sgst_amount,
                     'igst_amount' => $qi->igst_amount,
+                    // The invoice line's GST-inclusive Amount reads this.
+                    'total' => round((float) $qi->amount + (float) $qi->cgst_amount + (float) $qi->sgst_amount + (float) $qi->igst_amount, 2),
                 ]);
             }
 

@@ -3,10 +3,12 @@
 {{--
     Google review invite.
 
-    Shown once, on the first dashboard visit after the user has issued an
-    invoice. Deliberately not on the invoice screen: that page already
-    congratulates them, and its job is to get the bill sent - a modal over the
-    share buttons would block the very thing being celebrated.
+    Shown on the dashboard once the user has issued an invoice, and again a
+    week later if they put it off - until they click "Write a review" or
+    "I've already reviewed", after which it never returns. Deliberately not
+    on the invoice screen: that page already congratulates them, and its job
+    is to get the bill sent - a modal over the share buttons would block the
+    very thing being celebrated.
 
     The poster carries its own QR code, which is what a phone user will scan.
     A clickable button is added on top only when GOOGLE_REVIEW_URL is set,
@@ -15,7 +17,18 @@
 @if ($show ?? false)
     @php $reviewUrl = config('seo.contact.google_review_url'); @endphp
 
-    <div x-data="{ open: true }"
+    {{-- given(): tell the server the review is done so the invite retires.
+         Fire-and-forget; the modal closes either way. --}}
+    <div x-data="{
+            open: true,
+            given() {
+                fetch('{{ route('review-invite.given') }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                }).catch(() => {});
+                this.open = false;
+            },
+         }"
          x-show="open"
          x-cloak
          @keydown.escape.window="open = false"
@@ -61,7 +74,7 @@
             <div class="p-5 flex flex-col sm:flex-row items-center gap-3">
                 @if ($reviewUrl)
                     <a href="{{ $reviewUrl }}" target="_blank" rel="noopener"
-                       @click="open = false"
+                       @click="given()"
                        class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                             <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.36 4.18a1 1 0 00.95.69h4.4c.97 0 1.37 1.24.59 1.81l-3.56 2.59a1 1 0 00-.36 1.12l1.36 4.18c.3.92-.75 1.69-1.54 1.12l-3.55-2.59a1 1 0 00-1.18 0l-3.55 2.59c-.79.57-1.84-.2-1.54-1.12l1.36-4.18a1 1 0 00-.36-1.12L1.76 9.61c-.79-.57-.38-1.81.58-1.81h4.4a1 1 0 00.95-.69z"/>
@@ -72,6 +85,15 @@
                 <button type="button" @click="open = false"
                         class="w-full sm:w-auto px-5 py-3 text-sm font-semibold text-gray-600 hover:text-gray-900 transition">
                     Maybe later
+                </button>
+            </div>
+
+            {{-- For the phone user who scanned the QR, and the case where no
+                 button URL is configured: the only other way to retire it. --}}
+            <div class="px-5 pb-4 -mt-2 text-center">
+                <button type="button" @click="given()"
+                        class="text-xs text-gray-500 hover:text-gray-800 underline underline-offset-2 transition">
+                    I've already reviewed - don't ask again
                 </button>
             </div>
         </div>

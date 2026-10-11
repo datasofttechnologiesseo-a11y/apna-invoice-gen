@@ -132,9 +132,26 @@ class FinanceController extends Controller
         ];
         $summary['cash_out'] = $summary['taxable'] + $summary['gst'];
 
+        // Sales/purchase tab strip - see InvoiceController::index for the schema.
+        $salesStats = [
+            'invoices' => [
+                'total' => $company->invoices()->count(),
+                'open' => $company->invoices()
+                    ->whereIn('status', ['final', 'partially_paid'])
+                    ->where('balance', '>', 0)
+                    ->count(),
+            ],
+            'purchases' => [
+                'total' => $company->expenses()->count(),
+                'this_month' => $company->expenses()
+                    ->whereBetween('entry_date', [now()->startOfMonth(), now()->endOfMonth()])
+                    ->count(),
+            ],
+        ];
+
         return view('finance.expenses', compact(
             'company', 'expenses', 'periodStart', 'periodEnd', 'periodLabel', 'periodKey',
-            'summary', 'byCategory'
+            'summary', 'byCategory', 'salesStats'
         ));
     }
 

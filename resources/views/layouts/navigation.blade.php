@@ -18,9 +18,18 @@
                 @php
                     $navItems = [
                         ['href' => route('dashboard'), 'label' => 'Dashboard', 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
-                        ['href' => route('invoices.index'), 'label' => 'Invoices', 'active' => request()->routeIs('invoices.*') || request()->routeIs('quotations.*'), 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
-                        ['href' => route('customers.index'), 'label' => 'Customers', 'active' => request()->routeIs('customers.*'), 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
-                        ['href' => route('products.index'), 'label' => 'Products / Services', 'active' => request()->routeIs('products.*'), 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
+                        ['href' => route('invoices.index'), 'label' => 'Invoices', 'active' => request()->routeIs('invoices.*'), 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+                        // Customers, Products / Services and Quotations share one
+                        // "Add New" menu: the create actions first, then the lists.
+                        ['label' => 'Add New', 'active' => request()->routeIs('customers.*') || request()->routeIs('products.*') || request()->routeIs('quotations.*'), 'icon' => 'M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z', 'children' => [
+                            ['href' => route('customers.create'), 'label' => 'Add Customer', 'active' => request()->routeIs('customers.create')],
+                            ['href' => route('products.create'), 'label' => 'Add Product / Service', 'active' => request()->routeIs('products.create')],
+                            ['href' => route('quotations.create'), 'label' => 'Add Quotation', 'active' => request()->routeIs('quotations.create')],
+                            ['divider' => true],
+                            ['href' => route('customers.index'), 'label' => 'All Customers', 'active' => request()->routeIs('customers.*') && ! request()->routeIs('customers.create')],
+                            ['href' => route('products.index'), 'label' => 'All Products / Services', 'active' => request()->routeIs('products.*') && ! request()->routeIs('products.create')],
+                            ['href' => route('quotations.index'), 'label' => 'All Quotations', 'active' => request()->routeIs('quotations.*') && ! request()->routeIs('quotations.create')],
+                        ]],
                         ['href' => route('companies.index'), 'label' => 'Your Company', 'active' => request()->routeIs('companies.*') || request()->routeIs('company.*'), 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'],
                         ['href' => route('finance.index'), 'label' => 'P&L', 'active' => request()->routeIs('finance.*'), 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'],
                     ];
@@ -36,16 +45,42 @@
                      Icons return at xl. Keeps both sides of the bar from colliding. --}}
                 <div class="hidden lg:ms-3 xl:ms-6 lg:flex lg:items-center lg:gap-1">
                     @foreach ($navItems as $item)
-                        <a href="{{ $item['href'] }}" @class([
-                            'group relative inline-flex items-center gap-2 px-2 xl:px-3 py-2 rounded-lg text-sm transition-all duration-200 whitespace-nowrap',
-                            'bg-brand-50 text-brand-700 font-bold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
-                            'text-gray-600 font-semibold hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
-                        ])>
-                            <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
-                            </svg>
-                            {{ $item['label'] }}
-                        </a>
+                        @php
+                            $tabClasses = \Illuminate\Support\Arr::toCssClasses([
+                                'group relative inline-flex items-center gap-2 px-2 xl:px-3 py-2 rounded-lg text-sm transition-all duration-200 whitespace-nowrap',
+                                'bg-brand-50 text-brand-700 font-bold ring-1 ring-brand-200/70 shadow-sm' => $item['active'],
+                                'text-gray-600 font-semibold hover:bg-gray-100/80 hover:text-gray-900' => ! $item['active'],
+                            ]);
+                        @endphp
+                        @if (! empty($item['children']))
+                            <x-dropdown align="left" width="w-60">
+                                <x-slot name="trigger">
+                                    <button type="button" class="{{ $tabClasses }}" aria-haspopup="true">
+                                        <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
+                                        </svg>
+                                        {{ $item['label'] }}
+                                        <svg class="fill-current h-3.5 w-3.5 opacity-60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    </button>
+                                </x-slot>
+                                <x-slot name="content">
+                                    @foreach ($item['children'] as $child)
+                                        @if (! empty($child['divider']))
+                                            <div class="my-1 border-t border-gray-100"></div>
+                                        @else
+                                            <x-dropdown-link :href="$child['href']" :class="$child['active'] ? 'font-semibold text-brand-700 bg-brand-50' : ''">{{ $child['label'] }}</x-dropdown-link>
+                                        @endif
+                                    @endforeach
+                                </x-slot>
+                            </x-dropdown>
+                        @else
+                            <a href="{{ $item['href'] }}" class="{{ $tabClasses }}">
+                                <svg class="hidden xl:block w-4 h-4 shrink-0 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500 group-hover:text-brand-500' }} transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
+                                </svg>
+                                {{ $item['label'] }}
+                            </a>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -187,16 +222,46 @@
                 </a>
             @endauth
             @foreach ($navItems as $item)
-                <a href="{{ $item['href'] }}" @class([
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
-                    'bg-brand-50 text-brand-700' => $item['active'],
-                    'text-gray-700 hover:bg-gray-100' => ! $item['active'],
-                ])>
-                    <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
-                    </svg>
-                    {{ $item['label'] }}
-                </a>
+                @if (! empty($item['children']))
+                    {{-- Grouped menu: collapsible here, open while one of its pages is active. --}}
+                    <div x-data="{ sub: {{ $item['active'] ? 'true' : 'false' }} }">
+                        <button type="button" @click="sub = ! sub" :aria-expanded="sub" @class([
+                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
+                            'bg-brand-50 text-brand-700' => $item['active'],
+                            'text-gray-700 hover:bg-gray-100' => ! $item['active'],
+                        ])>
+                            <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
+                            </svg>
+                            {{ $item['label'] }}
+                            <svg class="ms-auto h-4 w-4 text-gray-500 transition-transform" :class="{ 'rotate-180': sub }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <div x-show="sub" @class(['mt-1 ms-8 space-y-0.5', 'hidden' => ! $item['active']])>
+                            @foreach ($item['children'] as $child)
+                                @if (! empty($child['divider']))
+                                    <div class="my-1 border-t border-gray-100"></div>
+                                @else
+                                    <a href="{{ $child['href'] }}" @class([
+                                        'block px-3 py-2 rounded-lg text-sm transition',
+                                        'bg-brand-50 text-brand-700 font-semibold' => $child['active'],
+                                        'text-gray-700 hover:bg-gray-100' => ! $child['active'],
+                                    ])>{{ $child['label'] }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ $item['href'] }}" @class([
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition',
+                        'bg-brand-50 text-brand-700' => $item['active'],
+                        'text-gray-700 hover:bg-gray-100' => ! $item['active'],
+                    ])>
+                        <svg class="w-5 h-5 {{ $item['active'] ? 'text-brand-700' : 'text-gray-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/>
+                        </svg>
+                        {{ $item['label'] }}
+                    </a>
+                @endif
             @endforeach
         </div>
 

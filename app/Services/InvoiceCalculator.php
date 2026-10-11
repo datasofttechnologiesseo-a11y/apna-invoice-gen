@@ -47,12 +47,16 @@ class InvoiceCalculator
 
             // RCM: supplier collects nothing; recipient pays the tax.
             if ($gstRate > 0 && ! $reverseCharge) {
-                $tax = round($amount * ($gstRate / 100), 2);
                 if ($isInterstate) {
-                    $igst = $tax;
+                    $igst = round($amount * ($gstRate / 100), 2);
                 } else {
-                    $cgst = round($tax / 2, 2);
-                    $sgst = round($tax - $cgst, 2);
+                    // Each head at half the rate, rounded on its own - the way
+                    // the NIC e-invoice schema computes it (SGST = taxable ×
+                    // rate/2). Rounding the combined tax and halving it leaves
+                    // CGST ≠ SGST on odd paise (₹100.30 @ 18% gave 9.03/9.02),
+                    // which the GSTR-1 validations reject.
+                    $cgst = round($amount * ($gstRate / 200), 2);
+                    $sgst = $cgst;
                 }
             }
 

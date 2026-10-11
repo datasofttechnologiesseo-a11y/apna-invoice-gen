@@ -28,6 +28,10 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    // Local testing: sign every visitor in as the seeded test user. Only
+    // honoured when env is "local" - see App\Http\Middleware\LocalAutoLogin.
+    'local_auto_login' => (bool) env('LOCAL_AUTO_LOGIN', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

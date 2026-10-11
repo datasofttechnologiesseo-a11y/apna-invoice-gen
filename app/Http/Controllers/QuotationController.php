@@ -56,22 +56,7 @@ class QuotationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Section-tab stats — see InvoiceController for the full schema.
-        $salesStats = [
-            'invoices' => [
-                'total' => $company->invoices()->count(),
-                'open' => $company->invoices()
-                    ->whereIn('status', ['final', 'partially_paid'])
-                    ->where('balance', '>', 0)
-                    ->count(),
-            ],
-            'quotations' => [
-                'total' => $company->quotations()->count(),
-                'awaiting' => $company->quotations()->where('status', 'sent')->count(),
-            ],
-        ];
-
-        return view('quotations.index', compact('company', 'quotations', 'salesStats'));
+        return view('quotations.index', compact('company', 'quotations'));
     }
 
     public function create(Request $request): View|RedirectResponse
@@ -370,6 +355,9 @@ class QuotationController extends Controller
                     'cgst_amount' => $qi->cgst_amount,
                     'sgst_amount' => $qi->sgst_amount,
                     'igst_amount' => $qi->igst_amount,
+                    // Quotation items have no total column; the invoice line's
+                    // Amount (GST-inclusive) reads this, so it must be filled.
+                    'total' => round((float) $qi->amount + (float) $qi->cgst_amount + (float) $qi->sgst_amount + (float) $qi->igst_amount, 2),
                 ]);
             }
 

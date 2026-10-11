@@ -194,6 +194,80 @@ class WorkflowAuditTest extends TestCase
             'the sum of the lines plus round-off must equal the invoice total');
     }
 
+    public function test_an_advance_on_the_draft_survives_the_first_payment(): void
+    {
+        // ₹10,000 + 18% = ₹11,800. ₹4,000 paid in advance on the draft, then a
+        // ₹2,000 payment after issue: paid must read ₹6,000, not ₹2,000. The
+        // advance used to live only in paid_amount, and the first receipt
+        // recomputed paid from the payments table and dropped it.
+        $inv = $this->createInvoice([
+            ['description' => 'Consulting', 'quantity' => 1, 'rate' => 10000, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+        ], null, ['paid_amount' => 4000]);
+        $this->assertEqualsWithDelta(7800.0, (float) $inv->balance, 0.01);
+
+        $this->actingAs($this->user)->post(route('invoices.finalize', $inv))->assertRedirect();
+        $inv->refresh();
+        $this->assertSame('partially_paid', $inv->status);
+        $this->assertCount(1, $inv->payments, 'issuing books the advance as a receipt');
+        $this->assertEqualsWithDelta(4000.0, (float) $inv->payments->first()->amount, 0.01);
+
+        $this->actingAs($this->user)->post(route('invoices.payments', $inv), [
+            'amount' => 2000, 'method' => 'cash', 'received_at' => now()->toDateString(),
+        ])->assertRedirect();
+        $inv->refresh();
+
+        $this->assertEqualsWithDelta(6000.0, (float) $inv->paid_amount, 0.01);
+        $this->assertEqualsWithDelta(5800.0, (float) $inv->balance, 0.01);
+        $this->assertSame('partially_paid', $inv->status);
+    }
+
+    public function test_cgst_and_sgst_are_each_half_the_rate_rounded_separately(): void
+    {
+        // ₹100.30 @ 18%: 9% of 100.30 is 9.027 -> 9.03 for EACH head. Rounding
+        // the combined 18.054 -> 18.05 and halving gave 9.03 / 9.02, so CGST and
+        // SGST disagreed by a paisa and GSTR-1 validations rejected the invoice.
+        $inv = $this->createInvoice([
+            ['description' => 'Odd paise', 'quantity' => 1, 'rate' => 100.30, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+            ['description' => 'Odd paise 5%', 'quantity' => 1, 'rate' => 100.10, 'gst_rate' => 5, 'hsn_sac' => '998314'],
+        ]);
+
+        [$a, $b] = $inv->items->values();
+        $this->assertEqualsWithDelta(9.03, (float) $a->cgst_amount, 0.001);
+        $this->assertEqualsWithDelta(9.03, (float) $a->sgst_amount, 0.001);
+        $this->assertEqualsWithDelta(2.50, (float) $b->cgst_amount, 0.001); // 2.5025 -> 2.50
+        $this->assertEqualsWithDelta(2.50, (float) $b->sgst_amount, 0.001);
+        $this->assertEqualsWithDelta((float) $inv->total_cgst, (float) $inv->total_sgst, 0.001,
+            'CGST and SGST must match to the paisa on an intra-state invoice');
+    }
+
+    public function test_a_line_shows_its_gst_and_an_amount_that_includes_it(): void
+    {
+        // Rate 49,576.27 @ 18% same-state: CGST 4,461.86 + SGST 4,461.86 =
+        // 8,923.72 tax, 58,499.99 for the line (the invoice round-off carries
+        // the paisa to ₹58,500). The Amount column used to repeat the taxable
+        // value, so it read as if the line carried no GST at all.
+        $inv = $this->createInvoice([
+            ['description' => 'Intel CPU', 'quantity' => 1, 'rate' => 49576.27, 'gst_rate' => 18, 'hsn_sac' => '84733010'],
+        ]);
+
+        $this->assertEqualsWithDelta(58500.0, (float) $inv->grand_total, 0.001);
+        $this->get(route('invoices.show', $inv))->assertOk()
+            ->assertSeeInOrder(['Taxable value', 'CGST + SGST', 'Amount'])
+            ->assertSeeInOrder(['49,576.27', '8,923.72', '58,499.99']);
+    }
+
+    public function test_under_reverse_charge_the_line_amount_carries_no_gst(): void
+    {
+        $inv = $this->createInvoice([
+            ['description' => 'Freight', 'quantity' => 1, 'rate' => 5000, 'gst_rate' => 5, 'hsn_sac' => '996511'],
+        ], null, ['reverse_charge' => 1]);
+
+        $this->assertEqualsWithDelta(5000.0, (float) $inv->items()->first()->total, 0.01);
+        $this->get(route('invoices.show', $inv))->assertOk()
+            ->assertSeeInOrder(['5,000.00', 'RCM', '5,000.00'])
+            ->assertDontSee('5,250.00');
+    }
+
     // ================================================ 3. Issue / state machine
 
     public function test_issuing_assigns_a_number_and_locks_the_document(): void

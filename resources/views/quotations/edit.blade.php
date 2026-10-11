@@ -416,12 +416,13 @@
                         const amount = +(gross - disc).toFixed(2);
                         let c = 0, s = 0, ig = 0;
                         if (gst > 0) {
-                            const tax = +(amount * gst / 100).toFixed(2);
                             if (inter) {
-                                ig = tax;
+                                ig = +(amount * gst / 100).toFixed(2);
                             } else {
-                                c = +(tax / 2).toFixed(2);
-                                s = +(tax - c).toFixed(2);
+                                // Each head at half the rate, rounded on its own
+                                // (mirrors InvoiceCalculator; keeps CGST = SGST).
+                                c = +(amount * gst / 200).toFixed(2);
+                                s = c;
                             }
                         }
                         item.amount = amount;

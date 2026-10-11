@@ -406,14 +406,17 @@
             <tr>
                 <th style="width: 22px;">#</th>
                 <th>Description of goods / services</th>
-                <th style="width: 58px;">HSN/SAC</th>
-                <th class="tr" style="width: 50px;">Qty</th>
-                <th class="tr" style="width: 60px;">Rate</th>
+                <th style="width: 52px;">HSN/SAC</th>
+                <th class="tr" style="width: 40px;">Qty</th>
+                <th class="tr" style="width: 58px;">Rate</th>
                 @if ($hasDiscount)
-                    <th class="tr" style="width: 60px;">Discount</th>
+                    <th class="tr" style="width: 54px;">Discount</th>
                 @endif
-                <th class="tr" style="width: 38px;">GST%</th>
-                <th class="tr" style="width: 80px;">Taxable {{ $currencySymbol }}</th>
+                <th class="tr" style="width: 66px;">Taxable {{ $currencySymbol }}</th>
+                {{-- Rate and tax in one column: "18%" over the rupee amount, so a
+                     reader can follow Taxable + GST = Amount across the row. --}}
+                <th class="tr" style="width: 60px;">{{ $invoice->is_interstate ? 'IGST' : 'GST' }} {{ $currencySymbol }}</th>
+                <th class="tr" style="width: 70px;">Amount {{ $currencySymbol }}</th>
             </tr>
         </thead>
         <tbody>
@@ -445,8 +448,13 @@
                     @if ($hasDiscount)
                         <td class="tr mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . $inr($item->discount) : '-' }}</td>
                     @endif
-                    <td class="tr">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
-                    <td class="tr mono bold">{{ $inr($item->amount) }}</td>
+                    @php $lineTax = (float) $item->cgst_amount + (float) $item->sgst_amount + (float) $item->igst_amount; @endphp
+                    <td class="tr mono">{{ $inr($item->amount) }}</td>
+                    <td class="tr">
+                        <div class="x-small muted">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%{{ $invoice->reverse_charge ? ' RCM' : '' }}</div>
+                        <div class="mono">{{ $invoice->reverse_charge ? '-' : $inr($lineTax) }}</div>
+                    </td>
+                    <td class="tr mono bold">{{ $inr($item->total) }}</td>
                 </tr>
             @endforeach
         </tbody>

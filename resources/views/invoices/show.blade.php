@@ -68,12 +68,15 @@
                         </label>
                         <label class="flex items-start gap-2 py-1.5 cursor-pointer">
                             <input type="checkbox" x-model="types.supplier" class="mt-0.5">
-                            <span><span class="font-medium text-gray-800">Supplier</span><br><span class="text-xs text-gray-500">Duplicate for Supplier</span></span>
+                            <span><span class="font-medium text-gray-800">Supplier</span><br><span class="text-xs text-gray-500">{{ $invoice->defaultCopyCount() === 2 ? 'Duplicate for Supplier' : 'Triplicate for Supplier' }}</span></span>
                         </label>
+                        {{-- Rule 48(2): services need no transporter copy. --}}
+                        @if ($invoice->defaultCopyCount() === 3)
                         <label class="flex items-start gap-2 py-1.5 cursor-pointer">
                             <input type="checkbox" x-model="types.transporter" class="mt-0.5">
-                            <span><span class="font-medium text-gray-800">Delivery</span><br><span class="text-xs text-gray-500">Triplicate for Transporter</span></span>
+                            <span><span class="font-medium text-gray-800">Delivery</span><br><span class="text-xs text-gray-500">Duplicate for Transporter</span></span>
                         </label>
+                        @endif
                         <button type="button" @click="download()" :disabled="!selected.length" class="mt-2 w-full px-3 py-1.5 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:opacity-40 disabled:cursor-not-allowed">Download</button>
                     </div>
                 </div>

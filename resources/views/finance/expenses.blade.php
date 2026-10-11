@@ -42,6 +42,8 @@
                 </div>
             @endif
 
+            @include('partials.sales-tabs', ['active' => 'purchases', 'stats' => $salesStats ?? []])
+
             @include('finance.partials.tabs')
 
             {{-- ─── Period chooser (dropdown) ─── --}}

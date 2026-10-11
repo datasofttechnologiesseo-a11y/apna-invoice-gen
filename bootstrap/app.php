@@ -25,7 +25,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security response headers on every HTML document.
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+            // No-op unless APP_ENV=local and LOCAL_AUTO_LOGIN=true.
+            \App\Http\Middleware\LocalAutoLogin::class,
         ]);
+        // ...and it has to sign in before the auth check runs, which Laravel
+        // otherwise hoists ahead of anything not on its priority list.
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            prepend: \App\Http\Middleware\LocalAutoLogin::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

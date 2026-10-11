@@ -2,10 +2,13 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Quotations') }}</h1>
-            <a href="{{ route('quotations.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                New Quotation
-            </a>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ route('invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back to Invoices</a>
+                <a href="{{ route('quotations.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    New Quotation
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -13,12 +16,8 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
-            @include('partials.sales-tabs', ['active' => 'quotations', 'stats' => $salesStats ?? []])
-
-            {{-- Slim, dismissible explainer - only shown on first visit. The
-                 tab strip already states "Pre-sale proposals · convert to
-                 invoice on accept", so the banner repeats that for new users
-                 then gets out of the way. --}}
+            {{-- Slim, dismissible explainer - only shown on first visit, then
+                 gets out of the way. --}}
             <div x-data="{ show: !localStorage.getItem('hideQuotationsTip') }" x-show="show" x-cloak
                  class="px-4 py-2.5 bg-brand-50 border border-brand-200 text-brand-900 rounded-lg text-xs flex items-center gap-2.5">
                 <svg class="w-4 h-4 flex-shrink-0 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
