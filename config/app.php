@@ -69,7 +69,10 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    // Indian business software: dates, the 1 April financial-year rollover and
+    // GST periods are in IST. Falling back to UTC when the variable is missing
+    // would move every rollover 5½ hours late.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
 
     /*
     |--------------------------------------------------------------------------

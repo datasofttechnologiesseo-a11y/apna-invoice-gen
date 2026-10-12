@@ -2,9 +2,14 @@
     $c = $invoice->company;
     $cust = $invoice->customer;
     $balance = (float) $invoice->balance;
-    $overdueLabel = $daysPastDue <= 0
-        ? 'due today'
-        : ($daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue');
+    // A reminder can be sent by hand before the due date, so "due today" is
+    // only one of three cases.
+    $dueOn = ($invoice->due_date ?? $invoice->invoice_date)?->format('d M Y');
+    $overdueLabel = match (true) {
+        $daysPastDue < 0 => 'due on ' . $dueOn,
+        $daysPastDue === 0 => 'due today',
+        default => $daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue',
+    };
     $accent = $daysPastDue >= 15 ? '#b91c1c' : ($daysPastDue >= 7 ? '#b45309' : '#167c88');
 @endphp
 <!DOCTYPE html>
@@ -27,9 +32,13 @@
                 <tr>
                     <td style="padding: 28px 32px; font-size: 14px; line-height: 1.6; color: #333;">
                         <p>Hi {{ $cust->name }},</p>
-                        @if ($daysPastDue <= 0)
+                        @if ($daysPastDue < 0)
+                            <p>This is a friendly reminder that invoice <strong>{{ $invoice->invoice_number }}</strong>
+                                is due on <strong>{{ $dueOn }}</strong>.
+                                If you have already paid, please ignore this reminder.</p>
+                        @elseif ($daysPastDue === 0)
                             <p>This is a reminder that invoice <strong>{{ $invoice->invoice_number }}</strong>
-                                @if ($invoice->due_date) is due <strong>today ({{ $invoice->due_date->format('d M Y') }})</strong>@endif.
+                                is due <strong>today ({{ $dueOn }})</strong>.
                                 Please arrange payment at the earliest.</p>
                         @else
                             <p>Our records show that invoice <strong>{{ $invoice->invoice_number }}</strong>

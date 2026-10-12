@@ -55,7 +55,7 @@
                 </div>
                 <div class="px-4 sm:px-6 py-3 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                     <button type="button" @click="open = false"
-                            class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 rounded transition">
+                            class="inline-flex items-center justify-center h-10 px-4 text-sm font-semibold text-gray-800 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 rounded-md transition">
                         Cancel
                     </button>
                     <form method="POST" action="{{ $action }}" class="inline">
@@ -64,7 +64,7 @@
                             @method($method)
                         @endif
                         <button type="submit"
-                                class="w-full sm:w-auto inline-flex items-center justify-center min-h-[40px] px-4 py-2 text-sm font-semibold text-white rounded shadow-sm transition {{ $confirmClass }}">
+                                class="w-full sm:w-auto inline-flex items-center justify-center h-10 px-4 text-sm font-semibold text-white rounded-md shadow-sm transition {{ $confirmClass }}">
                             {{ $confirmLabel }}
                         </button>
                     </form>

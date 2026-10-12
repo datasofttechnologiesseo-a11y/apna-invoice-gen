@@ -125,6 +125,28 @@ class Gstr2bMatchTest extends TestCase
         $this->assertStringContainsString('K-9', $csv);
     }
 
+    public function test_gstr3b_says_how_much_of_the_books_credit_2b_confirms(): void
+    {
+        $from = \Illuminate\Support\Carbon::parse('2026-09-01');
+        $to = \Illuminate\Support\Carbon::parse('2026-09-30');
+        $this->assertNull(app(\App\Services\Gstr3bBuilder::class)->build($this->company, $from, $to)['itc_2b'], 'no 2B uploaded: nothing to compare');
+
+        $this->upload($this->jsonFile());
+        $r = app(\App\Services\Gstr3bBuilder::class)->build($this->company, $from, $to);
+        $check = $r['itc_2b'];
+
+        // Books: P1 900+900, P2 IGST 3,600, P3 450+450, P4 (no GSTIN) 90+90 = 6,480.
+        $this->assertEqualsWithDelta(6480.0, $r['itc']['total'], 0.001, 'the books figure is unchanged');
+        // 2B confirms P1 in full and P2 up to the books' 3,600 (2B shows 3,960).
+        $this->assertEqualsWithDelta(5400.0, $check['in_2b']['total'], 0.001);
+        $this->assertEqualsWithDelta(3600.0, $check['in_2b']['igst'], 0.001);
+        // P3 is not in 2B yet and P4 never will be: hold 1,080.
+        $this->assertEqualsWithDelta(1080.0, $check['not_in_2b']['total'], 0.001);
+        $this->assertSame(1, $check['missing']['count'], 'K-9 is in 2B but not in the books');
+        $this->assertEqualsWithDelta(720.0, $check['missing']['tax'], 0.001);
+        $this->assertSame(['2026-09'], $check['uploaded']);
+    }
+
     public function test_invoice_numbers_match_however_they_are_written(): void
     {
         $m = app(Gstr2bMatcher::class);

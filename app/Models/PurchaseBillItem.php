@@ -33,4 +33,10 @@ class PurchaseBillItem extends Model
     {
         return $this->belongsTo(PurchaseBill::class);
     }
+
+    /** The saved item this line brings into stock, when linked. */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

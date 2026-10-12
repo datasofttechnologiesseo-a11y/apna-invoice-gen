@@ -27,8 +27,12 @@ class PurchaseBillController extends Controller
     {
         $company = $request->user()->ensureCompany();
 
+        // From the vendors list: one vendor's purchase invoices.
+        $vendor = $request->filled('vendor') ? $company->vendors()->find((int) $request->query('vendor')) : null;
+
         $bills = $company->purchaseBills()
             ->with('vendor:id,name,gstin')
+            ->when($vendor, fn ($q) => $q->where('vendor_id', $vendor->id))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('bill_number', 'like', "%{$s}%")
                     ->orWhereHas('vendor', fn ($v) => $v->where('name', 'like', "%{$s}%")
@@ -59,6 +63,7 @@ class PurchaseBillController extends Controller
         return view('purchases.index', [
             'company' => $company,
             'bills' => $bills,
+            'vendor' => $vendor,
             'summary' => $summary,
             'salesStats' => $this->salesStats($company),
         ]);
@@ -131,7 +136,7 @@ class PurchaseBillController extends Controller
     public function show(Request $request, PurchaseBill $purchaseBill): View
     {
         $this->authorizeBill($request, $purchaseBill);
-        $purchaseBill->load(['vendor.state', 'items', 'payments', 'company.state']);
+        $purchaseBill->load(['vendor.state', 'items.product:id,name,track_stock', 'payments', 'company.state']);
 
         return view('purchases.show', [
             'bill' => $purchaseBill,
@@ -158,6 +163,7 @@ class PurchaseBillController extends Controller
             return back()->withInput()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This purchase invoice cannot be changed.");
         }
 
+        $before = $this->auditSnapshot($purchaseBill);
         DB::transaction(function () use ($company, $request, $purchaseBill, $data) {
             $this->persist($company, $request->user(), $purchaseBill, $data);
             $purchaseBill->syncPaymentTotals();
@@ -171,6 +177,17 @@ class PurchaseBillController extends Controller
                 ]);
             }
         });
+
+        // The bill carries input tax credit, so an edit is logged with the
+        // figures before and after.
+        $after = $this->auditSnapshot($purchaseBill);
+        $total = (float) $before['grand_total'] === (float) $after['grand_total']
+            ? '₹' . inr((float) $after['grand_total'])
+            : '₹' . inr((float) $before['grand_total']) . ' to ₹' . inr((float) $after['grand_total']);
+        AuditLog::record('purchase_bill.updated',
+            "Purchase invoice {$purchaseBill->bill_number} from {$purchaseBill->vendor->name} updated · {$total}",
+            $purchaseBill,
+            ['before' => $before, 'after' => $after]);
 
         return redirect()->route('purchases.show', $purchaseBill)->with('status', 'Purchase invoice updated.');
     }
@@ -189,6 +206,7 @@ class PurchaseBillController extends Controller
         }
 
         $label = "{$purchaseBill->bill_number} from {$purchaseBill->vendor->name}";
+        $snapshot = $this->auditSnapshot($purchaseBill);
         DB::transaction(function () use ($purchaseBill) {
             if ($purchaseBill->expense_id) {
                 \App\Models\Expense::where('id', $purchaseBill->expense_id)->delete();
@@ -197,7 +215,7 @@ class PurchaseBillController extends Controller
             $purchaseBill->delete();
         });
 
-        AuditLog::record('purchase_bill.deleted', "Purchase invoice {$label} deleted", null);
+        AuditLog::record('purchase_bill.deleted', "Purchase invoice {$label} deleted · ₹" . inr((float) $snapshot['grand_total']), $purchaseBill, $snapshot);
 
         return redirect()->route('purchases.index')->with('status', "Purchase invoice {$label} deleted.");
     }
@@ -219,14 +237,47 @@ class PurchaseBillController extends Controller
         if ($purchaseBill->company->isBooksLockedOn($data['paid_on'])) {
             return back()->withErrors(['paid_on' => "Books are locked up to {$purchaseBill->company->books_locked_until->format('d M Y')}. Date the payment after that."])->withInput();
         }
+        $reference = trim((string) ($data['reference_number'] ?? ''));
+        $data['reference_number'] = $reference !== '' ? $reference : null;
 
-        DB::transaction(function () use ($request, $purchaseBill, $data) {
-            $purchaseBill->payments()->create(array_merge($data, [
+        $payment = DB::transaction(function () use ($request, $purchaseBill, $data, $reference) {
+            // Lock the bill row, then check again: the cap above was read
+            // before the lock, so a double submit or a second tab would
+            // otherwise pay the vendor twice and leave a negative payable.
+            $bill = PurchaseBill::whereKey($purchaseBill->id)->lockForUpdate()->firstOrFail();
+
+            // The bank reference identifies one transfer. A part payment sent
+            // twice passes the cap, so the reference is what stops it.
+            if ($reference !== '' && $bill->payments()->whereRaw('LOWER(reference_number) = ?', [mb_strtolower($reference)])->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'reference_number' => "A payment with reference {$reference} is already recorded on this purchase invoice.",
+                ]);
+            }
+            $owed = round((float) $bill->grand_total - (float) $bill->payments()->sum('amount'), 2);
+            if ((float) $data['amount'] > $owed + 0.001) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'amount' => $owed > 0
+                        ? 'A payment was just recorded. Only ₹' . inr($owed) . ' is still owed on this purchase invoice.'
+                        : 'A payment was just recorded. Nothing more is owed on this purchase invoice.',
+                ]);
+            }
+
+            $payment = $bill->payments()->create(array_merge($data, [
                 'user_id' => $request->user()->id,
-                'company_id' => $purchaseBill->company_id,
+                'company_id' => $bill->company_id,
             ]));
-            $purchaseBill->syncPaymentTotals();
+            $bill->syncPaymentTotals();
+            $purchaseBill->setRawAttributes($bill->getAttributes(), true);
+
+            return $payment;
         });
+
+        AuditLog::record('purchase_payment.recorded',
+            '₹' . inr((float) $payment->amount) . ' paid · ' . $this->methodLabel($payment->method)
+                . ($payment->reference_number ? " · Ref {$payment->reference_number}" : '')
+                . " · Purchase invoice {$purchaseBill->bill_number} from {$purchaseBill->vendor->name}",
+            $payment,
+            $this->paymentSnapshot($payment, $purchaseBill));
 
         return back()->with('status', 'Payment of ₹' . inr($data['amount']) . " to {$purchaseBill->vendor->name} recorded.");
     }
@@ -240,10 +291,18 @@ class PurchaseBillController extends Controller
             return back()->with('error', "Books are locked up to {$purchaseBill->company->books_locked_until->format('d M Y')}. This payment cannot be removed.");
         }
 
+        $snapshot = $this->paymentSnapshot($purchasePayment, $purchaseBill);
         DB::transaction(function () use ($purchaseBill, $purchasePayment) {
             $purchasePayment->delete();
             $purchaseBill->syncPaymentTotals();
         });
+
+        // The payment row is gone; the entry keeps what it was.
+        AuditLog::record('purchase_payment.removed',
+            '₹' . inr((float) $snapshot['amount']) . ' payment removed · ' . $this->methodLabel($snapshot['method'])
+                . " · Purchase invoice {$purchaseBill->bill_number} from {$purchaseBill->vendor->name}",
+            $purchaseBill,
+            $snapshot);
 
         return back()->with('status', 'Payment removed. Purchase invoice balance restored.');
     }
@@ -293,7 +352,7 @@ class PurchaseBillController extends Controller
             'total_tax' => $t['total_tax'],
             'round_off' => $roundOff,
             'grand_total' => $grandTotal,
-            'expense_category' => $data['expense_category'] ?? 'misc',
+            'expense_category' => $data['expense_category'] ?? ($bill->expense_category ?: $this->defaultCategory($company, $data['items'])),
             'reference_number' => $data['reference_number'] ?? null,
             'notes' => $data['notes'] ?? null,
         ]);
@@ -348,12 +407,33 @@ class PurchaseBillController extends Controller
         return $bill->load('vendor');
     }
 
+    /**
+     * Category when none was chosen: goods bought for stock when a line is
+     * linked to a goods item (and that category exists), otherwise
+     * Miscellaneous as before.
+     */
+    private function defaultCategory($company, array $items): string
+    {
+        $ids = collect($items)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
+        if ($ids && array_key_exists('purchases', config('expense_categories', []))
+            && $company->products()->whereIn('id', $ids)->where('kind', 'goods')->exists()) {
+            return 'purchases';
+        }
+
+        return 'misc';
+    }
+
     private function formData($company, PurchaseBill $bill, bool $isEdit): array
     {
         $vendors = $company->vendors()->with('state:id,name,gst_code')->orderBy('name')->get();
+        if ($bill->exists) {
+            $bill->loadMissing('items.product:id,name');
+        }
         $items = $bill->exists
             ? $bill->items->map(fn ($i) => [
                 'product_id' => $i->product_id ? (string) $i->product_id : '',
+                // Shown in the Item box even if the item was archived since.
+                'product_name' => $i->product?->name,
                 'description' => $i->description, 'hsn_sac' => $i->hsn_sac, 'quantity' => (float) $i->quantity,
                 'unit' => $i->unit, 'rate' => (float) $i->rate, 'discount' => (float) $i->discount, 'gst_rate' => (float) $i->gst_rate,
             ])->values()->all()
@@ -371,9 +451,9 @@ class PurchaseBillController extends Controller
             // Items a line can be linked to (goods): picking one fills the line,
             // and for items that track stock the purchase brings stock in.
             'products' => $company->products()->where('kind', 'goods')->where('is_active', true)->orderBy('name')
-                ->get(['id', 'name', 'hsn_sac', 'unit', 'gst_rate', 'rate', 'purchase_rate', 'track_stock'])
+                ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'gst_rate', 'rate', 'purchase_rate', 'track_stock'])
                 ->map(fn ($p) => [
-                    'id' => (string) $p->id, 'name' => $p->name, 'hsn_sac' => $p->hsn_sac, 'unit' => $p->unit,
+                    'id' => (string) $p->id, 'name' => $p->name, 'sku' => (string) $p->sku, 'hsn_sac' => $p->hsn_sac, 'unit' => $p->unit,
                     'gst_rate' => (float) $p->gst_rate, 'rate' => (float) ($p->purchase_rate ?? 0), 'track' => (bool) $p->track_stock,
                 ])->values(),
             'categories' => config('expense_categories', []),
@@ -393,6 +473,37 @@ class PurchaseBillController extends Controller
                 'unpaid' => $company->purchaseBills()->where('balance', '>', 0)->count(),
             ],
         ];
+    }
+
+    /** The figures an activity-log entry keeps for a purchase invoice. */
+    private function auditSnapshot(PurchaseBill $bill): array
+    {
+        return [
+            'bill_number' => $bill->bill_number,
+            'bill_date' => $bill->bill_date?->toDateString(),
+            'vendor_id' => $bill->vendor_id,
+            'subtotal' => (float) $bill->subtotal,
+            'total_tax' => (float) $bill->total_tax,
+            'grand_total' => (float) $bill->grand_total,
+            'itc_eligible' => (bool) $bill->itc_eligible,
+            'reverse_charge' => (bool) $bill->reverse_charge,
+        ];
+    }
+
+    private function paymentSnapshot(PurchasePayment $payment, PurchaseBill $bill): array
+    {
+        return [
+            'purchase_bill' => $bill->bill_number,
+            'amount' => (float) $payment->amount,
+            'method' => $payment->method,
+            'paid_on' => $payment->paid_on?->toDateString(),
+            'reference_number' => $payment->reference_number,
+        ];
+    }
+
+    private function methodLabel(?string $method): string
+    {
+        return config("payment_methods.methods.{$method}.label") ?? strtoupper((string) $method);
     }
 
     private function authorizeBill(Request $request, PurchaseBill $bill): void
@@ -429,15 +540,35 @@ class PurchaseBillController extends Controller
             'items.*.product_id' => ['nullable', 'integer'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
+        ], [
+            // Shown under the field, so they name the problem and the fix.
+            'vendor_id.required' => 'Select the vendor.',
+            'bill_number.required' => "Enter the vendor's invoice number.",
+            'bill_number.unique' => 'This invoice number from this vendor is already recorded.',
+            'bill_date.before_or_equal' => 'The invoice date cannot be in the future.',
+            'due_date.after_or_equal' => 'The due date cannot be before the invoice date.',
+            'paid_on.before_or_equal' => 'The payment date cannot be in the future.',
+            'items.required' => 'Add at least one line.',
+            'items.*.description.required' => 'Enter a description.',
+            'items.*.quantity.min' => 'Quantity must be more than 0.',
+            'items.*.gst_rate.in' => 'Choose a GST rate from the list.',
+        ], [
+            'items.*.description' => 'description',
+            'items.*.hsn_sac' => 'HSN/SAC',
+            'items.*.quantity' => 'quantity',
+            'items.*.unit' => 'unit',
+            'items.*.rate' => 'rate',
+            'items.*.gst_rate' => 'GST rate',
+            'items.*.product_id' => 'item',
         ]);
 
         if (array_key_exists('bill_discount', $data)) {
-            $gross = collect($data['items'])->sum(fn ($i) => round((float) $i['quantity'] * (float) $i['rate'], 2));
+            $gross = $this->calculator->valueAfterLineDiscounts($data['items']);
             if ((float) $data['bill_discount'] > $gross + 0.001) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'bill_discount' => 'Discount cannot be more than the items total (₹' . inr($gross) . ').',

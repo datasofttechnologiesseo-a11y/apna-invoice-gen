@@ -73,7 +73,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="Free GST Calculator India"
+    title="Free GST calculator for India"
     eyebrow="Free tool"
     lead="Add or remove GST at 5%, 18% or 40% in one tap. See the CGST and SGST split for same-state sales, or IGST for inter-state, with no sign up."
     description="Free online GST calculator for India. Add or remove GST at 5, 18 or 40% with automatic CGST, SGST and IGST split, inclusive or exclusive, no sign-up."

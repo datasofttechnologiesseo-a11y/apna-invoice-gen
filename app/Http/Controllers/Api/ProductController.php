@@ -87,13 +87,14 @@ class ProductController extends Controller
     {
         $this->authorizeProduct($request, $product);
 
-        // Keep historical invoice items intact (GST audit trail). Soft-disable
-        // if the product has ever been used; hard-delete only if never billed.
-        if ($product->invoiceItems()->exists()) {
+        // Same rule as the web: an item billed, bought, quoted or with stock
+        // entries is archived (history and stock ledger kept), never deleted.
+        $usedOn = $product->usedOn();
+        if ($usedOn !== null) {
             $product->update(['is_active' => false]);
 
             return response()->json([
-                'message' => "'{$product->name}' is used on an invoice, so it was archived, not deleted. It will not appear on new invoices. Restore it from the Archived tab on the web app.",
+                'message' => "'{$product->name}' is used on {$usedOn}, so it was archived, not deleted. It will not appear on new invoices. Restore it from the Archived tab on the web app.",
                 'archived' => true,
             ]);
         }

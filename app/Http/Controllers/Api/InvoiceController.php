@@ -215,9 +215,12 @@ class InvoiceController extends Controller
     {
         $this->authorizeInvoice($request, $invoice);
 
-        if (! ($invoice->isEditable() || $invoice->isCancelled())) {
+        // Same rule as the web: only a draft (or a cancelled one that never got
+        // a number) can be deleted. An issued number stays on record, cancelled
+        // or not, so the series has no holes (Rule 46(b), GSTR-1 Table 13).
+        if (! $invoice->canBeDeleted()) {
             return response()->json([
-                'message' => 'Issued invoices cannot be deleted. Cancel first, then delete.',
+                'message' => 'An issued invoice cannot be deleted; its number must stay on record. Cancel it instead.',
             ], 422);
         }
 

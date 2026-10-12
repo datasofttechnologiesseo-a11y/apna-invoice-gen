@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Services\AccountErasureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -67,7 +68,8 @@ class ProfileController extends Controller
             'data' => collect($logs->items())->map(fn ($log) => [
                 'id' => $log->id,
                 'action' => $log->action,
-                'description' => $log->description,
+                // The audit row keeps its text in `summary` (the web prints the same).
+                'description' => $log->summary,
                 'user_name' => $log->user?->name,
                 'created_at' => optional($log->created_at)->toIso8601String(),
             ]),
@@ -79,17 +81,24 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function destroy(Request $request): JsonResponse
+    /**
+     * Close the account, exactly as the web does: AccountErasureService
+     * deletes everything when no GST invoice was issued, otherwise keeps
+     * the GST books and erases the person. Every token is revoked either way.
+     */
+    public function destroy(Request $request, AccountErasureService $eraser): JsonResponse
     {
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
 
-        $user = $request->user();
-        // Revoke all issued tokens, then delete the account.
-        $user->tokens()->delete();
-        $user->delete();
+        $result = $eraser->erase($request->user());
 
-        return response()->json(['message' => 'Account deleted.']);
+        return response()->json([
+            'message' => $result['mode'] === 'deleted'
+                ? 'Account deleted.'
+                : 'Account closed and personal data erased. GST invoice records are kept only as long as tax law requires, then deleted automatically.',
+            'mode' => $result['mode'],
+        ]);
     }
 }

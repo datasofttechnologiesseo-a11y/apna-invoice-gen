@@ -1,4 +1,4 @@
-@props(['action', 'placeholder', 'noun', 'value' => ''])
+@props(['action', 'placeholder', 'noun', 'value' => '', 'shortPlaceholder' => 'Search'])
 {{--
     The top search: one box for everything. Typing shows the pages and actions
     that match ("gstr", "bank", "add customer") and the matching invoices and
@@ -15,9 +15,10 @@
                x-model="q" @input="search()" @focus="open = true" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)"
                @keydown.enter="go($event)"
                placeholder="{{ $placeholder }}" aria-label="Search {{ $noun }}, pages and actions"
+               x-init="const mq = window.matchMedia('(max-width: 639px)'); const set = () => $el.placeholder = mq.matches ? @js($shortPlaceholder) : @js($placeholder); set(); mq.addEventListener && mq.addEventListener('change', set);"
                role="combobox" aria-autocomplete="list" aria-controls="global-search-results" :aria-expanded="(open && flat.length > 0).toString()"
                :aria-activedescendant="active >= 0 ? 'gs-opt-' + active : null"
-               class="w-full h-9 pl-8 pr-10 text-sm rounded-md border-gray-300 bg-gray-50 focus:bg-white focus:border-brand-500 focus:ring-brand-500/30">
+               class="w-full h-10 sm:h-9 pl-8 pr-3 sm:pr-10 text-sm rounded-md border-gray-300 bg-gray-50 focus:bg-white focus:border-brand-500 focus:ring-brand-500/30">
         <kbd class="hidden sm:block absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-gray-500 border border-gray-300 rounded px-1">/</kbd>
 
         <div x-show="open && flat.length > 0" x-cloak x-transition.opacity.duration.100ms
@@ -25,7 +26,7 @@
              class="absolute left-0 mt-1.5 w-[min(30rem,calc(100vw-1.5rem))] max-h-[70vh] overflow-y-auto rounded-lg bg-white shadow-xl ring-1 ring-gray-200 py-1.5 z-50">
             <template x-for="section in sections" :key="section.label">
                 <div class="py-1">
-                    <div class="px-3 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-500" x-text="section.label"></div>
+                    <div class="px-3 pt-1 pb-1 text-xs font-semibold text-gray-500" x-text="section.label"></div>
                     <template x-for="item in section.items" :key="item.key">
                         <a :href="item.url" :id="'gs-opt-' + item.index" role="option" :aria-selected="(active === item.index).toString()"
                            @mouseenter="active = item.index"
@@ -40,7 +41,7 @@
                     </template>
                 </div>
             </template>
-            <div class="px-3 pt-1.5 mt-1 border-t border-gray-100 text-[11px] text-gray-500" x-show="q.trim() !== ''">
+            <div class="px-3 pt-1.5 mt-1 border-t border-gray-100 text-xs text-gray-500" x-show="q.trim() !== ''">
                 Press Enter to search {{ $noun }} for “<span x-text="q.trim()"></span>”.
             </div>
         </div>

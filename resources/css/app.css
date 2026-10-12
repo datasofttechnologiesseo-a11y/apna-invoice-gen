@@ -5,21 +5,27 @@
 /* ----------------------------------------------------------------
  * Global scale
  *
- * Everything renders at 90%. Because Tailwind sizes type AND spacing
- * in rem, one root change shrinks both together, so the layout keeps
- * its proportions instead of text shrinking inside unchanged padding.
- * That is what makes a UI read as dense and professional rather than
- * merely small.
+ * Phones render at the browser's own size (100%): a phone is held close
+ * and read in a shop or on the road, and anything smaller strains.
+ * Tablets and desktops render at 93.75% (15px), the density of desk
+ * accounting software. Because Tailwind sizes type AND spacing in rem,
+ * one root change scales both together, so layouts keep their
+ * proportions.
  *
- * Using a percentage, not a px value, keeps the browser's own font-size
- * preference working for anyone who has changed it.
+ * text-xs is set to 0.8rem in tailwind.config.js, so the smallest text a
+ * person reads is 12px on a desktop and 12.8px on a phone.
  *
- * Deliberate floor: a handful of labels are set in absolute px
- * (text-[10px], text-[11px]) and are unaffected here, so nothing drops
- * below 10px. Headings carry a further zoom below, applied on top.
+ * A percentage, not a px value, keeps the browser's own font-size
+ * preference working for anyone who has changed it. Headings carry a
+ * further zoom below, applied on top.
  * -------------------------------------------------------------- */
 html {
-    font-size: 90%;
+    font-size: 100%;
+}
+@media (min-width: 640px) {
+    html {
+        font-size: 93.75%;
+    }
 }
 
 /* ----------------------------------------------------------------

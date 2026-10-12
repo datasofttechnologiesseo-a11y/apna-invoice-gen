@@ -64,7 +64,11 @@ class CompanyController extends Controller
     public function update(Request $request, Company $company): CompanyResource
     {
         $this->authorizeCompany($request, $company);
-        $company->update($this->validated($request));
+        $company->fill($this->validated($request));
+        // Logged like the web settings: bank account (masked) and books lock
+        // with the old and new values.
+        \App\Support\CompanyChangeLog::record($company);
+        $company->save();
         $company->load('state');
 
         return new CompanyResource($company);
@@ -90,7 +94,7 @@ class CompanyController extends Controller
      */
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
             'composition_dealer' => ['nullable', 'boolean'],
@@ -119,5 +123,47 @@ class CompanyController extends Controller
             'invoice_number_padding' => ['required', 'integer', 'min:1', 'max:8'],
             'invoice_number_format' => ['nullable', 'string', 'max:60', 'regex:/^[A-Za-z0-9_\-\/{} ]+$/'],
         ]);
+
+        // The same checks the web settings make, so the app cannot save what
+        // the website refuses. Each is applied only when the value is new or
+        // changed: a value saved before a check existed never blocks saving
+        // the rest of the settings.
+        $company = $request->route('company');
+        $errors = [];
+
+        // Rule 46(b): a tax invoice number is at most 16 characters, from
+        // letters, digits, "-" and "/".
+        $numberingChanged = ! $company
+            || ($data['invoice_prefix'] ?? null) !== $company->invoice_prefix
+            || ($data['invoice_number_format'] ?? null) !== $company->invoice_number_format
+            || (int) ($data['invoice_number_padding'] ?? 0) !== (int) $company->invoice_number_padding;
+        if ($numberingChanged) {
+            $preview = \App\Http\Controllers\CompanyController::previewInvoiceNumber(
+                (string) ($data['invoice_prefix'] ?? ''),
+                $data['invoice_number_format'] ?? null,
+                (int) ($data['invoice_number_padding'] ?? 4),
+            );
+            if (strlen($preview) > 16 || ! preg_match('/^[A-Za-z0-9\/-]+$/', $preview)) {
+                $errors['invoice_number_format'] = "GST invoice numbers must be 16 characters or fewer, using only letters, digits, \"-\" and \"/\" (CGST Rule 46(b)). This series would produce \"{$preview}\" (" . strlen($preview) . ' characters).';
+            }
+        }
+
+        if (! empty($data['bank_ifsc'])) {
+            $data['bank_ifsc'] = strtoupper(preg_replace('/\s+/', '', $data['bank_ifsc']));
+            if ($data['bank_ifsc'] !== $company?->bank_ifsc && ! preg_match('/^[A-Z]{4}0[A-Z0-9]{6}$/', $data['bank_ifsc'])) {
+                $errors['bank_ifsc'] = 'IFSC should be 11 characters: 4 letters, a zero, then 6 letters or digits (e.g. SBIN0001234).';
+            }
+        }
+        if (! empty($data['upi_id'])) {
+            $data['upi_id'] = trim($data['upi_id']);
+            if ($data['upi_id'] !== $company?->upi_id && ! preg_match('/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{1,64}$/', $data['upi_id'])) {
+                $errors['upi_id'] = 'UPI ID should look like name@bank (e.g. sharmatraders@okicici).';
+            }
+        }
+        if ($errors) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+
+        return $data;
     }
 }

@@ -1,36 +1,46 @@
 <x-app-layout :title="$customer->exists ? 'Edit customer' : 'New customer'">
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Customers', 'href' => route('customers.index')],
+            ['label' => $customer->exists ? $customer->name : 'New customer'],
+        ]" />
         <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
             {{ $customer->exists ? 'Edit customer' : 'New customer' }}
         </h1>
     </x-slot>
 
-    <div class="py-10">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <x-breadcrumbs :items="[
-                ['label' => 'Customers', 'href' => route('customers.index')],
-                ['label' => $customer->exists ? $customer->name : 'New customer'],
-            ]" />
-
+    @php
+        // GSTIN state code => state id, so typing a GSTIN fills the state.
+        $stateByCode = $states->filter(fn ($st) => $st->gst_code)->mapWithKeys(fn ($st) => [str_pad((string) $st->gst_code, 2, '0', STR_PAD_LEFT) => $st->id]);
+    @endphp
+    <div class="py-6 sm:py-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <form method="POST" action="{{ $customer->exists ? route('customers.update', $customer) : route('customers.store') }}"
-                  x-data="{ country: @js(old('country', $customer->country ?? 'India')) }"
-                  class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
+                  x-data="{
+                      country: @js(old('country', $customer->country ?? 'India')),
+                      stateByCode: @js($stateByCode),
+                      stateFromGstin: false,
+                      gstinTyped(value) {
+                          const code = (value || '').trim().slice(0, 2);
+                          const id = /^[0-9]{2}$/.test(code) ? this.stateByCode[code] : null;
+                          if (id && String(this.$refs.state.value) !== String(id)) {
+                              this.$refs.state.value = id;
+                              this.stateFromGstin = true;
+                          }
+                      },
+                  }"
+                  class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
                 @csrf
                 @if ($customer->exists) @method('PATCH') @endif
 
                 @if ($errors->any())
-                    <div class="m-6 mb-0 p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
-                        <div class="font-semibold mb-1">Fix the following before saving:</div>
-                        <ul class="list-disc pl-5 space-y-0.5">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+                    <div class="m-5 sm:m-6 mb-0 p-3 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
+                        Check the {{ \Illuminate\Support\Str::plural('field', count($errors->keys())) }} marked below.
                     </div>
                 @endif
 
                 {{-- Section: Customer details --}}
-                <section class="p-6 sm:p-8 border-b border-gray-100">
+                <section class="p-5 sm:p-8 border-b border-gray-100">
                     <h2 class="text-sm font-bold text-gray-900">Customer details</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Shown on your invoices.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -42,15 +52,15 @@
                         </div>
                         <div class="md:col-span-2">
                             <x-input-label for="gstin" value="GSTIN (optional, for B2B)" />
-                            <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('gstin', $customer->gstin)" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="27AAACT2727Q1ZW" aria-describedby="gstin-hint" />
-                            <p id="gstin-hint" class="mt-1 text-xs text-gray-500">15 characters. Leave blank for unregistered (B2C) customers.</p>
+                            <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('gstin', $customer->gstin)" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="27AAACT2727Q1ZW" aria-describedby="gstin-hint" @input="gstinTyped($event.target.value)" />
+                            <p id="gstin-hint" class="mt-1 text-xs text-gray-500">15 characters. The state is filled from the first two digits. Leave blank for unregistered (B2C) customers.</p>
                             <x-input-error :messages="$errors->get('gstin')" for="gstin" class="mt-2" />
                         </div>
                     </div>
                 </section>
 
                 {{-- Section: Contact --}}
-                <section class="p-6 sm:p-8 border-b border-gray-100">
+                <section class="p-5 sm:p-8 border-b border-gray-100">
                     <h2 class="text-sm font-bold text-gray-900">Contact</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Used to send invoices and payment reminders.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -70,7 +80,7 @@
                 </section>
 
                 {{-- Section: Billing address --}}
-                <section class="p-6 sm:p-8">
+                <section class="p-5 sm:p-8">
                     <h2 class="text-sm font-bold text-gray-900">Billing address</h2>
                     <p class="text-xs text-gray-500 mt-0.5">The state sets the place of supply.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -91,17 +101,20 @@
                         </div>
                         <div>
                             <x-input-label for="state_id" value="State *" />
-                            <select id="state_id" name="state_id" required aria-describedby="state_id-hint" @error('state_id') aria-invalid="true" @enderror class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                            <select id="state_id" name="state_id" x-ref="state" @change="stateFromGstin = false" required aria-describedby="state_id-hint{{ $errors->has('state_id') ? ' state_id-error' : '' }}" @error('state_id') aria-invalid="true" @enderror class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 <option value="">Select state</option>
                                 @foreach ($states as $s)
                                     <option value="{{ $s->id }}" @selected(old('state_id', $customer->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                                 @endforeach
                             </select>
-                            <p id="state_id-hint" class="mt-1 text-xs text-gray-500">CGST + SGST (same state) or IGST (other state).</p>
+                            <p id="state_id-hint" class="mt-1 text-xs text-gray-500">
+                                <span x-show="stateFromGstin" x-cloak class="text-brand-700">Filled from the GSTIN. You can change it.</span>
+                                <span x-show="! stateFromGstin">CGST + SGST (same state) or IGST (other state).</span>
+                            </p>
                             <x-input-error :messages="$errors->get('state_id')" for="state_id" class="mt-2" />
                         </div>
                         <div>
-                            <x-input-label for="postal_code" value="Postal code" />
+                            <x-input-label for="postal_code" value="PIN code" />
                             <x-text-input id="postal_code" name="postal_code" type="text" inputmode="numeric" maxlength="10" x-bind:inputmode="(country || '').trim().toLowerCase() === 'india' ? 'numeric' : 'text'" x-bind:maxlength="(country || '').trim().toLowerCase() === 'india' ? 6 : 10" autocomplete="off" class="mt-1 block w-full" :value="old('postal_code', $customer->postal_code)" placeholder="6 digits" />
                             <x-input-error :messages="$errors->get('postal_code')" for="postal_code" class="mt-2" />
                         </div>
@@ -114,8 +127,8 @@
                 </section>
 
                 {{-- Action bar --}}
-                <div class="px-6 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                    <a href="{{ route('customers.index') }}" class="text-sm text-gray-500 hover:text-gray-800">Cancel</a>
+                <div class="px-5 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                    <a href="{{ route('customers.index') }}" class="inline-flex items-center h-10 px-4 rounded-md text-sm font-semibold text-gray-800 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Cancel</a>
                     <x-primary-button>{{ $customer->exists ? 'Save changes' : 'Save customer' }}</x-primary-button>
                 </div>
             </form>

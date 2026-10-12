@@ -20,8 +20,8 @@
     $hasProducts = $invoice->items->contains(fn ($i) => $i->product_id !== null && $i->product?->name);
 @endphp
 
-<div class="p-8 text-gray-900 invoice-doc">
-    <div class="flex justify-between items-start pb-6 border-b-2 border-gray-800">
+<div class="p-4 sm:p-6 print:p-8 text-gray-900 invoice-doc">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 pb-6 border-b-2 border-gray-800 print:flex-row print:justify-between">
         @php
             // A wide wordmark sits above the business name; a square or tall
             // emblem sits beside it, as on a printed letterhead.
@@ -54,14 +54,21 @@
             @endif
             </div>
         </div>
-        <div class="text-right">
+        <div class="sm:text-right print:text-right">
             <h2 class="text-2xl font-bold tracking-wide uppercase">{{ $documentTitle }}</h2>
+            @if ($invoice->isCancelled())
+                {{-- A cancelled invoice must never look payable, on screen or printed. --}}
+                <div class="mt-2 inline-block text-center px-3 py-1 border-2 border-danger-700 text-danger-700 rounded">
+                    <div class="text-lg font-extrabold tracking-[0.2em] uppercase leading-tight">Cancelled</div>
+                    <div class="text-xs">on {{ $invoice->cancelled_at?->format('d M Y') }}</div>
+                </div>
+            @endif
             @if ($c->composition_dealer)
-                <div class="mt-2 inline-block text-left px-2.5 py-1.5 bg-accent-50 border border-accent-300 rounded text-[11px] leading-snug text-accent-900 max-w-xs">
+                <div class="mt-2 inline-block text-left px-2.5 py-1.5 bg-accent-50 border border-accent-300 rounded text-xs leading-snug text-accent-900 max-w-xs">
                     <strong>Composition taxable person, not eligible to collect tax on supplies.</strong>
                 </div>
             @elseif ($isBillOfSupply)
-                <div class="mt-2 text-[11px] italic text-gray-500">Issued under Section 31(3)(c) - exempt supply</div>
+                <div class="mt-2 text-xs italic text-gray-500">Issued under Section 31(3)(c) · exempt supply</div>
             @endif
             <div class="text-sm mt-2">
                 <div><strong>{{ $documentTitle }} #:</strong> {{ $invoice->isDraft() ? 'Not yet issued (preview: ' . $invoice->company->nextInvoiceNumber() . ')' : $invoice->invoice_number }}</div>
@@ -71,7 +78,7 @@
                 @endif
                 <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '-' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
                 @if ($invoice->reverse_charge)
-                    <div class="text-accent-700"><strong>Reverse charge applicable</strong> - Section 9(3)/9(4)</div>
+                    <div class="text-accent-700"><strong>Reverse charge applicable</strong> · Section 9(3)/9(4)</div>
                 @endif
                 @if ($invoice->isZeroRated())
                     <div class="mt-1 text-brand-800 text-xs font-semibold uppercase tracking-wide">{{ $invoice->zeroRatedEndorsement() }}</div>
@@ -148,73 +155,61 @@
         </div>
     </div>
 
-    {{-- Scrolls sideways on a phone rather than pushing the page wider. --}}
+    {{-- Item and its note in one column (as on the PDF), the GST rate over the
+         tax: fits the invoice page's main column without sideways scrolling.
+         Scrolls sideways on a phone rather than pushing the page wider. --}}
     <div class="mt-6 overflow-x-auto print:overflow-visible">
-    <table class="w-full text-sm min-w-[560px] print:min-w-0">
+    <table class="w-full text-sm min-w-[520px] print:min-w-0">
         <thead>
-            <tr class="bg-gray-100 text-gray-700 text-left">
-                <th class="px-2 py-2">#</th>
-                @if ($hasProducts)
-                    <th class="px-2 py-2">Product</th>
-                @endif
-                <th class="px-2 py-2">Description</th>
-                <th class="px-2 py-2">HSN/SAC</th>
-                <th class="px-2 py-2 text-right">Qty</th>
-                <th class="px-2 py-2 text-right">Rate</th>
+            <tr class="bg-gray-100 text-gray-700 text-left text-xs">
+                <th class="px-2 py-2 font-semibold">#</th>
+                <th class="px-2 py-2 font-semibold">Description</th>
+                <th class="px-2 py-2 font-semibold">HSN/SAC</th>
+                <th class="px-2 py-2 font-semibold text-right">Qty</th>
+                <th class="px-2 py-2 font-semibold text-right">Rate</th>
                 @if ($hasDiscount)
-                    <th class="px-2 py-2 text-right">Discount</th>
+                    <th class="px-2 py-2 font-semibold text-right">Discount</th>
                 @endif
-                <th class="px-2 py-2 text-right">GST%</th>
-                <th class="px-2 py-2 text-right">Taxable value</th>
-                <th class="px-2 py-2 text-right">{{ $invoice->is_interstate ? 'IGST' : 'CGST + ' . $invoice->stateTaxLabel() }}</th>
-                <th class="px-2 py-2 text-right">Amount</th>
+                <th class="px-2 py-2 font-semibold text-right">Taxable value</th>
+                <th class="px-2 py-2 font-semibold text-right">{{ $invoice->is_interstate ? 'IGST' : 'CGST + ' . $invoice->stateTaxLabel() }}</th>
+                <th class="px-2 py-2 font-semibold text-right">Amount</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($invoice->items as $idx => $item)
-                <tr class="border-b">
-                    <td class="px-2 py-2">{{ $idx + 1 }}</td>
-                    @if ($hasProducts)
-                        {{-- Product column - bold name if linked to a saved product.
-                             Empty dash for custom-typed lines so the user can see at
-                             a glance which lines are catalogued vs one-offs. --}}
-                        <td class="px-2 py-2 font-medium">
-                            {{ $item->product?->name ?: '-' }}
-                        </td>
-                    @endif
-                    {{-- Description: raw saved value. When the Product column is
-                         present, the description is purely the user's extra note.
-                         When there's no Product column (all custom lines), the
-                         description doubles as the item identifier - and the
-                         legacy display fallback fills it in from product.name if
-                         it was saved as blank/junk. --}}
+                @php
+                    // The saved item's name in bold, with the line's own note under
+                    // it when it says something different. A blank or legacy "0"
+                    // description falls back to the item name.
+                    $productName = $hasProducts ? $item->product?->name : null;
+                    $desc = trim((string) $item->description);
+                    $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
+                    $primary = $productName ?: ($looksLikeJunk ? ($item->product?->name ?? '') : $desc);
+                    $secondary = ($productName && ! $looksLikeJunk && strcasecmp($desc, $productName) !== 0) ? $desc : null;
+                    $lineTax = (float) $item->cgst_amount + (float) $item->sgst_amount + (float) $item->igst_amount;
+                @endphp
+                <tr class="border-b align-top">
+                    <td class="px-2 py-2 text-gray-600">{{ $idx + 1 }}</td>
                     <td class="px-2 py-2">
-                        @php
-                            $desc = trim((string) $item->description);
-                            $looksLikeJunk = $desc === '' || preg_match('/^0+(\.0+)?$/', $desc) === 1;
-                            // Only apply the product-name fallback when there's NO Product
-                            // column already showing it - avoid duplication.
-                            $shown = ($looksLikeJunk && ! $hasProducts && $item->product?->name)
-                                ? $item->product->name
-                                : ($looksLikeJunk ? '' : $item->description);
-                        @endphp
-                        {{ $shown }}
+                        <div class="font-medium text-gray-900">{{ $primary }}</div>
+                        @if ($secondary)
+                            <div class="text-xs text-gray-600 mt-0.5">{{ $secondary }}</div>
+                        @endif
                     </td>
-                    <td class="px-2 py-2 font-mono">{{ $item->hsn_sac }}</td>
-                    <td class="px-2 py-2 text-right font-mono">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
+                    <td class="px-2 py-2 font-mono text-xs">{{ $item->hsn_sac }}</td>
+                    <td class="px-2 py-2 text-right font-mono whitespace-nowrap">{{ rtrim(rtrim(number_format((float) $item->quantity, 3), '0'), '.') }} {{ $item->unit }}</td>
                     <td class="px-2 py-2 text-right font-mono">{{ inr($item->rate) }}</td>
                     @if ($hasDiscount)
-                        <td class="px-2 py-2 text-right font-mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . inr($item->discount) : '-' }}</td>
+                        <td class="px-2 py-2 text-right font-mono">{{ (float) ($item->discount ?? 0) > 0 ? '-' . inr($item->discount) : '–' }}</td>
                     @endif
-                    <td class="px-2 py-2 text-right">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</td>
                     {{-- Taxable value is the Rule 46 figure; Amount is what the
                          line actually costs the buyer, GST included. Under reverse
                          charge no GST is collected, so the two are equal. --}}
-                    @php $lineTax = (float) $item->cgst_amount + (float) $item->sgst_amount + (float) $item->igst_amount; @endphp
                     <td class="px-2 py-2 text-right font-mono">{{ inr($item->amount) }}</td>
                     <td class="px-2 py-2 text-right font-mono text-gray-700">
+                        <div class="text-xs text-gray-600">{{ rtrim(rtrim(inr($item->gst_rate), '0'), '.') }}%</div>
                         @if ($invoice->reverse_charge)
-                            <span class="text-xs text-gray-500" title="Payable by the recipient under reverse charge">RCM</span>
+                            <span class="text-xs text-gray-600" title="Payable by the recipient under reverse charge">RCM</span>
                         @else
                             {{ inr($lineTax) }}
                         @endif
@@ -226,7 +221,7 @@
     </table>
     </div>
 
-    <div class="grid grid-cols-2 gap-8 mt-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mt-6 print:grid-cols-2">
         <div class="text-sm">
             <strong>Amount in words:</strong><br>
             <em>{{ $amountInWords }}</em>
@@ -244,7 +239,7 @@
 
             @if ($c->declaration)
                 <div class="mt-3 pl-3 border-l-2 border-gray-300 text-xs text-gray-700">
-                    <div class="font-semibold uppercase text-[10px] tracking-wider text-gray-500 mb-1">Declaration</div>
+                    <div class="font-semibold text-xs text-gray-500 mb-1">Declaration</div>
                     <em>{{ $c->declaration }}</em>
                 </div>
             @endif
@@ -269,9 +264,15 @@
                 @if ((float) $invoice->round_off != 0)
                     <tr><td class="py-1">Round off</td><td class="py-1 text-right font-mono">{{ inr($invoice->round_off) }}</td></tr>
                 @endif
-                <tr class="border-t"><td class="py-1.5 font-bold">Grand Total</td><td class="py-1.5 text-right font-mono font-bold">{{ $currencySymbol }}{{ inr($invoice->grand_total) }}</td></tr>
-                @if ((float) $invoice->paid_amount > 0)
-                    <tr><td class="py-1 text-gray-600">Paid</td><td class="py-1 text-right font-mono text-gray-600">{{ inr($invoice->paid_amount) }}</td></tr>
+                <tr class="border-t"><td class="py-1.5 font-bold">Grand total</td><td class="py-1.5 text-right font-mono font-bold">{{ $currencySymbol }}{{ inr($invoice->grand_total) }}</td></tr>
+                @if ((float) $invoice->paid_amount > 0 || (float) $invoice->credited_amount > 0)
+                    {{-- Every amount that moves the balance is listed, so the rows add up. --}}
+                    @if ((float) $invoice->credited_amount > 0)
+                        <tr><td class="py-1 text-gray-600">Less credit notes</td><td class="py-1 text-right font-mono text-gray-600">{{ $currencySymbol }}{{ inr($invoice->credited_amount) }}</td></tr>
+                    @endif
+                    @if ((float) $invoice->paid_amount > 0)
+                        <tr><td class="py-1 text-gray-600">Paid</td><td class="py-1 text-right font-mono text-gray-600">{{ $currencySymbol }}{{ inr($invoice->paid_amount) }}</td></tr>
+                    @endif
                     @php
                         // Negative balance = customer overpaid; show sign BEFORE the currency
                         // symbol (Indian accounting convention) and relabel as "Advance" so
@@ -291,7 +292,8 @@
 
     @php
         $payableAmount = (float) ($invoice->balance ?? $invoice->grand_total);
-        $showUpiQr = $c->upi_id && $payableAmount > 0;
+        // No QR and no "pay" wording on a cancelled invoice: it is not owed.
+        $showUpiQr = $c->upi_id && $payableAmount > 0 && ! $invoice->isCancelled();
         $qrDataUri = $showUpiQr
             ? \App\Support\UpiQr::svgDataUri($c->upi_id, $c->name, $payableAmount, $invoice->invoice_number ?: 'Invoice', 180)
             : null;
@@ -299,7 +301,7 @@
 
     @if ($c->bank_name || $c->bank_account_number || $c->upi_id)
         <div class="mt-6 p-4 bg-gray-50 rounded text-sm">
-            <div class="text-xs font-semibold uppercase text-gray-500">Bank details for payment</div>
+            <div class="text-xs font-semibold uppercase text-gray-500">{{ $invoice->isCancelled() ? 'Bank details' : 'Bank details for payment' }}</div>
             <div class="mt-2 flex gap-4 items-start">
                 <div class="flex-1 grid grid-cols-2 gap-y-1 gap-x-6 text-xs">
                     @if ($c->bank_account_name)
@@ -325,7 +327,7 @@
                     <div class="pl-4 border-l border-gray-200 text-center">
                         <img src="{{ $qrDataUri }}" alt="UPI QR" style="width: 84px; height: 84px; display: block;">
                         <div class="mt-1 text-xs text-gray-600">Scan to pay {{ $currencySymbol }}{{ inr($payableAmount) }}</div>
-                        <div class="text-[10px] text-gray-500">Any UPI app · GPay · PhonePe · Paytm</div>
+                        <div class="text-xs text-gray-500">Any UPI app</div>
                     </div>
                 @endif
             </div>
@@ -346,7 +348,7 @@
         </div>
     @endif
 
-    <div class="mt-10 flex justify-between items-end text-sm">
+    <div class="mt-10 flex flex-wrap justify-between items-end gap-6 text-sm">
         <div class="text-xs text-gray-500">
             <div><strong>E. &amp; O.E.</strong> (Errors &amp; Omissions Excepted)</div>
             <div class="mt-0.5">Subject to <strong>{{ $c->city ?: 'India' }}</strong> jurisdiction</div>

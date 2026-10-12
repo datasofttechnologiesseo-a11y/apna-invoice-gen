@@ -35,7 +35,7 @@ class GuidanceTest extends TestCase
 
         $this->assertStringContainsString('commandSearch(', $html);
         $destinations = collect($this->destinations($html))->keyBy('label');
-        foreach (['GSTR-1', 'Bank reconciliation', 'Add customer', 'Receivables aging', 'Take the tour'] as $label) {
+        foreach (['GSTR-1', 'Bank reconciliation', 'New customer', 'Receivables aging', 'Take the tour'] as $label) {
             $this->assertTrue($destinations->has($label), $label);
         }
         $this->assertSame(route('finance.gstr1'), $destinations['GSTR-1']['url']);
@@ -62,7 +62,7 @@ class GuidanceTest extends TestCase
         $labels = array_column($this->destinations($html), 'label');
 
         $this->assertContains('New invoice', $labels);
-        $this->assertContains('Add customer', $labels);
+        $this->assertContains('New customer', $labels);
         $this->assertNotContains('GSTR-1', $labels);
         $this->assertNotContains('Purchase invoices', $labels);
         $this->assertNotContains('Bank reconciliation', $labels);

@@ -72,13 +72,22 @@ class OnboardingController extends Controller
             'bank_account_name' => ['nullable', 'string', 'max:120'],
             'bank_account_number' => ['nullable', 'string', 'max:30'],
             'bank_account_type' => ['nullable', 'in:savings,current'],
-            'bank_ifsc' => ['nullable', 'string', 'max:15'],
+            'bank_ifsc' => ['nullable', 'string', 'max:15', 'regex:/^\s*[A-Za-z]{4}0[A-Za-z0-9]{6}\s*$/'],
             'bank_branch' => ['nullable', 'string', 'max:120'],
-            'upi_id' => ['nullable', 'string', 'max:60'],
+            'upi_id' => ['nullable', 'string', 'max:60', 'regex:/^\s*[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{1,64}\s*$/'],
         ], [
             'address_line1.required_with' => 'A GST tax invoice must show your registered address. Add it, or clear the GSTIN and add both later.',
             'city.required_with' => 'City is required on GST tax invoices when a GSTIN is set.',
+            'bank_ifsc.regex' => 'IFSC should be 11 characters: 4 letters, a zero, then 6 letters or digits (e.g. SBIN0001234).',
+            'upi_id.regex' => 'UPI ID should look like name@bank (e.g. sharmatraders@okicici).',
         ]);
+
+        if (! empty($data['bank_ifsc'])) {
+            $data['bank_ifsc'] = strtoupper(trim($data['bank_ifsc']));
+        }
+        if (! empty($data['upi_id'])) {
+            $data['upi_id'] = trim($data['upi_id']);
+        }
 
         $data['invoice_prefix'] = trim((string) ($data['invoice_prefix'] ?? ''))
             ?: ($company->invoice_prefix ?: 'INV');

@@ -51,7 +51,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="Free Billing Software India"
+    title="Free billing software for India"
     eyebrow="Free tool"
     lead="Run your billing on any phone or computer: GST bills with auto CGST/SGST/IGST, counter bills on thermal receipts, UPI QR and WhatsApp share. Free, with nothing to install."
     description="Free billing software for Indian shops and MSMEs. Make GST bills with automatic CGST, SGST and IGST, print counter bills and track dues online."

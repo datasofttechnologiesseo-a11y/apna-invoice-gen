@@ -13,7 +13,7 @@
     $teamRole = \App\Support\Team::membership()?->roleLabel();
 @endphp
 <header class="sticky top-0 z-30 h-14 bg-white/95 backdrop-blur border-b border-gray-200 flex items-center gap-2 px-3 sm:px-4 print:hidden">
-    <button type="button" @click="drawer = true" class="lg:hidden p-2 -ml-1 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Open menu" aria-controls="app-sidebar" :aria-expanded="drawer.toString()">
+    <button type="button" @click="drawer = true" class="lg:hidden inline-flex items-center justify-center w-10 h-10 -ml-1 rounded-md text-gray-600 hover:bg-gray-100" aria-label="Open menu" aria-controls="app-sidebar" :aria-expanded="drawer.toString()">
         <svg class="w-6 h-6" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
 
@@ -38,7 +38,7 @@
             }
         }
     @endphp
-    <x-command-search :action="route($search[0])" :placeholder="'Search ' . $search[1] . ' or a page, e.g. GSTR-1'" :noun="$search[1]"
+    <x-command-search :action="route($search[0])" :placeholder="'Search ' . $search[1] . ' or a page, e.g. GSTR-1'" short-placeholder="Search" :noun="$search[1]"
                       :value="request()->routeIs($search[0]) ? (string) request('search') : ''" />
 
     <div class="ml-auto flex items-center gap-1.5">
@@ -48,12 +48,12 @@
                 <button type="button" data-tour="company" title="Active firm: {{ $activeCompany->name }}" class="hidden sm:inline-flex items-center gap-2 h-9 px-2.5 text-sm rounded-md text-gray-700 border border-gray-300 hover:bg-gray-50 max-w-[14rem]">
                     <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     <span class="truncate font-semibold text-xs">{{ $activeCompany->name }}</span>
-                    @if ($teamRole)<span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-accent-100 text-accent-800 font-bold">{{ $teamRole }}</span>@endif
+                    @if ($teamRole)<span class="shrink-0 text-xs px-1.5 py-0.5 rounded bg-accent-100 text-accent-800 font-semibold">{{ $teamRole }}</span>@endif
                     <svg class="w-3.5 h-3.5 text-gray-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
                 </button>
             </x-slot>
             <x-slot name="content">
-                <div class="px-3 py-2 text-[11px] text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-100">Switch firm</div>
+                <div class="px-4 py-2 text-xs text-gray-500 font-semibold border-b border-gray-100">Switch firm</div>
                 @foreach ($myCompanies as $c)
                     @if ($c->id === $activeCompany->id)
                         <div class="flex items-center gap-2 px-4 py-2 text-sm text-brand-700 font-semibold bg-brand-50">
@@ -67,18 +67,18 @@
                     @endif
                 @endforeach
                 @if ($joinedCompanies->isNotEmpty())
-                    <div class="px-3 py-2 text-[11px] text-gray-500 uppercase tracking-wider font-semibold border-y border-gray-100">As a team member</div>
+                    <div class="px-4 py-2 text-xs text-gray-500 font-semibold border-y border-gray-100">As a team member</div>
                     @foreach ($joinedCompanies as $m)
                         @if ($m->company->id === $activeCompany->id)
                             <div class="flex items-center gap-2 px-4 py-2 text-sm text-brand-700 font-semibold bg-brand-50">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                <span class="truncate">{{ $m->company->name }}</span><span class="ml-auto text-[10px] text-gray-500">{{ $m->roleLabel() }}</span>
+                                <span class="truncate">{{ $m->company->name }}</span><span class="ml-auto text-xs text-gray-500">{{ $m->roleLabel() }}</span>
                             </div>
                         @else
                             <form method="POST" action="{{ route('companies.switch', $m->company) }}">
                                 @csrf
                                 <button type="submit" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                                    <span class="truncate">{{ $m->company->name }}</span><span class="ml-auto text-[10px] text-gray-500">{{ $m->roleLabel() }}</span>
+                                    <span class="truncate">{{ $m->company->name }}</span><span class="ml-auto text-xs text-gray-500">{{ $m->roleLabel() }}</span>
                                 </button>
                             </form>
                         @endif
@@ -96,24 +96,24 @@
         {{-- + New --}}
         <x-dropdown align="right" width="w-56">
             <x-slot name="trigger">
-                <button type="button" aria-label="New" data-tour="new" class="inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-semibold text-white bg-brand-700 hover:bg-brand-800 shadow-sm">
+                <button type="button" aria-label="New" data-tour="new" class="inline-flex items-center justify-center gap-1.5 h-10 min-w-[2.5rem] sm:h-9 px-2.5 sm:px-3 rounded-md text-sm font-semibold text-white bg-brand-700 hover:bg-brand-800 shadow-sm">
                     <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     <span class="hidden sm:inline">New</span>
                 </button>
             </x-slot>
             <x-slot name="content">
-                <div class="px-4 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider font-bold">Sales</div>
-                @if (\App\Support\Team::can('invoices.create'))<x-dropdown-link :href="route('invoices.create')">Invoice <span class="float-right text-[10px] text-gray-500 font-mono">Alt+N</span></x-dropdown-link>@endif
+                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold">Sales</div>
+                @if (\App\Support\Team::can('invoices.create'))<x-dropdown-link :href="route('invoices.create')">Invoice <span class="float-right text-[10px] text-gray-500 font-mono" aria-hidden="true">Alt+N</span></x-dropdown-link>@endif
                 @if (\App\Support\Team::can('quotations.create'))<x-dropdown-link :href="route('quotations.create')">Quotation</x-dropdown-link>@endif
-                <div class="px-4 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider font-bold border-t border-gray-100">Purchases</div>
+                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold border-t border-gray-100">Purchases</div>
                 @if (\App\Support\Team::can('purchases.create'))<x-dropdown-link :href="route('purchases.create')">Purchase invoice</x-dropdown-link>@endif
                 @if (\App\Support\Team::can('finance.expenses.create'))<x-dropdown-link :href="route('finance.expenses.create')">Expense</x-dropdown-link>@endif
                 @if (\App\Support\Team::can('finance.cash-memos.create'))<x-dropdown-link :href="route('finance.cash-memos.create')">Cash memo</x-dropdown-link>@endif
-                <div class="px-4 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider font-bold border-t border-gray-100">Parties &amp; items</div>
+                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold border-t border-gray-100">Parties &amp; items</div>
                 @if (\App\Support\Team::can('customers.create'))<x-dropdown-link :href="route('customers.create')">Customer</x-dropdown-link>@endif
                 @if (\App\Support\Team::can('vendors.create'))<x-dropdown-link :href="route('vendors.create')">Vendor</x-dropdown-link>@endif
-                @if (\App\Support\Team::can('products.create'))<x-dropdown-link :href="route('products.create')">Item (product / service)</x-dropdown-link>@endif
-                <div class="px-4 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider font-bold border-t border-gray-100">Banking &amp; GST</div>
+                @if (\App\Support\Team::can('products.create'))<x-dropdown-link :href="route('products.create')">Item</x-dropdown-link>@endif
+                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold border-t border-gray-100">Banking &amp; GST</div>
                 @if (\App\Support\Team::can('bank.index'))<x-dropdown-link :href="route('bank.index')">Upload bank statement</x-dropdown-link>@endif
                 @if (\App\Support\Team::can('finance.gstr2b'))<x-dropdown-link :href="route('finance.gstr2b')">Upload GSTR-2B</x-dropdown-link>@endif
             </x-slot>
@@ -124,7 +124,7 @@
             @php $helpAnchor = \App\Support\AppDestinations::helpAnchor(); @endphp
             <a href="{{ route('help') }}{{ $helpAnchor ? '#' . $helpAnchor : '' }}" data-tour="help"
                title="Help with this page" aria-label="Help with this page"
-               class="inline-flex items-center justify-center w-9 h-9 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-brand-700 transition">
+               class="inline-flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-brand-700 transition">
                 <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </a>
         @endif
@@ -143,20 +143,22 @@
         {{-- Account --}}
         <x-dropdown align="right" width="48">
             <x-slot name="trigger">
-                <button type="button" class="inline-flex items-center gap-1 p-1 rounded-md hover:bg-gray-100" aria-label="Account menu" title="{{ Auth::user()->name }}">
-                    <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-sm">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                <button type="button" class="inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-100" aria-label="Account menu" title="{{ $realUser->name }}">
+                    <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-sm">{{ strtoupper(substr($realUser->name, 0, 1)) }}</span>
                 </button>
             </x-slot>
             <x-slot name="content">
                 <div class="px-4 py-3 border-b border-gray-100">
-                    <div class="text-sm font-semibold text-gray-900 truncate">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</div>
+                    <div class="text-sm font-semibold text-gray-900 truncate">{{ $realUser->name }}</div>
+                    <div class="text-xs text-gray-500 truncate">{{ $realUser->email }}</div>
                 </div>
                 @if (\App\Support\Team::can('profile.edit'))<x-dropdown-link :href="route('profile.edit')">Profile</x-dropdown-link>@endif
+                @if (\App\Support\Team::can('company.edit'))<x-dropdown-link :href="route('company.edit')">Company settings</x-dropdown-link>@endif
                 @if (\App\Support\Team::can('profile.activity'))<x-dropdown-link :href="route('profile.activity')">Activity log</x-dropdown-link>@endif
+                @if (\App\Support\Team::can('referrals.index'))<x-dropdown-link :href="route('referrals.index')">Refer a friend</x-dropdown-link>@endif
+                <div class="border-t border-gray-100"></div>
                 @if (\App\Support\Team::can('help'))<x-dropdown-link :href="route('help')">Help</x-dropdown-link>@endif
                 <x-dropdown-link :href="\App\Support\Team::can('dashboard') ? route('dashboard', ['tour' => 1]) : route('invoices.index', ['tour' => 1])">Take the tour</x-dropdown-link>
-                @if (\App\Support\Team::can('referrals.index'))<x-dropdown-link :href="route('referrals.index')">Refer a friend</x-dropdown-link>@endif
                 <div class="border-t border-gray-100">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

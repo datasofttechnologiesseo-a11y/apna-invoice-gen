@@ -1,6 +1,6 @@
-@php $effective = 'April 18, 2026'; @endphp
+@php $effective = '18 April 2026'; @endphp
 <x-layouts.marketing
-    title="Refund Policy"
+    title="Refund policy"
     eyebrow="Legal"
     lead="Fair, predictable refunds. While the Service is free during beta, this policy applies once paid plans launch."
     description="Our refund policy: 14-day money-back on annual plans, rules for monthly cancellations and duplicate charges, GST credit notes, and how long refunds take."

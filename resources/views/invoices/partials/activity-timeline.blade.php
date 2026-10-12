@@ -33,9 +33,9 @@
             'display' => $payment->received_at ?? $payment->created_at,
             'icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
             'tone' => 'money',
-            'title' => '₹' . rupees($payment->amount) . ' received',
+            'title' => '₹' . inr($payment->amount) . ' received',
             'sub' => trim(
-                ($payment->method ? ucfirst(str_replace('_', ' ', $payment->method)) : 'Payment')
+                ($payment->method ? $payment->methodLabel() : 'Payment')
                 . ($payment->receipt_number ? ' · Receipt ' . $payment->receipt_number : '')
                 . ($payment->reference_number ? ' · Ref ' . $payment->reference_number : '')
             ),
@@ -49,7 +49,7 @@
             'icon' => 'M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
             'tone' => 'accent',
             'title' => 'Credit note ' . ($cn->credit_note_number ?? '#' . $cn->id) . ' issued',
-            'sub' => '₹' . rupees((float) $cn->amount) . ' credited to customer',
+            'sub' => '₹' . inr((float) $cn->amount) . ' credited to customer',
         ];
     }
 
@@ -90,53 +90,52 @@
     ];
 @endphp
 
-<div x-data="{ open: {{ $invoice->isDraft() || count($events) <= 2 ? 'false' : 'true' }} }"
-     class="bg-white rounded-2xl shadow-card ring-1 ring-gray-200 overflow-hidden">
+<div x-data="{ open: {{ count($events) <= 4 ? 'true' : 'false' }} }"
+     class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
     <button type="button"
             @click="open = !open"
-            class="w-full flex items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 transition"
+            class="w-full flex items-center justify-between gap-3 px-4 py-3 min-h-[48px] hover:bg-gray-50 transition"
             :class="open ? 'border-b border-gray-100' : ''"
             :aria-expanded="open.toString()">
-        <div class="flex items-center gap-2 min-w-0">
-            <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <h3 class="font-display font-bold text-gray-900 truncate">Activity</h3>
-            <span class="text-[11px] uppercase tracking-wider font-bold text-gray-500 shrink-0">{{ count($events) }} {{ count($events) === 1 ? 'event' : 'events' }}</span>
-        </div>
-        <svg class="w-4 h-4 text-gray-500 transition" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        <span class="flex items-baseline gap-2 min-w-0">
+            <span class="font-semibold text-gray-900">Activity</span>
+            <span class="text-xs text-gray-500 shrink-0">{{ count($events) }} {{ count($events) === 1 ? 'event' : 'events' }}</span>
+        </span>
+        <svg class="w-4 h-4 text-gray-500 transition" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
     </button>
 
-    {{-- Hidden semantic list for screen readers / search engines --}}
+    {{-- Hidden semantic list for screen readers --}}
     <ol class="sr-only">
         @foreach ($events as $e)
             <li>{{ $e['title'] }} on {{ $e['when']?->format('d M Y') }}</li>
         @endforeach
     </ol>
 
-    <div x-show="open" x-cloak x-transition.duration.150ms>
-        <ol class="relative px-5 py-5 space-y-5">
+    <div x-show="open" x-cloak>
+        <ol class="relative px-4 py-4 space-y-4" aria-hidden="true">
             {{-- Vertical connector line behind the icons --}}
-            <div class="absolute left-[33px] top-7 bottom-7 w-px bg-gray-200" aria-hidden="true"></div>
+            <div class="absolute left-[29px] top-6 bottom-6 w-px bg-gray-200"></div>
 
             @foreach ($events as $i => $e)
                 @php $t = $tones[$e['tone']] ?? $tones['gray']; @endphp
-                <li class="relative flex items-start gap-4">
-                    <div class="relative z-10 shrink-0 w-10 h-10 rounded-full flex items-center justify-center {{ $t['bg'] }} ring-4 ring-white">
-                        <svg class="w-5 h-5 {{ $t['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <li class="relative flex items-start gap-3">
+                    <div class="relative z-10 shrink-0 w-7 h-7 rounded-full flex items-center justify-center {{ $t['bg'] }} ring-4 ring-white">
+                        <svg class="w-4 h-4 {{ $t['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="{{ $e['icon'] }}"/>
                         </svg>
                     </div>
                     @php $shown = $e['display'] ?? $e['when']; @endphp
-                    <div class="min-w-0 flex-1 pt-1.5">
-                        <div class="flex items-baseline justify-between gap-3 flex-wrap">
-                            <div class="font-semibold text-gray-900">{{ $e['title'] }}</div>
+                    <div class="min-w-0 flex-1 pt-0.5">
+                        <div class="flex items-baseline justify-between gap-2 flex-wrap">
+                            <div class="text-sm font-semibold text-gray-900">{{ $e['title'] }}</div>
                             <time class="text-xs text-gray-500 tabular-nums whitespace-nowrap"
                                   datetime="{{ $shown?->toIso8601String() }}"
                                   title="{{ $shown?->format('d M Y, h:i A') }}">
-                                {{ $shown?->diffForHumans() }}
+                                {{ $shown?->format('d M Y') }}
                             </time>
                         </div>
                         @if (! empty($e['sub']))
-                            <div class="text-sm text-gray-500 mt-0.5">{{ $e['sub'] }}</div>
+                            <div class="text-xs text-gray-600 mt-0.5">{{ $e['sub'] }}</div>
                         @endif
                     </div>
                 </li>

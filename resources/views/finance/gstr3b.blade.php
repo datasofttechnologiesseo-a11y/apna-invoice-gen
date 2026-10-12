@@ -1,27 +1,23 @@
 <x-app-layout title="GSTR-3B summary">
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Reports', 'href' => route('reports.index')],
+            ['label' => 'GSTR-3B summary'],
+        ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-3B Summary</h1>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-3B summary</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $periodLabel }} · {{ $company->name }}</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 print:hidden">
-                <a href="{{ route('finance.gstr3b.export.pdf', $period->query()) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-money-600 hover:bg-money-700 text-white text-sm font-semibold rounded shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Download PDF
-                </a>
-                <a href="{{ route('finance.gstr3b.export.csv', $period->query()) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
-                    Excel / CSV
-                </a>
-            </div>
+            <x-export-toolbar
+                :pdf="route('finance.gstr3b.export.pdf', $period->query())"
+                :csv="route('finance.gstr3b.export.csv', $period->query())"
+                print="window" />
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6 sm:py-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             {{-- Finance section tabs --}}
             <div class="print:hidden">
@@ -44,98 +40,96 @@
 
             {{-- ─── Counters strip ─── --}}
             <div class="grid grid-cols-3 gap-3">
-                <div class="p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Invoices in period</div>
+                <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
+                    <div class="text-xs font-medium text-gray-600">Invoices in period</div>
                     <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $invoiceCount }}</div>
                 </div>
-                <div class="p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Expenses in period</div>
+                <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
+                    <div class="text-xs font-medium text-gray-600">Expenses in period</div>
                     <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $expenseCount }}</div>
                 </div>
-                <div class="p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Cash memos</div>
+                <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
+                    <div class="text-xs font-medium text-gray-600">Cash memos</div>
                     <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $cashMemoCount }}</div>
                 </div>
             </div>
 
             {{-- ═══ Section 3.1 - Outward + RCM supplies ═══ --}}
-            <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                <div class="px-5 py-4 bg-gradient-to-r from-brand-700 to-brand-800 text-white">
-                    <div class="text-[10px] uppercase tracking-widest font-bold text-accent-300">Section 3.1</div>
-                    <h2 class="font-display text-lg font-extrabold">Details of outward supplies and inward supplies liable to reverse charge</h2>
+            @php
+                // [label, note, taxable, igst, cgst, sgst, cess]; null = not applicable (shown as –).
+                $rows31 = [
+                    ['(a)', 'Outward taxable supplies', 'other than zero rated, nil rated and exempted', $outward['taxable'], $outward['igst'], $outward['cgst'], $outward['sgst'], 0],
+                    ['(b)', 'Outward taxable supplies', 'zero rated: exports, SEZ', $outward_zero['taxable'], $outward_zero['igst'], 0, 0, 0],
+                    ['(c)', 'Other outward supplies', 'nil rated, exempted', $outward_nil, null, null, null, null],
+                    ['(d)', 'Inward supplies', 'liable to reverse charge', $rcm_inward['taxable'], $rcm_inward['igst'], $rcm_inward['cgst'], $rcm_inward['sgst'], 0],
+                    ['(e)', 'Non-GST outward supplies', null, 0, null, null, null, null],
+                ];
+                $heads31 = ['Taxable value', 'IGST', 'CGST', 'SGST', 'Cess'];
+                $show = fn ($v) => $v === null ? '–' : rupees($v);
+            @endphp
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g3b-31">
+                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+                    <div class="text-xs font-semibold text-brand-700">Section 3.1</div>
+                    <h2 id="g3b-31" class="font-display text-base sm:text-lg font-bold text-gray-900">Details of outward supplies and inward supplies liable to reverse charge</h2>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm min-w-[700px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                             <tr>
-                                <th class="px-5 py-3 text-left font-semibold">Nature of supplies</th>
-                                <th class="px-5 py-3 text-right font-semibold">Taxable value (₹)</th>
-                                <th class="px-5 py-3 text-right font-semibold">IGST (₹)</th>
-                                <th class="px-5 py-3 text-right font-semibold">CGST (₹)</th>
-                                <th class="px-5 py-3 text-right font-semibold">SGST (₹)</th>
-                                <th class="px-5 py-3 text-right font-semibold">Cess (₹)</th>
+                                <th class="px-4 py-3 text-left">Nature of supplies</th>
+                                @foreach ($heads31 as $h)
+                                    <th class="px-4 py-3 text-right whitespace-nowrap">{{ $h }} (₹)</th>
+                                @endforeach
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            <tr class="bg-money-50/30">
-                                <td class="px-5 py-3"><strong>(a)</strong> Outward taxable supplies <span class="text-xs text-gray-500">(other than zero rated, nil rated and exempted)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ rupees($outward['taxable']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($outward['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($outward['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($outward['sgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                            </tr>
-                            <tr>
-                                <td class="px-5 py-3"><strong>(b)</strong> Outward taxable supplies <span class="text-xs text-gray-500">(zero rated: exports, SEZ)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums {{ $outward_zero['taxable'] ? 'font-semibold' : 'text-gray-500' }}">{{ rupees($outward_zero['taxable']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums {{ $outward_zero['igst'] ? '' : 'text-gray-500' }}">{{ rupees($outward_zero['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                            </tr>
-                            <tr>
-                                <td class="px-5 py-3"><strong>(c)</strong> Other outward supplies <span class="text-xs text-gray-500">(Nil rated, exempted)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums {{ $outward_nil ? 'font-semibold' : 'text-gray-500' }}">{{ rupees($outward_nil) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                            </tr>
-                            <tr class="bg-accent-50/40">
-                                <td class="px-5 py-3"><strong>(d)</strong> Inward supplies <span class="text-xs text-gray-500">(liable to reverse charge)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">{{ rupees($rcm_inward['taxable']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($rcm_inward['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($rcm_inward['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($rcm_inward['sgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                            </tr>
-                            <tr>
-                                <td class="px-5 py-3"><strong>(e)</strong> Non-GST outward supplies</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
-                            </tr>
+                            @foreach ($rows31 as [$code, $label, $note, $taxable, $igst, $cgst, $sgst, $cess])
+                                <tr>
+                                    <td class="px-4 py-3"><strong>{{ $code }}</strong> {{ $label }} @if ($note)<span class="text-xs text-gray-500">({{ $note }})</span>@endif</td>
+                                    @foreach ([$taxable, $igst, $cgst, $sgst, $cess] as $i => $v)
+                                        <td class="px-4 py-3 text-right tabular-nums whitespace-nowrap {{ $v === null || (float) $v == 0.0 ? 'text-gray-400' : ($i === 0 ? 'font-semibold text-gray-900' : 'text-gray-900') }}">{{ $show($v) }}</td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
-                <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
+                {{-- Phones: one block per row, every amount visible without scrolling. --}}
+                <ul class="sm:hidden divide-y divide-gray-100">
+                    @foreach ($rows31 as [$code, $label, $note, $taxable, $igst, $cgst, $sgst, $cess])
+                        <li class="px-4 py-3">
+                            <div class="text-sm"><strong>{{ $code }}</strong> {{ $label }}</div>
+                            @if ($note)<div class="text-xs text-gray-500">{{ ucfirst($note) }}</div>@endif
+                            <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                @foreach ([$taxable, $igst, $cgst, $sgst] as $i => $v)
+                                    <div class="flex items-baseline justify-between gap-2">
+                                        <dt class="text-xs text-gray-500">{{ $heads31[$i] }}</dt>
+                                        <dd class="tabular-nums {{ $v === null || (float) $v == 0.0 ? 'text-gray-400' : 'font-medium text-gray-900' }}">{{ $show($v) }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="px-4 sm:px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
                     Matches GSTR-1: issued invoices less credit notes dated in the period, excluding drafts and cancelled invoices. Lines at 0% are in (c) as nil rated; exports and SEZ supplies are in (b).
                     Sales where your <strong>customer</strong> pays tax under reverse charge are not part of 3.1 and go in GSTR-1 only.
-                    Row (e) is always zero here. Enter non-GST supplies on the portal.
+                    Row (e) is always zero here. Enter non-GST supplies on the portal. Cess is not computed and shows as zero.
                 </div>
             </section>
 
             {{-- ═══ Section 4 - Eligible ITC ═══ --}}
-            <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                <div class="px-5 py-4 bg-gradient-to-r from-money-700 to-money-800 text-white">
-                    <div class="text-[10px] uppercase tracking-widest font-bold text-money-200">Section 4</div>
-                    <h2 class="font-display text-lg font-extrabold">Eligible ITC</h2>
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g3b-4">
+                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+                    <div class="text-xs font-semibold text-brand-700">Section 4</div>
+                    <h2 id="g3b-4" class="font-display text-base sm:text-lg font-bold text-gray-900">Eligible ITC</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm min-w-[600px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                    {{-- Phones: tighter cells and no Cess column (always zero), so
+                         the three tax heads fit without scrolling. Frame only:
+                         the rows below are unchanged. --}}
+                    <table class="w-full text-sm [&_th]:px-2.5 [&_td]:px-2.5 sm:[&_th]:px-5 sm:[&_td]:px-5 [&_th:last-child]:hidden [&_td:last-child]:hidden sm:[&_th:last-child]:table-cell sm:[&_td:last-child]:table-cell [&_td]:align-top">
+                        <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                             <tr>
                                 <th class="px-5 py-3 text-left font-semibold">Details</th>
                                 <th class="px-5 py-3 text-right font-semibold">IGST (₹)</th>
@@ -183,6 +177,61 @@
                         Add the supplier's GSTIN, or untick "ITC eligible" on those entries.
                     </div>
                 @endif
+                {{-- s.16(2)(aa): credit on a supplier's invoice can be claimed only once it
+                     appears in GSTR-2B. The figures above are from the books; this says
+                     how much of that 2B confirms, so the books figure is not copied
+                     into the return as it is. --}}
+                @php $g2b = $itc_2b ?? null; @endphp
+                @if ($g2b)
+                    <div class="px-4 sm:px-5 py-4 border-t border-gray-200" aria-labelledby="g3b-2b">
+                        <h3 id="g3b-2b" class="text-sm font-semibold text-gray-900">Checked against GSTR-2B</h3>
+                        <p class="mt-0.5 text-xs text-gray-600">
+                            From the GSTR-2B uploaded for {{ collect($g2b['uploaded'])->map(fn ($m) => \Illuminate\Support\Carbon::createFromFormat('!Y-m', $m)->format('M Y'))->join(', ', ' and ') }}.
+                            @if ($g2b['not_uploaded'])
+                                Not uploaded yet for {{ collect($g2b['not_uploaded'])->map(fn ($m) => \Illuminate\Support\Carbon::createFromFormat('!Y-m', $m)->format('M Y'))->join(', ', ' and ') }}.
+                            @endif
+                        </p>
+                        <dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <dt class="text-gray-700">Supplier invoices found in 2B</dt>
+                                <dd class="font-mono tabular-nums text-money-800 font-semibold">₹{{ inr($g2b['in_2b']['total']) }}</dd>
+                            </div>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <dt class="text-gray-700">Reverse charge you paid <span class="text-xs text-gray-500">(not in 2B, claimable)</span></dt>
+                                <dd class="font-mono tabular-nums">₹{{ inr($g2b['rcm']['total']) }}</dd>
+                            </div>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <dt class="text-gray-700">In your books, not in 2B yet <span class="text-xs text-gray-500">(hold until the supplier files)</span></dt>
+                                <dd class="font-mono tabular-nums {{ $g2b['not_in_2b']['total'] > 0 ? 'text-accent-800 font-semibold' : '' }}">₹{{ inr($g2b['not_in_2b']['total']) }}</dd>
+                            </div>
+                            <div class="flex items-baseline justify-between gap-3">
+                                <dt class="text-gray-700">Expenses and cash memos <span class="text-xs text-gray-500">(check on the GST portal)</span></dt>
+                                <dd class="font-mono tabular-nums">₹{{ inr($g2b['unchecked']['total']) }}</dd>
+                            </div>
+                        </dl>
+                        <div class="mt-3 rounded-lg ring-1 ring-money-200 bg-money-50 px-4 py-3 text-sm text-gray-800">
+                            <strong>Credit confirmed for this return: ₹{{ inr($g2b['confirmed']['total']) }}</strong>
+                            <span class="text-gray-600">(IGST ₹{{ inr($g2b['confirmed']['igst']) }} · CGST ₹{{ inr($g2b['confirmed']['cgst']) }} · SGST ₹{{ inr($g2b['confirmed']['sgst']) }})</span>.
+                            Claiming only this, tax payable in cash would be <strong>₹{{ inr($g2b['cash_if_2b_only']['total']) }}</strong>.
+                            @if ($g2b['unchecked']['total'] > 0)
+                                Add the credit on expenses and cash memos only for the bills you can see in 2B on the portal.
+                            @endif
+                        </div>
+                        @if ($g2b['missing']['count'] > 0)
+                            <p class="mt-2 text-xs text-gray-600">
+                                {{ $g2b['missing']['count'] }} {{ \Illuminate\Support\Str::plural('document', $g2b['missing']['count']) }} in 2B
+                                (₹{{ inr($g2b['missing']['tax']) }} of tax) {{ $g2b['missing']['count'] === 1 ? 'is' : 'are' }} not in your books.
+                                <a href="{{ route('finance.gstr2b', ['month' => $g2b['uploaded'][0]]) }}" class="font-semibold text-brand-700 hover:underline">Review in GSTR-2B match</a>
+                            </p>
+                        @endif
+                    </div>
+                @else
+                    <div class="px-4 sm:px-5 py-3 border-t border-gray-200 text-sm text-gray-700">
+                        Credit can be claimed only once it appears in GSTR-2B (Section 16(2)(aa)).
+                        <a href="{{ route('finance.gstr2b', ['month' => $periodStart->format('Y-m')]) }}" class="font-semibold text-brand-700 hover:underline">Upload GSTR-2B for {{ $periodStart->format('M Y') }}</a>
+                        to see how much of this credit it confirms.
+                    </div>
+                @endif
                 <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
                     Includes cash memos with a seller GSTIN and expenses with GST input. Claim only ITC that matches GSTR-2B.
                     <span class="block mt-1">Excludes entries marked <strong>not eligible for ITC</strong>, such as blocked credit under Section 17(5) (motor vehicles, staff food and catering, personal use). Mark these on the expense or cash memo.</span>
@@ -190,65 +239,91 @@
             </section>
 
             {{-- ═══ Section 6.1 - Payment of tax ═══ --}}
-            <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                <div class="px-5 py-4 bg-gradient-to-r from-accent-700 to-accent-800 text-white">
-                    <div class="text-[10px] uppercase tracking-widest font-bold text-accent-200">Section 6.1</div>
-                    <h2 class="font-display text-lg font-extrabold">Payment of tax</h2>
+            @php
+                // Which credit paid which tax. Shown only while it adds up to
+                // the "paid through ITC" row above it.
+                $matrix = $setOffMatrix ?? null;
+                $matrixOk = is_array($matrix) && collect(['igst', 'cgst', 'sgst'])->every(fn ($h) =>
+                    abs(($matrix['igst'][$h] ?? 0) + ($matrix['cgst'][$h] ?? 0) + ($matrix['sgst'][$h] ?? 0) - (float) $itc_used[$h]) < 0.01);
+                $paise = fn ($v) => \App\Support\IndianNumber::format((float) $v, 2);
+                $cellNum = 'px-2.5 sm:px-5 py-3 text-right tabular-nums whitespace-nowrap';
+                $cellLabel = 'px-2.5 sm:px-5 py-3';
+            @endphp
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g3b-61">
+                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+                    <div class="text-xs font-semibold text-brand-700">Section 6.1</div>
+                    <h2 id="g3b-61" class="font-display text-base sm:text-lg font-bold text-gray-900">Payment of tax</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm min-w-[500px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                             <tr>
-                                <th class="px-5 py-3 text-left font-semibold">Description</th>
-                                <th class="px-5 py-3 text-right font-semibold">IGST (₹)</th>
-                                <th class="px-5 py-3 text-right font-semibold">CGST (₹)</th>
-                                <th class="px-5 py-3 text-right font-semibold">SGST (₹)</th>
+                                <th class="{{ $cellLabel }} text-left">Description</th>
+                                <th class="{{ $cellNum }}">IGST (₹)</th>
+                                <th class="{{ $cellNum }}">CGST (₹)</th>
+                                <th class="{{ $cellNum }}">SGST (₹)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             <tr>
-                                <td class="px-5 py-3 text-gray-700">Tax on outward supplies <span class="text-xs text-gray-500">(3.1(a) + (b))</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($liability['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($liability['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($liability['sgst']) }}</td>
+                                <td class="{{ $cellLabel }} text-gray-700">Tax on outward supplies <span class="text-xs text-gray-500">(3.1(a) + (b))</span></td>
+                                <td class="{{ $cellNum }}">{{ rupees($liability['igst']) }}</td>
+                                <td class="{{ $cellNum }}">{{ rupees($liability['cgst']) }}</td>
+                                <td class="{{ $cellNum }}">{{ rupees($liability['sgst']) }}</td>
                             </tr>
                             <tr>
-                                <td class="px-5 py-3 text-gray-700">Less: paid through ITC <span class="text-xs text-gray-500">(set-off order under Section 49(5), IGST credit first)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ rupees($itc_used['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ rupees($itc_used['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">−{{ rupees($itc_used['sgst']) }}</td>
+                                <td class="{{ $cellLabel }} text-gray-700">Less: paid through ITC <span class="text-xs text-gray-500">(Section 49(5): IGST credit first)</span></td>
+                                <td class="{{ $cellNum }} text-gray-900">−{{ rupees($itc_used['igst']) }}</td>
+                                <td class="{{ $cellNum }} text-gray-900">−{{ rupees($itc_used['cgst']) }}</td>
+                                <td class="{{ $cellNum }} text-gray-900">−{{ rupees($itc_used['sgst']) }}</td>
                             </tr>
+                            @if ($matrixOk && array_sum(array_map('array_sum', $matrix)) > 0)
+                                @foreach (['igst' => 'IGST', 'cgst' => 'CGST', 'sgst' => 'SGST'] as $credit => $creditLabel)
+                                    @continue(array_sum($matrix[$credit]) <= 0)
+                                    <tr class="bg-gray-50/60 text-xs text-gray-600">
+                                        <td class="{{ $cellLabel }} py-2 pl-5 sm:pl-10">from {{ $creditLabel }} credit</td>
+                                        @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                            <td class="{{ $cellNum }} py-2 {{ $matrix[$credit][$head] > 0 ? '' : 'text-gray-400' }}">{{ $matrix[$credit][$head] > 0 ? '−' . $paise($matrix[$credit][$head]) : '–' }}</td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            @endif
                             <tr>
-                                <td class="px-5 py-3 text-gray-700">Add: reverse charge on inward supplies <span class="text-xs text-gray-500">(3.1(d), payable in cash only)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">+{{ rupees($rcm_inward['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">+{{ rupees($rcm_inward['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">+{{ rupees($rcm_inward['sgst']) }}</td>
+                                <td class="{{ $cellLabel }} text-gray-700">Add: reverse charge on inward supplies <span class="text-xs text-gray-500">(3.1(d), payable in cash only)</span></td>
+                                <td class="{{ $cellNum }}">+{{ rupees($rcm_inward['igst']) }}</td>
+                                <td class="{{ $cellNum }}">+{{ rupees($rcm_inward['cgst']) }}</td>
+                                <td class="{{ $cellNum }}">+{{ rupees($rcm_inward['sgst']) }}</td>
                             </tr>
-                            <tr class="bg-accent-50 border-t-2 border-accent-300">
-                                <td class="px-5 py-3 font-bold text-accent-900">Net cash payable</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ rupees($netCash['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ rupees($netCash['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold text-accent-900">{{ rupees($netCash['sgst']) }}</td>
+                            <tr class="bg-gray-50 border-t-2 border-gray-300">
+                                <td class="{{ $cellLabel }} font-bold text-gray-900">Net cash payable</td>
+                                <td class="{{ $cellNum }} font-bold text-gray-900">{{ rupees($netCash['igst']) }}</td>
+                                <td class="{{ $cellNum }} font-bold text-gray-900">{{ rupees($netCash['cgst']) }}</td>
+                                <td class="{{ $cellNum }} font-bold text-gray-900">{{ rupees($netCash['sgst']) }}</td>
                             </tr>
                             @if ($itc_carried['total'] > 0)
                                 <tr>
-                                    <td class="px-5 py-3 text-gray-600">ITC carried forward <span class="text-xs text-gray-500">(unused credit, available next month)</span></td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ rupees($itc_carried['igst']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ rupees($itc_carried['cgst']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ rupees($itc_carried['sgst']) }}</td>
+                                    <td class="{{ $cellLabel }} text-gray-600">ITC carried forward <span class="text-xs text-gray-500">(unused credit, available next month)</span></td>
+                                    <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carried['igst']) }}</td>
+                                    <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carried['cgst']) }}</td>
+                                    <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carried['sgst']) }}</td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
                 </div>
-
-                {{-- Big total --}}
-                <div class="px-5 py-5 bg-gradient-to-r from-accent-100 to-accent-50 border-t border-accent-200 flex items-center justify-between flex-wrap gap-4">
-                    <div>
-                        <div class="text-[11px] uppercase tracking-widest font-bold text-accent-800">Total cash to deposit</div>
-                        <div class="text-xs text-accent-700 mt-0.5">IGST + CGST + SGST · Pay by PMT-06 challan on the GST portal</div>
+                @if ($matrixOk && array_sum(array_map('array_sum', $matrix)) > 0)
+                    <div class="px-4 sm:px-5 py-2.5 border-t border-gray-100 text-xs text-gray-500">
+                        The "from … credit" lines show which credit paid each tax, in rupees and paise. IGST credit is used first, on IGST and then on CGST and SGST; CGST and SGST credit go to their own head, then to IGST.
                     </div>
-                    <div class="font-display text-2xl sm:text-3xl font-extrabold text-accent-900 tabular-nums">₹{{ rupees($netCash['total']) }}</div>
+                @endif
+
+                {{-- Total --}}
+                <div class="px-4 sm:px-5 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">Total cash to deposit</div>
+                        <div class="text-xs text-gray-500 mt-0.5">IGST + CGST + SGST · pay by PMT-06 challan on the GST portal</div>
+                    </div>
+                    <div class="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($netCash['total']) }}</div>
                 </div>
             </section>
 

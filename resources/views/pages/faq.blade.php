@@ -14,7 +14,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="GST Invoicing FAQ for India"
+    title="GST invoicing FAQ for India"
     eyebrow="Help"
     lead="Creating GST invoices free with Apna Invoice: how it works, HSN/SAC and GST rates, credit notes, GSTR-1 exports, data safety and more."
     description="FAQs about Apna Invoice, the free GST invoice generator for India: creating invoices, HSN/SAC, CGST/SGST/IGST, credit notes, GSTR-1 and data safety."

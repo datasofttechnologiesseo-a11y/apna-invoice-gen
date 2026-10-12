@@ -1,20 +1,19 @@
 <x-app-layout title="Invoice templates">
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Choose a template</h1>
-                <p class="mt-1 text-sm text-gray-500">Samples use your company details. Everything stays editable before issue.</p>
-            </div>
-            <a href="{{ route('invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">← Back to invoices</a>
-        </div>
+        <x-breadcrumbs :items="[
+            ['label' => 'Invoices', 'href' => route('invoices.index')],
+            ['label' => 'Templates'],
+        ]" />
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Choose a template</h1>
+        <p class="mt-1 text-sm text-gray-600">Samples use your company details. Everything stays editable before issue.</p>
     </x-slot>
 
-    <div class="py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Top banner --}}
-            <div class="mb-8 p-5 rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-50 ring-1 ring-brand-100 flex items-start gap-4">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 text-white flex items-center justify-center flex-shrink-0 shadow-brand">
+            <div class="mb-6 p-4 sm:p-5 rounded-xl bg-brand-50 border border-brand-200 flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-brand-700 text-white flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 </div>
                 <div class="flex-1 text-sm">
@@ -66,7 +65,7 @@
                                 <div class="w-11 h-11 rounded-xl bg-white/20 ring-1 ring-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tpl['icon'] }}"/></svg>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full bg-white/20 ring-1 ring-white/30 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{{ $tpl['tag'] }}</span>
+                                <span class="px-2.5 py-1 rounded-full bg-white/20 ring-1 ring-white/30 text-xs font-semibold whitespace-nowrap">{{ $tpl['tag'] }}</span>
                             </div>
                             <h2 class="mt-3 font-display font-extrabold text-lg leading-tight">{{ $tpl['label'] }}</h2>
                             <p class="mt-1 text-white/85 text-sm leading-snug">{{ $tpl['tagline'] }}</p>
@@ -154,7 +153,7 @@
                                         <div class="font-medium text-gray-700">{{ $styleMeta['label'] }} style preview</div>
                                         <div class="mt-1 italic text-gray-500">Your line items, totals and terms appear here.</div>
                                         @if (! empty($tpl['items'][0]['gst_rate']))
-                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
+                                            <div class="mt-2 text-xs text-gray-600 font-medium">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
                                         @endif
                                     </div>
                                 @endif

@@ -1,28 +1,31 @@
 <x-app-layout title="Cash memos">
     <x-slot name="header">
+        <div class="print:hidden">
+            <x-breadcrumbs :items="[
+                ['label' => 'Expenses', 'href' => route('finance.expenses')],
+                ['label' => 'Cash memos'],
+            ]" />
+        </div>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Cash Memos</h1>
-                <p class="text-sm text-gray-500 mt-1">{{ $memos->total() }} total · {{ $company->name }}</p>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Cash memos</h1>
+                <p class="text-sm text-gray-600 mt-1">{{ $memos->total() }} total · {{ $company->name }}</p>
             </div>
             <div class="flex items-center gap-2 print:hidden">
-                <a href="{{ route('finance.expenses') }}" class="text-sm text-gray-500 hover:text-gray-700">← All expenses</a>
-                <a href="{{ route('finance.cash-memos.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ New cash memo</a>
+                <a href="{{ route('finance.cash-memos.create') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-md bg-brand-700 hover:bg-brand-800 text-white font-semibold text-sm whitespace-nowrap shadow-sm">New cash memo</a>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-            @if (session('status'))
-                <div class="p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm">{{ session('status') }}</div>
-            @endif
+    <div class="py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+            <div class="print:hidden"><x-flash /></div>
 
             <div class="print:hidden">
                 @include('finance.partials.tabs')
             </div>
 
-            <div class="bg-brand-50 border border-brand-200 rounded-lg p-4 text-sm text-brand-900 print:hidden">
+            <div class="bg-brand-50 border border-brand-200 rounded-xl p-4 text-sm text-brand-900 print:hidden">
                 <div class="font-semibold mb-1">Purchase voucher for cash purchases</div>
                 <p>Use when the seller does not issue a tax invoice, as with small or unregistered vendors. Each memo also creates a matching expense entry.</p>
             </div>
@@ -30,20 +33,20 @@
             <div class="bg-white p-4 rounded-xl border border-gray-200 print:hidden">
                 <form method="GET" class="flex flex-wrap items-end gap-3">
                     <div>
-                        <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Search</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Memo number or seller" class="w-56 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Memo number or seller">
+                        <label for="cm-search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <input id="cm-search" type="text" name="search" value="{{ request('search') }}" placeholder="Memo number or seller" class="w-full sm:w-56 h-10 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                     </div>
                     <div>
-                        <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">From</label>
-                        <input type="date" name="from" aria-label="From date" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                        <label for="cm-from" class="block text-sm font-medium text-gray-700 mb-1">From</label>
+                        <input id="cm-from" type="date" name="from" value="{{ request('from') }}" class="h-10 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                     </div>
                     <div>
-                        <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">To</label>
-                        <input type="date" name="to" aria-label="To date" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                        <label for="cm-to" class="block text-sm font-medium text-gray-700 mb-1">To</label>
+                        <input id="cm-to" type="date" name="to" value="{{ request('to') }}" class="h-10 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                     </div>
-                    <button class="px-4 py-2 bg-gray-800 text-white rounded text-sm">Filter</button>
+                    <button class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Apply</button>
                     @if (request()->anyFilled(['search', 'from', 'to']))
-                        <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:text-gray-900">Clear</a>
+                        <a href="{{ route('finance.cash-memos.index') }}" class="inline-flex items-center min-h-[40px] text-sm text-gray-600 hover:text-gray-900 hover:underline">Clear</a>
                     @endif
                 </form>
 
@@ -63,24 +66,24 @@
                 @endphp
                 <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-sm">
-                        <span class="text-gray-500">Export range:</span>
+                        <span class="text-gray-600">Export range:</span>
                         <strong class="text-gray-900 ml-1">{{ $rangeLabel }}</strong>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('finance.cash-memos.export.pdf', $exportQuery) }}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-money-600 hover:bg-money-700 text-white text-xs font-semibold rounded"
+                           class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50"
                            title="Summary PDF of all cash memos in this range">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Download PDF
                         </a>
                         <a href="{{ route('finance.cash-memos.export.csv', $exportQuery) }}"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded"
+                           class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50"
                            title="CSV for Excel or your accounting software">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
-                            Excel / CSV
+                            CSV
                         </a>
-                        <button onclick="window.print()"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold rounded"
+                        <button type="button" onclick="window.print()"
+                                class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50"
                                 title="Print the list on this page">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             Print
@@ -92,7 +95,7 @@
             {{-- Mobile cards --}}
             <div class="md:hidden space-y-2">
                 @forelse ($memos as $m)
-                    <div class="bg-white shadow-sm rounded-lg p-4 border border-gray-100">
+                    <div class="bg-white rounded-xl p-4 ring-1 ring-gray-200">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0 flex-1">
                                 <a href="{{ route('finance.cash-memos.show', $m) }}" class="font-mono font-semibold text-brand-700 hover:underline">{{ $m->memo_number }}</a>
@@ -102,16 +105,16 @@
                                 @endif
                                 <div class="flex items-center gap-3 text-xs text-gray-500 mt-2">
                                     <span>{{ $m->memo_date->format('d M Y') }}</span>
-                                    <span class="uppercase">{{ $m->payment_mode }}</span>
+                                    <span>{{ ucfirst($m->payment_mode) }}</span>
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
                                 <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ rupees($m->grand_total) }}</div>
                             </div>
                         </div>
-                        <div class="mt-3 pt-2 border-t border-gray-100 flex items-center gap-3 text-xs print:hidden">
-                            <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium">View / Print</a>
-                            <a href="{{ route('finance.cash-memos.pdf', $m) }}" class="text-money-700 hover:underline font-medium">PDF</a>
+                        <div class="mt-3 pt-2 border-t border-gray-100 flex items-center gap-4 text-sm print:hidden">
+                            <a href="{{ route('finance.cash-memos.show', $m) }}" class="inline-flex items-center min-h-[40px] text-brand-700 hover:underline font-semibold">View</a>
+                            <a href="{{ route('finance.cash-memos.pdf', $m) }}" class="inline-flex items-center min-h-[40px] text-gray-700 hover:underline">PDF</a>
                             <span class="ml-auto">
                                 <x-confirm-form
                                     :action="route('finance.cash-memos.destroy', $m)"
@@ -121,19 +124,19 @@
                                     confirmLabel="Delete memo"
                                     confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
-                                    <button type="button" class="text-danger-600 hover:underline">Delete</button>
+                                    <button type="button" class="inline-flex items-center min-h-[40px] text-danger-700 hover:underline">Delete</button>
                                 </x-confirm-form>
                             </span>
                         </div>
                     </div>
                 @empty
-                    <div class="bg-white shadow-sm rounded-lg p-8 text-center text-gray-500">
+                    <div class="bg-white rounded-xl ring-1 ring-gray-200 p-8 text-center text-gray-500">
                         <x-empty-state
                             icon="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
                             title="No cash memos yet"
                             description="Record cash purchases from vendors who do not issue a tax invoice."
                             :actionHref="route('finance.cash-memos.create')"
-                            actionLabel="Create cash memo"
+                            actionLabel="New cash memo"
                         />
                     </div>
                 @endforelse
@@ -169,14 +172,14 @@
             </div>
 
             {{-- Desktop table --}}
-            <div class="printable hidden md:block bg-white shadow sm:rounded-lg overflow-hidden print:shadow-none print:rounded-none print:block">
+            <div class="printable hidden md:block bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden print:shadow-none print:rounded-none print:block">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[700px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                        <thead class="bg-gray-50 text-xs text-gray-600 uppercase">
                             <tr>
-                                <th class="px-5 py-3 text-left font-semibold">Memo No.</th>
+                                <th class="px-5 py-3 text-left font-semibold">Memo no.</th>
                                 <th class="px-5 py-3 text-left font-semibold">Date</th>
-                                <th class="px-5 py-3 text-left font-semibold">Purchased From</th>
+                                <th class="px-5 py-3 text-left font-semibold">Purchased from</th>
                                 <th class="px-5 py-3 text-right font-semibold">Total</th>
                                 <th class="px-5 py-3 text-left font-semibold">Mode</th>
                                 <th class="px-5 py-3 text-right font-semibold print:hidden">Actions</th>
@@ -194,12 +197,12 @@
                                         @endif
                                     </td>
                                     <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ rupees($m->grand_total) }}</td>
-                                    <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $m->payment_mode }}</td>
+                                    <td class="px-5 py-3 text-sm text-gray-700">{{ ucfirst($m->payment_mode) }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
-                                        <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open memo">View / Print</a>
+                                        <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open memo">View</a>
                                         <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('finance.cash-memos.pdf', $m) }}"
-                                           class="inline-flex items-center gap-1 text-money-700 hover:underline font-medium"
+                                           class="inline-flex items-center gap-1 text-gray-700 hover:underline font-medium"
                                            title="Download memo PDF">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                             PDF
@@ -224,7 +227,7 @@
                                         title="No cash memos yet"
                                         description="Record cash purchases from vendors who do not issue a tax invoice."
                                         :actionHref="route('finance.cash-memos.create')"
-                                        actionLabel="Create cash memo"
+                                        actionLabel="New cash memo"
                                     />
                                 </td></tr>
                             @endforelse

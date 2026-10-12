@@ -115,8 +115,8 @@
                 <th>Particulars</th>
                 <th style="width: 70px;">HSN/SAC</th>
                 <th style="width: 60px;" class="r">Qty</th>
-                <th style="width: 70px;" class="r">Rate (Rs.)</th>
-                <th style="width: 90px;" class="r">Amount (Rs.)</th>
+                <th style="width: 70px;" class="r">Rate (₹)</th>
+                <th style="width: 90px;" class="r">Amount (₹)</th>
             </tr>
         </thead>
         <tbody>
@@ -150,22 +150,22 @@
             </td>
             <td style="width: 45%; vertical-align: top;">
                 <table class="totals-table">
-                    <tr><td class="k">Subtotal</td><td class="v">Rs. {{ inr($memo->subtotal) }}</td></tr>
+                    <tr><td class="k">Subtotal</td><td class="v">₹{{ inr($memo->subtotal) }}</td></tr>
                     @if ((float) $memo->discount > 0)
-                        <tr><td class="k">Discount</td><td class="v" style="color:#a00;">- Rs. {{ inr($memo->discount) }}</td></tr>
+                        <tr><td class="k">Discount</td><td class="v" style="color:#a00;">-₹{{ inr($memo->discount) }}</td></tr>
                     @endif
-                    <tr class="sub"><td class="k" style="color:#111; font-weight: bold;">Taxable value</td><td class="v" style="font-weight: bold;">Rs. {{ inr($memo->taxable_value) }}</td></tr>
+                    <tr class="sub"><td class="k" style="color:#111; font-weight: bold;">Taxable value</td><td class="v" style="font-weight: bold;">₹{{ inr($memo->taxable_value) }}</td></tr>
                     @if ((float) $memo->total_cgst > 0)
-                        <tr><td class="k">CGST</td><td class="v">Rs. {{ inr($memo->total_cgst) }}</td></tr>
-                        <tr><td class="k">SGST</td><td class="v">Rs. {{ inr($memo->total_sgst) }}</td></tr>
+                        <tr><td class="k">CGST</td><td class="v">₹{{ inr($memo->total_cgst) }}</td></tr>
+                        <tr><td class="k">SGST</td><td class="v">₹{{ inr($memo->total_sgst) }}</td></tr>
                     @endif
                     @if ((float) $memo->total_igst > 0)
-                        <tr><td class="k">IGST</td><td class="v">Rs. {{ inr($memo->total_igst) }}</td></tr>
+                        <tr><td class="k">IGST</td><td class="v">₹{{ inr($memo->total_igst) }}</td></tr>
                     @endif
                     @if ((float) $memo->round_off != 0)
-                        <tr><td class="k" style="font-size: 9px; color: #888;">Round off</td><td class="v" style="font-size: 9px; color: #888;">{{ ((float) $memo->round_off >= 0 ? '+ ' : '- ') }}Rs. {{ inr(abs((float) $memo->round_off)) }}</td></tr>
+                        <tr><td class="k" style="font-size: 9px; color: #888;">Round off</td><td class="v" style="font-size: 9px; color: #888;">{{ ((float) $memo->round_off >= 0 ? '+' : '-') }}₹{{ inr(abs((float) $memo->round_off)) }}</td></tr>
                     @endif
-                    <tr class="grand"><td class="k">Grand Total</td><td class="v">Rs. {{ inr($memo->grand_total) }}</td></tr>
+                    <tr class="grand"><td class="k">Grand total</td><td class="v">₹{{ inr($memo->grand_total) }}</td></tr>
                 </table>
             </td>
         </tr>

@@ -178,6 +178,14 @@ return [
     */
 
     'custom' => [
+        // Rates are stored to the paisa and quantities to 3 decimals; more
+        // would print a rate x quantity that does not give the line value.
+        'items.*.rate' => [
+            'decimal' => 'Rate can have at most 2 decimals (paise), e.g. 12.35. For smaller unit prices, bill per 10 or per 100 units.',
+        ],
+        'items.*.quantity' => [
+            'decimal' => 'Quantity can have at most 3 decimals, e.g. 1.235.',
+        ],
         'gstin' => [
             'regex' => 'Enter a valid 15-character GSTIN, e.g. 27AABCU9603R1ZM.',
             'size' => 'GSTIN must be exactly 15 characters.',

@@ -59,14 +59,14 @@
      @click.outside="open = false" @keydown.escape.window="open = false" class="relative">
     <button type="button"
             @click="open = !open; if (open && unseen) { unseen = false; fetch('{{ route('notifications.seen') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } }).catch(() => {}) }"
-            class="relative inline-flex items-center justify-center w-9 h-9 rounded-lg ring-1 ring-accent-300 bg-white hover:bg-accent-50 hover:ring-accent-400 text-brand-900 shadow-md focus:outline-none focus:ring-2 focus:ring-accent-400 transition"
+            class="relative inline-flex items-center justify-center w-10 h-10 sm:w-9 sm:h-9 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-brand-700 transition"
             :aria-expanded="open.toString()"
             aria-label="Notifications {{ $overdueCount > 0 ? '(' . $overdueCount . ' overdue)' : '' }}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <svg class="w-[18px] h-[18px]" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
         </svg>
         @if ($overdueCount > 0)
-            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-danger-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+            <span class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-danger-600 text-white text-xs leading-none font-bold flex items-center justify-center ring-2 ring-white">
                 {{ $overdueCount > 9 ? '9+' : $overdueCount }}
             </span>
         @elseif ($hasUnseen)
@@ -84,12 +84,12 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
-         class="absolute right-0 mt-2 w-80 origin-top-right bg-white rounded-xl shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
+         class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] origin-top-right bg-white rounded-xl shadow-xl ring-1 ring-gray-200 z-50 overflow-hidden">
 
         <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 class="font-display font-bold text-gray-900 text-sm">Notifications</h3>
             @if ($totalCount > 0)
-                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">{{ $totalCount }} {{ $totalCount === 1 ? 'item' : 'items' }}</span>
+                <span class="text-xs font-medium text-gray-500">{{ $totalCount }} {{ $totalCount === 1 ? 'item' : 'items' }}</span>
             @endif
         </div>
 
@@ -106,7 +106,7 @@
 
             @if ($overdue->isNotEmpty())
                 <div class="px-4 pt-3 pb-1">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-danger-600 flex items-center gap-1.5">
+                    <div class="text-xs font-semibold text-danger-700 flex items-center gap-1.5">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
                         Overdue
                     </div>
@@ -120,7 +120,7 @@
                             </div>
                             <div class="flex items-baseline justify-between gap-2 mt-0.5">
                                 <div class="text-xs text-gray-500 truncate">{{ $inv->customer?->name ?? 'No customer' }}</div>
-                                <div class="text-[10px] text-danger-600 font-semibold whitespace-nowrap">{{ $inv->due_date?->diffForHumans() }}</div>
+                                <div class="text-xs text-danger-700 font-medium whitespace-nowrap">{{ $inv->due_date?->diffForHumans() }}</div>
                             </div>
                         </a>
                     @endforeach
@@ -129,7 +129,7 @@
 
             @if ($recentPayments->isNotEmpty())
                 <div class="px-4 pt-3 pb-1">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-money-700 flex items-center gap-1.5">
+                    <div class="text-xs font-semibold text-money-700 flex items-center gap-1.5">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                         Payments received
                     </div>
@@ -140,9 +140,9 @@
                             <div class="flex items-baseline justify-between gap-2">
                                 <div class="text-xs font-semibold text-gray-900 truncate">
                                     ₹{{ rupees($p->amount) }}
-                                    <span class="font-normal text-gray-500 text-[11px]">on {{ $p->invoice?->invoice_number ?? 'invoice' }}</span>
+                                    <span class="font-normal text-gray-500 text-xs">on {{ $p->invoice?->invoice_number ?? 'invoice' }}</span>
                                 </div>
-                                <div class="text-[10px] text-gray-500 whitespace-nowrap">{{ $p->created_at?->diffForHumans() }}</div>
+                                <div class="text-xs text-gray-500 whitespace-nowrap">{{ $p->created_at?->diffForHumans() }}</div>
                             </div>
                         </a>
                     @endforeach
@@ -151,7 +151,7 @@
 
             @if ($recentFinalized->isNotEmpty())
                 <div class="px-4 pt-3 pb-1">
-                    <div class="text-[10px] font-bold uppercase tracking-widest text-brand-700 flex items-center gap-1.5">
+                    <div class="text-xs font-semibold text-brand-700 flex items-center gap-1.5">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
                         Issued in last 24 hours
                     </div>
@@ -165,7 +165,7 @@
                             </div>
                             <div class="flex items-baseline justify-between gap-2 mt-0.5">
                                 <div class="text-xs text-gray-500 truncate">{{ $inv->customer?->name ?? 'No customer' }}</div>
-                                <div class="text-[10px] text-gray-500 whitespace-nowrap">{{ $inv->finalized_at?->diffForHumans() }}</div>
+                                <div class="text-xs text-gray-500 whitespace-nowrap">{{ $inv->finalized_at?->diffForHumans() }}</div>
                             </div>
                         </a>
                     @endforeach
@@ -174,7 +174,7 @@
         </div>
 
         <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
-            <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800">View outstanding invoices →</a>
+            <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800">View unpaid invoices</a>
         </div>
     </div>
 </div>

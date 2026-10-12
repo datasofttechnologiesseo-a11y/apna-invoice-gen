@@ -273,7 +273,7 @@ class DashboardChartsTest extends TestCase
         $page->assertSee("setSpan('yearly')", false);
 
         // Both rings.
-        $page->assertSee('>Receivables</div>', false);
+        $page->assertSee('>Collection status</div>', false);
         $page->assertSee('>Spend by category</div>', false);
         $page->assertSee('pathLength="100"', false);
 

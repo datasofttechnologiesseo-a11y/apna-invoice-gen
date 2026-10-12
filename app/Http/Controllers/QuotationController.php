@@ -440,7 +440,7 @@ class QuotationController extends Controller
         if (! array_key_exists('quote_discount', $data)) {
             return $data;
         }
-        $gross = collect($data['items'])->sum(fn ($i) => round((float) ($i['quantity'] ?? 0) * (float) ($i['rate'] ?? 0), 2));
+        $gross = $this->calculator->valueAfterLineDiscounts($data['items']);
         if ((float) $data['quote_discount'] > $gross + 0.001) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'quote_discount' => 'Discount cannot be more than the items total (₹' . inr($gross) . ').',
@@ -475,9 +475,9 @@ class QuotationController extends Controller
             // Description optional — server backfills from product name if blank.
             'items.*.description' => ['nullable', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             // One discount for the whole quote (bottom box), spread before tax.
             'quote_discount' => ['nullable', 'numeric', 'min:0'],

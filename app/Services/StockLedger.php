@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\PurchaseBill;
@@ -44,6 +45,29 @@ class StockLedger
             $this->post($invoice->company_id, $m->product_id, -(float) $m->quantity, 'sale_cancelled', $invoice, now(),
                 'Invoice ' . $invoice->invoice_number . ' cancelled');
         }
+    }
+
+    /**
+     * A sales return puts the goods back: stock in for each line of the
+     * credit note linked to a tracked goods item, dated the note's date.
+     * Notes for other reasons (a price reduction) and notes without lines
+     * move no stock.
+     */
+    public function recordCreditNote(CreditNote $cn): void
+    {
+        if (! $cn->isSalesReturn() || $cn->stockMovements()->where('kind', 'sale_return')->exists()) {
+            return;
+        }
+        foreach ($this->trackedLines($cn->items()->get(), $cn->company_id) as [$product, $qty]) {
+            $this->post($cn->company_id, $product, $qty, 'sale_return', $cn, $cn->credit_note_date,
+                'Credit note ' . $cn->credit_note_number . ' (goods returned)');
+        }
+    }
+
+    /** Reversing a credit note takes back the stock its return put in. */
+    public function reverseCreditNote(CreditNote $cn): void
+    {
+        $cn->stockMovements()->where('kind', 'sale_return')->delete();
     }
 
     public function syncPurchase(PurchaseBill $bill): void

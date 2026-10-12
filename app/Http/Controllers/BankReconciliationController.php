@@ -33,7 +33,12 @@ class BankReconciliationController extends Controller
         $base = BankStatementLine::where('company_id', $company->id)
             ->when($account !== '', fn ($q) => $q->whereHas('statement', fn ($s) => $s->where('account_name', $account)));
         $lines = (clone $base)->when($status !== 'all', fn ($q) => $q->where('status', $status))
-            ->with('matched')->orderByDesc('txn_date')->orderByDesc('id')->paginate(50)->withQueryString();
+            // Matched rows name the party and the document, so load them in one go.
+            ->with(['matched' => fn (\Illuminate\Database\Eloquent\Relations\MorphTo $m) => $m->morphWith([
+                Payment::class => ['invoice.customer'],
+                PurchasePayment::class => ['purchaseBill.vendor'],
+            ])])
+            ->orderByDesc('txn_date')->orderByDesc('id')->paginate(50)->withQueryString();
 
         // Suggestions for the lines on screen that still need a match, and
         // open invoices for an unmatched receipt of exactly their balance.
@@ -68,6 +73,10 @@ class BankReconciliationController extends Controller
             ],
             'unmatchedIn' => $sum('unmatched', 'credit'),
             'unmatchedOut' => $sum('unmatched', 'debit'),
+            'matchedIn' => $sum('matched', 'credit'),
+            'matchedOut' => $sum('matched', 'debit'),
+            'categories' => config('expense_categories', []),
+            'bankChargeCategory' => array_key_exists('bank_charges', config('expense_categories', [])) ? 'bank_charges' : null,
         ]);
     }
 
@@ -151,6 +160,13 @@ class BankReconciliationController extends Controller
     {
         $this->authorizeLine($request, $line);
         $data = $request->validate(['candidate' => ['required', 'string', 'max:120']]);
+        if ($data['candidate'] === 'new-expense') {
+            // Checks the lock itself, under the expense form.
+            return $this->addExpense($request, $line, $reconciler);
+        }
+        if ($locked = $this->lockedMessage($request, $line, 'matched')) {
+            return back()->with('error', $locked);
+        }
         [$type, $id] = array_pad(explode('#', $data['candidate'], 2), 2, null);
         // Only something the reconciler itself offers for this line can be matched.
         $model = $reconciler->candidates($line)->first(fn ($c) => $c['model']->getMorphClass() === $type && (string) $c['model']->getKey() === (string) $id)['model'] ?? null;
@@ -163,6 +179,9 @@ class BankReconciliationController extends Controller
     public function unmatch(Request $request, BankStatementLine $line, BankReconciler $reconciler): RedirectResponse
     {
         $this->authorizeLine($request, $line);
+        if ($locked = $this->lockedMessage($request, $line, 'changed')) {
+            return back()->with('error', $locked);
+        }
         $reconciler->unmatch($line);
 
         return back()->with('status', 'Match removed. The line is back in the list to review.');
@@ -171,6 +190,9 @@ class BankReconciliationController extends Controller
     public function ignore(Request $request, BankStatementLine $line): RedirectResponse
     {
         $this->authorizeLine($request, $line);
+        if ($locked = $this->lockedMessage($request, $line, 'changed')) {
+            return back()->with('error', $locked);
+        }
         $line->update(['status' => 'ignored', 'matched_type' => null, 'matched_id' => null, 'matched_at' => now()]);
 
         return back()->with('status', 'Line marked as nothing to match.');
@@ -180,7 +202,7 @@ class BankReconciliationController extends Controller
     {
         $count = $reconciler->autoMatch($request->user()->ensureCompany());
 
-        return back()->with('status', $count ? "{$count} more lines matched." : 'No new matches found. Enter the missing receipts or expenses, then try again.');
+        return back()->with('status', $count ? $count . ' more ' . \Illuminate\Support\Str::plural('line', $count) . ' matched.' : 'No new matches found. Enter the missing receipts or expenses, then try again.');
     }
 
     public function destroy(Request $request, BankStatement $statement): RedirectResponse
@@ -189,6 +211,72 @@ class BankReconciliationController extends Controller
         $statement->delete();
 
         return redirect()->route('bank.index')->with('status', 'Statement removed. Receipts and payments are not affected.');
+    }
+
+    /**
+     * "Add as expense" on a money-out line: the expense is entered for the
+     * line's date and exact amount, paid from the bank, and matched to the
+     * line, so the user stays on this screen. GST to claim needs the full
+     * expense form; this quick entry has none.
+     */
+    private function addExpense(Request $request, BankStatementLine $line, BankReconciler $reconciler): RedirectResponse
+    {
+        if ($line->status !== 'unmatched' || ! ((float) $line->debit > 0)) {
+            return back()->with('error', 'Only a money-out line that is not matched yet can be added as an expense.');
+        }
+        $data = $request->validateWithBag('expense', [
+            'category' => ['required', 'string', 'in:' . implode(',', array_keys(config('expense_categories', [])))],
+            'description' => ['required', 'string', 'max:255'],
+            'vendor_name' => ['nullable', 'string', 'max:120'],
+        ], [
+            'category.required' => 'Choose a category.',
+            'category.in' => 'Choose a category from the list.',
+            'description.required' => 'Enter a description.',
+        ]);
+
+        $company = $request->user()->ensureCompany();
+        if ($company->isBooksLockedOn($line->txn_date)) {
+            return back()->withInput()->withErrors(['description' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. An expense on this date cannot be added."], 'expense');
+        }
+
+        $expense = DB::transaction(function () use ($company, $request, $line, $data, $reconciler) {
+            $expense = $company->expenses()->create([
+                'user_id' => $request->user()->id,
+                'entry_date' => $line->txn_date->toDateString(),
+                'category' => $data['category'],
+                'vendor_name' => $data['vendor_name'] ?? null,
+                'description' => $data['description'],
+                'amount' => round((float) $line->debit, 2),
+                'gst_amount' => 0,
+                'is_interstate' => false,
+                'itc_eligible' => true,
+                'payment_method' => 'bank',
+                'reference_number' => mb_substr((string) $line->reference, 0, 50) ?: null,
+            ]);
+            $reconciler->match($line, $expense);
+
+            return $expense;
+        });
+
+        AuditLog::record('expense.created',
+            'Expense ₹' . inr($expense->amount) . ' · ' . ($expense->vendor_name ?: $expense->description) . ' (from a bank line)',
+            $expense
+        );
+
+        return back()->with('status', 'Expense of ₹' . inr($expense->amount) . ' added and matched.');
+    }
+
+    /**
+     * A bank line dated inside the books lock belongs to a closed period:
+     * its reconciliation is part of those books, so it stays as it is.
+     */
+    private function lockedMessage(Request $request, BankStatementLine $line, string $what): ?string
+    {
+        $company = $request->user()->ensureCompany();
+
+        return $company->isBooksLockedOn($line->txn_date)
+            ? "Books are locked up to {$company->books_locked_until->format('d M Y')}. A bank line dated on or before that cannot be {$what}."
+            : null;
     }
 
     private function authorizeLine(Request $request, BankStatementLine $line): void

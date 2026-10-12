@@ -253,4 +253,32 @@ class PurchaseBillFlowTest extends TestCase
         $this->actingAs($stranger)->get(route('purchases.show', $bill))->assertForbidden();
         $this->actingAs($stranger)->get(route('purchases.index'))->assertOk()->assertDontSee('DC/2026/0117');
     }
+
+    public function test_a_vendor_name_opens_that_vendors_purchase_invoices(): void
+    {
+        $deepcool = $this->vendorIn($this->mh);
+        $other = $this->vendorIn($this->ka, ['name' => 'Bengaluru Metals']);
+        $this->actingAs($this->user)->post(route('purchases.store'), $this->billPayload($deepcool))->assertSessionHasNoErrors();
+        $this->actingAs($this->user)->post(route('purchases.store'), $this->billPayload($other, ['bill_number' => 'BM/77']))->assertSessionHasNoErrors();
+
+        $this->actingAs($this->user)->get(route('vendors.index'))->assertOk()
+            ->assertSee(route('purchases.index', ['vendor' => $deepcool->id]), false);
+        $this->actingAs($this->user)->get(route('purchases.index', ['vendor' => $deepcool->id]))->assertOk()
+            ->assertSee('Showing purchase invoices from')
+            ->assertSee('DC/2026/0117')->assertDontSee('BM/77');
+        // Another business's vendor id filters to nothing of theirs.
+        $this->actingAs($this->user)->get(route('purchases.index', ['vendor' => 999999]))->assertOk()
+            ->assertSee('DC/2026/0117')->assertSee('BM/77');
+    }
+
+    public function test_a_repeated_invoice_number_is_explained_under_its_field(): void
+    {
+        $vendor = $this->vendorIn($this->mh);
+        $this->actingAs($this->user)->post(route('purchases.store'), $this->billPayload($vendor))->assertSessionHasNoErrors();
+        $this->actingAs($this->user)->from(route('purchases.create'))->post(route('purchases.store'), $this->billPayload($vendor))
+            ->assertSessionHasErrors(['bill_number' => 'This invoice number from this vendor is already recorded.']);
+        $this->actingAs($this->user)->withViewErrors(['bill_number' => 'This invoice number from this vendor is already recorded.'])
+            ->get(route('purchases.create'))->assertOk()
+            ->assertSee('id="bill_number-error"', false);
+    }
 }

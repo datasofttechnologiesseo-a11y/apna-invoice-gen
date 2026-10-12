@@ -222,6 +222,89 @@ class BankReconciliationTest extends TestCase
         $this->assertSame('unmatched', $line->fresh()->status);
     }
 
+    public function test_two_payments_to_one_vendor_are_told_apart_by_date_and_amount(): void
+    {
+        // A second 5,900 payment to the same vendor a day later: both are
+        // possible matches for the 12 Sep line, so it is left to the user.
+        $bill = PurchaseBill::firstOrFail();
+        $this->actingAs($this->user)->post(route('purchases.store'), [
+            'vendor_id' => $bill->vendor_id, 'bill_number' => 'MM/2', 'bill_date' => '2026-09-11', 'itc_eligible' => 1, 'expense_category' => 'office_supplies',
+            'paid_now' => 5900, 'paid_on' => '2026-09-13', 'payment_method' => 'neft',
+            'items' => [['description' => 'Steel', 'hsn_sac' => '72085100', 'quantity' => 1, 'unit' => 'NOS', 'rate' => 5000, 'gst_rate' => 18]],
+        ])->assertSessionHasNoErrors();
+        $this->actingAs($this->user)->post(route('bank.upload'), ['account_name' => 'HDFC Current', 'file' => $this->hdfcXlsx()]);
+        $this->assertSame('unmatched', BankStatementLine::where('debit', 5900)->firstOrFail()->status);
+
+        $this->actingAs($this->user)->get(route('bank.index'))->assertOk()
+            ->assertSee('Purchase invoice MM/1 · 12 Sep 2026 · ₹5,900')
+            ->assertSee('Purchase invoice MM/2 · 13 Sep 2026 · ₹5,900');
+    }
+
+    public function test_matched_lines_name_the_party_and_the_document_and_show_paise(): void
+    {
+        $this->actingAs($this->user)->post(route('bank.upload'), ['account_name' => 'HDFC Current', 'file' => $this->hdfcXlsx()]);
+
+        $this->actingAs($this->user)->get(route('bank.index', ['status' => 'all']))->assertOk()
+            ->assertSee('Payment made · Mumbai Metals')
+            ->assertSee('Purchase invoice MM/1')
+            ->assertSee('Patil Traders')
+            ->assertSee('Invoice ' . $this->invoice->fresh()->invoice_number)
+            // Matching is to the paisa, so the screen shows paise.
+            ->assertSee('−₹17.70')
+            // Matched and still-to-review totals.
+            ->assertSee('Matched · 3 lines')
+            ->assertSee('To review · 2 lines');
+    }
+
+    public function test_add_as_expense_saves_it_matches_the_line_and_stays_on_the_bank_screen(): void
+    {
+        $this->actingAs($this->user)->post(route('bank.upload'), ['account_name' => 'HDFC Current', 'file' => $this->hdfcXlsx()]);
+        $charge = BankStatementLine::where('debit', 17.70)->firstOrFail();
+
+        // A bank-charge line offers the bank charges category.
+        $this->actingAs($this->user)->get(route('bank.index'))->assertOk()
+            ->assertSee('value="bank_charges" selected', false);
+
+        $this->actingAs($this->user)->from(route('bank.index'))->post(route('bank.lines.match', $charge), [
+            'candidate' => 'new-expense', 'line_id' => $charge->id,
+            'category' => 'bank_charges', 'description' => 'CHRG: SMS ALERT CHARGES', 'vendor_name' => 'HDFC Bank',
+        ])->assertRedirect(route('bank.index'))->assertSessionHas('status', 'Expense of ₹17.70 added and matched.');
+
+        $expense = Expense::where('category', 'bank_charges')->firstOrFail();
+        $this->assertEqualsWithDelta(17.70, (float) $expense->amount, 0.001);
+        $this->assertEqualsWithDelta(0.0, (float) $expense->gst_amount, 0.001);
+        $this->assertSame('2026-09-20', $expense->entry_date->toDateString());
+        $this->assertSame('bank', $expense->payment_method);
+        $charge->refresh();
+        $this->assertSame('matched', $charge->status);
+        $this->assertTrue($charge->matched->is($expense));
+    }
+
+    public function test_add_as_expense_checks_its_fields_the_line_and_the_books_lock(): void
+    {
+        $this->actingAs($this->user)->post(route('bank.upload'), ['account_name' => 'HDFC Current', 'file' => $this->hdfcXlsx()]);
+        $charge = BankStatementLine::where('debit', 17.70)->firstOrFail();
+        $before = Expense::count();
+
+        $this->actingAs($this->user)->from(route('bank.index'))->post(route('bank.lines.match', $charge), [
+            'candidate' => 'new-expense', 'line_id' => $charge->id, 'category' => 'bank_charges', 'description' => '',
+        ])->assertSessionHasErrorsIn('expense', ['description']);
+
+        // Money in is never an expense.
+        $credit = BankStatementLine::where('credit', 2500)->firstOrFail();
+        $this->actingAs($this->user)->from(route('bank.index'))->post(route('bank.lines.match', $credit), [
+            'candidate' => 'new-expense', 'category' => 'misc', 'description' => 'x',
+        ])->assertSessionHas('error');
+
+        $this->company->forceFill(['books_locked_until' => '2026-09-30'])->save();
+        $this->actingAs($this->user)->from(route('bank.index'))->post(route('bank.lines.match', $charge), [
+            'candidate' => 'new-expense', 'line_id' => $charge->id, 'category' => 'bank_charges', 'description' => 'SMS charges',
+        ])->assertSessionHasErrorsIn('expense', ['description']);
+
+        $this->assertSame($before, Expense::count());
+        $this->assertSame('unmatched', $charge->fresh()->status);
+    }
+
     public function test_a_bad_file_gets_a_plain_message(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'bank') . '.csv';

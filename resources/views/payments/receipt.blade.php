@@ -102,9 +102,24 @@
         <table class="kv" style="margin-top: 4px;">
             <tr><th>Invoice no.</th><td>{{ $inv->invoice_number ?? 'Draft' }}</td></tr>
             <tr><th>Invoice date</th><td>{{ $inv->invoice_date?->format('d M Y') }}</td></tr>
+            @php
+                // As things stood when this payment came in, not as they are
+                // today: a receipt for the first instalment must not show the
+                // later ones as "previously paid".
+                $paidBefore = (float) $inv->payments
+                    ->takeWhile(fn ($p) => $p->id !== $payment->id)
+                    ->sum('amount');
+                $creditedBefore = (float) $inv->creditNotes
+                    ->filter(fn ($cn) => $cn->credit_note_date && $cn->credit_note_date->lte($payment->received_at))
+                    ->sum('amount');
+                $balanceAfter = round((float) $inv->grand_total - $creditedBefore - $paidBefore - (float) $payment->amount, 2);
+            @endphp
             <tr><th>Invoice total</th><td>&#8377; {{ inr($inv->grand_total) }}</td></tr>
-            <tr><th>Previously paid</th><td>&#8377; {{ inr($inv->paid_amount - (float) $payment->amount) }}</td></tr>
-            <tr><th>Balance after this payment</th><td><strong>&#8377; {{ inr($inv->balance) }}</strong></td></tr>
+            @if ($creditedBefore > 0)
+                <tr><th>Less credit notes</th><td>&#8377; {{ inr($creditedBefore) }}</td></tr>
+            @endif
+            <tr><th>Previously paid</th><td>&#8377; {{ inr($paidBefore) }}</td></tr>
+            <tr><th>Balance after this payment</th><td><strong>&#8377; {{ inr($balanceAfter) }}</strong></td></tr>
         </table>
     </div>
 </div>
@@ -156,7 +171,7 @@
     @endif
 </table>
 
-@if ((float) $inv->balance <= 0)
+@if ($balanceAfter <= 0)
     <div class="center">
         <span class="stamp">PAID IN FULL</span>
     </div>

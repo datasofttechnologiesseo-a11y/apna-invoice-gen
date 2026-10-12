@@ -487,9 +487,9 @@ class CashMemoController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
         ]);
 
         // ITC eligibility: checkbox defaults to ticked in the form, so an

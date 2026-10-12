@@ -44,7 +44,7 @@
 
                 <div class="absolute bg-white rounded-xl shadow-2xl ring-1 ring-gray-200 p-5" :style="cardStyle">
                     <div class="flex items-center justify-between gap-3">
-                        <span class="text-[11px] font-semibold text-gray-500" x-text="`Step ${i + 1} of ${list.length}`"></span>
+                        <span class="text-xs font-semibold text-gray-500" x-text="`Step ${i + 1} of ${list.length}`"></span>
                         <button type="button" @click="finish()" class="text-xs font-semibold text-gray-500 hover:text-gray-800 px-2 py-1 -mr-2 rounded">Skip tour</button>
                     </div>
                     <h2 id="tour-title" class="mt-1 font-display text-lg font-extrabold text-gray-900" x-text="step.title"></h2>

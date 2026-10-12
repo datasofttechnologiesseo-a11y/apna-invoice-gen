@@ -107,7 +107,7 @@ class TeamMembersTest extends TestCase
 
         $page = $this->actingAs($member)->get(route('invoices.index'))->assertOk();
         $page->assertSee('as <strong>Billing staff</strong>', false);
-        $page->assertDontSee('Purchase Invoices');
+        $page->assertDontSee('Purchase invoices');
         $page->assertDontSee('GSTR-3B');
 
         // No cancelling or deleting issued invoices.

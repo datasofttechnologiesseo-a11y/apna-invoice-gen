@@ -46,12 +46,19 @@
     ];
 @endphp
 <x-layouts.marketing
-    title="Contact Us: India-based Support"
+    title="Contact us: India-based support"
     eyebrow="Contact"
     lead="Running 100+ invoices a month, managing several GSTINs, or stuck on a setting? Our India-based team replies within one business day."
     description="Contact our India-based team for help with GST invoicing, multi-GSTIN setup, custom plans and partnerships. Support for MSMEs, startups, freelancers and CAs."
     keywords="Apna Invoice contact, GST invoice support India, invoice software help India, MSME invoicing support, Datasoft Technologies contact, CA partnership India"
     :json-ld="[$contactSchema]">
+
+    @if (session('status'))
+        <div class="not-prose mb-6 flex gap-3 rounded-lg bg-money-50 ring-1 ring-money-200 px-4 py-3 text-money-800" role="status" tabindex="-1" x-data x-init="$el.focus()">
+            <svg class="mt-0.5 w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ session('status') }}</span>
+        </div>
+    @endif
 
     <h2>Get in touch</h2>
     <div class="mt-5 grid sm:grid-cols-2 gap-4">
@@ -92,29 +99,24 @@
 
     <h2>Or send us a message</h2>
 
-    @if (session('status'))
-        <div class="mt-4 flex gap-3 rounded-lg bg-money-50 ring-1 ring-money-200 px-4 py-3 text-money-800" role="status">
-            <svg class="mt-0.5 w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span>{{ session('status') }}</span>
-        </div>
-    @endif
     @if ($errors->any())
-        <div class="mt-4 rounded-lg bg-danger-50 ring-1 ring-danger-200 px-4 py-3 text-danger-800" role="alert">
+        {{-- Brought into view, so a failed send is never below the fold. --}}
+        <div class="mt-4 rounded-lg bg-danger-50 ring-1 ring-danger-200 px-4 py-3 text-danger-800 scroll-mt-24" role="alert" x-data x-init="$el.scrollIntoView({ block: 'start' })">
             <ul class="list-disc pl-5 space-y-1">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
         </div>
     @endif
 
-    <form method="POST" action="{{ route('pages.contact.send') }}" class="mt-5 rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-5 sm:p-6 space-y-5">
+    <form method="POST" action="{{ route('pages.contact.send') }}" id="contact-form" class="mt-5 rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-5 sm:p-6 space-y-5">
         @csrf
         <div class="grid sm:grid-cols-2 gap-5">
             <div>
                 <label for="name" class="block text-sm font-semibold text-gray-800">Your name *</label>
-                <input id="name" name="name" type="text" required maxlength="120" value="{{ old('name') }}"
+                <input id="name" name="name" type="text" required maxlength="120" value="{{ old('name', auth()->user()?->name) }}"
                        class="mt-1.5 block w-full border-gray-300 rounded-lg shadow-sm focus:border-brand-600 focus:ring-brand-600" autocomplete="name">
             </div>
             <div>
                 <label for="email" class="block text-sm font-semibold text-gray-800">Email *</label>
-                <input id="email" name="email" type="email" required maxlength="255" value="{{ old('email') }}"
+                <input id="email" name="email" type="email" required maxlength="255" value="{{ old('email', auth()->user()?->email) }}"
                        class="mt-1.5 block w-full border-gray-300 rounded-lg shadow-sm focus:border-brand-600 focus:ring-brand-600" autocomplete="email">
             </div>
             <div>
@@ -138,9 +140,8 @@
         <x-turnstile />
 
         <div class="flex justify-end">
-            <button type="submit" class="inline-flex items-center gap-2 min-h-[44px] px-5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm transition-colors">
+            <button type="submit" class="inline-flex items-center gap-2 min-h-[44px] px-5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-md shadow-sm transition-colors">
                 Send message
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </button>
         </div>
     </form>

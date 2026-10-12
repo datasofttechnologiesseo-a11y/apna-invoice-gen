@@ -1,16 +1,16 @@
 <x-app-layout title="GSTR-2B match">
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Reports', 'href' => route('reports.index')],
+            ['label' => 'GSTR-2B match'],
+        ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-2B match</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $periodLabel }} · {{ $company->name }}</p>
             </div>
             @if ($result['summary']['uploaded'])
-                <a href="{{ route('finance.gstr2b.export', ['month' => $period]) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded shadow-sm self-start">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Download match (CSV)
-                </a>
+                <x-export-toolbar class="self-start" :csv="route('finance.gstr2b.export', ['month' => $period])" print="window" />
             @endif
         </div>
     </x-slot>
@@ -29,7 +29,9 @@
             'brand' => 'ring-brand-200 bg-brand-50 text-brand-800',
             'danger' => 'ring-danger-200 bg-danger-50 text-danger-800',
         ];
-        $num = 'px-4 py-2.5 text-right font-mono tabular-nums whitespace-nowrap';
+        $num = 'px-4 py-2.5 text-right tabular-nums whitespace-nowrap';
+        // Matching is to the paisa, so this screen shows paise.
+        $paise = fn ($v) => \App\Support\IndianNumber::format((float) $v, 2);
     @endphp
 
     <div class="py-6">
@@ -38,7 +40,7 @@
             <div class="print:hidden">@include('finance.partials.tabs')</div>
 
             {{-- Upload --}}
-            <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-5" x-data="{ name: '' }">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-5" x-data="{ name: '' }">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div>
                         <h2 class="text-sm font-bold text-gray-900">{{ $s['uploaded'] ? 'Upload again' : 'Upload GSTR-2B' }}</h2>
@@ -64,11 +66,11 @@
                         </label>
                         <div class="flex flex-wrap items-end gap-3">
                             <div>
-                                <label for="g2b-month" class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Month (used for Excel files)</label>
+                                <label for="g2b-month" class="text-sm font-medium text-gray-700 block mb-1">Month (used for Excel files)</label>
                                 <input id="g2b-month" type="month" name="month" value="{{ $period }}" max="{{ now()->format('Y-m') }}"
                                        class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                             </div>
-                            <button class="ml-auto px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-md text-sm font-semibold">Upload and match</button>
+                            <button type="submit" class="ml-auto inline-flex items-center h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white rounded-md text-sm font-semibold">Upload and match</button>
                         </div>
                     </form>
                 </div>
@@ -97,17 +99,17 @@
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     @foreach ($cards as $c)
                         <a href="#g2b-{{ $c['key'] }}" class="block p-4 rounded-xl ring-1 {{ $tones[$c['tone']] }} hover:shadow-sm transition">
-                            <div class="text-[10px] uppercase tracking-wider font-bold opacity-80">{{ $c['label'] }}</div>
+                            <div class="text-sm font-semibold">{{ $c['label'] }}</div>
                             <div class="mt-1 font-display text-2xl font-extrabold tabular-nums">{{ $s['counts'][$c['key']] }}</div>
-                            <div class="text-xs font-semibold tabular-nums">GST ₹{{ rupees($s['tax'][$c['key']]) }}</div>
-                            <div class="mt-1 text-[11px] leading-snug opacity-90">{{ $c['hint'] }}</div>
+                            <div class="text-xs font-semibold tabular-nums">GST ₹{{ $paise($s['tax'][$c['key']]) }}</div>
+                            <div class="mt-1 text-xs leading-snug opacity-90">{{ $c['hint'] }}</div>
                         </a>
                     @endforeach
                 </div>
                 <div class="text-sm text-gray-600">
-                    ITC available in this GSTR-2B: <strong class="tabular-nums text-gray-900">₹{{ rupees($s['itc_in_2b']) }}</strong>
+                    ITC available in this GSTR-2B: <strong class="tabular-nums text-gray-900">₹{{ $paise($s['itc_in_2b']) }}</strong>
                     @if ($s['counts']['no_gstin'])
-                        · {{ $s['counts']['no_gstin'] }} purchase {{ \Illuminate\Support\Str::plural('invoice', $s['counts']['no_gstin']) }} from suppliers without a GSTIN (GST ₹{{ rupees($s['tax']['no_gstin']) }}) cannot appear in 2B.
+                        · {{ $s['counts']['no_gstin'] }} purchase {{ \Illuminate\Support\Str::plural('invoice', $s['counts']['no_gstin']) }} from suppliers without a GSTIN (GST ₹{{ $paise($s['tax']['no_gstin']) }}) cannot appear in 2B.
                     @endif
                 </div>
 
@@ -130,16 +132,17 @@
                             <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{{ count($rows) }}</span>
                         </summary>
                         <div class="overflow-x-auto border-t border-gray-100">
-                            <table class="w-full text-sm min-w-[720px]">
-                                <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                            <table class="w-full text-sm min-w-[860px]">
+                                <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                                     <tr>
-                                        <th class="px-4 py-2.5 text-left font-semibold">Supplier</th>
-                                        <th class="px-4 py-2.5 text-left font-semibold">Document</th>
-                                        <th class="px-4 py-2.5 text-right font-semibold">2B taxable</th>
-                                        <th class="px-4 py-2.5 text-right font-semibold">2B GST</th>
-                                        <th class="px-4 py-2.5 text-right font-semibold">Books taxable</th>
-                                        <th class="px-4 py-2.5 text-right font-semibold">Books GST</th>
-                                        <th class="px-4 py-2.5"></th>
+                                        <th class="px-4 py-2.5 text-left">Supplier</th>
+                                        <th class="px-4 py-2.5 text-left">Document</th>
+                                        <th class="px-4 py-2.5 text-right whitespace-nowrap">2B taxable (₹)</th>
+                                        <th class="px-4 py-2.5 text-right whitespace-nowrap">2B GST (₹)</th>
+                                        <th class="px-4 py-2.5 text-right whitespace-nowrap">Books taxable (₹)</th>
+                                        <th class="px-4 py-2.5 text-right whitespace-nowrap">Books GST (₹)</th>
+                                        <th class="px-4 py-2.5 text-right whitespace-nowrap" title="2B GST less books GST">GST difference (₹)</th>
+                                        <th class="px-4 py-2.5"><span class="sr-only">Actions</span></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
@@ -147,7 +150,7 @@
                                         @php $e = $row['entry'] ?? null; $b = $row['bill'] ?? null; @endphp
                                         <tr>
                                             <td class="px-4 py-2.5">
-                                                <div class="font-medium text-gray-900 truncate max-w-[16rem]">{{ $e?->supplier_name ?? $b?->vendor?->name ?? '-' }}</div>
+                                                <div class="font-medium text-gray-900 truncate max-w-[16rem]">{{ $e?->supplier_name ?? $b?->vendor?->name ?? '–' }}</div>
                                                 <div class="text-xs font-mono text-gray-500">{{ $e?->supplier_gstin ?? $b?->vendor?->gstin ?? 'No GSTIN' }}</div>
                                             </td>
                                             <td class="px-4 py-2.5 whitespace-nowrap">
@@ -159,16 +162,29 @@
                                                     @if ($e && ! $e->itc_available) · <span class="text-danger-700 font-semibold">ITC not available</span>@endif
                                                 </div>
                                             </td>
-                                            <td class="{{ $num }}">{{ $e ? rupees($e->taxable_value) : '' }}</td>
-                                            <td class="{{ $num }}">{{ $e ? rupees($e->tax()) : '' }}</td>
-                                            <td class="{{ $num }}">{{ $b ? rupees($b->subtotal) : '' }}</td>
-                                            <td class="{{ $num }} {{ isset($row['tax_diff']) && abs($row['tax_diff']) > 1 ? 'text-accent-800 font-semibold' : '' }}">{{ $b ? rupees($b->total_tax) : '' }}</td>
+                                            @php
+                                                // 2B less books: what the supplier reported minus what you booked.
+                                                $diff = $row['tax_diff'] ?? null;
+                                            @endphp
+                                            <td class="{{ $num }}">{{ $e ? $paise($e->taxable_value) : '–' }}</td>
+                                            <td class="{{ $num }}">{{ $e ? $paise($e->tax()) : '–' }}</td>
+                                            <td class="{{ $num }}">{{ $b ? $paise($b->subtotal) : '–' }}</td>
+                                            <td class="{{ $num }}">{{ $b ? $paise($b->total_tax) : '–' }}</td>
+                                            <td class="{{ $num }} {{ $diff !== null && abs($diff) > 0.009 ? 'text-accent-800 font-semibold' : 'text-gray-400' }}">
+                                                @if ($diff === null)
+                                                    –
+                                                @elseif (abs($diff) < 0.005)
+                                                    0.00
+                                                @else
+                                                    {{ $diff > 0 ? '+' : '−' }}{{ $paise(abs($diff)) }}
+                                                @endif
+                                            </td>
                                             <td class="px-4 py-2.5 text-right whitespace-nowrap">
                                                 @if ($b)
-                                                    <a href="{{ route('purchases.show', $b) }}" class="text-brand-700 hover:underline text-xs font-semibold">Open</a>
+                                                    <a href="{{ route('purchases.show', $b) }}" class="text-brand-700 hover:underline text-sm font-semibold">Open</a>
                                                 @elseif ($sec['key'] === 'missing')
                                                     <a href="{{ route('purchases.create', ['bill_number' => $e->document_number, 'bill_date' => $e->document_date?->toDateString(), 'vendor_gstin' => $e->supplier_gstin, 'vendor_name' => $e->supplier_name]) }}"
-                                                       class="inline-flex items-center px-2.5 py-1 rounded-md bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold">+ Add purchase invoice</a>
+                                                       class="inline-flex items-center h-9 px-3 rounded-md bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-semibold">+ Add purchase invoice</a>
                                                 @endif
                                             </td>
                                         </tr>

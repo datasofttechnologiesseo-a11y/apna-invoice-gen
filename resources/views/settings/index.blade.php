@@ -1,13 +1,13 @@
-<x-app-layout title="Settings">
+<x-app-layout title="All settings">
     <x-slot name="header">
         <div class="min-w-0">
-            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Settings') }}</h1>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">All settings</h1>
             <p class="text-sm text-gray-500 mt-1">Account, business and support settings.</p>
         </div>
     </x-slot>
 
-    <div class="py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+    <div class="py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <x-flash />
 
             @php
@@ -35,7 +35,7 @@
                                 'badge' => null,
                             ],
                             [
-                                'title' => 'Data & Privacy',
+                                'title' => 'Data and privacy',
                                 'sub' => 'Consent, data export and DPDP rights',
                                 'href' => route('profile.privacy'),
                                 'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
@@ -48,8 +48,8 @@
                         'group' => 'Business',
                         'cards' => array_filter([
                             [
-                                'title' => 'Company profile',
-                                'sub' => 'Name, GSTIN, address, state, logo, signature',
+                                'title' => 'Company settings',
+                                'sub' => 'Name, GSTIN, address, logo, bank details, numbering',
                                 'href' => route('company.edit') . '?from=settings',
                                 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
                                 'tone' => 'brand',
@@ -87,13 +87,29 @@
                                 'tone' => 'brand',
                                 'badge' => null,
                             ] : null,
+                            \App\Support\Team::can('backup.index') ? [
+                                'title' => 'Backups',
+                                'sub' => 'Download all your data, or have it emailed to you',
+                                'href' => route('backup.index'),
+                                'icon' => 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4',
+                                'tone' => 'brand',
+                                'badge' => null,
+                            ] : null,
+                            \App\Support\Team::can('referrals.index') ? [
+                                'title' => 'Refer a friend',
+                                'sub' => 'Lifetime free access when a friend issues their first invoice',
+                                'href' => route('referrals.index'),
+                                'icon' => 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7',
+                                'tone' => 'brand',
+                                'badge' => null,
+                            ] : null,
                         ]),
                     ],
                     [
                         'group' => 'Help',
                         'cards' => [
                             [
-                                'title' => 'Help & support',
+                                'title' => 'Help and support',
                                 'sub' => 'Contact our support team',
                                 'href' => route('pages.contact'),
                                 'icon' => 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
@@ -122,27 +138,27 @@
 
             @foreach ($sections as $section)
                 <section>
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3 px-1">{{ $section['group'] }}</h2>
+                    <h2 class="text-sm font-semibold text-gray-700 mb-3 px-1">{{ $section['group'] }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach ($section['cards'] as $card)
                             @php $t = $tones[$card['tone']] ?? $tones['brand']; @endphp
                             <a href="{{ $card['href'] }}"
-                               class="group relative bg-white rounded-2xl shadow-card ring-1 ring-gray-200 hover:ring-brand-300 hover:shadow-md transition p-5 flex items-start gap-4">
-                                <div class="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center {{ $t['bg'] }} ring-1 {{ $t['ring'] }}">
-                                    <svg class="w-6 h-6 {{ $t['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                               class="group relative bg-white rounded-xl ring-1 ring-gray-200 hover:ring-brand-300 transition p-4 sm:p-5 flex items-start gap-4">
+                                <div class="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center {{ $t['bg'] }} ring-1 {{ $t['ring'] }}">
+                                    <svg class="w-5 h-5 {{ $t['text'] }}" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $card['icon'] }}"/>
                                     </svg>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <div class="font-semibold text-gray-900 group-hover:text-brand-700 transition">{!! $card['title'] !!}</div>
+                                        <div class="font-semibold text-gray-900 group-hover:text-brand-700 transition">{{ $card['title'] }}</div>
                                         @if (! empty($card['badge']))
-                                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-100 text-accent-800 ring-1 ring-accent-200">{{ $card['badge'] }}</span>
+                                            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-accent-50 text-accent-800 ring-1 ring-accent-200">{{ $card['badge'] }}</span>
                                         @endif
                                     </div>
                                     <div class="text-sm text-gray-500 mt-0.5">{{ $card['sub'] }}</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-300 group-hover:text-brand-500 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <svg class="w-4 h-4 shrink-0 mt-1 text-gray-400 group-hover:text-brand-600 transition" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </a>

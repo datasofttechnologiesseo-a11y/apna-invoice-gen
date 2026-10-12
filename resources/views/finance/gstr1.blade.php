@@ -1,28 +1,26 @@
 <x-app-layout title="GSTR-1 summary">
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Reports', 'href' => route('reports.index')],
+            ['label' => 'GSTR-1 summary'],
+        ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-1 Summary</h1>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">GSTR-1 summary</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $period->label() }} · {{ $company->name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">
-                <a href="{{ route('finance.gstr1.export.xlsx', $period->query()) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-money-600 hover:bg-money-700 text-white text-sm font-semibold rounded shadow-sm"
-                   title="GST offline tool Excel layout, one sheet per table">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Excel (offline tool)
-                </a>
+                <x-export-toolbar
+                    :items="[
+                        ['label' => 'Excel for the offline tool', 'hint' => 'One sheet per table', 'href' => route('finance.gstr1.export.xlsx', $period->query())],
+                        ['label' => 'CSV, invoice by invoice', 'hint' => 'With credit notes and HSN', 'href' => route('invoices.gstr1', ['from' => $period->start->toDateString(), 'to' => $period->end->toDateString()])],
+                    ]"
+                    print="window" />
                 <a href="{{ route('finance.gstr1.export.json', $period->query()) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-50 text-gray-800 ring-1 ring-gray-300 text-sm font-semibold rounded shadow-sm"
-                   title="Upload on the GST portal: Returns > GSTR-1 > Prepare Offline > Upload">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    JSON (portal upload)
-                </a>
-                <a href="{{ route('invoices.gstr1', ['from' => $period->start->toDateString(), 'to' => $period->end->toDateString()]) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded shadow-sm"
-                   title="Invoice-wise register with credit notes and HSN summary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
-                    CSV (invoice-wise)
+                   class="inline-flex items-center gap-1.5 h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm"
+                   title="Upload on the GST portal: Returns > GSTR-1 > Prepare offline > Upload">
+                    <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    JSON for the portal
                 </a>
             </div>
         </div>
@@ -34,7 +32,7 @@
         $num = 'px-4 py-2.5 text-right font-mono tabular-nums whitespace-nowrap';
     @endphp
 
-    <div class="py-8">
+    <div class="py-6 sm:py-8">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             <div class="print:hidden">
@@ -56,37 +54,40 @@
                     ['Cancelled', $cancelled],
                     ['Documents (Table 13)', $docTotal],
                 ] as [$label, $value])
-                    <div class="p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                        <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">{{ $label }}</div>
+                    <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
+                        <div class="text-xs font-medium text-gray-600">{{ $label }}</div>
                         <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $value }}</div>
                     </div>
                 @endforeach
             </div>
 
             {{-- Table-wise summary --}}
-            <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                <div class="px-5 py-4 bg-gradient-to-r from-brand-700 to-brand-800 text-white">
-                    <div class="text-[10px] uppercase tracking-widest font-bold text-accent-300">Table-wise</div>
-                    <h2 class="font-display text-lg font-extrabold">Summary by GSTR-1 table</h2>
+            @php
+                // Labels from the builder say "Rs"; the screen says ₹ everywhere.
+                $tableLabel = fn (string $l) => str_replace(['Rs. ', 'Rs '], '₹', $l);
+            @endphp
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g1-tables">
+                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+                    <h2 id="g1-tables" class="font-display text-base sm:text-lg font-bold text-gray-900">Summary by GSTR-1 table</h2>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm min-w-[720px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                             <tr>
-                                <th class="px-4 py-2.5 text-left font-semibold">Table</th>
-                                <th class="px-4 py-2.5 text-left font-semibold">Section</th>
-                                <th class="px-4 py-2.5 text-right font-semibold">Records</th>
-                                <th class="px-4 py-2.5 text-right font-semibold">Taxable value (₹)</th>
-                                <th class="px-4 py-2.5 text-right font-semibold">IGST (₹)</th>
-                                <th class="px-4 py-2.5 text-right font-semibold">CGST (₹)</th>
-                                <th class="px-4 py-2.5 text-right font-semibold">SGST/UTGST (₹)</th>
+                                <th class="px-4 py-2.5 text-left">Table</th>
+                                <th class="px-4 py-2.5 text-left">Section</th>
+                                <th class="px-4 py-2.5 text-right">Records</th>
+                                <th class="px-4 py-2.5 text-right whitespace-nowrap">Taxable value (₹)</th>
+                                <th class="px-4 py-2.5 text-right whitespace-nowrap">IGST (₹)</th>
+                                <th class="px-4 py-2.5 text-right whitespace-nowrap">CGST (₹)</th>
+                                <th class="px-4 py-2.5 text-right whitespace-nowrap">SGST/UTGST (₹)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($tables as $key => $t)
                                 <tr class="{{ $t['records'] ? '' : 'text-gray-500' }}">
                                     <td class="px-4 py-2.5 font-semibold whitespace-nowrap">{{ $t['table'] }}</td>
-                                    <td class="px-4 py-2.5">{{ $t['label'] }}</td>
+                                    <td class="px-4 py-2.5">{{ $tableLabel($t['label']) }}</td>
                                     <td class="{{ $num }}">{{ $t['records'] }}</td>
                                     <td class="{{ $num }}">{{ rupees($t['taxable']) }}</td>
                                     <td class="{{ $num }}">{{ rupees($t['igst']) }}</td>
@@ -97,21 +98,42 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
+                {{-- Phones: one block per table, every amount on screen. --}}
+                <ul class="sm:hidden divide-y divide-gray-100">
+                    @foreach ($tables as $key => $t)
+                        <li class="px-4 py-3 {{ $t['records'] ? '' : 'text-gray-500' }}">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <div class="text-sm min-w-0"><strong>{{ $t['table'] }}</strong> {{ $tableLabel($t['label']) }}</div>
+                                <div class="text-xs text-gray-500 shrink-0">{{ $t['records'] }} {{ \Illuminate\Support\Str::plural('record', $t['records']) }}</div>
+                            </div>
+                            @if ($t['records'])
+                                <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                                    @foreach (['taxable' => 'Taxable', 'igst' => 'IGST', 'cgst' => 'CGST', 'sgst' => 'SGST/UTGST'] as $k => $l)
+                                        <div class="flex items-baseline justify-between gap-2">
+                                            <dt class="text-xs text-gray-500">{{ $l }}</dt>
+                                            <dd class="tabular-nums font-medium text-gray-900">₹{{ rupees($t[$k]) }}</dd>
+                                        </div>
+                                    @endforeach
+                                </dl>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="px-4 sm:px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
                     4B: tax is payable by your customer, so IGST/CGST/SGST show as zero. Credit notes on B2C invoices up to ₹1 lakh are netted in Table 7.
                     Not included (enter on the portal if applicable): deemed exports (6C), advances (11), amendments (9A/9C/10).
                 </div>
             </section>
 
             {{-- Ties to GSTR-3B --}}
-            <section class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
-                <div class="px-5 py-4 bg-gradient-to-r from-money-700 to-money-800 text-white">
-                    <div class="text-[10px] uppercase tracking-widest font-bold text-money-200">Cross-check</div>
-                    <h2 class="font-display text-lg font-extrabold">Net figures for GSTR-3B</h2>
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g1-3b">
+                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+                    <div class="text-xs font-semibold text-brand-700">Cross-check</div>
+                    <h2 id="g1-3b" class="font-display text-base sm:text-lg font-bold text-gray-900">Net figures for GSTR-3B</h2>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[600px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                        <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                             <tr>
                                 <th class="px-4 py-2.5 text-left font-semibold">GSTR-3B row</th>
                                 <th class="px-4 py-2.5 text-right font-semibold">Taxable value (₹)</th>
@@ -121,7 +143,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            <tr class="bg-money-50/30">
+                            <tr>
                                 <td class="px-4 py-2.5"><strong>3.1(a)</strong> Outward taxable supplies <span class="text-xs text-gray-500">(4A + 5 + 7 − 9B, excluding reverse charge)</span></td>
                                 <td class="{{ $num }} font-semibold">{{ rupees($summary['taxable']) }}</td>
                                 <td class="{{ $num }}">{{ rupees($summary['igst']) }}</td>
@@ -132,22 +154,22 @@
                                 <td class="px-4 py-2.5"><strong>3.1(b)</strong> Zero rated <span class="text-xs text-gray-500">(6A exports + 6B SEZ, net of 9B)</span></td>
                                 <td class="{{ $num }}">{{ rupees($summary['zero_taxable']) }}</td>
                                 <td class="{{ $num }}">{{ rupees($summary['zero_igst']) }}</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
                             </tr>
                             <tr>
                                 <td class="px-4 py-2.5"><strong>3.1(c)</strong> Nil rated <span class="text-xs text-gray-500">(Table 8)</span></td>
                                 <td class="{{ $num }}">{{ rupees($summary['nil']) }}</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
                             </tr>
                             <tr class="text-gray-600">
                                 <td class="px-4 py-2.5">Reverse-charge sales <span class="text-xs text-gray-500">(tax paid by your customer, not in 3B)</span></td>
                                 <td class="{{ $num }}">{{ rupees($summary['rcm_taxable']) }}</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
-                                <td class="{{ $num }} text-gray-400">-</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
+                                <td class="{{ $num }} text-gray-400">–</td>
                             </tr>
                         </tbody>
                     </table>
@@ -177,7 +199,7 @@
                     @if (count($rows))
                         <div class="overflow-x-auto border-t border-gray-100">
                             <table class="w-full text-sm">
-                                <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+                                <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
                                     <tr>
                                         @foreach ($cols as $label => $key)
                                             <th class="px-4 py-2 font-semibold whitespace-nowrap {{ in_array($key, $money, true) || in_array($key, ['rate', 'qty', 'total', 'cancelled'], true) ? 'text-right' : 'text-left' }}">{{ $label }}</th>

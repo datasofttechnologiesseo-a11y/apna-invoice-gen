@@ -23,7 +23,9 @@ class DashboardController extends Controller
 
         // Today's micro-stats — drive the "you've done X today" line in the
         // dashboard header. Keeps users engaged with a sense of momentum.
+        // A cancelled invoice was issued, but it is not a sale: not counted.
         $todayIssued = (clone $invoices)->whereNotNull('finalized_at')
+            ->where('status', '!=', 'cancelled')
             ->whereBetween('finalized_at', [$todayStart, $todayEnd])->count();
         $todayCollected = (float) (clone $payments)
             ->whereBetween('received_at', [$todayStart, $todayEnd])->sum('amount');
@@ -41,23 +43,23 @@ class DashboardController extends Controller
         };
         $firstName = preg_split('/\s+/', trim($user->name ?? ''))[0] ?? '';
 
-        // Fixed-date festivals + national days. Keep it small and tasteful —
-        // a single emoji + short label. Variable-date festivals (Diwali, Holi,
-        // Eid) need a year lookup; for 2026 we hard-code the known dates.
+        // Fixed-date festivals and national days, as one quiet line under the
+        // date. Variable-date festivals (Diwali, Holi, Eid) need a year
+        // lookup; the 2026 dates are listed here.
         $today = now()->format('m-d');
         $festivals2026 = [
-            '01-01' => ['name' => 'Happy New Year', 'emoji' => '🎊'],
-            '01-14' => ['name' => 'Happy Makar Sankranti / Pongal', 'emoji' => '🌾'],
-            '01-26' => ['name' => 'Happy Republic Day', 'emoji' => '🇮🇳'],
-            '03-04' => ['name' => 'Happy Holi', 'emoji' => '🎨'],     // 2026
-            '04-14' => ['name' => 'Happy Baisakhi / Tamil New Year', 'emoji' => '🌻'],
-            '05-01' => ['name' => 'Happy Labour Day', 'emoji' => '👷'],
-            '08-15' => ['name' => 'Happy Independence Day', 'emoji' => '🇮🇳'],
-            '10-02' => ['name' => 'Gandhi Jayanti', 'emoji' => '🕊️'],
-            '10-20' => ['name' => 'Shubh Dhanteras', 'emoji' => '💰'],   // 2026
-            '10-22' => ['name' => 'Shubh Diwali', 'emoji' => '🪔'],      // 2026
-            '11-14' => ['name' => "Children's Day", 'emoji' => '🧒'],
-            '12-25' => ['name' => 'Merry Christmas', 'emoji' => '🎄'],
+            '01-01' => 'Happy New Year',
+            '01-14' => 'Happy Makar Sankranti and Pongal',
+            '01-26' => 'Happy Republic Day',
+            '03-04' => 'Happy Holi',
+            '04-14' => 'Happy Baisakhi and Tamil New Year',
+            '05-01' => 'Happy Labour Day',
+            '08-15' => 'Happy Independence Day',
+            '10-02' => 'Gandhi Jayanti',
+            '10-20' => 'Shubh Dhanteras',
+            '10-22' => 'Shubh Diwali',
+            '11-14' => "Children's Day",
+            '12-25' => 'Merry Christmas',
         ];
         $festival = $festivals2026[$today] ?? null;
 
@@ -88,52 +90,50 @@ class DashboardController extends Controller
                 ->whereNotIn('status', ['draft', 'cancelled'])
                 ->whereBetween('invoice_date', [$monthStart, $monthEnd])
                 ->sum('paid_amount'),
+            // Credit notes raised against this month's invoices. The tile shows
+            // sales net of them: the same basis as the collection ring, where
+            // collected + due + overdue = billed less credit notes.
+            'credited_this_month' => (clone $invoices)->where('currency', $currency)
+                ->whereNotIn('status', ['draft', 'cancelled'])
+                ->whereBetween('invoice_date', [$monthStart, $monthEnd])
+                ->sum('credited_amount'),
+            'received_count_this_month' => (clone $payments)
+                ->whereBetween('received_at', [$monthStart, $monthEnd])->count(),
         ];
 
-        $recent = (clone $invoices)->with('customer')->latest('id')->take(10)->get();
+        // The key-figure row. Each figure is the total of the report its tile
+        // opens, so the dashboard and the report never disagree:
+        //   outstanding = Receivables aging (issued invoices, unpaid balance)
+        //   payables    = Payables aging (purchase invoices with a balance)
+        $todayDate = now()->toDateString();
+        $stats['outstanding_overdue'] = (float) (clone $invoices)->where('currency', $currency)
+            ->whereIn('status', ['final', 'partially_paid'])
+            ->where('balance', '>', 0)
+            ->whereNotNull('due_date')->where('due_date', '<', $todayDate)
+            ->sum('balance');
+        $payablesQ = $company->purchaseBills()->where('balance', '>', 0);
+        $stats['payables'] = (float) (clone $payablesQ)->sum('balance');
+        $stats['payables_count'] = (clone $payablesQ)->count();
+        $stats['payables_overdue'] = (float) (clone $payablesQ)
+            ->whereNotNull('due_date')->where('due_date', '<', $todayDate)->sum('balance');
 
-        // This month's P&L snapshot
-        $start = now()->startOfMonth();
-        $end = now()->endOfMonth();
-        // Same definitions as the Finance P&L: income net of credit notes
-        // issued this month (s.34), expenses including GST you cannot claim
-        // back (blocked credit, s.17(5)).
-        $monthIncome = round((float) (clone $invoices)->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$start, $end])->sum('subtotal')
-            - (float) \App\Models\CreditNote::where('company_id', $company->id)
-                ->whereBetween('credit_note_date', [$start, $end])->sum('taxable_value'), 2);
-        $monthExpense = round((float) $company->expenses()->whereBetween('entry_date', [$start, $end])->sum('amount')
-            + (float) $company->expenses()->whereBetween('entry_date', [$start, $end])->where('itc_eligible', false)->sum('gst_amount'), 2);
-        $pnl = [
-            'income' => $monthIncome,
-            'expense' => $monthExpense,
-            'profit' => $monthIncome - $monthExpense,
-        ];
+        $recent = (clone $invoices)->with('customer')->latest('id')->take(8)->get();
 
-        // Smart Action Items — the "what should I do today?" widget. Each entry
-        // is something the user can act on in one click. Computed cheap from
-        // existing indexed columns; no separate tables or jobs.
-        $today = now()->toDateString();
+        // "Needs attention": what the owner should act on, most urgent first.
+        // Overdue invoices, then the GST returns falling due (added below,
+        // once the return calendar is known), then stock and old drafts.
+        // Computed from indexed columns; no extra tables or jobs.
         $overdueQ = (clone $invoices)
             ->whereIn('status', ['final', 'partially_paid'])
             ->where('balance', '>', 0)
             ->whereNotNull('due_date')
-            ->where('due_date', '<', $today);
+            ->where('due_date', '<', $todayDate);
         $overdueCount  = (clone $overdueQ)->count();
         $overdueAmount = (float) (clone $overdueQ)->sum('balance');
 
-        $staleDraftsQ = (clone $invoices)
+        $staleDrafts = (clone $invoices)
             ->where('status', 'draft')
-            ->where('created_at', '<', now()->subDays(7));
-        $staleDrafts  = (clone $staleDraftsQ)->count();
-
-        // Invoices issued but never sent (no email, no reminder, no payment).
-        // Cheap heuristic: finalised > 1 day ago, balance owed, no reminders sent.
-        $unsentRecent = (clone $invoices)
-            ->whereIn('status', ['final', 'partially_paid'])
-            ->where('balance', '>', 0)
-            ->where('finalized_at', '<', now()->subDay())
-            ->whereDoesntHave('reminders')
+            ->where('created_at', '<', now()->subDays(7))
             ->count();
 
         $actionItems = [];
@@ -144,50 +144,40 @@ class DashboardController extends Controller
                 'title' => $overdueCount === 1
                     ? '1 invoice is overdue'
                     : "{$overdueCount} invoices are overdue",
-                'sub'   => '₹' . rupees($overdueAmount) . ' awaiting payment',
-                'cta'   => 'View overdue invoices',
-                'href'  => route('invoices.index', ['status' => 'outstanding']),
+                'sub'   => '₹' . rupees($overdueAmount) . ' past the due date',
+                'cta'   => 'View',
+                'href'  => route('finance.aging'),
+            ];
+        }
+        // Items at or below their low-stock level (only for items that track
+        // stock and have a level set - nothing shows for anyone else). An
+        // archived item is no longer sold, so it is nothing to reorder.
+        $lowStock = $company->products()->where('is_active', true)->where('track_stock', true)->whereNotNull('low_stock_level')
+            ->withSum('stockMovements', 'quantity')->get()
+            ->filter(fn ($p) => $p->stockOnHand() <= (float) $p->low_stock_level);
+        $laterItems = [];
+        if ($lowStock->isNotEmpty()) {
+            $laterItems[] = [
+                'tone' => 'accent',
+                'icon' => 'stock',
+                'title' => $lowStock->count() === 1
+                    ? $lowStock->first()->name . ' is low on stock'
+                    : $lowStock->count() . ' items are low on stock',
+                'sub'   => 'At or below the reorder level',
+                'cta'   => 'View',
+                'href'  => route('reports.show', ['report' => 'stock-summary', 'status' => 'low']),
             ];
         }
         if ($staleDrafts > 0) {
-            $actionItems[] = [
+            $laterItems[] = [
                 'tone' => 'accent',
                 'icon' => 'draft',
                 'title' => $staleDrafts === 1
                     ? '1 draft older than a week'
                     : "{$staleDrafts} drafts older than a week",
                 'sub'   => 'Issue or delete them',
-                'cta'   => 'Review drafts',
+                'cta'   => 'View',
                 'href'  => route('invoices.index', ['status' => 'draft']),
-            ];
-        }
-        if ($unsentRecent > 0) {
-            $actionItems[] = [
-                'tone' => 'brand',
-                'icon' => 'send',
-                'title' => $unsentRecent === 1
-                    ? '1 invoice not shared yet'
-                    : "{$unsentRecent} invoices not shared yet",
-                'sub'   => 'Send them on WhatsApp or email',
-                'cta'   => 'See invoices',
-                'href'  => route('invoices.index', ['status' => 'outstanding']),
-            ];
-        }
-        // Items at or below their low-stock level (only for items that track
-        // stock and have a level set - nothing shows for anyone else).
-        $lowStock = $company->products()->where('track_stock', true)->whereNotNull('low_stock_level')
-            ->withSum('stockMovements', 'quantity')->get()
-            ->filter(fn ($p) => $p->stockOnHand() <= (float) $p->low_stock_level);
-        if ($lowStock->isNotEmpty()) {
-            $actionItems[] = [
-                'tone' => 'accent',
-                'icon' => 'stock',
-                'title' => $lowStock->count() === 1
-                    ? $lowStock->first()->name . ' is low on stock'
-                    : $lowStock->count() . ' items are low on stock',
-                'sub'   => 'Reorder before you run out',
-                'cta'   => 'See stock',
-                'href'  => route('reports.show', ['report' => 'stock-summary', 'status' => 'low']),
             ];
         }
 
@@ -198,27 +188,6 @@ class DashboardController extends Controller
         ];
         $setupComplete = ! in_array(false, $setup, true);
         $setupProgress = round((array_sum($setup) / count($setup)) * 100);
-
-        // 30-day daily revenue trend — payments received per day. Drives the
-        // sparkline on the dashboard. One row per day so the chart shows real
-        // gaps (zero days) instead of misleadingly straight-lining over them.
-        $trendStart = now()->subDays(29)->startOfDay();
-        $trendEnd = now()->endOfDay();
-        $rows = (clone $payments)
-            ->selectRaw('DATE(received_at) as d, SUM(amount) as total')
-            ->whereBetween('received_at', [$trendStart, $trendEnd])
-            ->groupBy('d')
-            ->pluck('total', 'd');
-
-        $trend30 = [];
-        for ($i = 29; $i >= 0; $i--) {
-            $day = now()->subDays($i)->toDateString();
-            $trend30[] = [
-                'date' => $day,
-                'label' => \Illuminate\Support\Carbon::parse($day)->format('d M'),
-                'amount' => (float) ($rows[$day] ?? 0),
-            ];
-        }
 
         // Where the money stands right now — the sales ring.
         //
@@ -337,7 +306,8 @@ class DashboardController extends Controller
         $invoicedMonths = $byMonth(
             (clone $invoices)->where('currency', $currency)->whereNotIn('status', ['draft', 'cancelled']),
             'invoice_date',
-            ['total' => 'grand_total']
+            // Net of credit notes, like the sales tile and the ring.
+            ['total' => 'grand_total - credited_amount']
         );
         $collectedMonths = $byMonth((clone $payments), 'received_at', ['total' => 'amount']);
         $spendMonths = $byMonth(
@@ -449,12 +419,59 @@ class DashboardController extends Controller
                 'cash' => (float) $g3b['netCash']['total'],
                 'invoices' => (int) $g3b['invoiceCount'],
             ];
+
+            // A return joins the list a week before it is due and stays for a
+            // few days after. We cannot see the portal, so after that the GST
+            // card still shows the date, without nagging.
+            $startOfToday = now()->startOfDay();
+            $daysTo = fn ($date) => (int) $startOfToday->diffInDays($date->copy()->startOfDay(), false);
+            $dueLine = fn (int $days, $date): string => match (true) {
+                $days < 0 => 'Was due ' . $date->format('d M') . '. File it if you have not yet.',
+                $days === 0 => 'Due today',
+                $days === 1 => 'Due tomorrow, ' . $date->format('d M'),
+                default => 'Due ' . $date->format('d M') . ', in ' . $days . ' days',
+            };
+            $label = $gstCalendar['label'];
+            $d1 = $daysTo($gstCalendar['gstr1_due']);
+            if ($d1 <= 7 && $d1 >= -5) {
+                $actionItems[] = [
+                    'tone' => $d1 <= 0 ? 'danger' : 'accent',
+                    'icon' => 'gst',
+                    'title' => "GSTR-1 for {$label}",
+                    'sub' => $dueLine($d1, $gstCalendar['gstr1_due']),
+                    'cta' => 'Open',
+                    'href' => route('finance.gstr1', $gstCalendar['query']),
+                ];
+            }
+            $d3 = $daysTo($gstCalendar['gstr3b_due']);
+            if (! $gstCalendar['gstr2b_uploaded'] && now()->gte($gstCalendar['gstr2b_from']) && $d3 >= 0) {
+                $actionItems[] = [
+                    'tone' => 'accent',
+                    'icon' => 'gst',
+                    'title' => "Upload GSTR-2B for {$label}",
+                    'sub' => 'Match supplier invoices before you file GSTR-3B',
+                    'cta' => 'Upload',
+                    'href' => route('finance.gstr2b', ['month' => $gstCalendar['query']['month']]),
+                ];
+            }
+            if ($d3 <= 7 && $d3 >= -5) {
+                $actionItems[] = [
+                    'tone' => $d3 <= 0 ? 'danger' : 'accent',
+                    'icon' => 'gst',
+                    'title' => "GSTR-3B for {$label}"
+                        . ($gstCalendar['cash'] > 0 ? ' · ₹' . rupees($gstCalendar['cash']) . ' to pay' : ''),
+                    'sub' => $dueLine($d3, $gstCalendar['gstr3b_due']),
+                    'cta' => 'Open',
+                    'href' => route('finance.gstr3b', $gstCalendar['query']),
+                ];
+            }
         }
+        $actionItems = array_merge($actionItems, $laterItems);
 
         return view('dashboard', compact(
             'gstCalendar',
             'stats', 'recent', 'currency', 'company', 'setup', 'setupComplete',
-            'setupProgress', 'pnl', 'trend30',
+            'setupProgress',
             'receivables', 'spendByCategory', 'chartSeries',
             'greeting', 'firstName', 'festival', 'todayIssued', 'todayCollected',
             'actionItems', 'isFirstRun', 'showReviewInvite'

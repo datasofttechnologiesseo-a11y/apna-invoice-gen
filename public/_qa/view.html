@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>PDF check</title>
+<style>body{margin:0;background:#888}canvas{display:block;margin:8px auto;background:#fff;box-shadow:0 1px 4px #0006}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script></head>
+<body><div id="out"></div><script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const f=new URLSearchParams(location.search).get('f')||'inv111.pdf';
+const scale=parseFloat(new URLSearchParams(location.search).get('s')||'1.25');
+pdfjsLib.getDocument({url:f,standardFontDataUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',cMapUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',cMapPacked:true}).promise.then(async pdf=>{document.title='pages:'+pdf.numPages;const only=parseInt(new URLSearchParams(location.search).get('p')||'0');for(let i=1;i<=pdf.numPages;i++){if(only&&i!==only)continue;const p=await pdf.getPage(i);const v=p.getViewport({scale});const c=document.createElement('canvas');c.width=v.width;c.height=v.height;document.getElementById('out').appendChild(c);await p.render({canvasContext:c.getContext('2d'),viewport:v}).promise;}window.done=true;});
+</script></body></html>

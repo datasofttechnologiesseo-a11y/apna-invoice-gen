@@ -414,14 +414,25 @@ class MoneySafetyRegressionTest extends TestCase
         $zip = new \ZipArchive();
         $zip->open($zipPath);
         $names = [];
+        $files = [];
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $names[] = basename($zip->getNameIndex($i));
+            $files[basename($zip->getNameIndex($i))] = $zip->getFromIndex($i);
         }
         $zip->close();
         @unlink($zipPath);
 
-        foreach (['purchase_invoices.csv', 'purchase_invoice_items.csv', 'vendor_payments.csv', 'vendors.csv', 'credit_notes.csv', 'quotations.csv', 'cash_memos.csv'] as $f) {
+        foreach (['purchase_invoices.csv', 'purchase_invoice_items.csv', 'vendor_payments.csv', 'vendors.csv', 'credit_notes.csv', 'quotations.csv', 'cash_memos.csv',
+            'quotation_items.csv', 'stock_movements.csv', 'bank_statements.csv', 'bank_statement_lines.csv', 'gstr2b_entries.csv'] as $f) {
             $this->assertContains($f, $names);
         }
+        // Enough to rebuild GSTR-1 and TDS outside the app, and readable in Excel.
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $files['invoices.csv']);
+        $header = fn (string $file) => strtok($files[$file], "\n");
+        foreach (['place_of_supply', 'supply_type', 'reverse_charge', 'round_off', 'credited_amount'] as $col) {
+            $this->assertStringContainsString($col, $header('invoices.csv'));
+        }
+        $this->assertStringContainsString('tds_amount', $header('payments.csv'));
+        $this->assertStringContainsString('opening_stock', $header('products.csv'));
     }
 }

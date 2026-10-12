@@ -36,8 +36,11 @@ class FinanceController extends Controller
         $trend = $this->monthlyTrend($company, $periodEnd);
 
         // ── Expenses by category ──
+        // Each category includes the GST that cannot be claimed back (blocked
+        // credit, s.17(5)), as the headline expense figure does, so the
+        // categories add up to that figure to the rupee.
         $byCategory = (clone $expensesInPeriod)
-            ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->select('category', DB::raw('SUM(amount + CASE WHEN itc_eligible = 0 THEN COALESCE(gst_amount, 0) ELSE 0 END) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('category')
             ->orderByDesc('total')
             ->get()
@@ -81,7 +84,7 @@ class FinanceController extends Controller
 
         // Aggregates over the same filtered set (not paginated — full period totals)
         $totals = (clone $base)
-            ->selectRaw('SUM(amount) as taxable, SUM(gst_amount) as gst, COUNT(*) as cnt')
+            ->selectRaw('SUM(amount) as taxable, SUM(gst_amount) as gst, SUM(CASE WHEN itc_eligible = 1 THEN COALESCE(gst_amount, 0) ELSE 0 END) as itc, COUNT(*) as cnt')
             ->first();
 
         $byCategory = (clone $base)
@@ -104,6 +107,8 @@ class FinanceController extends Controller
         $summary = [
             'taxable' => (float) ($totals->taxable ?? 0),
             'gst' => (float) ($totals->gst ?? 0),
+            // GST on entries marked ITC eligible: what can be claimed back.
+            'itc_claimable' => round((float) ($totals->itc ?? 0), 2),
             'count' => (int) ($totals->cnt ?? 0),
         ];
         $summary['cash_out'] = $summary['taxable'] + $summary['gst'];
@@ -346,7 +351,7 @@ class FinanceController extends Controller
             csv_put($out, []);
             csv_put($out, [
                 'S.No.', 'Customer', 'Customer GSTIN', 'Invoice No.', 'Invoice Date',
-                'Due Date', 'Days Overdue', 'Bucket', 'Grand Total (Rs.)', 'Paid (Rs.)', 'Balance (Rs.)',
+                'Due Date', 'Days Overdue', 'Bucket', 'Grand Total (Rs.)', 'Paid (Rs.)', 'Credit Notes (Rs.)', 'Balance (Rs.)',
             ]);
             $i = 0;
             foreach ($rows as $r) {
@@ -362,11 +367,13 @@ class FinanceController extends Controller
                     $r['bucket'],
                     number_format((float) $r['grand_total'], 2, '.', ''),
                     number_format((float) $r['paid_amount'], 2, '.', ''),
+                    // Grand total - paid - credit notes = balance, so the row adds up.
+                    number_format((float) $r['credited_amount'], 2, '.', ''),
                     number_format((float) $r['balance'], 2, '.', ''),
                 ]);
             }
             csv_put($out, []);
-            csv_put($out, ['', '', '', '', '', '', '', 'TOTAL', '', '', number_format((float) $rows->sum('balance'), 2, '.', '')]);
+            csv_put($out, ['', '', '', '', '', '', '', 'TOTAL', '', '', '', number_format((float) $rows->sum('balance'), 2, '.', '')]);
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
@@ -401,6 +408,7 @@ class FinanceController extends Controller
                 'customer_gstin' => $inv->customer?->gstin,
                 'grand_total' => (float) $inv->grand_total,
                 'paid_amount' => (float) $inv->paid_amount,
+                'credited_amount' => (float) $inv->credited_amount,
                 'balance' => (float) $inv->balance,
                 'days_overdue' => $days,
                 'bucket' => $bucket,
@@ -476,7 +484,12 @@ class FinanceController extends Controller
 
         $data = $this->buildGstr3b($company, $periodStart, $periodEnd);
 
+        // Which credit paid which tax (Table 6.1). Same inputs as the
+        // builder's own set-off, so the totals are the ones on screen.
+        $setOffMatrix = app(\App\Services\GstSetOff::class)->settle($data['liability'], $data['itc'])['matrix'];
+
         return view('finance.gstr3b', array_merge($data, [
+            'setOffMatrix' => $setOffMatrix,
             'company' => $company,
             'periodStart' => $periodStart,
             'periodEnd' => $periodEnd,

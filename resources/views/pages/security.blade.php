@@ -1,5 +1,5 @@
 <x-layouts.marketing
-    title="Security and Data Protection"
+    title="Security and data protection"
     eyebrow="Trust"
     lead="How we protect your invoices, customer data, and account. Transparent practices, no marketing theatre."
     description="How we keep your invoice and customer data safe: encrypted in transit and at rest, access controls, daily backups and responsible disclosure."

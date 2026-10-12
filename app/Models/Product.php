@@ -66,6 +66,33 @@ class Product extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    public function purchaseBillItems(): HasMany
+    {
+        return $this->hasMany(PurchaseBillItem::class);
+    }
+
+    public function quotationItems(): HasMany
+    {
+        return $this->hasMany(QuotationItem::class);
+    }
+
+    /**
+     * Where this item has history, or null if it was never used. An item
+     * with history is archived, never deleted: deleting would unlink it
+     * from bills and erase its stock ledger, which cascades with the item.
+     * Shared by the web and the app so both apply the same rule.
+     */
+    public function usedOn(): ?string
+    {
+        return match (true) {
+            $this->invoiceItems()->exists() => 'an invoice',
+            $this->purchaseBillItems()->exists() => 'a purchase invoice',
+            $this->stockMovements()->exists() => 'stock entries',
+            $this->quotationItems()->exists() => 'a quotation',
+            default => null,
+        };
+    }
+
     public function kindLabel(): string
     {
         return config('uqc_units.kinds.' . $this->kind, ucfirst($this->kind));

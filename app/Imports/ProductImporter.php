@@ -15,7 +15,7 @@ class ProductImporter extends Importer
 
     public function title(): string
     {
-        return 'Products & Services';
+        return 'Items';
     }
 
     public function listRoute(): string
@@ -29,10 +29,10 @@ class ProductImporter extends Importer
             'name' => ['label' => 'Item Name', 'required' => true, 'help' => 'As it should print on the invoice line', 'example' => 'Intel Core Ultra 9 285K', 'aliases' => ['name', 'product', 'product name', 'item', 'service', 'description']],
             'sku' => ['label' => 'Item Code', 'help' => 'Your SKU / item code (optional, must be unique)', 'example' => 'CPU-285K', 'aliases' => ['sku', 'code', 'product code']],
             'kind' => ['label' => 'Type', 'help' => 'Goods or Service. Left blank: SAC codes starting 99 are services, others goods', 'example' => 'Goods', 'aliases' => ['kind', 'goods/service', 'category']],
-            'hsn_sac' => ['label' => 'HSN/SAC', 'help' => '4-8 digits', 'example' => '84733010', 'aliases' => ['hsn', 'sac', 'hsn code', 'sac code', 'hsn/sac code']],
+            'hsn_sac' => ['label' => 'HSN/SAC', 'help' => '4 to 8 digits. Required for a GST-registered business', 'example' => '84733010', 'aliases' => ['hsn', 'sac', 'hsn code', 'sac code', 'hsn/sac code']],
             'unit' => ['label' => 'Unit (UQC)', 'help' => 'GST unit code, e.g. NOS, PCS, KGS, BOX, HRS. Blank = NOS', 'example' => 'NOS', 'aliases' => ['unit', 'uqc', 'uom']],
             'rate' => ['label' => 'Sale Price', 'required' => true, 'help' => 'Price before GST, in ₹', 'example' => '49576.27', 'aliases' => ['rate', 'price', 'selling price', 'sale rate', 'mrp']],
-            'gst_rate' => ['label' => 'GST %', 'required' => true, 'help' => '0, 5, 18 or 40 (GST 2.0); 0.25, 1.5, 3 for special items', 'example' => '18', 'aliases' => ['gst', 'gst rate', 'tax rate', 'tax %', 'gst%']],
+            'gst_rate' => ['label' => 'GST %', 'required' => true, 'help' => 'GST 2.0 rates: 0, 5, 18 or 40. Also accepted: 0.1, 0.25, 1, 1.5, 3, 7.5 for special items, and the older 12 and 28', 'example' => '18', 'aliases' => ['gst', 'gst rate', 'tax rate', 'tax %', 'gst%']],
             'purchase_rate' => ['label' => 'Purchase Price', 'help' => 'What you pay the supplier, before GST, in ₹ (optional, used for stock value)', 'example' => '42000', 'aliases' => ['purchase price', 'purchase rate', 'cost', 'cost price', 'buying price']],
             'opening_stock' => ['label' => 'Opening Stock', 'help' => 'Quantity in hand today (goods only). Filling it turns on stock tracking', 'example' => '25', 'aliases' => ['opening stock', 'stock', 'qty', 'quantity', 'stock in hand', 'closing stock']],
             'low_stock_level' => ['label' => 'Low Stock Alert', 'help' => 'Warn when stock falls to this quantity (goods only)', 'example' => '5', 'aliases' => ['low stock', 'reorder level', 'minimum stock', 'min stock', 'reorder point']],

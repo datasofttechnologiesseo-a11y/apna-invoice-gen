@@ -1,5 +1,12 @@
 <x-app-layout title="Cash memo">
     <x-slot name="header">
+        <div class="print:hidden">
+            <x-breadcrumbs :items="[
+                ['label' => 'Expenses', 'href' => route('finance.expenses')],
+                ['label' => 'Cash memos', 'href' => route('finance.cash-memos.index')],
+                ['label' => $memo->memo_number],
+            ]" />
+        </div>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 print:hidden">
             <div>
                 <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ $memo->memo_number }}</h1>
@@ -15,20 +22,19 @@
                 $waUrl = 'https://wa.me/?text=' . rawurlencode($waMsg);
             @endphp
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← All memos</a>
-                <a href="{{ $waUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-[#0f7540] hover:bg-[#0c5f34] text-white font-semibold rounded-lg text-sm" title="Share details via WhatsApp">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                <a href="{{ $waUrl }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50" title="Share details on WhatsApp">
+                    <svg class="w-4 h-4 text-[#128C7E]" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                     WhatsApp
                 </a>
-                <a href="{{ route('finance.cash-memos.edit', $memo) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 font-semibold rounded-lg text-sm" title="Edit this cash memo">
+                <a href="{{ route('finance.cash-memos.edit', $memo) }}" class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50" title="Edit this cash memo">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit
                 </a>
-                <a href="{{ route('finance.cash-memos.pdf', $memo) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-money-600 hover:bg-money-700 text-white font-semibold rounded-lg text-sm" title="Download PDF">
+                <a href="{{ route('finance.cash-memos.pdf', $memo) }}" class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-sm" title="Download PDF">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    PDF
+                    Download PDF
                 </a>
-                <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm" title="Print the cash memo">
+                <button type="button" onclick="window.print()" class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50" title="Print the cash memo">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Print
                 </button>
@@ -47,8 +53,8 @@
     </div>
 
     <div class="py-6 print:py-0">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 print:px-0 print:max-w-none">
-            <div class="bg-white shadow-lg sm:rounded-lg p-8 sm:p-10 print:shadow-none print:rounded-none print:p-6 cash-memo-doc">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 print:px-0 print:max-w-none">
+            <div class="bg-white rounded-xl ring-1 ring-gray-200 p-4 sm:p-10 print:ring-0 print:shadow-none print:rounded-none print:p-6 cash-memo-doc">
 
                 {{-- ─── Seller letterhead (issuer) ─── --}}
                 <div class="text-center border-b-2 border-gray-900 pb-3 mb-3">
@@ -73,7 +79,7 @@
                 {{-- ─── Bill To (buyer) + Memo metadata ─── --}}
                 <div class="grid grid-cols-2 gap-6 mb-6 text-sm">
                     <div>
-                        <div class="text-[10px] uppercase text-gray-500 tracking-wider font-bold mb-1">Bill To</div>
+                        <div class="text-xs uppercase text-gray-500 tracking-wider font-bold mb-1">Bill to</div>
                         <div class="font-semibold text-gray-900 text-base">{{ $memo->company->name }}</div>
                         @if ($memo->company->address_line1)
                             <div class="text-gray-700">{{ $memo->company->address_line1 }}</div>
@@ -96,7 +102,7 @@
                     </div>
                     <div class="text-right">
                         <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
-                            <div class="text-gray-500 text-right text-xs uppercase tracking-wider">Memo No.</div>
+                            <div class="text-gray-500 text-right text-xs uppercase tracking-wider">Memo no.</div>
                             <div class="font-mono font-semibold text-gray-900">{{ $memo->memo_number }}</div>
                             <div class="text-gray-500 text-right text-xs uppercase tracking-wider">Date</div>
                             <div class="font-semibold text-gray-900">{{ $memo->memo_date->format('d M Y') }}</div>
@@ -146,11 +152,11 @@
                 {{-- ─── Totals + Amount in words ─── --}}
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <div class="text-sm">
-                        <div class="text-[10px] uppercase text-gray-500 tracking-wider font-bold mb-1">Amount in words</div>
+                        <div class="text-xs uppercase text-gray-500 tracking-wider font-bold mb-1">Amount in words</div>
                         <div class="text-gray-900 italic">{{ $memo->amount_in_words }}</div>
                         @if ($memo->notes)
                             <div class="mt-4">
-                                <div class="text-[10px] uppercase text-gray-500 tracking-wider font-bold mb-1">Notes</div>
+                                <div class="text-xs uppercase text-gray-500 tracking-wider font-bold mb-1">Notes</div>
                                 <div class="text-gray-700 text-sm whitespace-pre-line">{{ $memo->notes }}</div>
                             </div>
                         @endif
@@ -187,13 +193,13 @@
                     <div class="text-right">
                         <div class="border-t border-gray-400 pt-2 inline-block min-w-[180px]">
                             <div class="text-xs text-gray-600">For <strong>{{ $memo->seller_name }}</strong></div>
-                            <div class="text-[10px] text-gray-500 mt-6">Authorised Signatory</div>
+                            <div class="text-xs text-gray-500 mt-6">Authorised signatory</div>
                         </div>
                     </div>
                 </div>
 
                 {{-- E&OE --}}
-                <div class="text-center text-[10px] text-gray-500 mt-6 pt-2 border-t border-gray-100">
+                <div class="text-center text-xs text-gray-500 mt-6 pt-2 border-t border-gray-100">
                     This is a computer-generated cash purchase voucher. E&amp;OE.
                 </div>
             </div>

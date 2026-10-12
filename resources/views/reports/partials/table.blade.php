@@ -13,7 +13,8 @@
     <thead>
         <tr>
             @foreach ($columns as $col)
-                <th class="{{ in_array($col['type'] ?? 'text', ['money', 'qty', 'number', 'percent'], true) ? 'r' : '' }}">{{ $col['label'] }}</th>
+                {{-- Amounts are in rupees: say so once, in the heading. --}}
+                <th class="{{ in_array($col['type'] ?? 'text', ['money', 'qty', 'number', 'percent'], true) ? 'r' : '' }}">{{ $col['label'] }}{{ ($col['type'] ?? 'text') === 'money' && ! str_contains($col['label'], '₹') ? ' (₹)' : '' }}</th>
             @endforeach
         </tr>
     </thead>

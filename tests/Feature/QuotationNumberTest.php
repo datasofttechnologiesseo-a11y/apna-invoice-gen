@@ -52,6 +52,22 @@ class QuotationNumberTest extends TestCase
         ], $override);
     }
 
+    public function test_the_suggested_number_and_sending_skip_numbers_already_used(): void
+    {
+        // The form pre-fills QT-0001; the owner saves with it, so the counter
+        // never moved. The next form must not offer QT-0001 again, and sending
+        // a draft with no number must not collide with it.
+        $this->actingAs($this->user)->post(route('quotations.store'), $this->payload(['quote_number' => 'QT-0001']))->assertSessionHasNoErrors();
+        $this->actingAs($this->user)->get(route('quotations.create'))->assertOk()->assertSee('value="QT-0002"', false);
+
+        $this->actingAs($this->user)->post(route('quotations.store'), $this->payload(['quote_number' => 'QT-0002']))->assertSessionHasNoErrors();
+        $this->actingAs($this->user)->post(route('quotations.store'), $this->payload(['quote_number' => '']))->assertSessionHasNoErrors();
+        $draft = Quotation::whereNull('quote_number')->latest('id')->firstOrFail();
+
+        $this->actingAs($this->user)->post(route('quotations.send', $draft))->assertRedirect();
+        $this->assertSame('QT-0003', $draft->fresh()->quote_number);
+    }
+
     public function test_a_custom_quote_number_is_saved_on_the_draft(): void
     {
         $this->actingAs($this->user)

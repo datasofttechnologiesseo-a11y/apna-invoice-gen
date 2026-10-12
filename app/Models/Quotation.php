@@ -118,6 +118,20 @@ class Quotation extends Model
         return $this->isExpired() ? 'expired' : $this->status;
     }
 
+    /** The effective status as people read it: Draft, Sent, Accepted, Declined, Converted, Expired. */
+    public function statusLabel(): string
+    {
+        return match ($this->effectiveStatus()) {
+            'draft' => 'Draft',
+            'sent' => 'Sent',
+            'accepted' => 'Accepted',
+            'declined' => 'Declined',
+            'converted' => 'Converted',
+            'expired' => 'Expired',
+            default => ucfirst(str_replace('_', ' ', (string) $this->effectiveStatus())),
+        };
+    }
+
     /** Whether the quote can still be edited (drafts only — sent quotes are locked). */
     public function isEditable(): bool
     {
@@ -220,10 +234,9 @@ class Quotation extends Model
 
     public function whatsAppShareLink(): ?string
     {
-        $phone = $this->customer?->phone;
-        if (! $phone) return null;
-        $digits = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($digits) < 10) return null;
+        // Same normalising as invoices: a bare 10-digit mobile gets the 91.
+        $digits = Invoice::whatsAppNumber($this->customer?->phone);
+        if ($digits === null) return null;
         return 'https://wa.me/' . $digits . '?text=' . rawurlencode($this->shareMessageText());
     }
 }

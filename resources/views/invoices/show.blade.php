@@ -1,36 +1,37 @@
 <x-app-layout title="Invoice">
+    @php
+        $payments = $invoice->payments;
+        $isDraft = $invoice->isDraft();
+        $isCancelled = $invoice->isCancelled();
+        $isIssued = ! $isDraft && ! $isCancelled;
+        $hasBalance = $isIssued && (float) $invoice->balance > 0;
+        $canCreditNote = $isIssued && (float) $invoice->grand_total > (float) $invoice->credited_amount;
+
+        // One look for every button on the page (design standard).
+        $btnPrimary = 'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-sm transition';
+        $btnSecondary = 'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 transition';
+        $menuItem = 'flex w-full items-center gap-2 min-h-[40px] px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-50 rounded-md';
+        $card = 'bg-white rounded-xl ring-1 ring-gray-200';
+    @endphp
+
     <x-slot name="header">
         <x-breadcrumbs :items="[
             ['label' => 'Invoices', 'href' => route('invoices.index')],
             ['label' => $invoice->displayNumber()],
         ]" />
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight flex flex-wrap items-center gap-2">
-                @if ($invoice->isDraft())
-                    <span class="text-gray-500">Draft #{{ $invoice->id }}</span>
-                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 uppercase font-bold tracking-wider">Not yet issued</span>
-                @elseif ($invoice->isCancelled())
-                    <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
-                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-danger-50 text-danger-700 uppercase font-bold tracking-wider">Cancelled</span>
+                @if ($isDraft)
+                    <span class="text-gray-600">Draft #{{ $invoice->id }}</span>
                 @else
                     <span>{{ $invoice->documentTitle() }} {{ $invoice->invoice_number }}</span>
-                    @if ((float) $invoice->balance <= 0)
-                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Paid</span>
-                    @elseif ((float) $invoice->paid_amount > 0)
-                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-accent-50 text-accent-700 uppercase font-bold tracking-wider">Partially paid</span>
-                    @else
-                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 uppercase font-bold tracking-wider">Issued</span>
-                    @endif
                 @endif
+                <x-status-badge :status="$invoice->status" :label="$invoice->statusLabel()" />
             </h1>
+
+            {{-- One primary action, one secondary, the rest under More. --}}
             <div class="flex flex-wrap items-center gap-2">
-                @if ($invoice->isSoftEditable())
-                    <a href="{{ route('invoices.edit', $invoice) }}" class="px-3 py-1.5 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300" title="{{ $invoice->isEditable() ? 'Edit draft' : 'Edit notes, terms, due date and transporter details. Amounts are locked.' }}">Edit</a>
-                @endif
-                @if ($invoice->isEditable())
-                    {{-- Branded confirm dialog (same teleport-modal pattern used by
-                         Delete draft below). Replaces the older native confirm()
-                         which was jarring on mobile and broke visual flow. --}}
+                @if ($isDraft)
                     <x-confirm-form
                         :action="route('invoices.finalize', $invoice)"
                         method="POST"
@@ -39,13 +40,16 @@
                         confirm-label="Issue invoice"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default">
-                        <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded text-sm font-semibold shadow-sm transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            Issue
-                        </button>
+                        <button type="button" class="{{ $btnPrimary }}">Issue invoice</button>
                     </x-confirm-form>
+                @elseif ($hasBalance)
+                    <a href="#record-payment"
+                       @click="$nextTick(() => document.getElementById('pay-amount')?.focus({ preventScroll: true }))"
+                       class="{{ $btnPrimary }}">Record payment</a>
                 @endif
-                <div class="relative inline-block" x-data="{
+
+                {{-- Download PDF: pick the Rule 48 copies to include. --}}
+                <div class="relative" x-data="{
                         open: false,
                         types: { recipient: true, supplier: false, transporter: false },
                         colour: false,
@@ -56,97 +60,95 @@
                             window.location = this.base + '?copyTypes=' + this.selected.join(',') + (this.colour ? '&color=1' : '');
                             this.open = false;
                         }
-                    }">
-                    <button type="button" @click="open = !open" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-white text-sm hover:bg-gray-900 rounded shadow-sm">
+                    }" @keydown.escape="open = false">
+                    <button type="button" @click="open = !open" :aria-expanded="open.toString()" class="{{ $btnSecondary }}">
                         Download PDF
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div x-show="open" @click.outside="open = false" x-cloak class="absolute left-0 z-20 mt-1 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-sm">
-                        <div class="font-semibold text-gray-700 mb-1">Copies to include</div>
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute left-0 lg:left-auto lg:right-0 z-30 mt-1 w-72 max-w-[calc(100vw-2rem)] bg-white ring-1 ring-gray-200 rounded-xl shadow-lg p-3 text-sm">
+                        <div class="font-semibold text-gray-900 mb-1">Copies to include</div>
                         <label class="flex items-start gap-2 py-1.5 cursor-pointer">
-                            <input type="checkbox" x-model="types.recipient" class="mt-0.5">
-                            <span><span class="font-medium text-gray-800">Customer</span><br><span class="text-xs text-gray-500">Original for Recipient</span></span>
+                            <input type="checkbox" x-model="types.recipient" class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                            <span><span class="font-medium text-gray-900">Customer</span><br><span class="text-xs text-gray-600">Original for Recipient</span></span>
                         </label>
                         <label class="flex items-start gap-2 py-1.5 cursor-pointer">
-                            <input type="checkbox" x-model="types.supplier" class="mt-0.5">
-                            <span><span class="font-medium text-gray-800">Supplier</span><br><span class="text-xs text-gray-500">{{ $invoice->defaultCopyCount() === 2 ? 'Duplicate for Supplier' : 'Triplicate for Supplier' }}</span></span>
+                            <input type="checkbox" x-model="types.supplier" class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                            <span><span class="font-medium text-gray-900">Supplier</span><br><span class="text-xs text-gray-600">{{ $invoice->defaultCopyCount() === 2 ? 'Duplicate for Supplier' : 'Triplicate for Supplier' }}</span></span>
                         </label>
                         {{-- Rule 48(2): services need no transporter copy. --}}
                         @if ($invoice->defaultCopyCount() === 3)
                         <label class="flex items-start gap-2 py-1.5 cursor-pointer">
-                            <input type="checkbox" x-model="types.transporter" class="mt-0.5">
-                            <span><span class="font-medium text-gray-800">Delivery</span><br><span class="text-xs text-gray-500">Duplicate for Transporter</span></span>
+                            <input type="checkbox" x-model="types.transporter" class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                            <span><span class="font-medium text-gray-900">Delivery</span><br><span class="text-xs text-gray-600">Duplicate for Transporter</span></span>
                         </label>
                         @endif
                         <label class="flex items-start gap-2 pt-2 mt-1 border-t border-gray-100 cursor-pointer">
-                            <input type="checkbox" x-model="colour" class="mt-0.5">
-                            <span><span class="font-medium text-gray-800">Colour version</span><br><span class="text-xs text-gray-500">Uses your template colours. Uses more ink.</span></span>
+                            <input type="checkbox" x-model="colour" class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                            <span><span class="font-medium text-gray-900">Colour version</span><br><span class="text-xs text-gray-600">Uses your template colours and more ink.</span></span>
                         </label>
-                        <button type="button" @click="download()" :disabled="!selected.length" class="mt-2 w-full px-3 py-1.5 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:opacity-40 disabled:cursor-not-allowed">Download</button>
+                        <button type="button" @click="download()" :disabled="!selected.length" class="mt-2 w-full {{ $btnPrimary }} disabled:opacity-40 disabled:cursor-not-allowed">Download</button>
                     </div>
                 </div>
-                <a href="{{ route('invoices.print', $invoice) }}" target="_blank" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50">Print view</a>
-                {{-- Thermal 80mm receipt - for retail counters with 2"/3" thermal
-                     printers. Auto-prints on load; falls back to readable preview
-                     in browsers without a connected printer. --}}
-                <a href="{{ route('invoices.print', ['invoice' => $invoice, 'format' => 'thermal']) }}"
-                   target="_blank"
-                   class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50"
-                   title="80 mm thermal receipt for counter printers">
-                    Thermal 80mm
-                </a>
-                {{-- Duplicate into a fresh editable draft - repeat/recurring billing. --}}
-                <form method="POST" action="{{ route('invoices.duplicate', $invoice) }}" class="inline">
-                    @csrf
-                    <button type="submit" class="px-3 py-1.5 bg-white border text-gray-700 rounded text-sm hover:bg-gray-50" title="Copy to a new draft with the same customer and line items">
-                        Duplicate
+
+                {{-- Everything else. --}}
+                <div class="relative" x-data="{ open: false }" @keydown.escape="open = false">
+                    <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-haspopup="true" class="{{ $btnSecondary }}">
+                        More
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                </form>
-                @if (! $invoice->isDraft() && ! $invoice->isCancelled() && (float) $invoice->grand_total > (float) $invoice->credited_amount)
-                    @if ($invoice->isCreditNoteWindowClosed())
-                        {{-- Section 34(2) window closed - disable the action with a tooltip
-                             explaining the legal cut-off so the operator knows why. --}}
-                        <span class="px-3 py-1.5 bg-gray-100 text-gray-600 border border-gray-200 rounded text-sm cursor-not-allowed"
-                              title="Section 34(2) deadline passed on {{ $invoice->creditNoteDeadline()->format('d M Y') }}. Issue a commercial refund instead.">
-                            Issue credit note
-                        </span>
-                    @else
-                        <a href="{{ route('credit-notes.create', $invoice) }}"
-                           class="px-3 py-1.5 bg-accent-100 text-accent-900 border border-accent-300 rounded text-sm hover:bg-accent-200"
-                           title="For returns, post-sale discounts and rate corrections. Section 34(2) deadline: {{ $invoice->creditNoteDeadline()->format('d M Y') }}">
-                            Issue credit note
-                        </a>
-                    @endif
-                @endif
-                @if ($invoice->isEditable())
-                    <x-confirm-form
-                        :action="route('invoices.destroy', $invoice)"
-                        method="DELETE"
-                        title="Delete this draft?"
-                        message="The draft and its line items will be deleted. This cannot be undone."
-                        confirm-label="Delete draft"
-                        confirm-class="bg-danger-600 hover:bg-danger-700"
-                        tone="danger">
-                        <button type="button" class="px-3 py-1.5 bg-danger-600 text-white rounded text-sm hover:bg-danger-700 shadow-sm">Delete draft</button>
-                    </x-confirm-form>
-                @elseif ($invoice->isCancelled())
-                    {{-- Cancelled invoices can be deleted, but the invoice number stays
-                         consumed (counter never recycles) and the deletion is recorded
-                         in the activity log so the audit trail isn't entirely lost. --}}
-                    <x-confirm-form
-                        :action="route('invoices.destroy', $invoice)"
-                        method="DELETE"
-                        title="Delete cancelled invoice {{ $invoice->invoice_number }}?"
-                        :message="'The cancelled invoice is removed from your books. Number ' . $invoice->invoice_number . ' is not reused and stays as a gap in the series; the deletion is recorded in the activity log for audit. This cannot be undone.'"
-                        confirm-label="Delete invoice"
-                        confirm-class="bg-danger-600 hover:bg-danger-700"
-                        tone="danger">
-                        <button type="button" class="px-3 py-1.5 bg-white border border-danger-300 text-danger-700 rounded text-sm hover:bg-danger-50" title="Permanently delete this cancelled invoice">Delete invoice</button>
-                    </x-confirm-form>
-                @endif
-                @if ($invoice->canBeCancelled())
-                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').showModal()" class="px-3 py-1.5 bg-white border border-danger-300 text-danger-700 rounded text-sm hover:bg-danger-50">Cancel invoice</button>
-                @endif
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute left-0 lg:left-auto lg:right-0 z-30 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white ring-1 ring-gray-200 rounded-xl shadow-lg p-1.5">
+                        @if ($invoice->isSoftEditable())
+                            <a href="{{ route('invoices.edit', $invoice) }}" class="{{ $menuItem }}"
+                               title="{{ $invoice->isEditable() ? 'Edit the draft' : 'Notes, terms, due date and transporter details. Amounts are locked.' }}">
+                                {{ $invoice->isEditable() ? 'Edit' : 'Edit details' }}
+                            </a>
+                        @endif
+                        {{-- Duplicate into a fresh editable draft: repeat billing. --}}
+                        <form method="POST" action="{{ route('invoices.duplicate', $invoice) }}">
+                            @csrf
+                            <button type="submit" class="{{ $menuItem }}" title="Copy to a new draft with the same customer and line items">Duplicate</button>
+                        </form>
+                        <a href="{{ route('invoices.print', $invoice) }}" target="_blank" rel="noopener" class="{{ $menuItem }}">Print</a>
+                        <a href="{{ route('invoices.print', ['invoice' => $invoice, 'format' => 'thermal']) }}" target="_blank" rel="noopener"
+                           class="{{ $menuItem }}" title="80 mm receipt for counter printers">Thermal print (80 mm)</a>
+                        @if ($canCreditNote)
+                            @if ($invoice->isCreditNoteWindowClosed())
+                                <span class="{{ $menuItem }} text-gray-500 cursor-not-allowed hover:bg-transparent"
+                                      title="Section 34(2) deadline passed on {{ $invoice->creditNoteDeadline()->format('d M Y') }}. Issue a commercial refund instead.">
+                                    Issue credit note
+                                    <span class="ml-auto text-xs">Closed</span>
+                                </span>
+                            @else
+                                <a href="{{ route('credit-notes.create', $invoice) }}" class="{{ $menuItem }}"
+                                   title="For returns, post-sale discounts and rate corrections. Section 34(2) deadline: {{ $invoice->creditNoteDeadline()->format('d M Y') }}">
+                                    Issue credit note
+                                </a>
+                            @endif
+                        @endif
+                        @if ($invoice->canBeCancelled() && \App\Support\Team::can('invoices.cancel'))
+                            <div class="my-1 border-t border-gray-100"></div>
+                            <button type="button" @click="open = false; document.getElementById('cancel-invoice-modal').showModal()"
+                                    class="{{ $menuItem }} text-danger-700 hover:bg-danger-50">Cancel invoice</button>
+                        @endif
+                        {{-- Only a draft can be deleted. An issued number stays on
+                             record, cancelled or not (GSTR-1 Table 13). --}}
+                        @if ($invoice->canBeDeleted() && \App\Support\Team::can('invoices.destroy'))
+                            <div class="my-1 border-t border-gray-100"></div>
+                            <x-confirm-form
+                                :action="route('invoices.destroy', $invoice)"
+                                method="DELETE"
+                                title="Delete this draft?"
+                                message="The draft and its line items will be deleted. This cannot be undone."
+                                confirm-label="Delete draft"
+                                confirm-class="bg-danger-600 hover:bg-danger-700"
+                                tone="danger">
+                                <button type="button" class="{{ $menuItem }} text-danger-700 hover:bg-danger-50">Delete draft</button>
+                            </x-confirm-form>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </x-slot>
@@ -163,299 +165,270 @@
                     </p>
                 </div>
                 <div>
-                    <label for="cancellation_reason" class="text-xs uppercase font-bold tracking-wider text-gray-500">Reason (required)</label>
+                    <label for="cancellation_reason" class="block text-sm font-medium text-gray-700">Reason *</label>
                     <textarea name="cancellation_reason" id="cancellation_reason" rows="3" required minlength="5" maxlength="500"
-                              class="mt-1 block w-full border-gray-300 rounded shadow-sm"
-                              placeholder="e.g. Wrong amount, replaced by INV-0145"></textarea>
+                              aria-describedby="cancellation_reason-error"
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                              placeholder="e.g. Wrong amount, replaced by INV-0145">{{ old('cancellation_reason') }}</textarea>
+                    <x-input-error :messages="$errors->get('cancellation_reason')" for="cancellation_reason" class="mt-1" />
                 </div>
-                <div class="flex justify-end gap-2 pt-2 border-t">
-                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').close()" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded">Keep invoice</button>
-                    <button type="submit" class="px-4 py-2 bg-danger-600 text-white text-sm font-semibold rounded hover:bg-danger-700">Cancel invoice</button>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').close()" class="{{ $btnSecondary }}">Keep invoice</button>
+                    <button type="submit" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-danger-600 hover:bg-danger-700 text-white">Cancel invoice</button>
                 </div>
             </form>
         </dialog>
+        @error('cancellation_reason')
+            @push('scripts')
+            <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('cancel-invoice-modal')?.showModal());</script>
+            @endpush
+        @enderror
     @endif
 
-    <div class="py-8">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <x-flash />
-            @if ($errors->any())
+            @if ($errors->any() && ! $errors->has('cancellation_reason'))
                 <x-flash type="error" :message="implode(' · ', $errors->all())" :auto="false" />
             @endif
 
-            @php $payments = $invoice->payments; @endphp
-
-            {{-- Once-in-a-lifetime first-issued-invoice celebration. Server gate:
-                 user has exactly 1 finalized invoice AND this is it. Client gate:
-                 localStorage so it doesn't re-show on revisit (e.g. via email link).
-                 Together: fires once, never again. --}}
+            {{-- First issued invoice: one short line, shown once (server gate:
+                 this is the user's only issued invoice; client gate: localStorage). --}}
             @if (! empty($isFirstFinalized) && $isFirstFinalized)
                 <div x-data="{ show: !localStorage.getItem('hideFirstInvoiceCelebration') }" x-show="show" x-cloak
-                     class="relative bg-gradient-to-r from-accent-50 via-white to-money-50 ring-1 ring-accent-200 rounded-xl p-5 overflow-hidden">
-                    {{-- Subtle Indian-flag stripe accent on top edge --}}
-                    <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-accent-500 via-white to-money-600"></div>
+                     class="flex items-start gap-3 p-4 bg-brand-50 border border-brand-200 rounded-xl text-sm text-brand-900">
+                    <div class="flex-1">
+                        <div class="font-semibold">Your first invoice is issued.</div>
+                        <div class="mt-0.5">Share it with the customer and record the payment when it arrives. It is included in GSTR-1 for this month.</div>
+                    </div>
                     <button type="button"
                             @click="localStorage.setItem('hideFirstInvoiceCelebration','1'); show=false"
-                            class="absolute top-2 right-2 inline-flex items-center justify-center w-7 h-7 text-gray-500 hover:text-gray-700 hover:bg-white/60 rounded"
-                            aria-label="Close">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                    <div class="flex items-start gap-4 pt-1">
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs uppercase font-bold tracking-widest text-accent-700">First invoice issued</div>
-                            <h2 class="font-display text-xl font-extrabold text-gray-900 mt-1">
-                                Congratulations, {{ Str::limit(explode(' ', auth()->user()->name)[0] ?? 'friend', 20) }}.
-                            </h2>
-                            <p class="text-sm text-gray-700 mt-1">
-                                Share the invoice with your customer and record the payment when it arrives.
-                                Your GSTR-1 is prepared from these invoices each month.
-                            </p>
-                            <div class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white ring-1 ring-accent-200 text-xs font-medium text-accent-800">
-                                <span>Made in India · Apna Invoice by Datasoft Technologies</span>
-                            </div>
-                        </div>
-                    </div>
+                            class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-800 hover:bg-brand-100 rounded-md text-xl leading-none"
+                            aria-label="Dismiss">×</button>
                 </div>
             @endif
 
-            {{-- Engagement layer: tells the user, in plain language, what the
-                 most useful next step is. Sits above the share/reminder panels
-                 so users don't drown in actions. --}}
-            @include('invoices.partials.whats-next', ['invoice' => $invoice])
-
-            @include('invoices.partials.activity-timeline', ['invoice' => $invoice])
-
-            @if (! $invoice->isDraft() && ! $invoice->isCancelled())
-                @include('invoices.partials.share-panel', ['invoice' => $invoice])
-                @if ((float) $invoice->balance > 0)
-                    @include('invoices.partials.reminder-panel', ['invoice' => $invoice])
-                @endif
-                @include('invoices.partials.credit-notes', ['invoice' => $invoice])
-            @endif
-
-            @if ($invoice->isCancelled())
-                <div class="bg-danger-50 border border-danger-200 rounded-lg p-4 text-sm">
-                    <div class="font-semibold text-danger-800">This invoice is cancelled.</div>
+            @if ($isCancelled)
+                <div class="bg-danger-50 border border-danger-200 rounded-xl p-4 text-sm">
+                    <div class="font-semibold text-danger-800">This invoice is cancelled. It is not payable.</div>
                     <div class="text-danger-700 mt-1">
                         Cancelled on {{ $invoice->cancelled_at?->format('d M Y, h:i A') }}.
                         @if ($invoice->cancellation_reason)
-                            <br>Reason: <span class="italic">"{{ $invoice->cancellation_reason }}"</span>
+                            Reason: <span class="italic">"{{ $invoice->cancellation_reason }}"</span>
                         @endif
                     </div>
+                    <div class="text-danger-700 mt-1">The number stays on record for GST and is not reused.</div>
                 </div>
             @endif
 
-            @if ($invoice->balance > 0 && ! $invoice->isDraft() && $invoice->status !== 'cancelled')
-                <form id="record-payment" method="POST" action="{{ route('invoices.payments', $invoice) }}" class="bg-white shadow sm:rounded-lg p-5 space-y-4 scroll-mt-20">
-                    @csrf
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-semibold text-gray-900">Record a payment</h2>
-                        <div class="text-sm text-gray-500">Balance due: <span class="font-mono font-semibold text-gray-900">₹{{ rupees($invoice->balance) }}</span></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div>
-                            <label for="pay-amount" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Amount (₹) *</label>
-                            <input inputmode="decimal" id="pay-amount" type="number" name="amount" step="any" min="0.01" max="{{ $invoice->balance }}" value="{{ plain_amount(old('amount', request('pay_amount') ? min((float) request('pay_amount'), (float) $invoice->balance) : $invoice->balance)) }}" required class="mt-1 block w-full border-gray-300 rounded shadow-sm">
-                        </div>
-                        <div>
-                            <label for="pay-method" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Method *</label>
-                            <select id="pay-method" name="method" required class="mt-1 block w-full border-gray-300 rounded shadow-sm">
-                                @foreach (config('payment_methods.methods') as $code => $m)
-                                    <option value="{{ $code }}" @selected(old('method', request('pay_method', 'upi')) === $code)>{{ $m['label'] }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label for="pay-received-at" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Date received *</label>
-                            <input id="pay-received-at" type="date" name="received_at" value="{{ old('received_at', request('pay_date', now()->toDateString())) }}" max="{{ now()->toDateString() }}" required class="mt-1 block w-full border-gray-300 rounded shadow-sm">
-                        </div>
-                        <div>
-                            <label for="pay-reference-number" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Reference / Txn ID</label>
-                            <input id="pay-reference-number" type="text" name="reference_number" value="{{ old('reference_number', mb_substr((string) request('pay_ref', ''), 0, 80)) }}" maxlength="80" placeholder="UPI txn / cheque no." class="mt-1 block w-full border-gray-300 rounded shadow-sm font-mono text-sm">
-                        </div>
-                    </div>
-                    {{-- TDS section: collapsed by default. Indian B2B service providers
-                         frequently have TDS deducted by corporate customers under Sections 194-x. --}}
-                    <details x-data="{ open: false }" :open="open" @toggle="open = $event.target.open" class="border border-accent-200 bg-accent-50/30 rounded p-3">
-                        <summary class="cursor-pointer text-sm font-semibold text-accent-900 select-none">
-                            TDS deducted by customer <span class="text-xs font-normal text-gray-500">(optional)</span>
-                        </summary>
-                        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3" x-data="{
-                            amt: {{ old('tds_amount', 0) }},
-                            rate: {{ old('tds_rate', 0) }},
-                            section: '{{ old('tds_section', '') }}',
-                            // Section → standard rate map (Indian Income Tax Act, AY 2024-25 onwards).
-                            // Source: Income Tax Department TDS rate chart.
-                            sectionRates: {
-                                '194A': 10, '194B': 30, '194C_indiv': 1, '194C_other': 2,
-                                '194D': 5, '194H': 5, '194I_land': 10, '194I_plant': 2,
-                                '194-IA': 1, '194-IB': 5, '194J_prof': 10, '194J_tech': 2,
-                                '194O': 1, '194Q': 0.1, '51': 2,
-                            },
-                            sectionThresholds: {
-                                '194A': 'Threshold ₹5,000/yr (₹40,000 for banks)',
-                                '194B': 'Threshold ₹10,000',
-                                '194C_indiv': 'Threshold ₹30,000 single / ₹1,00,000 aggregate',
-                                '194C_other': 'Threshold ₹30,000 single / ₹1,00,000 aggregate',
-                                '194D': 'Threshold ₹15,000/yr',
-                                '194H': 'Threshold ₹15,000/yr',
-                                '194I_land': 'Threshold ₹2,40,000/yr',
-                                '194I_plant': 'Threshold ₹2,40,000/yr',
-                                '194-IA': 'Property value > ₹50 lakh',
-                                '194-IB': 'Rent > ₹50,000/month (individual/HUF)',
-                                '194J_prof': 'Threshold ₹30,000/yr',
-                                '194J_tech': 'Threshold ₹30,000/yr',
-                                '194O': 'E-commerce participants',
-                                '194Q': 'Aggregate purchases > ₹50 lakh/yr',
-                                '51': 'GST TDS by govt / PSU on contracts > ₹2.5 lakh',
-                            },
-                            recalcFromRate() {
-                                const grossAmt = parseFloat(document.querySelector('input[name=amount]')?.value || 0);
-                                this.amt = +(grossAmt * (parseFloat(this.rate) || 0) / 100).toFixed(2);
-                            },
-                            applySection() {
-                                if (this.sectionRates[this.section] !== undefined) {
-                                    this.rate = this.sectionRates[this.section];
-                                    this.recalcFromRate();
-                                }
-                            },
-                        }">
-                            <div>
-                                <label for="pay-tds-section" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS section</label>
-                                <select id="pay-tds-section" name="tds_section" x-model="section" @change="applySection()"
-                                        class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
-                                    <option value="">None</option>
-                                    <optgroup label="Common (services / contracts)">
-                                        <option value="194C_indiv">194C · Contractor (Indiv/HUF) · 1%</option>
-                                        <option value="194C_other">194C · Contractor (Co/Firm) · 2%</option>
-                                        <option value="194J_prof">194J · Professional fees · 10%</option>
-                                        <option value="194J_tech">194J · Technical services · 2%</option>
-                                        <option value="194H">194H · Commission / brokerage · 5%</option>
-                                    </optgroup>
-                                    <optgroup label="Rent &amp; property">
-                                        <option value="194I_plant">194I · Rent (plant/machinery) · 2%</option>
-                                        <option value="194I_land">194I · Rent (land/building) · 10%</option>
-                                        <option value="194-IB">194-IB · Rent by Indiv/HUF (&gt;₹50k/mo) · 5%</option>
-                                        <option value="194-IA">194-IA · Sale of property (&gt;₹50L) · 1%</option>
-                                    </optgroup>
-                                    <optgroup label="Goods &amp; e-commerce">
-                                        <option value="194Q">194Q · Purchase of goods (&gt;₹50L) · 0.1%</option>
-                                        <option value="194O">194O · E-commerce participants · 1%</option>
-                                    </optgroup>
-                                    <optgroup label="Other">
-                                        <option value="194A">194A · Interest (other than securities) · 10%</option>
-                                        <option value="194D">194D · Insurance commission · 5%</option>
-                                        <option value="194B">194B · Lottery / games · 30%</option>
-                                        <option value="51">Section 51 · GST TDS (govt) · 2%</option>
-                                        <option value="other">Other</option>
-                                    </optgroup>
-                                </select>
-                                <p class="text-[10px] text-gray-500 mt-1" x-show="section && section !== 'other' && sectionThresholds[section]" x-text="sectionThresholds[section]"></p>
-                            </div>
-                            <div>
-                                <label for="pay-tds-rate" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS rate (%)</label>
-                                <input inputmode="decimal" id="pay-tds-rate" type="number" name="tds_rate" step="0.01" min="0" max="30" x-model="rate" @input="recalcFromRate()"
-                                       placeholder="e.g. 10" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
-                                <p class="text-[10px] text-gray-500 mt-1">Section 206AA: 20% if no PAN is furnished.</p>
-                            </div>
-                            <div>
-                                <label for="pay-tds-amount" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">TDS amount (₹)</label>
-                                <input inputmode="decimal" id="pay-tds-amount" type="number" name="tds_amount" step="any" min="0" x-model="amt"
-                                       placeholder="0" class="mt-1 block w-full border-gray-300 rounded shadow-sm text-sm">
-                                <p class="text-[10px] text-gray-500 mt-1">For Form 26AS reconciliation. The invoice balance reduces by the gross amount.</p>
-                            </div>
-                        </div>
-                    </details>
+            <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6 lg:items-start">
+                {{-- The document comes first, on every screen size. --}}
+                <div class="min-w-0 {{ $card }} overflow-hidden">
+                    @include('invoices.partials.document', ['invoice' => $invoice, 'amountInWords' => $amountInWords])
+                </div>
 
-                    <div>
-                        <label for="pay-notes" class="text-xs text-gray-500 uppercase tracking-wider font-semibold">Notes (optional)</label>
-                        <input id="pay-notes" type="text" name="notes" maxlength="500" value="{{ old('notes') }}" class="mt-1 block w-full border-gray-300 rounded shadow-sm">
-                    </div>
-                    <div class="flex justify-end">
-                        <button class="px-4 py-2 bg-money-600 hover:bg-money-700 text-white rounded font-semibold">Record payment</button>
-                    </div>
-                </form>
-            @endif
-
-            @if ($payments->isNotEmpty())
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-                    <div class="px-5 py-3 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <div>
-                            <h2 class="font-display font-bold text-gray-900 text-base flex items-center gap-2">
-                                <svg class="w-5 h-5 text-money-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                Payment receipts
-                            </h2>
-                            <p class="text-xs text-gray-500 mt-0.5">Each payment has its own receipt PDF.</p>
+                {{-- Right rail: what to do with the invoice. Below the document on a phone. --}}
+                <aside class="mt-6 lg:mt-0 space-y-4" aria-label="Invoice actions">
+                    @if ($isDraft)
+                        <div class="{{ $card }} p-4 text-sm">
+                            <h2 class="font-semibold text-gray-900">Not issued yet</h2>
+                            <p class="mt-1 text-gray-600">Issue it to assign the invoice number and lock the amounts. Until then you can still change anything.</p>
+                            <a href="{{ route('invoices.edit', $invoice) }}" class="mt-3 w-full {{ $btnSecondary }}">Edit draft</a>
                         </div>
-                        <div class="text-xs text-gray-500 sm:text-right">{{ $payments->count() }} receipt{{ $payments->count() > 1 ? 's' : '' }} issued</div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
-                                <tr>
-                                    <th class="px-4 py-2 text-left">Receipt</th>
-                                    <th class="px-4 py-2 text-left">Date</th>
-                                    <th class="px-4 py-2 text-left">Method</th>
-                                    <th class="px-4 py-2 text-left">Reference</th>
-                                    <th class="px-4 py-2 text-right">Amount</th>
-                                    <th class="px-4 py-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
+                    @endif
+
+                    @if ($hasBalance)
+                        <form id="record-payment" method="POST" action="{{ route('invoices.payments', $invoice) }}" class="{{ $card }} p-4 space-y-3 scroll-mt-24">
+                            @csrf
+                            <div class="flex items-baseline justify-between gap-2">
+                                <h2 class="font-semibold text-gray-900">Record payment</h2>
+                                <div class="text-sm text-gray-600">Balance <span class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ inr($invoice->balance) }}</span></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="pay-amount" class="block text-sm font-medium text-gray-700">Amount (₹) *</label>
+                                    <input inputmode="decimal" id="pay-amount" type="number" name="amount" step="any" min="0.01" max="{{ $invoice->balance }}" value="{{ plain_amount(old('amount', request('pay_amount') ? min((float) request('pay_amount'), (float) $invoice->balance) : $invoice->balance)) }}" required aria-describedby="amount-error" class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-right font-mono">
+                                    <x-input-error :messages="$errors->get('amount')" for="amount" class="mt-1" />
+                                </div>
+                                <div>
+                                    <label for="pay-method" class="block text-sm font-medium text-gray-700">Method *</label>
+                                    <select id="pay-method" name="method" required class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm">
+                                        @foreach (config('payment_methods.methods') as $code => $m)
+                                            <option value="{{ $code }}" @selected(old('method', request('pay_method', 'upi')) === $code)>{{ $m['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="pay-received-at" class="block text-sm font-medium text-gray-700">Date received *</label>
+                                    <input id="pay-received-at" type="date" name="received_at" value="{{ old('received_at', request('pay_date', now()->toDateString())) }}" max="{{ now()->toDateString() }}" required aria-describedby="received_at-error" class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm">
+                                    <x-input-error :messages="$errors->get('received_at')" for="received_at" class="mt-1" />
+                                </div>
+                                <div>
+                                    <label for="pay-reference-number" class="block text-sm font-medium text-gray-700">Reference</label>
+                                    <input id="pay-reference-number" type="text" name="reference_number" value="{{ old('reference_number', mb_substr((string) request('pay_ref', ''), 0, 80)) }}" maxlength="80" placeholder="UPI txn / cheque no." class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm font-mono text-sm">
+                                </div>
+                            </div>
+
+                            {{-- TDS: collapsed by default. Corporate customers often deduct
+                                 TDS under Sections 194-x before paying a service invoice. --}}
+                            <details x-data="{ open: {{ old('tds_amount') ? 'true' : 'false' }} }" :open="open" @toggle="open = $event.target.open" class="rounded-md border border-gray-200 p-3">
+                                <summary class="cursor-pointer text-sm font-medium text-gray-800 select-none">
+                                    TDS deducted by customer <span class="text-xs font-normal text-gray-500">(optional)</span>
+                                </summary>
+                                <div class="mt-3 space-y-3" x-data="{
+                                    amt: {{ (float) old('tds_amount', 0) }},
+                                    rate: {{ (float) old('tds_rate', 0) }},
+                                    section: @js((string) old('tds_section', '')),
+                                    // Section → standard rate (Income Tax Act, AY 2024-25 onwards).
+                                    sectionRates: {
+                                        '194A': 10, '194B': 30, '194C_indiv': 1, '194C_other': 2,
+                                        '194D': 5, '194H': 5, '194I_land': 10, '194I_plant': 2,
+                                        '194-IA': 1, '194-IB': 5, '194J_prof': 10, '194J_tech': 2,
+                                        '194O': 1, '194Q': 0.1, '51': 2,
+                                    },
+                                    sectionThresholds: {
+                                        '194A': 'Threshold ₹5,000/yr (₹40,000 for banks)',
+                                        '194B': 'Threshold ₹10,000',
+                                        '194C_indiv': 'Threshold ₹30,000 single / ₹1,00,000 aggregate',
+                                        '194C_other': 'Threshold ₹30,000 single / ₹1,00,000 aggregate',
+                                        '194D': 'Threshold ₹15,000/yr',
+                                        '194H': 'Threshold ₹15,000/yr',
+                                        '194I_land': 'Threshold ₹2,40,000/yr',
+                                        '194I_plant': 'Threshold ₹2,40,000/yr',
+                                        '194-IA': 'Property value > ₹50 lakh',
+                                        '194-IB': 'Rent > ₹50,000/month (individual/HUF)',
+                                        '194J_prof': 'Threshold ₹30,000/yr',
+                                        '194J_tech': 'Threshold ₹30,000/yr',
+                                        '194O': 'E-commerce participants',
+                                        '194Q': 'Aggregate purchases > ₹50 lakh/yr',
+                                        '51': 'GST TDS by govt / PSU on contracts > ₹2.5 lakh',
+                                    },
+                                    recalcFromRate() {
+                                        const grossAmt = parseFloat(document.querySelector('input[name=amount]')?.value || 0);
+                                        this.amt = +(grossAmt * (parseFloat(this.rate) || 0) / 100).toFixed(2);
+                                    },
+                                    applySection() {
+                                        if (this.sectionRates[this.section] !== undefined) {
+                                            this.rate = this.sectionRates[this.section];
+                                            this.recalcFromRate();
+                                        }
+                                    },
+                                }">
+                                    <div>
+                                        <label for="pay-tds-section" class="block text-sm font-medium text-gray-700">TDS section</label>
+                                        <select id="pay-tds-section" name="tds_section" x-model="section" @change="applySection()"
+                                                class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm">
+                                            <option value="">None</option>
+                                            <optgroup label="Common (services / contracts)">
+                                                <option value="194C_indiv">194C · Contractor (Indiv/HUF) · 1%</option>
+                                                <option value="194C_other">194C · Contractor (Co/Firm) · 2%</option>
+                                                <option value="194J_prof">194J · Professional fees · 10%</option>
+                                                <option value="194J_tech">194J · Technical services · 2%</option>
+                                                <option value="194H">194H · Commission / brokerage · 5%</option>
+                                            </optgroup>
+                                            <optgroup label="Rent &amp; property">
+                                                <option value="194I_plant">194I · Rent (plant/machinery) · 2%</option>
+                                                <option value="194I_land">194I · Rent (land/building) · 10%</option>
+                                                <option value="194-IB">194-IB · Rent by Indiv/HUF (&gt;₹50k/mo) · 5%</option>
+                                                <option value="194-IA">194-IA · Sale of property (&gt;₹50L) · 1%</option>
+                                            </optgroup>
+                                            <optgroup label="Goods &amp; e-commerce">
+                                                <option value="194Q">194Q · Purchase of goods (&gt;₹50L) · 0.1%</option>
+                                                <option value="194O">194O · E-commerce participants · 1%</option>
+                                            </optgroup>
+                                            <optgroup label="Other">
+                                                <option value="194A">194A · Interest (other than securities) · 10%</option>
+                                                <option value="194D">194D · Insurance commission · 5%</option>
+                                                <option value="194B">194B · Lottery / games · 30%</option>
+                                                <option value="51">Section 51 · GST TDS (govt) · 2%</option>
+                                                <option value="other">Other</option>
+                                            </optgroup>
+                                        </select>
+                                        <p class="text-xs text-gray-500 mt-1" x-show="section && section !== 'other' && sectionThresholds[section]" x-text="sectionThresholds[section]"></p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label for="pay-tds-rate" class="block text-sm font-medium text-gray-700">TDS rate (%)</label>
+                                            <input inputmode="decimal" id="pay-tds-rate" type="number" name="tds_rate" step="0.01" min="0" max="30" x-model="rate" @input="recalcFromRate()"
+                                                   placeholder="e.g. 10" class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm text-right">
+                                        </div>
+                                        <div>
+                                            <label for="pay-tds-amount" class="block text-sm font-medium text-gray-700">TDS amount (₹)</label>
+                                            <input inputmode="decimal" id="pay-tds-amount" type="number" name="tds_amount" step="any" min="0" x-model="amt"
+                                                   placeholder="0" aria-describedby="tds_amount-error" class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm text-right">
+                                        </div>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('tds_amount')" for="tds_amount" />
+                                    <p class="text-xs text-gray-500">Section 206AA: 20% if no PAN is furnished. The invoice balance reduces by the gross amount; TDS is kept for Form 26AS.</p>
+                                </div>
+                            </details>
+
+                            <div>
+                                <label for="pay-notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                                <input id="pay-notes" type="text" name="notes" maxlength="500" value="{{ old('notes') }}" class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm">
+                            </div>
+                            <button type="submit" class="w-full {{ $btnPrimary }}">Record payment</button>
+                        </form>
+                    @endif
+
+                    @if ($isIssued)
+                        @include('invoices.partials.share-panel', ['invoice' => $invoice])
+                        @if ((float) $invoice->balance > 0)
+                            @include('invoices.partials.reminder-panel', ['invoice' => $invoice])
+                        @endif
+                        @include('invoices.partials.credit-notes', ['invoice' => $invoice])
+                    @endif
+
+                    @if ($payments->isNotEmpty())
+                        <div class="{{ $card }} overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between gap-2">
+                                <h2 class="font-semibold text-gray-900">Receipts</h2>
+                                <div class="text-sm text-gray-600">Received <span class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ inr($payments->sum('amount')) }}</span></div>
+                            </div>
+                            <ul class="divide-y divide-gray-100">
                                 @foreach ($payments as $p)
-                                    <tr>
-                                        <td class="px-4 py-2 font-mono text-sm font-semibold">{{ $p->receipt_number }}</td>
-                                        <td class="px-4 py-2">{{ $p->received_at?->format('d M Y') }}</td>
-                                        <td class="px-4 py-2">{{ $p->methodLabel() }}</td>
-                                        <td class="px-4 py-2 text-xs font-mono text-gray-600">{{ $p->reference_number ?: '-' }}</td>
-                                        <td class="px-4 py-2 text-right font-mono font-semibold">
-                                            ₹{{ rupees($p->amount) }}
-                                            @if ((float) $p->tds_amount > 0)
-                                                <div class="text-[10px] font-normal text-accent-700 mt-0.5" title="TDS deducted at source">
-                                                    incl. TDS {{ $p->tds_section }} ₹{{ rupees($p->tds_amount) }}<br>
-                                                    <span class="text-gray-500">Net to bank: ₹{{ rupees($p->netReceived()) }}</span>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-2 text-right whitespace-nowrap">
-                                            <a href="{{ route('payments.receipt', $p) }}" class="text-brand-700 hover:underline text-sm">PDF</a>
-                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                                    <li class="px-4 py-3 text-sm">
+                                        <div class="flex items-baseline justify-between gap-2">
+                                            <span class="font-mono font-semibold text-gray-900">{{ $p->receipt_number }}</span>
+                                            <span class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ inr($p->amount) }}</span>
+                                        </div>
+                                        <div class="mt-0.5 text-xs text-gray-600">
+                                            {{ $p->received_at?->format('d M Y') }} · {{ $p->methodLabel() }}@if ($p->reference_number) · <span class="font-mono">{{ $p->reference_number }}</span>@endif
+                                        </div>
+                                        @if ((float) $p->tds_amount > 0)
+                                            <div class="mt-0.5 text-xs text-gray-600" title="TDS deducted at source">
+                                                Includes TDS {{ $p->tds_section }} ₹{{ inr($p->tds_amount) }} · Net to bank ₹{{ inr($p->netReceived()) }}
+                                            </div>
+                                        @endif
+                                        <div class="mt-1 flex items-center gap-4">
+                                            <a href="{{ route('payments.receipt', $p) }}" class="inline-flex items-center min-h-[40px] text-brand-700 font-medium hover:underline">Receipt PDF</a>
                                             <x-confirm-form
                                                 :action="route('payments.destroy', $p)"
                                                 method="DELETE"
                                                 title="Reverse this payment?"
-                                                message="Receipt {{ $p->receipt_number }} (₹{{ rupees($p->amount) }}) will be removed and the invoice balance restored. The receipt number stays reserved in the audit log."
+                                                message="Receipt {{ $p->receipt_number }} (₹{{ inr($p->amount) }}) will be removed and the invoice balance restored. The receipt number stays reserved in the audit log."
                                                 confirm-label="Reverse payment"
                                                 confirm-class="bg-danger-600 hover:bg-danger-700"
                                                 tone="warning">
-                                                <button type="button" class="text-danger-600 hover:underline text-sm">Reverse</button>
+                                                <button type="button" class="inline-flex items-center min-h-[40px] text-danger-700 hover:underline">Reverse</button>
                                             </x-confirm-form>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                    </li>
                                 @endforeach
-                            </tbody>
-                            <tfoot class="bg-gray-50">
-                                <tr>
-                                    <td colspan="4" class="px-4 py-2 text-right text-xs uppercase tracking-wider text-gray-500 font-semibold">Total received</td>
-                                    <td class="px-4 py-2 text-right font-mono font-bold">₹{{ rupees($payments->sum('amount')) }}</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            @endif
+                            </ul>
+                        </div>
+                    @endif
 
-            <div class="bg-white shadow sm:rounded-lg">
-                @include('invoices.partials.document', ['invoice' => $invoice, 'amountInWords' => $amountInWords])
+                    @include('invoices.partials.activity-timeline', ['invoice' => $invoice])
+                </aside>
             </div>
         </div>
     </div>
 
     {{-- One-click "Save & Download PDF" support: when the edit form sets
          post_save_action=pdf, the controller redirects here with ?download=1.
-         A hidden anchor with the `download` attribute is clicked once on load,
-         triggering the browser's native download flow without navigating away. --}}
+         A hidden anchor is clicked once on load, triggering the browser's
+         native download flow without navigating away. --}}
     @if (request('download'))
         @push('scripts')
         <script>
@@ -464,7 +437,7 @@
                 const a = document.createElement('a');
                 a.href = url;
                 a.rel = 'noopener';
-                // Tiny delay so the page paints first - feels more responsive.
+                // Tiny delay so the page paints first.
                 setTimeout(() => { a.click(); }, 250);
             })();
         </script>

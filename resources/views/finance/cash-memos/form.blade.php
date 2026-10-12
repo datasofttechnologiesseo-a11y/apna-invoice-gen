@@ -1,9 +1,11 @@
 <x-app-layout title="Cash memo">
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit Cash Memo' : 'New cash memo' }}</h1>
-            <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← All memos</a>
-        </div>
+        <x-breadcrumbs :items="[
+            ['label' => 'Expenses', 'href' => route('finance.expenses')],
+            ['label' => 'Cash memos', 'href' => route('finance.cash-memos.index')],
+            ['label' => ($isEdit ?? false) ? $memo->memo_number : 'New cash memo'],
+        ]" />
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ ($isEdit ?? false) ? 'Edit cash memo' : 'New cash memo' }}</h1>
     </x-slot>
 
     @php
@@ -15,9 +17,9 @@
         $companyStateName = optional($company->state)->name;
     @endphp
 
-    <div class="py-8" x-data='cashMemoForm(@json($oldItems), {{ (int) old('is_interstate', $isInterstate ?? 0) }}, {{ (float) old('gst_rate', $gstRate ?? 0) }}, {{ (float) old('discount', $discount ?? 0) }}, @json(old('seller_state', $memo->seller_state ?? null)), @json($companyStateName))'>
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-            <div class="p-6 sm:p-8 bg-white shadow sm:rounded-lg">
+    <div class="py-6 sm:py-8" x-data='cashMemoForm(@json($oldItems), {{ (int) old('is_interstate', $isInterstate ?? 0) }}, {{ (float) old('gst_rate', $gstRate ?? 0) }}, {{ (float) old('discount', $discount ?? 0) }}, @json(old('seller_state', $memo->seller_state ?? null)), @json($companyStateName))'>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-5xl p-4 sm:p-8 bg-white rounded-xl ring-1 ring-gray-200">
                 <form method="POST" action="{{ ($isEdit ?? false) ? route('finance.cash-memos.update', $memo) : route('finance.cash-memos.store') }}" class="space-y-8">
                     @csrf
                     @if ($isEdit ?? false) @method('PUT') @endif
@@ -33,7 +35,7 @@
 
                     {{-- ─── Memo header ─── --}}
                     <section>
-                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Memo details</h2>
+                        <h2 class="font-semibold text-gray-900 mb-3">Memo details</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <x-input-label for="memo_date" value="Date *" />
@@ -44,7 +46,7 @@
                                 <div class="flex items-center justify-between">
                                     <x-input-label for="memo_number" value="Memo number" />
                                     <button type="button" @click="locked = !locked; if (!locked) $nextTick(() => $refs.memoInput.focus())"
-                                            class="text-[11px] font-semibold text-brand-700 hover:underline">
+                                            class="text-xs font-semibold text-brand-700 hover:underline">
                                         <span x-show="locked">Edit manually</span>
                                         <span x-show="!locked">Use auto-generated</span>
                                     </button>
@@ -55,7 +57,7 @@
                                        :class="locked ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'"
                                        value="{{ old('memo_number', $nextMemoNumber) }}"
                                        class="mt-1 block w-full font-mono text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
-                                <p class="mt-1 text-[11px] text-gray-500">
+                                <p class="mt-1 text-xs text-gray-500">
                                     <span x-show="locked">Auto-generated, FY-wise series.</span>
                                     <span x-show="!locked" class="text-accent-700">Custom number. Must be unique; the auto series will <strong>not</strong> advance.</span>
                                 </p>
@@ -66,7 +68,7 @@
 
                     {{-- ─── Purchased From ─── --}}
                     <section>
-                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Purchased from <span class="text-danger-600">*</span></h2>
+                        <h2 class="font-semibold text-gray-900 mb-3">Purchased from <span class="text-danger-600">*</span></h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
                                 <x-input-label for="seller_name" value="Seller / vendor name *" />
@@ -99,7 +101,7 @@
                                     @endforeach
                                 </select>
                                 @if ($companyStateName)
-                                    <p class="mt-1 text-[11px] text-gray-500">Your company is in <strong>{{ $companyStateName }}</strong>. A different state means IGST.</p>
+                                    <p class="mt-1 text-xs text-gray-500">Your company is in <strong>{{ $companyStateName }}</strong>. A different state means IGST.</p>
                                 @endif
                             </div>
                         </div>
@@ -108,7 +110,7 @@
                     {{-- ─── Particulars / line items ─── --}}
                     <section>
                         <div class="flex items-center justify-between mb-3">
-                            <h2 class="font-semibold text-gray-900 text-sm uppercase tracking-wider text-gray-700">Particulars *</h2>
+                            <h2 class="font-semibold text-gray-900">Particulars *</h2>
                             <button type="button" @click="addRow()" class="text-sm text-brand-700 font-semibold hover:underline">+ Add row</button>
                         </div>
 
@@ -219,7 +221,7 @@
 
                     {{-- ─── Discount + GST + Totals ─── --}}
                     <section>
-                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Totals</h2>
+                        <h2 class="font-semibold text-gray-900 mb-3">Totals</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
@@ -297,7 +299,7 @@
 
                     {{-- ─── Payment + classification ─── --}}
                     <section>
-                        <h2 class="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wider text-gray-700">Payment &amp; classification</h2>
+                        <h2 class="font-semibold text-gray-900 mb-3">Payment &amp; classification</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <div>
                                 <x-input-label for="payment_mode" value="Payment mode *" />
@@ -334,9 +336,9 @@
                                   placeholder="Remarks or terms">{{ old('notes', $memo->notes) }}</textarea>
                     </section>
 
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <a href="{{ route('finance.cash-memos.index') }}" class="text-sm text-gray-500 hover:underline">← Cancel</a>
-                        <x-primary-button>{{ ($isEdit ?? false) ? 'Save changes' : 'Create cash memo' }}</x-primary-button>
+                    <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-4 border-t border-gray-100">
+                        <a href="{{ route('finance.cash-memos.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Cancel</a>
+                        <x-primary-button>{{ ($isEdit ?? false) ? 'Save changes' : 'Save cash memo' }}</x-primary-button>
                     </div>
                 </form>
             </div>

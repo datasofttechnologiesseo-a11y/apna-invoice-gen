@@ -147,18 +147,16 @@ class ImportExportTest extends TestCase
 
     public function test_items_can_be_imported_with_opening_stock_and_a_low_stock_alert(): void
     {
-        $csv = "Item Name,HSN/SAC,Sale Price,GST %,Purchase Price,Opening Stock,Low Stock Alert
-"
-            . "Steel Rack,94032090,4500,18,3600,40,5
-"
-            . "Plain Item,94032090,100,18,,,
-"           // no stock columns: not tracked
-            . "Repair Visit,998719,500,18,,3,
-"          // a service: quantity ignored
-            . "Bad Stock,94032090,100,18,,-2,
-";        // negative stock refused
+        $csv = "Item Name,HSN/SAC,Sale Price,GST %,Purchase Price,Opening Stock,Low Stock Alert,Description\n"
+            . "Steel Rack,94032090,4500,18,3600,40,5,Powder coated\n"
+            . "Plain Item,94032090,100,18,,,,\n"           // no stock columns: not tracked
+            . "Repair Visit,998719,500,18,,3,,\n"          // a service: quantity ignored
+            . "Bad Stock,94032090,100,18,,-2,,\n";        // negative stock refused
         $preview = $this->actingAs($this->user)->post(route('imports.preview', 'products'), ['file' => $this->csv($csv)]);
-        $preview->assertOk()->assertSee('Opening Stock cannot be negative');
+        $preview->assertOk()->assertSee('Opening Stock cannot be negative')
+            // Every column read from the file is shown, not only the first six.
+            ->assertSee('Purchase Price</th>', false)->assertSee('Opening Stock</th>', false)
+            ->assertSee('Low Stock Alert</th>', false)->assertSee('3600');
         $this->actingAs($this->user)->post(route('imports.confirm', 'products'), ['token' => $preview->viewData('token')]);
 
         $rack = Product::where('name', 'Steel Rack')->firstOrFail();
@@ -166,6 +164,7 @@ class ImportExportTest extends TestCase
         $this->assertEqualsWithDelta(40, $rack->stockOnHand(), 0.001);
         $this->assertEqualsWithDelta(5, (float) $rack->low_stock_level, 0.001);
         $this->assertEqualsWithDelta(3600, (float) $rack->purchase_rate, 0.001);
+        $this->assertSame('Powder coated', $rack->description, "the template's own Description column is the description, not the name");
         $this->assertFalse(Product::where('name', 'Plain Item')->firstOrFail()->track_stock);
         $this->assertFalse(Product::where('name', 'Repair Visit')->firstOrFail()->track_stock);
         $this->assertFalse(Product::where('name', 'Bad Stock')->exists());

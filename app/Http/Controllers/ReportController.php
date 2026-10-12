@@ -73,6 +73,30 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * The name a report has on screen: the same words as the menu
+     * ("Payments received", "Items"). The report classes keep their own
+     * titles for file names and printed headings.
+     */
+    public static function screenTitle(string $key, ?Report $report = null): string
+    {
+        return [
+            'sales-register' => 'Sales register',
+            'purchase-register' => 'Purchase register',
+            'quotations' => 'Quotations',
+            'credit-notes' => 'Credit notes',
+            'receipts' => 'Payments received',
+            'vendor-payments' => 'Payments made',
+            'customers' => 'Customers',
+            'products' => 'Items',
+            'vendors' => 'Vendors',
+            'receivables-aging' => 'Receivables aging',
+            'payables-aging' => 'Payables aging',
+            'hsn-summary' => 'HSN summary (GSTR-1 Table 12)',
+            'stock-summary' => 'Stock summary',
+        ][$key] ?? ($report?->title() ?? $key);
+    }
+
     /** Indian business periods: month, quarter and April-March financial year. */
     private function presets(): array
     {

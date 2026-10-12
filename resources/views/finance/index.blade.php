@@ -1,35 +1,37 @@
-<x-app-layout title="Profit & Loss">
+<x-app-layout title="Profit & loss">
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Reports', 'href' => route('reports.index')],
+            ['label' => 'Profit & loss'],
+        ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="min-w-0">
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Profit &amp; Loss</h1>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Profit &amp; loss</h1>
                 <p class="text-sm text-gray-500 mt-1 truncate">{{ $company->name }} · {{ $periodLabel }}</p>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm">{{ session('status') }}</div>
-            @endif
+    <div class="py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <x-flash />
 
             @include('finance.partials.tabs')
 
             {{-- Period + view controls --}}
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 bg-white rounded-xl border border-gray-200 p-4">
                 <form method="GET" class="flex items-center gap-2 flex-wrap">
-                    <label class="text-xs uppercase tracking-wider font-bold text-gray-500">Period</label>
-                    <select name="period" aria-label="Choose reporting period" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                    <label for="pnl-period" class="text-sm font-medium text-gray-700">Period</label>
+                    <select id="pnl-period" name="period" onchange="this.form.submit()" class="h-10 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                         @foreach ([
                             'today' => 'Today',
                             'yesterday' => 'Yesterday',
-                            'this_month' => 'Current Month',
-                            'this_quarter' => 'Current Quarter',
-                            'this_half' => 'Current Half-Year',
-                            'this_fy' => 'Current Financial Year',
-                            'last_fy' => 'Previous Financial Year',
-                            'ytd' => 'Financial Year to Date',
+                            'this_month' => 'This month',
+                            'this_quarter' => 'This quarter',
+                            'this_half' => 'This half-year',
+                            'this_fy' => 'This financial year',
+                            'last_fy' => 'Last financial year',
+                            'ytd' => 'Financial year to date',
                         ] as $key => $label)
                             <option value="{{ $key }}" @selected($periodKey === $key)>{{ $label }}</option>
                         @endforeach
@@ -39,10 +41,11 @@
 
                 {{-- View toggle (accrual / cash / GST) --}}
                 <div class="inline-flex rounded-lg bg-gray-100 p-1 text-sm">
-                    @php $viewOptions = ['accrual' => 'P&L (Accrual)', 'cash' => 'Cash flow', 'gst' => 'GST summary']; @endphp
+                    @php $viewOptions = ['accrual' => 'P&L (accrual)', 'cash' => 'Cash flow', 'gst' => 'GST summary']; @endphp
                     @foreach ($viewOptions as $key => $label)
                         <a href="{{ route('finance.index', ['period' => $periodKey, 'view' => $key]) }}"
-                           class="px-4 py-1.5 rounded-md font-semibold transition {{ $view === $key ? 'bg-white shadow text-brand-700' : 'text-gray-600 hover:text-gray-900' }}">
+                           @if ($view === $key) aria-current="page" @endif
+                           class="inline-flex items-center h-9 px-3 sm:px-4 rounded-md font-semibold transition {{ $view === $key ? 'bg-white shadow text-brand-700' : 'text-gray-600 hover:text-gray-900' }}">
                             {{ $label }}
                         </a>
                     @endforeach
@@ -53,70 +56,70 @@
             @if ($view === 'accrual')
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-brand-600">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Revenue (taxable)</div>
+                        <div class="text-sm font-medium text-gray-600">Revenue (taxable)</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($revenue['taxable']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">Excl. GST · from issued invoices</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-danger-500">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Expenses (taxable)</div>
+                        <div class="text-sm font-medium text-gray-600">Expenses (taxable)</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($expense['taxable']) }}</div>
-                        <div class="mt-1 text-xs text-gray-500">Excl. recoverable GST ITC</div>
+                        <div class="mt-1 text-xs text-gray-500">Excl. GST you can claim back. Blocked GST is included.</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] {{ $netProfit >= 0 ? 'border-l-money-600' : 'border-l-danger-600' }}">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Net profit</div>
-                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $netProfit >= 0 ? 'text-money-700' : 'text-danger-700' }} tabular-nums">₹{{ rupees($netProfit) }}</div>
+                        <div class="text-sm font-medium text-gray-600">Net profit</div>
+                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $netProfit >= 0 ? 'text-money-700' : 'text-danger-700' }} tabular-nums">{{ $netProfit < 0 ? '-' : '' }}₹{{ rupees(abs($netProfit)) }}</div>
                         <div class="mt-1 text-xs text-gray-500">Margin: <strong class="{{ $netProfit >= 0 ? 'text-money-700' : 'text-danger-700' }}">{{ number_format($margin, 1) }}%</strong></div>
                     </div>
                 </div>
                 {{-- Working-capital cue on the main P&L view too - profit on paper
                      means little if it's stuck in unpaid invoices. --}}
                 @if ((float) $revenue['outstanding'] > 0)
-                    <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-accent-50 border border-accent-200 text-accent-900 text-sm rounded hover:bg-accent-100 transition">
+                    <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-accent-50 border border-accent-200 text-accent-900 text-sm rounded-xl hover:bg-accent-100 transition">
                         <span><strong>Outstanding receivables:</strong> ₹{{ rupees($revenue['outstanding']) }} due from customers.</span>
-                        <span class="font-semibold whitespace-nowrap">View unpaid →</span>
+                        <span class="font-semibold whitespace-nowrap">View unpaid</span>
                     </a>
                 @endif
             @elseif ($view === 'cash')
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-money-600">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Cash received</div>
+                        <div class="text-sm font-medium text-gray-600">Cash received</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($revenue['received']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">Paid amounts incl. GST</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-danger-500">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Cash spent</div>
+                        <div class="text-sm font-medium text-gray-600">Cash spent</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($expense['cash_out']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">Amount + GST paid on expenses</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] {{ $cashInHand >= 0 ? 'border-l-money-600' : 'border-l-danger-600' }}">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Cash in hand</div>
-                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $cashInHand >= 0 ? 'text-money-700' : 'text-danger-700' }} tabular-nums">₹{{ rupees($cashInHand) }}</div>
-                        <div class="mt-1 text-xs text-gray-500">Received − Spent</div>
+                        <div class="text-sm font-medium text-gray-600">Net cash flow</div>
+                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $cashInHand >= 0 ? 'text-money-700' : 'text-danger-700' }} tabular-nums">{{ $cashInHand < 0 ? '-' : '' }}₹{{ rupees(abs($cashInHand)) }}</div>
+                        <div class="mt-1 text-xs text-gray-500">Cash received less cash spent in the period. Not your bank balance.</div>
                     </div>
                 </div>
-                <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-accent-50 border border-accent-200 text-accent-900 text-sm rounded hover:bg-accent-100 transition">
+                <a href="{{ route('invoices.index', ['status' => 'outstanding']) }}" class="flex items-center justify-between gap-3 p-4 bg-accent-50 border border-accent-200 text-accent-900 text-sm rounded-xl hover:bg-accent-100 transition">
                     <span><strong>Outstanding receivables:</strong> ₹{{ rupees($revenue['outstanding']) }} due from customers.</span>
-                    <span class="font-semibold whitespace-nowrap">View unpaid →</span>
+                    <span class="font-semibold whitespace-nowrap">View unpaid</span>
                 </a>
             @else {{-- gst --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-brand-500">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">GST collected</div>
+                        <div class="text-sm font-medium text-gray-600">GST collected</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($revenue['gst_collected']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">From customers on issued invoices</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] border-l-brand-500">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Input Tax Credit (ITC)</div>
+                        <div class="text-sm font-medium text-gray-600">Input tax credit (ITC)</div>
                         <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($expense['gst_itc']) }}</div>
                         <div class="mt-1 text-xs text-gray-500">From expense GST · claimable</div>
                     </div>
                     <div class="p-5 bg-white rounded-xl border border-gray-200 border-l-[4px] {{ $gstPayable >= 0 ? 'border-l-danger-600' : 'border-l-money-600' }}">
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Net GST payable</div>
-                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $gstPayable >= 0 ? 'text-danger-700' : 'text-money-700' }} tabular-nums">₹{{ rupees($gstPayable) }}</div>
+                        <div class="text-sm font-medium text-gray-600">Net GST payable</div>
+                        <div class="mt-2 font-display text-2xl sm:text-3xl font-extrabold {{ $gstPayable >= 0 ? 'text-gray-900' : 'text-money-700' }} tabular-nums">{{ $gstPayable < 0 ? '-' : '' }}₹{{ rupees(abs($gstPayable)) }}</div>
                         <div class="mt-1 text-xs text-gray-500">Payable through GSTR-3B</div>
                     </div>
                 </div>
-                <div class="p-4 bg-brand-50 border border-brand-200 text-brand-900 text-sm rounded">
+                <div class="p-4 bg-brand-50 border border-brand-200 text-brand-900 text-sm rounded-xl">
                     Net GST payable is GST collected less ITC on valid vendor tax invoices.
                 </div>
             @endif
@@ -125,8 +128,8 @@
             <div class="p-5 bg-white rounded-xl border border-gray-200">
                 <div class="flex items-center justify-between">
                     <div>
-                        <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Revenue vs Expenses</div>
-                        <div class="text-sm text-gray-700 mt-0.5">Last 12 months · taxable values</div>
+                        <div class="text-sm font-semibold text-gray-900">Revenue and expenses</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Last 12 months · taxable values</div>
                     </div>
                     <div class="flex items-center gap-4 text-xs">
                         <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 bg-brand-600 rounded"></span> Revenue</span>
@@ -148,10 +151,10 @@
                              truncate on the label does its job. --}}
                         <div class="flex-1 min-w-0 flex flex-col items-stretch" title="{{ $m['label'] }}: Revenue ₹{{ rupees($m['revenue']) }} · Expenses ₹{{ rupees($m['expenses']) }}">
                             <div class="flex-1 flex items-end gap-0.5">
-                                <div class="flex-1 bg-gradient-to-t from-brand-700 to-brand-500 rounded-t" style="height: {{ $rh }}%"></div>
-                                <div class="flex-1 bg-gradient-to-t from-danger-600 to-danger-400 rounded-t" style="height: {{ $eh }}%"></div>
+                                <div class="flex-1 bg-brand-600 rounded-t" style="height: {{ $rh }}%"></div>
+                                <div class="flex-1 bg-danger-400 rounded-t" style="height: {{ $eh }}%"></div>
                             </div>
-                            <div class="text-[9px] text-center text-gray-500 mt-1 truncate">{{ $m['label'] }}</div>
+                            <div class="text-xs text-center text-gray-500 mt-1 truncate">{{ $m['label'] }}</div>
                         </div>
                     @endforeach
                 </div>
@@ -162,11 +165,14 @@
                 {{-- By category --}}
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-                        <h2 class="font-display font-bold text-gray-900">Expenses by category</h2>
+                        <div>
+                            <h2 class="font-display font-bold text-gray-900">Expenses by category</h2>
+                            <p class="text-xs text-gray-500">Includes GST you cannot claim back. Adds up to ₹{{ rupees($byCategory->sum('total')) }}.</p>
+                        </div>
                         <span class="text-xs text-gray-500">{{ $byCategory->count() }} categor{{ $byCategory->count() === 1 ? 'y' : 'ies' }}</span>
                     </div>
                     @if ($byCategory->isEmpty())
-                        <div class="p-10 text-center text-gray-500 text-sm">No expenses in this period. <a href="{{ route('finance.expenses.create') }}" class="text-brand-700 underline">Add expense →</a></div>
+                        <div class="p-10 text-center text-gray-500 text-sm">No expenses in this period. <a href="{{ route('finance.expenses.create') }}" class="text-brand-700 font-semibold hover:underline">New expense</a></div>
                     @else
                         <ul class="divide-y divide-gray-100">
                             @foreach ($byCategory as $cat)
@@ -195,7 +201,7 @@
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
                         <h2 class="font-display font-bold text-gray-900">Top expenses this period</h2>
-                        <a href="{{ route('finance.expenses') }}" class="text-xs font-semibold text-brand-700 hover:underline">View all →</a>
+                        <a href="{{ route('finance.expenses') }}" class="text-sm font-semibold text-brand-700 hover:underline">View all</a>
                     </div>
                     @if ($topExpenses->isEmpty())
                         <div class="p-10 text-center text-gray-500 text-sm">No expenses in this period.</div>
@@ -205,7 +211,7 @@
                                 <li class="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50">
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center gap-2">
-                                            <span class="inline-block text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider" style="background: {{ $e->categoryColor() }}20; color: {{ $e->categoryColor() }};">{{ $e->categoryLabel() }}</span>
+                                            <span class="inline-block text-xs px-1.5 py-0.5 rounded font-medium whitespace-nowrap" style="background: {{ $e->categoryColor() }}20; color: {{ $e->categoryColor() }};">{{ $e->categoryLabel() }}</span>
                                             <span class="font-medium text-gray-900 truncate">{{ $e->description }}</span>
                                         </div>
                                         <div class="text-xs text-gray-500 mt-0.5 truncate">
@@ -216,7 +222,7 @@
                                     <div class="text-right flex-shrink-0">
                                         <div class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ rupees($e->amount) }}</div>
                                         @if ((float) $e->gst_amount > 0)
-                                            <div class="text-[10px] text-gray-500">+ ₹{{ rupees((float) $e->gst_amount) }} GST</div>
+                                            <div class="text-xs text-gray-500">+ ₹{{ rupees((float) $e->gst_amount) }} GST</div>
                                         @endif
                                     </div>
                                 </li>

@@ -1,6 +1,6 @@
-@php $effective = 'April 18, 2026'; @endphp
+@php $effective = '18 April 2026'; @endphp
 <x-layouts.marketing
-    title="Terms of Service"
+    title="Terms of service"
     eyebrow="Legal"
     lead="The rules of the road for using Apna Invoice. Plain English where we can, precise where we must."
     description="Apna Invoice Terms of Service: account rules, acceptable use, GST responsibility, fees, liability and Indian jurisdiction, in plain English where possible."

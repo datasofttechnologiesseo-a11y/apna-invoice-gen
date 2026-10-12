@@ -1,8 +1,8 @@
 {{--
-    Sales / purchase section tabs - the two sides of the GST ledger side by
-    side: bills you issued (GSTR-1) and bills you received (ITC in GSTR-3B).
-    Each tab gets its own color theme, distinct icon, a live stat, and a
-    quick "+ New" CTA on the active tab.
+    Sales / purchase switch: the two sides of the GST ledger side by side,
+    bills you issued (GSTR-1) and bills you received (ITC in GSTR-3B), each
+    with a live count and what needs attention. The page header carries the
+    "New …" button, so the strip does not repeat it.
 
     Required:
         $active = 'invoices' | 'purchases'
@@ -12,9 +12,8 @@
             'invoices'  => ['total' => 12, 'open' => 3],         // open = outstanding (unpaid)
             'purchases' => ['total' => 40, 'unpaid' => 4],       // unpaid = still owed to vendors
         ]
-        Backwards-compat: if a legacy `$counts` array is passed
-        (`['invoices' => 12, ...]`) it's normalised into the new shape so
-        existing callers don't break.
+        Backwards-compat: a legacy `$counts` array (`['invoices' => 12, ...]`)
+        is normalised into the new shape so existing callers don't break.
 --}}
 @php
     // Backwards-compat shim: accept the old `$counts` shape.
@@ -26,153 +25,64 @@
     $tabs = [
         [
             'key' => 'invoices',
-            'label' => 'Sales Invoice',
+            'label' => 'Sales invoices',
             'href' => route('invoices.index'),
             'desc' => 'Bills you issued · reported in GSTR-1',
-            // Document with embedded check - distinct from quotation envelope
-            'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-            'theme' => [
-                'pill_bg'         => 'bg-brand-700',
-                'pill_to'         => 'to-brand-900',
-                'icon_active'     => 'bg-gradient-to-br from-brand-700 to-brand-900 text-white shadow-brand-900/20',
-                'icon_idle'       => 'bg-brand-50 text-brand-700 group-hover:bg-brand-100',
-                'label_active'    => 'text-brand-900',
-                'count_active'    => 'bg-accent-500 text-accent-950',
-                'count_idle'      => 'bg-gray-200 text-gray-700',
-                'stripe'          => 'bg-gradient-to-r from-accent-400 via-accent-500 to-brand-700',
-                'cta_bg'          => 'bg-brand-700 hover:bg-brand-800',
-                'bg_active'       => 'bg-gradient-to-br from-brand-50/80 via-white to-accent-50/30',
-            ],
-            'create_route' => route('invoices.create'),
-            'create_label' => 'New invoice',
-            // Stat sub-label
-            'stat_key'   => 'open',
+            'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            'stat_key' => 'open',
             'stat_label' => 'outstanding',
-            'stat_zero'  => 'All paid',
-            'stat_tone'  => 'accent',
+            'stat_zero' => 'All paid',
         ],
         [
             'key' => 'purchases',
-            'label' => 'Purchase Invoice',
+            'label' => 'Purchase invoices',
             'href' => route('purchases.index'),
             'desc' => 'Bills you received · input tax credit for GSTR-3B',
-            // Inbox-tray / "bills coming in" icon
             'icon' => 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
-            'theme' => [
-                'pill_bg'         => 'bg-brand-700',
-                'pill_to'         => 'to-brand-900',
-                'icon_active'     => 'bg-gradient-to-br from-brand-700 to-brand-900 text-white shadow-brand-900/20',
-                'icon_idle'       => 'bg-brand-50 text-brand-700 group-hover:bg-brand-100',
-                'label_active'    => 'text-brand-900',
-                'count_active'    => 'bg-accent-500 text-accent-950',
-                'count_idle'      => 'bg-gray-200 text-gray-700',
-                'stripe'          => 'bg-gradient-to-r from-accent-400 via-accent-500 to-brand-700',
-                'cta_bg'          => 'bg-brand-700 hover:bg-brand-800',
-                'bg_active'       => 'bg-gradient-to-br from-brand-50/80 via-white to-accent-50/30',
-            ],
-            'create_route' => route('purchases.create'),
-            'create_label' => 'New purchase invoice',
-            'stat_key'   => 'unpaid',
+            'stat_key' => 'unpaid',
             'stat_label' => 'unpaid',
-            'stat_zero'  => 'All paid',
-            'stat_tone'  => 'accent',
+            'stat_zero' => 'All paid',
         ],
     ];
     // Billing staff don't see purchases.
     $tabs = array_values(array_filter($tabs, fn ($t) => $t['key'] !== 'purchases' || \App\Support\Team::can('purchases.index')));
-
-    // Resolve the active tab's accent stripe for the top of the card.
-    $activeStripe = collect($tabs)->firstWhere('key', $active)['theme']['stripe']
-        ?? 'bg-gradient-to-r from-accent-400 via-accent-500 to-brand-700';
 @endphp
 
-<div class="relative bg-white rounded-xl ring-1 ring-gray-200 shadow-sm overflow-hidden">
-    {{-- Decorative top stripe - colour follows the ACTIVE tab so users can
-         glance at the strip and instantly see which doc type they're in. --}}
-    <div class="h-1 {{ $activeStripe }}"></div>
-
-    <div class="grid grid-cols-2 divide-x divide-gray-200" role="tablist" aria-label="Sales and purchase documents">
-        @foreach ($tabs as $tab)
-            @php
-                $isActive = ($active ?? null) === $tab['key'];
-                $tabStats = $stats[$tab['key']] ?? [];
-                $count = $tabStats['total'] ?? null;
-                $statValue = $tabStats[$tab['stat_key']] ?? null;
-                $t = $tab['theme'];
-            @endphp
-            <div @class([
-                'group relative min-h-[64px] transition-all',
-                $t['bg_active'] => $isActive,
-                'hover:bg-gray-50' => ! $isActive,
+<nav class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden grid {{ count($tabs) > 1 ? 'grid-cols-2 divide-x divide-gray-200' : 'grid-cols-1' }}" aria-label="Sales and purchase documents">
+    @foreach ($tabs as $tab)
+        @php
+            $isActive = ($active ?? null) === $tab['key'];
+            $tabStats = $stats[$tab['key']] ?? [];
+            $count = $tabStats['total'] ?? null;
+            $statValue = $tabStats[$tab['stat_key']] ?? null;
+        @endphp
+        <a href="{{ $tab['href'] }}" @if ($isActive) aria-current="page" @endif
+           @class([
+               'flex items-center gap-3 px-3 sm:px-5 py-3 min-h-[64px] border-b-2 transition',
+               'bg-brand-50/60 border-brand-700' => $isActive,
+               'border-transparent hover:bg-gray-50' => ! $isActive,
+           ])>
+            <span @class([
+                'shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
+                'bg-brand-700 text-white' => $isActive,
+                'bg-gray-100 text-gray-600' => ! $isActive,
             ])>
-                <a href="{{ $tab['href'] }}" role="tab" aria-selected="{{ $isActive ? 'true' : 'false' }}"
-                   class="block px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
-                    {{-- Icon tile - themed per tab --}}
-                    <span @class([
-                        'shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm transition-all',
-                        $t['icon_active'] => $isActive,
-                        $t['icon_idle'] => ! $isActive,
-                    ])>
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tab['icon'] }}"/></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tab['icon'] }}"/></svg>
+            </span>
+            <span class="min-w-0 flex-1">
+                <span class="flex items-center gap-2 flex-wrap">
+                    <span @class(['font-semibold text-sm sm:text-base leading-tight', 'text-gray-900' => $isActive, 'text-gray-700' => ! $isActive])>{{ $tab['label'] }}</span>
+                    @if ($count !== null)
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 text-xs font-semibold rounded-full tabular-nums bg-gray-100 text-gray-700">{{ $count }}</span>
+                    @endif
+                </span>
+                <span class="hidden sm:block text-xs text-gray-600 mt-0.5 leading-snug">{{ $tab['desc'] }}</span>
+                @if ($statValue !== null)
+                    <span class="block text-xs font-medium mt-0.5 {{ (int) $statValue > 0 ? 'text-accent-800' : 'text-money-700' }}">
+                        {{ (int) $statValue > 0 ? $statValue . ' ' . $tab['stat_label'] : $tab['stat_zero'] }}
                     </span>
-
-                    <span class="flex-1 min-w-0 text-left">
-                        <span class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                            <span @class([
-                                'block font-display font-bold text-sm sm:text-base leading-tight',
-                                $t['label_active'] => $isActive,
-                                'text-gray-700 group-hover:text-gray-900' => ! $isActive,
-                            ])>{{ $tab['label'] }}</span>
-                            @if ($count !== null)
-                                <span @class([
-                                    'inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 text-[10px] font-bold rounded-full tabular-nums',
-                                    $t['count_active'] => $isActive,
-                                    $t['count_idle'] => ! $isActive,
-                                ])>{{ $count }}</span>
-                            @endif
-                            @if ($isActive)
-                                <span class="hidden md:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-accent-700 bg-accent-100 ring-1 ring-accent-200 rounded-full px-1.5 py-0.5">
-                                    <span class="w-1 h-1 rounded-full bg-accent-600 animate-pulse"></span>
-                                    Open
-                                </span>
-                            @endif
-                        </span>
-                        <span @class([
-                            'hidden sm:block text-[11px] mt-0.5 leading-snug',
-                            'text-gray-600' => $isActive,
-                            'text-gray-500' => ! $isActive,
-                        ])>{{ $tab['desc'] }}</span>
-
-                        {{-- Live status stat - shown when controller passes a value.
-                             Friendly empty-state message ("All paid") when value is 0. --}}
-                        @if ($statValue !== null)
-                            <span class="hidden sm:flex items-center gap-1.5 mt-1.5 text-[11px] font-medium">
-                                @if ((int) $statValue > 0)
-                                    <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-accent-100 text-accent-800 text-[10px] font-bold tabular-nums">{{ $statValue }}</span>
-                                    <span class="text-accent-700">{{ $tab['stat_label'] }}</span>
-                                @else
-                                    <span class="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-money-100 text-money-700">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    </span>
-                                    <span class="text-money-700">{{ $tab['stat_zero'] }}</span>
-                                @endif
-                            </span>
-                        @endif
-                    </span>
-                </a>
-
-                {{-- Quick "+ New" CTA - only on the active tab. Sits absolutely
-                     positioned so the row click target stays as one big link. --}}
-                @if ($isActive)
-                    <a href="{{ $tab['create_route'] }}"
-                       class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 {{ $t['cta_bg'] }} text-white text-xs font-semibold rounded-md shadow-sm transition"
-                       title="{{ $tab['create_label'] }}">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                        <span class="hidden sm:inline">{{ $tab['create_label'] }}</span>
-                    </a>
-                    <span class="absolute bottom-0 inset-x-0 h-[3px] {{ $t['stripe'] }}"></span>
                 @endif
-            </div>
-        @endforeach
-    </div>
-</div>
+            </span>
+        </a>
+    @endforeach
+</nav>

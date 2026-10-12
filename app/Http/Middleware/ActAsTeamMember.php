@@ -74,6 +74,17 @@ class ActAsTeamMember
         $user = $request->user();
         $route = $request->route();
         $signedIn = collect($route?->gatherMiddleware() ?? [])->contains(fn ($m) => $m === 'auth' || str_starts_with((string) $m, 'auth:'));
+
+        // A DPDP-erased account is never usable again, on the web or in the
+        // app, even with a session or token from before the erasure.
+        if ($user && $route && $signedIn && $user->erased_at !== null) {
+            if ($request->hasSession()) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+            }
+            throw new \Illuminate\Auth\AuthenticationException('Unauthenticated.');
+        }
+
         if (! $user || ! $route || ! $signedIn || ! $user->active_company_id) {
             return $next($request);
         }
@@ -100,7 +111,7 @@ class ActAsTeamMember
 
         if (! CompanyMember::allows($membership->role, $name)) {
             $message = 'Your role in ' . $company->name . ' (' . $membership->roleLabel() . ') does not include this page. Ask the owner if you need it.';
-            $fallback = $membership->role === 'staff' ? 'invoices.index' : 'dashboard';
+            $fallback = Team::homeRoute($membership);
             if ($request->expectsJson() || $request->is('api/*') || $name === $fallback || ($request->isMethod('post') && ! $request->header('referer'))) {
                 abort(403, $message);
             }

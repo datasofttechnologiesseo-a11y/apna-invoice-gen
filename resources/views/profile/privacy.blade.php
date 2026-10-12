@@ -7,11 +7,11 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
             {{-- Marketing consent --}}
-            <section class="bg-white shadow sm:rounded-lg p-6">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6">
                 <h2 class="font-semibold text-gray-900">Communication preferences</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Account, security and billing emails are always sent. Marketing emails (product
@@ -35,7 +35,7 @@
             </section>
 
             {{-- Right to access --}}
-            <section class="bg-white shadow sm:rounded-lg p-6">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6">
                 <h2 class="font-semibold text-gray-900">Access &amp; portability</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Download a complete copy of your account, invoices, customers and products as a
@@ -49,7 +49,7 @@
             </section>
 
             {{-- Consent history --}}
-            <section class="bg-white shadow sm:rounded-lg p-6">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6">
                 <h2 class="font-semibold text-gray-900">Consent history</h2>
                 <p class="text-sm text-gray-500 mt-1">Each consent decision with its date and policy version. Entries cannot be edited.</p>
 
@@ -86,7 +86,7 @@
             </section>
 
             {{-- Right to erasure --}}
-            <section class="bg-white shadow sm:rounded-lg p-6 border-l-4 border-danger-300">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6 border-l-4 border-danger-300">
                 <h2 class="font-semibold text-gray-900">Delete my account</h2>
                 <p class="text-sm text-gray-500 mt-1">
                     Permanently delete your account and personal data. Invoice records that GST law requires

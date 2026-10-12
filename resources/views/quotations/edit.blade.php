@@ -1,5 +1,9 @@
 <x-app-layout :title="$quotation->exists ? 'Edit quotation' : 'New quotation'">
     <x-slot name="header">
+        <x-breadcrumbs :items="[
+            ['label' => 'Quotations', 'href' => route('quotations.index')],
+            ['label' => $quotation->exists ? $quotation->displayNumber() : 'New quotation'],
+        ]" />
         <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
             {{ $quotation->exists ? 'Edit ' . $quotation->displayNumber() : 'New quotation' }}
         </h1>
@@ -30,13 +34,9 @@
         $utStateIds = \App\Models\State::where('is_union_territory', true)->pluck('id')->values();
     @endphp
 
-    <div class="py-10" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, {{ ! empty($company->gstin) ? 'true' : 'false' }})'
+    <div class="py-6 sm:py-8" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, {{ ! empty($company->gstin) ? 'true' : 'false' }})'
          @customer-added.window="addCustomer($event.detail)">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <x-breadcrumbs :items="[
-                ['label' => 'Quotations', 'href' => route('quotations.index')],
-                ['label' => $quotation->exists ? $quotation->displayNumber() : 'New quotation'],
-            ]" />
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             @if ($errors->any())
                 <div class="p-4 bg-danger-50 border border-danger-200 text-danger-800 rounded">
@@ -51,7 +51,7 @@
                     </svg>
                     <div class="text-sm">
                         <div class="font-semibold">A quotation is not a tax invoice.</div>
-                        <div class="mt-0.5">It is not reported in GSTR-1 or GSTR-3B. GST is charged only when you use <strong>Convert to invoice</strong> after the customer accepts.</div>
+                        <div class="mt-0.5">It is not reported in GSTR-1 or GSTR-3B. GST is charged on the invoice you create with <strong>Convert to invoice</strong> after the customer accepts.</div>
                     </div>
                 </div>
             @endunless
@@ -60,7 +60,7 @@
                 @csrf
                 @if ($quotation->exists) @method('PATCH') @endif
 
-                <div class="bg-white shadow sm:rounded-lg p-6 space-y-6">
+                <div class="bg-white rounded-xl ring-1 ring-gray-200 p-4 sm:p-6 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="md:col-span-2">
                             <x-input-label for="customer_id" value="Customer *" />
@@ -75,6 +75,7 @@
                                 </select>
                                 <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap" title="Add a new customer">+ New</button>
                             </div>
+                            <x-input-error :messages="$errors->get('customer_id')" for="customer_id" class="mt-1" />
                         </div>
 
                         <div>
@@ -82,9 +83,7 @@
                             <x-text-input id="quote_number" name="quote_number" type="text" maxlength="50"
                                           class="mt-1 block w-full font-mono text-sm"
                                           :value="old('quote_number', $quotation->quote_number ?: $previewNumber)" />
-                            <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
-                                Edit if you use your own series
-                            </p>
+                            <p class="mt-1 text-xs text-gray-500">Change it if you use your own series.</p>
                             <x-input-error :messages="$errors->get('quote_number')" for="quote_number" class="mt-1" />
                         </div>
 
@@ -95,6 +94,7 @@
                             <x-input-label for="quote_date" value="Quote date *" />
                             <x-text-input id="quote_date" name="quote_date" type="date" class="mt-1 block w-full"
                                           :value="old('quote_date', $quotation->quote_date?->toDateString() ?? now()->toDateString())" required />
+                            <x-input-error :messages="$errors->get('quote_date')" for="quote_date" class="mt-1" />
                         </div>
 
                         <div x-data="{
@@ -107,10 +107,13 @@
                             <x-input-label for="valid_until" value="Valid until" />
                             <x-text-input id="valid_until" name="valid_until" type="date" class="mt-1 block w-full" x-ref="validUntil"
                                           :value="old('valid_until', $quotation->valid_until?->toDateString() ?? now()->addDays(30)->toDateString())" />
+                            <x-input-error :messages="$errors->get('valid_until')" for="valid_until" class="mt-1" />
                             <div class="mt-1 flex flex-wrap gap-1">
-                                @foreach ([7 => '7d', 15 => '15d', 30 => '30d', 60 => '60d'] as $days => $label)
+                                {{-- $chip, not $label: partials.hsn-search-link reads $label,
+                                     and the last chip ("60d") leaked into the HSN/SAC header. --}}
+                                @foreach ([7 => '7 days', 15 => '15 days', 30 => '30 days', 60 => '60 days'] as $days => $chip)
                                     <button type="button" @click="setValidity({{ $days }})"
-                                            class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-brand-100 hover:text-brand-700 text-gray-600 font-mono">{{ $label }}</button>
+                                            class="text-xs min-h-[32px] px-2 rounded bg-gray-100 hover:bg-brand-100 hover:text-brand-700 text-gray-700">{{ $chip }}</button>
                                 @endforeach
                             </div>
                         </div>
@@ -122,7 +125,7 @@
                                 <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded">Inter-state (IGST)</span>
                                 <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + <span x-text="stateTaxLabel"></span>)</span>
                             </div>
-                            <p class="mt-1 text-[10px] text-gray-500">Based on your state and the customer's state.</p>
+                            <p class="mt-1 text-xs text-gray-500">Based on your state and the customer's state.</p>
                         </div>
                     </div>
                 </div>
@@ -131,13 +134,13 @@
                      standard on Indian B2B quotations. All optional, but having
                      them surfaced means the operator can fill them in seconds
                      instead of cramming them into the free-text notes field. --}}
-                <div class="bg-white shadow sm:rounded-lg p-6 space-y-4">
+                <div class="bg-white rounded-xl ring-1 ring-gray-200 p-4 sm:p-6 space-y-4">
                     <div>
                         <x-input-label for="subject" value="Subject" />
                         <x-text-input id="subject" name="subject" type="text" class="mt-1 block w-full"
                                       :value="old('subject', $quotation->subject)"
                                       placeholder="e.g. Quotation for supply of office furniture" maxlength="200" />
-                        <p class="mt-1 text-[10px] text-gray-500">One line, printed at the top of the quotation.</p>
+                        <p class="mt-1 text-xs text-gray-500">One line, printed at the top of the quotation.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -145,22 +148,21 @@
                             <x-text-input id="reference" name="reference" type="text" class="mt-1 block w-full"
                                           :value="old('reference', $quotation->reference)"
                                           placeholder="e.g. Your enquiry ABC/RFQ/26-27/021 dated 12-Apr-2026" maxlength="100" />
-                            <p class="mt-1 text-[10px] text-gray-500">The customer's enquiry or RFQ number.</p>
+                            <p class="mt-1 text-xs text-gray-500">The customer's enquiry or RFQ number.</p>
                         </div>
                         <div>
                             <x-input-label for="delivery_period" value="Delivery period (optional)" />
                             <x-text-input id="delivery_period" name="delivery_period" type="text" class="mt-1 block w-full"
                                           :value="old('delivery_period', $quotation->delivery_period)"
                                           placeholder="e.g. 15-20 working days from order confirmation" maxlength="100" />
-                            <p class="mt-1 text-[10px] text-gray-500">Printed on the quotation.</p>
+                            <p class="mt-1 text-xs text-gray-500">Printed on the quotation.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-                    <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
-                        <h2 class="font-medium text-gray-900">Line items</h2>
-                        <button type="button" @click="addRow" class="inline-flex items-center justify-center min-h-[40px] px-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-md text-sm font-semibold">+ Add row</button>
+                <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
+                    <div class="px-4 sm:px-6 py-4 border-b">
+                        <h2 class="font-semibold text-gray-900">Items</h2>
                     </div>
 
                     {{-- Mobile / tablet stacked cards --}}
@@ -168,18 +170,18 @@
                         <template x-for="(item, idx) in items" :key="idx">
                             <div class="p-4 space-y-3">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs uppercase font-bold tracking-wider text-gray-500">Item <span x-text="idx + 1"></span></span>
+                                    <span class="text-xs font-semibold text-gray-600">Item <span x-text="idx + 1"></span></span>
                                     <button type="button" @click="removeRow(idx)"
                                             :disabled="items.length <= 1"
-                                            :class="items.length <= 1 ? 'text-gray-400 cursor-not-allowed' : 'text-danger-600'"
-                                            class="text-sm font-medium transition"
+                                            :class="items.length <= 1 ? 'text-gray-600 cursor-not-allowed' : 'text-danger-700'"
+                                            class="inline-flex items-center min-h-[40px] px-2 -mr-2 text-sm font-medium transition"
                                             aria-label="Remove row">Remove</button>
                                 </div>
                                 @if ($productIndex->isNotEmpty())
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">Product</label>
+                                        <label class="text-sm font-medium text-gray-700">Item</label>
                                         <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
-                                        <select @change="pickProduct(idx, $event.target.value)" :aria-label="`Pick a product for line item ${idx + 1}`" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                        <select @change="pickProduct(idx, $event.target.value)" :aria-label="`Pick an item for line item ${idx + 1}`" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                             <option value="">Custom</option>
                                             @foreach ($productIndex as $p)
                                                 <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
@@ -188,31 +190,31 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <label class="text-xs text-gray-500 font-semibold">Description</label>
+                                    <label class="text-sm font-medium text-gray-700">Description</label>
                                     <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional · filled from the product" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <div class="flex items-center justify-between gap-1">
-                                            <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
+                                            <label class="text-sm font-medium text-gray-700">HSN/SAC</label>
                                             @include('partials.hsn-search-link')
                                         </div>
                                         <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono">
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">Unit</label>
+                                        <label class="text-sm font-medium text-gray-700">Unit</label>
                                         <input :name="`items[${idx}][unit]`" :aria-label="`Unit for line item ${idx + 1}`" x-model="item.unit" class="mt-1 block w-full border-gray-300 rounded text-sm" placeholder="NOS, HRS…">
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">Quantity</label>
+                                        <label class="text-sm font-medium text-gray-700">Quantity</label>
                                         <input :name="`items[${idx}][quantity]`" :aria-label="`Quantity for line item ${idx + 1}`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
+                                        <label class="text-sm font-medium text-gray-700">Rate (₹)</label>
                                         <input :name="`items[${idx}][rate]`" :aria-label="`Rate for line item ${idx + 1}`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">GST rate</label>
+                                        <label class="text-sm font-medium text-gray-700">GST rate</label>
                                         <select :name="`items[${idx}][gst_rate]`" :aria-label="`GST rate for line item ${idx + 1}`" x-model.number="item.gst_rate" @change="recompute()" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                             @foreach (config('gst.rates') as $r)
                                                 <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' · ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
@@ -231,10 +233,10 @@
                     {{-- Desktop table --}}
                     <div class="hidden lg:block overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                            <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase">
                                 <tr>
                                     @if ($productIndex->isNotEmpty())
-                                        <th class="px-3 py-2 text-left">Product</th>
+                                        <th class="px-3 py-2 text-left">Item</th>
                                     @endif
                                     <th class="px-3 py-2 text-left">Description</th>
                                     <th class="px-3 py-2 text-left">
@@ -243,7 +245,7 @@
                                             @include('partials.hsn-search-link')
                                         </span>
                                     </th>
-                                    <th class="px-3 py-2 text-left">Quantity</th>
+                                    <th class="px-3 py-2 text-right">Quantity</th>
                                     <th class="px-3 py-2 text-right">Rate (₹)</th>
                                     <th class="px-3 py-2 text-right">GST%</th>
                                     <th class="px-3 py-2 text-right">Amount</th>
@@ -256,7 +258,7 @@
                                         @if ($productIndex->isNotEmpty())
                                             <td class="px-2 py-2">
                                                 <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
-                                                <select @change="pickProduct(idx, $event.target.value)" :aria-label="`Pick a product for line item ${idx + 1}`" class="w-40 border-gray-300 rounded text-sm">
+                                                <select @change="pickProduct(idx, $event.target.value)" :aria-label="`Pick an item for line item ${idx + 1}`" class="w-40 border-gray-300 rounded text-sm">
                                                     <option value="">Custom</option>
                                                     @foreach ($productIndex as $p)
                                                         <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
@@ -267,7 +269,7 @@
                                         <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional · filled from the product" class="w-full border-gray-300 rounded text-sm"></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono"></td>
                                         <td class="px-2 py-2">
-                                            <div class="flex items-center gap-1">
+                                            <div class="flex items-center justify-end gap-1">
                                                 <input :name="`items[${idx}][quantity]`" :aria-label="`Quantity for line item ${idx + 1}`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
                                                 <input :name="`items[${idx}][unit]`" :aria-label="`Unit for line item ${idx + 1}`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="Unit">
                                             </div>
@@ -299,13 +301,17 @@
                         </table>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-t bg-gray-50">
+                    <div class="px-4 sm:px-6 py-3 border-t">
+                        <button type="button" @click="addRow" class="inline-flex items-center justify-center min-h-[40px] px-3 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-md text-sm font-semibold">+ Add row</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 sm:p-6 border-t bg-gray-50">
                         <div class="space-y-4">
                             <div>
                                 <x-input-label for="terms" value="Terms & conditions" />
                                 <textarea id="terms" name="terms" rows="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm font-mono text-xs"
                                           placeholder="1. Payment: 50% advance on order, balance against proforma before dispatch.&#10;2. Taxes: GST extra at applicable rates.&#10;3. Freight: At actuals, on customer's account.&#10;4. Warranty: 12 months from date of dispatch.&#10;5. Disputes: Subject to {{ $company->city ?? 'local' }} jurisdiction.">{{ old('terms', $quotation->terms ?? $company->default_terms) }}</textarea>
-                                <p class="mt-1 text-[10px] text-gray-500">Put each numbered term on its own line.</p>
+                                <p class="mt-1 text-xs text-gray-500">Put each numbered term on its own line.</p>
                             </div>
                             <div>
                                 <x-input-label for="notes" value="Notes (printed below the terms)" />
@@ -320,7 +326,7 @@
                             <div class="flex justify-between items-center gap-2">
                                 <label for="quote_discount_input" class="flex items-center gap-1.5">
                                     Discount
-                                    <span class="inline-flex rounded border border-gray-300 overflow-hidden text-[11px] font-semibold">
+                                    <span class="inline-flex rounded border border-gray-300 overflow-hidden text-xs font-semibold">
                                         <button type="button" @click="discountMode = 'amount'; recompute()" :class="discountMode === 'amount' ? 'bg-brand-700 text-white' : 'bg-white text-gray-600'" :aria-pressed="(discountMode === 'amount').toString()" aria-label="Discount in rupees" class="px-2.5 py-1.5">₹</button>
                                         <button type="button" @click="discountMode = 'percent'; recompute()" :class="discountMode === 'percent' ? 'bg-brand-700 text-white' : 'bg-white text-gray-600'" :aria-pressed="(discountMode === 'percent').toString()" aria-label="Discount in percent" class="px-2.5 py-1.5">%</button>
                                     </span>
@@ -330,21 +336,21 @@
                                        class="w-32 border-gray-300 rounded text-sm text-right" placeholder="0">
                                 <input type="hidden" name="quote_discount" :value="totals.discount">
                             </div>
-                            <p x-show="discountMode === 'percent' && totals.discount > 0" x-cloak class="text-[11px] text-gray-500 text-right -mt-1">= ₹ <span x-text="fmt(totals.discount)"></span></p>
+                            <p x-show="discountMode === 'percent' && totals.discount > 0" x-cloak class="text-xs text-gray-500 text-right -mt-1">= ₹ <span x-text="fmt(totals.discount)"></span></p>
                             @error('quote_discount')<p class="text-xs text-danger-600 text-right">{{ $message }}</p>@enderror
                             <div class="flex justify-between border-t pt-2"><span>Taxable value</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
                             <div class="flex justify-between" x-show="!isInterstate"><span x-text="stateTaxLabel"></span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
                             <div class="flex justify-between" x-show="isInterstate"><span>IGST</span><span class="font-mono" x-text="fmt(totals.igst)"></span></div>
                             <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono" x-text="fmt(totals.grandTotal)"></span></div>
-                            <p class="pt-2 text-[11px] text-gray-500">No GST is charged or reported on a quotation.</p>
+                            <p class="pt-2 text-xs text-gray-500">GST shown is what the invoice will charge. A quotation itself is not reported in GST returns.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <a href="{{ route('quotations.index') }}" class="text-gray-500 hover:underline">← Cancel</a>
-                    <x-primary-button>{{ $quotation->exists ? 'Save changes' : 'Create draft' }}</x-primary-button>
+                <div class="flex items-center justify-end gap-3">
+                    <a href="{{ route('quotations.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Cancel</a>
+                    <x-primary-button>{{ $quotation->exists ? 'Save changes' : 'Save draft' }}</x-primary-button>
                 </div>
             </form>
         </div>

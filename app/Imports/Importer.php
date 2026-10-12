@@ -52,14 +52,23 @@ abstract class Importer
 
     // ------------------------------------------------------------------
 
-    /** Map a sheet header ("Customer Name", "GST No.") to a field key. */
+    /**
+     * Map a sheet header ("Customer Name", "GST No.") to a field key. A
+     * field's own name or template heading wins over another field's alias,
+     * so the template's "Description" column is the description, not the
+     * item name that also answers to "description" in other software.
+     */
     public function fieldForHeader(string $header): ?string
     {
         $norm = self::normaliseHeader($header);
         foreach ($this->fields() as $key => $def) {
-            $candidates = array_merge([$key, $def['label']], $def['aliases'] ?? []);
-            foreach ($candidates as $c) {
-                if (self::normaliseHeader($c) === $norm) {
+            if (self::normaliseHeader($key) === $norm || self::normaliseHeader($def['label']) === $norm) {
+                return $key;
+            }
+        }
+        foreach ($this->fields() as $key => $def) {
+            foreach ($def['aliases'] ?? [] as $alias) {
+                if (self::normaliseHeader($alias) === $norm) {
                     return $key;
                 }
             }

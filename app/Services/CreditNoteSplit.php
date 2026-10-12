@@ -21,7 +21,9 @@ class CreditNoteSplit
     public function for(Invoice $invoice, float $amount): array
     {
         $grand = (float) $invoice->grand_total;
-        $prior = $invoice->creditNotes()
+        // reorder(): the relation sorts by date, and MySQL refuses ORDER BY on
+        // a plain aggregate query (error 1140 under ONLY_FULL_GROUP_BY).
+        $prior = $invoice->creditNotes()->reorder()
             ->selectRaw('COALESCE(SUM(amount),0) as amount, COALESCE(SUM(taxable_value),0) as taxable_value,
                 COALESCE(SUM(total_cgst),0) as total_cgst, COALESCE(SUM(total_sgst),0) as total_sgst, COALESCE(SUM(total_igst),0) as total_igst')
             ->first();
@@ -42,7 +44,12 @@ class CreditNoteSplit
             return $left;
         }
 
-        $ratio = $grand > 0 ? min(1.0, $amount / $grand) : 0.0;
+        // Pro rata over taxable value plus tax, not the rounded grand total, so
+        // the note's taxable value and tax add up to the note amount. (Over the
+        // grand total, an invoice rounded down by 14 paise gave a ₹14,381.25
+        // note ₹14,381.37 of value and tax.)
+        $beforeRounding = array_sum($base);
+        $ratio = $beforeRounding > 0 ? min(1.0, $amount / $beforeRounding) : 0.0;
         $out = [];
         foreach ($base as $k => $v) {
             $out[$k] = min($left[$k], round($v * $ratio, 2));

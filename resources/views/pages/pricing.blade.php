@@ -49,7 +49,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="Pricing: Free GST Invoice Software for India"
+    title="Pricing: free GST invoice software for India"
     eyebrow="Beta pricing"
     lead="Free for Indian MSMEs, SMEs, startups and freelancers, with unlimited invoices, customers and PDF exports. No credit card, no feature locks, no hidden add-ons."
     description="Apna Invoice pricing: free during beta, with unlimited GST invoices, customers and PDF exports. No card, no feature locks. Beta users keep the free plan."

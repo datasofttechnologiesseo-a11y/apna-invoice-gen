@@ -103,8 +103,10 @@ class NewUserCalmDashboardTest extends TestCase
         $res = $this->actingAs($this->establishedUser())->get('/dashboard');
 
         $res->assertOk();
-        $res->assertSee('Quick actions');
+        $res->assertSee('Needs attention');
         $res->assertSee('Recent invoices');
-        $res->assertSee('Reports & exports', false);
+        // The top bar's New menu is the one place for "create": the dashboard
+        // no longer repeats it as a Quick actions card.
+        $res->assertDontSee('Quick actions');
     }
 }

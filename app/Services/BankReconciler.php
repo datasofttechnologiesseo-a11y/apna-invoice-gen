@@ -43,23 +43,20 @@ class BankReconciler
             $payments = Payment::where('company_id', $company->id)->whereBetween('received_at', [$from, $to])
                 ->whereRaw('ABS(amount - ?) < 0.005', [round($amount, 2)])->with('invoice.customer')->get();
             foreach ($payments as $p) {
-                $found->push(['model' => $p, 'date' => $p->received_at, 'ref' => $p->reference_number,
-                    'label' => 'Receipt ' . $p->receipt_number . ' · ' . ($p->invoice?->invoice_number ?? '') . ' · ' . ($p->invoice?->billedCustomer()?->name ?? '')]);
+                $found->push(['model' => $p, 'date' => $p->received_at, 'ref' => $p->reference_number, 'label' => self::label($p)]);
             }
         } else {
             $vendorPayments = PurchasePayment::where('company_id', $company->id)->whereBetween('paid_on', [$from, $to])
                 ->whereRaw('ABS(amount - ?) < 0.005', [round($amount, 2)])->with('purchaseBill.vendor')->get();
             foreach ($vendorPayments as $p) {
-                $found->push(['model' => $p, 'date' => $p->paid_on, 'ref' => $p->reference_number,
-                    'label' => 'Paid ' . ($p->purchaseBill?->vendor?->name ?? 'vendor') . ' · ' . ($p->purchaseBill?->bill_number ?? '')]);
+                $found->push(['model' => $p, 'date' => $p->paid_on, 'ref' => $p->reference_number, 'label' => self::label($p)]);
             }
             $expenses = Expense::where('company_id', $company->id)->whereNull('purchase_bill_id')
                 ->where(fn ($q) => $q->whereNull('payment_method')->orWhere('payment_method', '!=', 'cash'))
                 ->whereBetween('entry_date', [$from, $to])
                 ->whereRaw('ABS((amount + gst_amount) - ?) < 0.005', [round($amount, 2)])->get();
             foreach ($expenses as $e) {
-                $found->push(['model' => $e, 'date' => $e->entry_date, 'ref' => $e->reference_number,
-                    'label' => 'Expense · ' . ($e->vendor_name ?: $e->description)]);
+                $found->push(['model' => $e, 'date' => $e->entry_date, 'ref' => $e->reference_number, 'label' => self::label($e)]);
             }
         }
 
@@ -75,6 +72,57 @@ class BankReconciler
                 return ['model' => $c['model'], 'label' => $c['label'], 'score' => ($refHit ? 100 : 0) + (self::DAYS + 1 - $days)];
             })
             ->sortByDesc('score')->values();
+    }
+
+    /**
+     * What a receipt, vendor payment or expense is, in the words the bank
+     * screen uses: the kind, who it is with, which document, and its date,
+     * amount (to the paisa, as matching is) and reference. Two payments to
+     * the same vendor for the same bill differ by date or reference.
+     *
+     * @return array{kind: string, party: ?string, document: ?string, date: ?string, amount: float, ref: ?string, url: ?string}
+     */
+    public static function describe(?Model $model): ?array
+    {
+        return match (true) {
+            $model instanceof Payment => [
+                'kind' => 'Receipt ' . $model->receipt_number,
+                'party' => $model->invoice?->billedCustomer()?->name,
+                'document' => $model->invoice ? 'Invoice ' . $model->invoice->displayNumber() : null,
+                'date' => $model->received_at?->format('d M Y'),
+                'amount' => (float) $model->amount,
+                'ref' => $model->reference_number,
+                'url' => $model->invoice ? route('invoices.show', $model->invoice) : null,
+            ],
+            $model instanceof PurchasePayment => [
+                'kind' => 'Payment made',
+                'party' => $model->purchaseBill?->vendor?->name,
+                'document' => $model->purchaseBill ? 'Purchase invoice ' . $model->purchaseBill->bill_number : null,
+                'date' => $model->paid_on?->format('d M Y'),
+                'amount' => (float) $model->amount,
+                'ref' => $model->reference_number,
+                'url' => $model->purchaseBill ? route('purchases.show', $model->purchaseBill) : null,
+            ],
+            $model instanceof Expense => [
+                'kind' => 'Expense',
+                'party' => $model->vendor_name ?: null,
+                'document' => $model->categoryLabel() . ($model->description ? ': ' . $model->description : ''),
+                'date' => $model->entry_date?->format('d M Y'),
+                'amount' => (float) $model->amount + (float) $model->gst_amount,
+                'ref' => $model->reference_number,
+                'url' => route('finance.expenses.edit', $model),
+            ],
+            default => null,
+        };
+    }
+
+    /** One line for the "match to" list: kind, party, document, date, amount, reference. */
+    public static function label(Model $model): string
+    {
+        $d = self::describe($model);
+
+        return collect([$d['kind'], $d['party'], $d['document'], $d['date'], '₹' . inr($d['amount']), $d['ref'] ? 'Ref ' . $d['ref'] : null])
+            ->filter()->implode(' · ');
     }
 
     public function match(BankStatementLine $line, Model $model): void

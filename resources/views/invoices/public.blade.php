@@ -16,7 +16,7 @@
             . '&am=' . number_format($balance, 2, '.', '')
             . '&cu=INR&tn=' . rawurlencode(($docTitle) . ' ' . $number)
         : null;
-    $ogTitle = $docTitle . ' ' . $number . ' from ' . ($c?->name ?: 'a business') . ' - ' . $grand;
+    $ogTitle = $docTitle . ' ' . $number . ' from ' . ($c?->name ?: 'a business') . ' · ' . $grand;
 @endphp
 <!DOCTYPE html>
 <html lang="en-IN">
@@ -47,9 +47,9 @@
                 <div class="text-lg font-bold text-gray-900">{{ $number }}</div>
             </div>
             @if ($isPaid)
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-money-100 text-money-800 ring-1 ring-money-200">PAID</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-money-100 text-money-800 ring-1 ring-money-200">Paid</span>
             @else
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-accent-100 text-accent-800 ring-1 ring-accent-200">DUE</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-accent-100 text-accent-800 ring-1 ring-accent-200">Due</span>
             @endif
         </div>
 
@@ -79,18 +79,19 @@
             </div>
         </div>
 
+        {{-- One primary action: paying while something is owed, else the PDF. --}}
         <div class="px-6 pb-6 space-y-3">
-            <a href="{{ $pdfUrl }}"
-               class="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">
-                Download PDF
-            </a>
             @if ($upiLink)
                 <a href="{{ $upiLink }}"
-                   class="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-money-600 hover:bg-money-700 text-white font-semibold shadow-sm transition">
-                    Pay {{ $symbol . inr($balance) }} via UPI
+                   class="flex items-center justify-center gap-2 w-full min-h-[48px] px-5 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">
+                    Pay {{ $symbol . inr($balance) }} by UPI
                 </a>
                 <p class="text-center text-xs text-gray-500">Opens your UPI app (GPay, PhonePe, Paytm…)</p>
             @endif
+            <a href="{{ $pdfUrl }}"
+               class="flex items-center justify-center gap-2 w-full min-h-[48px] px-5 py-3 rounded-xl {{ $upiLink ? 'bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50' : 'bg-brand-700 hover:bg-brand-800 text-white shadow-sm' }} font-semibold transition">
+                Download PDF
+            </a>
         </div>
     </div>
 
@@ -100,7 +101,7 @@
            class="inline-flex items-center gap-2 text-brand-700 hover:text-brand-800 font-semibold">
             Make your own GST invoices free →
         </a>
-        <p class="mt-1 text-xs text-gray-500">Powered by Apna Invoice - free GST invoicing for Indian businesses</p>
+        <p class="mt-1 text-xs text-gray-500">Powered by Apna Invoice · Free GST invoicing for Indian businesses</p>
     </div>
 </main>
 

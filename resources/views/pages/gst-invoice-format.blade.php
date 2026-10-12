@@ -85,7 +85,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="GST Invoice Format: Rules & Template"
+    title="GST invoice format: rules and template"
     eyebrow="Guide"
     lead="Everything a GST invoice must contain under CGST Rule 46, explained in plain English, with a sample layout and a free way to make one."
     description="GST invoice format for India. The mandatory fields under CGST Rule 46, the CGST, SGST and IGST split, HSN and SAC codes, a sample layout and a free template."

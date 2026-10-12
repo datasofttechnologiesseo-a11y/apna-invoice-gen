@@ -1,6 +1,6 @@
-@php $effective = 'April 18, 2026'; @endphp
+@php $effective = '18 April 2026'; @endphp
 <x-layouts.marketing
-    title="Privacy Policy, DPDP Act 2023 Compliant"
+    title="Privacy policy, DPDP Act 2023 compliant"
     eyebrow="Legal"
     lead="What data we collect, why we collect it, and the controls you have over it, under the Digital Personal Data Protection Act, 2023."
     description="Our DPDP Act 2023 privacy policy: what we collect, your rights as a Data Principal, how long we keep data, security, and our grievance contact."

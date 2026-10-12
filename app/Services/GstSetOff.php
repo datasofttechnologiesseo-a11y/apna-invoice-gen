@@ -24,7 +24,12 @@ class GstSetOff
      * @param  array{igst: float, cgst: float, sgst: float}  $credit     ITC available per head
      * @return array{cash: array{igst: float, cgst: float, sgst: float, total: float},
      *               carried: array{igst: float, cgst: float, sgst: float, total: float},
-     *               used: array{igst: float, cgst: float, sgst: float}}
+     *               used: array{igst: float, cgst: float, sgst: float},
+     *               matrix: array<string, array<string, float>>}
+     *
+     * matrix[credit head][liability head] says which credit paid which tax,
+     * the way Table 6.1 of the return lays it out. Display only: the cash,
+     * carried and used figures do not depend on it.
      */
     public function settle(array $liability, array $credit): array
     {
@@ -39,8 +44,10 @@ class GstSetOff
             'sgst' => max(0.0, round((float) ($credit['sgst'] ?? 0), 2)),
         ];
         $used = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        $zero = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        $matrix = ['igst' => $zero, 'cgst' => $zero, 'sgst' => $zero];
 
-        $apply = function (string $creditHead, string $dueHead) use (&$due, &$left, &$used): void {
+        $apply = function (string $creditHead, string $dueHead) use (&$due, &$left, &$used, &$matrix): void {
             $amount = min($left[$creditHead], $due[$dueHead]);
             if ($amount <= 0) {
                 return;
@@ -48,6 +55,7 @@ class GstSetOff
             $left[$creditHead] = round($left[$creditHead] - $amount, 2);
             $due[$dueHead] = round($due[$dueHead] - $amount, 2);
             $used[$dueHead] = round($used[$dueHead] + $amount, 2);
+            $matrix[$creditHead][$dueHead] = round($matrix[$creditHead][$dueHead] + $amount, 2);
         };
 
         // IGST credit must be exhausted first, against IGST, then the others.
@@ -63,6 +71,7 @@ class GstSetOff
                 $left['igst'] = round($left['igst'] - $amount, 2);
                 $due[$h] = round($due[$h] - $amount, 2);
                 $used[$h] = round($used[$h] + $amount, 2);
+                $matrix['igst'][$h] = round($matrix['igst'][$h] + $amount, 2);
             }
         }
         // Any IGST credit still left must still be used before CGST/SGST credit.
@@ -79,6 +88,6 @@ class GstSetOff
         $carried = $left;
         $carried['total'] = round($carried['igst'] + $carried['cgst'] + $carried['sgst'], 2);
 
-        return ['cash' => $cash, 'carried' => $carried, 'used' => $used];
+        return ['cash' => $cash, 'carried' => $carried, 'used' => $used, 'matrix' => $matrix];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\CashMemo;
 use App\Models\Company;
+use App\Models\CompanyMember;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -50,6 +51,10 @@ class AccountErasureService
     public function erase(User $user): array
     {
         return DB::transaction(function () use ($user) {
+            // Sign out every device: the mobile app's tokens were issued
+            // before the erasure and would otherwise keep working.
+            $user->tokens()->delete();
+
             $hasStatutoryRecords = $user->invoices()->whereNotNull('finalized_at')->exists();
 
             if ($hasStatutoryRecords) {
@@ -123,6 +128,12 @@ class AccountErasureService
             ->orWhere('referee_user_id', $user->id)->delete();
         AuditLog::where('user_id', $user->id)->delete();
 
+        // Team access ends with the account: their seats in other businesses
+        // (which hold their email), and anyone invited into the retained
+        // books, who would otherwise keep working in them as the owner.
+        CompanyMember::where('user_id', $user->id)->delete();
+        CompanyMember::whereIn('company_id', Company::where('user_id', $user->id)->select('id'))->delete();
+
         // Drop customers no longer attached to any retained GST invoice — keeping
         // their personal data once the only references (drafts/quotations) are
         // gone would have no lawful basis (DPDP data minimisation). Customers on
@@ -145,6 +156,10 @@ class AccountErasureService
             'password' => Hash::make(Str::random(64)),
             'remember_token' => null,
             'email_verified_at' => null,
+            // The personal mobile number is not part of the GST record
+            // (the invoices print the business's own details).
+            'phone' => null,
+            'phone_verified_at' => null,
             // Sever the Google link too, otherwise the account could be
             // re-opened via "Sign in with Google" (matched on google_id).
             'google_id' => null,

@@ -5,77 +5,60 @@
     $cnWindowClosed = $invoice->isCreditNoteWindowClosed();
     // Only nudge while the invoice can still be credited (something left to credit).
     $cnStillCreditable = (float) $invoice->grand_total > (float) $invoice->credited_amount;
+    $showDeadline = $cnDeadline && $cnStillCreditable
+        && ($cnWindowClosed || ($cnDaysLeft !== null && $cnDaysLeft <= 60));
 @endphp
 
-{{-- Proactive Section 34(2) deadline notice - warn the operator BEFORE the
-     window shuts (not only when they try to issue a credit note too late). --}}
-@if ($cnDeadline && $cnStillCreditable)
-    @if (! $cnWindowClosed && $cnDaysLeft !== null && $cnDaysLeft <= 60)
-        <div class="bg-accent-50 border border-accent-200 rounded-lg p-4 flex items-start gap-3 text-sm">
-            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <div class="text-accent-900">
-                <div class="font-semibold">Credit-note window closes {{ $cnDaysLeft === 0 ? 'today' : 'in ' . $cnDaysLeft . ' ' . \Illuminate\Support\Str::plural('day', $cnDaysLeft) }} ({{ $cnDeadline->format('d M Y') }}).</div>
-                <div class="mt-0.5">After this date a credit note cannot reduce GST on this invoice (Section 34(2), CGST Act). Issue any credit note for returns or adjustments before then.</div>
-            </div>
+@if ($creditNotes->isNotEmpty() || $showDeadline)
+    <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-baseline justify-between gap-2">
+            <h2 class="font-semibold text-gray-900">Credit notes</h2>
+            @if ($creditNotes->isNotEmpty())
+                <div class="text-sm text-gray-600">Credited <span class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ inr($invoice->credited_amount) }}</span></div>
+            @endif
         </div>
-    @elseif ($cnWindowClosed)
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-start gap-3 text-sm">
-            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <div class="text-gray-600">
-                <div class="font-semibold text-gray-700">Credit-note window closed on {{ $cnDeadline->format('d M Y') }}.</div>
-                <div class="mt-0.5">A credit note issued now cannot reduce GST on this invoice (Section 34(2), CGST Act). A commercial adjustment outside GST is still possible.</div>
-            </div>
-        </div>
-    @endif
-@endif
 
-@if ($creditNotes->isNotEmpty())
-    <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-        <div class="px-5 py-3 border-b flex items-center justify-between">
-            <div>
-                <h3 class="font-semibold text-gray-900">Credit notes issued</h3>
-                <div class="text-xs text-gray-500">Issued under Section 34 against this invoice</div>
-            </div>
-            <div class="text-xs text-gray-500">
-                Total credited: <span class="font-mono font-semibold text-gray-900">₹{{ rupees($invoice->credited_amount) }}</span>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Credit note</th>
-                        <th class="px-4 py-2 text-left">Date</th>
-                        <th class="px-4 py-2 text-left">Reason</th>
-                        <th class="px-4 py-2 text-right">Amount</th>
-                        <th class="px-4 py-2"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @foreach ($creditNotes as $cn)
-                        <tr>
-                            <td class="px-4 py-2 font-mono text-sm font-semibold">{{ $cn->credit_note_number }}</td>
-                            <td class="px-4 py-2">{{ $cn->credit_note_date?->format('d M Y') }}</td>
-                            <td class="px-4 py-2 text-xs">{{ $cn->reasonLabel() }}</td>
-                            <td class="px-4 py-2 text-right font-mono font-semibold">₹{{ rupees($cn->amount) }}</td>
-                            <td class="px-4 py-2 text-right whitespace-nowrap">
-                                <a href="{{ route('credit-notes.pdf', $cn) }}" class="text-brand-700 hover:underline text-sm">PDF</a>
-                                <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
-                                <x-confirm-form
-                                    :action="route('credit-notes.destroy', $cn)"
-                                    method="DELETE"
-                                    title="Reverse {{ $cn->credit_note_number }}?"
-                                    :message="'The credit note is removed and the invoice balance is restored by ₹' . rupees($cn->amount) . '. The credit note number stays reserved in the audit log.'"
-                                    confirm-label="Reverse credit note"
-                                    confirm-class="bg-danger-600 hover:bg-danger-700"
-                                    tone="warning">
-                                    <button type="button" class="text-danger-600 hover:underline text-sm">Reverse</button>
-                                </x-confirm-form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        {{-- Section 34(2): warn BEFORE the window shuts, not only when a
+             credit note is attempted too late. --}}
+        @if ($showDeadline)
+            @if (! $cnWindowClosed)
+                <div class="px-4 py-3 bg-accent-50 text-sm text-accent-900 border-b border-accent-100">
+                    <div class="font-semibold">Window closes {{ $cnDaysLeft === 0 ? 'today' : 'in ' . $cnDaysLeft . ' ' . \Illuminate\Support\Str::plural('day', $cnDaysLeft) }} ({{ $cnDeadline->format('d M Y') }}).</div>
+                    <div class="mt-0.5 text-xs">After this date a credit note cannot reduce GST on this invoice (Section 34(2)).</div>
+                </div>
+            @else
+                <div class="px-4 py-3 bg-gray-50 text-sm text-gray-700 border-b border-gray-100">
+                    <div class="font-semibold">Window closed on {{ $cnDeadline->format('d M Y') }}.</div>
+                    <div class="mt-0.5 text-xs">A credit note cannot reduce GST on this invoice now (Section 34(2)). A commercial adjustment outside GST is still possible.</div>
+                </div>
+            @endif
+        @endif
+
+        @if ($creditNotes->isNotEmpty())
+            <ul class="divide-y divide-gray-100">
+                @foreach ($creditNotes as $cn)
+                    <li class="px-4 py-3 text-sm">
+                        <div class="flex items-baseline justify-between gap-2">
+                            <span class="font-mono font-semibold text-gray-900">{{ $cn->credit_note_number }}</span>
+                            <span class="font-mono font-semibold text-gray-900 tabular-nums">₹{{ inr($cn->amount) }}</span>
+                        </div>
+                        <div class="mt-0.5 text-xs text-gray-600">{{ $cn->credit_note_date?->format('d M Y') }} · {{ $cn->reasonLabel() }}</div>
+                        <div class="mt-1 flex items-center gap-4">
+                            <a href="{{ route('credit-notes.pdf', $cn) }}" class="inline-flex items-center min-h-[40px] text-brand-700 font-medium hover:underline">PDF</a>
+                            <x-confirm-form
+                                :action="route('credit-notes.destroy', $cn)"
+                                method="DELETE"
+                                title="Reverse {{ $cn->credit_note_number }}?"
+                                :message="'The credit note is removed and the invoice balance is restored by ₹' . inr($cn->amount) . '. The credit note number stays reserved in the audit log.'"
+                                confirm-label="Reverse credit note"
+                                confirm-class="bg-danger-600 hover:bg-danger-700"
+                                tone="warning">
+                                <button type="button" class="inline-flex items-center min-h-[40px] text-danger-700 hover:underline">Reverse</button>
+                            </x-confirm-form>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
     </div>
 @endif

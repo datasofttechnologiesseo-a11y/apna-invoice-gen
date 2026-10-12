@@ -21,14 +21,11 @@
     @if ($actionHref && $actionLabel)
         <div class="mt-6 flex items-center justify-center gap-3 flex-wrap">
             <a href="{{ $actionHref }}"
-               class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm transition">
+               class="inline-flex items-center gap-1.5 h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                 {{ $actionLabel }}
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
             </a>
             @if ($secondaryHref && $secondaryLabel)
-                <a href="{{ $secondaryHref }}" class="text-sm text-gray-600 hover:text-brand-700 font-medium">
+                <a href="{{ $secondaryHref }}" class="inline-flex items-center h-10 px-2 text-sm text-gray-600 hover:text-brand-700 font-medium">
                     {{ $secondaryLabel }}
                 </a>
             @endif

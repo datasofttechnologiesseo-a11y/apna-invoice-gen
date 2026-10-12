@@ -1,5 +1,5 @@
 <x-layouts.marketing
-    title="Cookie Settings"
+    title="Cookie settings"
     eyebrow="Preferences"
     lead="Control which cookies Apna Invoice uses. Essential cookies are always on because the product can't function without them."
     description="Manage your Apna Invoice cookie preferences: essential, analytics and marketing. Your choice is stored in your browser and applied across the site."

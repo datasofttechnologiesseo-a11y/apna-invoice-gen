@@ -19,7 +19,8 @@ class UpiQr
             'tn' => $note,
             'cu' => 'INR',
         ]);
-        return 'upi://pay?' . http_build_query($params);
+        // RFC 3986 (%20, not +): some UPI apps show a literal + in the payee name.
+        return 'upi://pay?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
     }
 
     /**

@@ -1,5 +1,5 @@
 <x-layouts.marketing
-    title="CA & Consultant Partner Programme"
+    title="CA and consultant partner programme"
     eyebrow="Partnerships"
     lead="For Chartered Accountants, tax consultants and agencies. Help your MSME, SME and startup clients get GST invoicing right, and earn a revenue share on referrals."
     description="Partner programme for Indian CAs, tax consultants and agencies. Refer MSMEs and startups, earn a revenue share, and get priority support. Free to join."
@@ -18,8 +18,8 @@
             <div class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-5 sm:p-6">
                 <h3 class="font-display text-lg font-bold text-gray-900">Implementation &amp; Design Agencies</h3>
                 <p class="mt-1.5 text-gray-600">
-                    White-glove onboarding for your SMB clients. We provide revenue share, co-branded collateral, and a named
-                    partner manager.
+                    You set up Apna Invoice for your small-business clients and train their staff. We give you a revenue
+                    share, material with your firm's name on it, and one person at our end to work with.
                 </p>
             </div>
             <div class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-5 sm:p-6">

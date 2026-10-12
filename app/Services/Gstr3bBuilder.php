@@ -141,7 +141,15 @@ class Gstr3bBuilder
         }
         $netCash['total'] = round($netCash['igst'] + $netCash['cgst'] + $netCash['sgst'], 2);
 
+        // Since 1 Jan 2022 (s.16(2)(aa)) credit on a supplier's invoice can be
+        // taken only once it appears in GSTR-2B. The figures above are from the
+        // books; when the 2B for the period has been uploaded, say how much of
+        // that credit 2B confirms, so nobody copies a books figure the portal
+        // will not accept. The books figures themselves are not changed.
+        $itc2b = $this->checkAgainst2b($company, $from, $to, $eligibleBills, $itcRcm, $intraExpenseGst, $interExpenseGst, $eligibleMemos, $liability, $rcm_inward);
+
         return [
+            'itc_2b' => $itc2b,
             'itc_carried' => $itcCarried,
             'itc_used' => $setOff['used'],
             'itc_rcm' => $itcRcm,
@@ -159,8 +167,98 @@ class Gstr3bBuilder
             'creditNoteCount' => $gstr1['summary']['credit_notes'],
             // Standalone expenses only — cash-memo-linked rows are tallied as
             // cash memos below, so they'd otherwise be counted twice.
-            'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
+            'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereNull('purchase_bill_id')->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
             'cashMemoCount' => $cashMemos->count(),
         ];
+    }
+
+    /**
+     * The books' input credit checked against the GSTR-2B uploaded for the
+     * period. Null when no 2B has been uploaded for any month of the period.
+     *
+     * - in_2b:      supplier invoices (not reverse charge) found in 2B. For a
+     *               document whose 2B amounts differ, the lower of the two per
+     *               tax head, since the portal allows no more than 2B shows.
+     * - not_in_2b:  supplier invoices in the books that 2B does not show yet
+     *               (supplier has not filed): hold until it appears.
+     * - rcm:        tax you paid under reverse charge; not in 2B, claimable.
+     * - unchecked:  GST on expenses and cash memos, which carry no supplier
+     *               invoice number to look up; check them on the portal.
+     * - missing:    in 2B but not recorded in the books (credit not taken).
+     * - cash_if_2b_only: cash payable if only in_2b + rcm credit is claimed.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function checkAgainst2b(Company $company, Carbon $from, Carbon $to, $eligibleBills, array $itcRcm,
+        float $intraExpenseGst, float $interExpenseGst, $eligibleMemos, array $liability, array $rcmInward): ?array
+    {
+        $months = [];
+        for ($m = $from->copy()->startOfMonth(); $m->lte($to); $m->addMonth()) {
+            $months[] = $m->format('Y-m');
         }
+        $matcher = app(Gstr2bMatcher::class);
+        $uploaded = [];
+        $found = [];      // bill id => 2B entry
+        $missing = ['count' => 0, 'tax' => 0.0];
+        foreach ($months as $period) {
+            $match = $matcher->match($company, $period);
+            if (! $match['summary']['uploaded']) {
+                continue;
+            }
+            $uploaded[] = $period;
+            foreach (array_merge($match['matched'], $match['mismatch']) as $row) {
+                $found[$row['bill']->id] = $row['entry'];
+            }
+            $missing['count'] += count($match['missing']);
+            $missing['tax'] = round($missing['tax'] + $match['summary']['tax']['missing'], 2);
+        }
+        if (! $uploaded) {
+            return null;
+        }
+
+        $zero = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        $in2b = $zero;
+        $notIn2b = $zero;
+        foreach ($eligibleBills->where('reverse_charge', false) as $bill) {
+            $entry = $found[$bill->id] ?? null;
+            foreach (['igst', 'cgst', 'sgst'] as $head) {
+                $books = (float) $bill->{'total_' . $head};
+                if ($entry) {
+                    $in2b[$head] = round($in2b[$head] + min($books, (float) $entry->{$head}), 2);
+                } else {
+                    $notIn2b[$head] = round($notIn2b[$head] + $books, 2);
+                }
+            }
+        }
+        $unchecked = [
+            'igst' => round((float) $eligibleMemos->sum('total_igst') + $interExpenseGst, 2),
+            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + $intraExpenseGst / 2, 2),
+            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + $intraExpenseGst / 2, 2),
+        ];
+        $sum = fn (array $a) => round($a['igst'] + $a['cgst'] + $a['sgst'], 2);
+
+        $confirmed = [];
+        foreach (['igst', 'cgst', 'sgst'] as $head) {
+            $confirmed[$head] = round($in2b[$head] + (float) $itcRcm[$head], 2);
+        }
+        $settled = app(GstSetOff::class)->settle($liability, $confirmed);
+        $cash = $settled['cash'];
+        foreach (['igst', 'cgst', 'sgst'] as $head) {
+            $cash[$head] = round($cash[$head] + (float) $rcmInward[$head], 2);
+        }
+        $cash['total'] = $sum($cash);
+
+        return [
+            'months' => $months,
+            'uploaded' => $uploaded,
+            'not_uploaded' => array_values(array_diff($months, $uploaded)),
+            'in_2b' => $in2b + ['total' => $sum($in2b)],
+            'not_in_2b' => $notIn2b + ['total' => $sum($notIn2b)],
+            'rcm' => $itcRcm + ['total' => $sum($itcRcm)],
+            'unchecked' => $unchecked + ['total' => $sum($unchecked)],
+            'missing' => $missing,
+            'confirmed' => $confirmed + ['total' => $sum($confirmed)],
+            'cash_if_2b_only' => $cash,
+        ];
+    }
 }

@@ -205,6 +205,55 @@ class StockTrackingTest extends TestCase
         $this->assertSame(0, StockMovement::count());
     }
 
+    public function test_the_purchase_form_puts_the_item_first_and_asks_for_it(): void
+    {
+        $this->cement->update(['sku' => 'OPC-50']);
+        $html = $this->actingAs($this->user)->get(route('purchases.create'))->assertOk()
+            ->assertSee('Pick the item to update stock')
+            ->assertSee('Search name, SKU or HSN')
+            ->getContent();
+        // The items are on the page to filter by name, SKU or HSN as you type.
+        $this->assertStringContainsString('OPC-50', $html);
+        $this->assertStringContainsString('items[${idx}][product_id]', $html, 'field names unchanged');
+    }
+
+    public function test_a_purchase_of_goods_items_is_booked_as_stock_by_default(): void
+    {
+        $vendor = $this->company->vendors()->create(['user_id' => $this->user->id, 'name' => 'ACC Ltd', 'state_id' => $this->company->state_id]);
+        $line = ['description' => 'Cement', 'hsn_sac' => '25232910', 'quantity' => 5, 'unit' => 'BAG', 'rate' => 320, 'gst_rate' => 18];
+
+        // No category chosen: a line linked to a goods item makes it a stock purchase.
+        $this->actingAs($this->user)->post(route('purchases.store'), [
+            'vendor_id' => $vendor->id, 'bill_number' => 'ACC/1', 'bill_date' => now()->toDateString(), 'itc_eligible' => 1,
+            'items' => [$line + ['product_id' => $this->cement->id]],
+        ])->assertSessionHasNoErrors();
+        $bill = PurchaseBill::where('bill_number', 'ACC/1')->firstOrFail();
+        $this->assertSame('purchases', $bill->expense_category);
+        $this->assertSame('purchases', \App\Models\Expense::findOrFail($bill->expense_id)->category);
+
+        // Unlinked lines keep the old default; a category chosen by hand always wins.
+        $this->actingAs($this->user)->post(route('purchases.store'), [
+            'vendor_id' => $vendor->id, 'bill_number' => 'ACC/2', 'bill_date' => now()->toDateString(), 'itc_eligible' => 1, 'items' => [$line],
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('misc', PurchaseBill::where('bill_number', 'ACC/2')->value('expense_category'));
+        $this->actingAs($this->user)->post(route('purchases.store'), [
+            'vendor_id' => $vendor->id, 'bill_number' => 'ACC/3', 'bill_date' => now()->toDateString(), 'itc_eligible' => 1, 'expense_category' => 'repairs',
+            'items' => [$line + ['product_id' => $this->cement->id]],
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('repairs', PurchaseBill::where('bill_number', 'ACC/3')->value('expense_category'));
+    }
+
+    public function test_a_customer_return_reads_plainly_on_the_stock_page(): void
+    {
+        StockMovement::create([
+            'company_id' => $this->company->id, 'product_id' => $this->cement->id, 'user_id' => $this->user->id,
+            'moved_on' => now()->toDateString(), 'quantity' => 2, 'kind' => 'sale_return', 'note' => 'Credit note CRN-7',
+        ]);
+        $this->actingAs($this->user)->get(route('products.stock', $this->cement))->assertOk()
+            ->assertSee('Returned by customer')->assertSee('Credit note CRN-7')
+            ->assertSee('Balance');
+    }
+
     public function test_the_search_endpoint_tells_the_invoice_line_what_is_in_stock(): void
     {
         $res = $this->actingAs($this->user)->getJson(route('products.search', ['q' => 'Cement']))->assertOk();

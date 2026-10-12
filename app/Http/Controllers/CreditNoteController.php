@@ -41,9 +41,30 @@ class CreditNoteController extends Controller
                 ->with('status', 'This invoice is already fully credited.');
         }
 
+        // Lines the owner can pick for a return: what each still has left to
+        // credit after earlier notes, with the same per-unit figures the
+        // server uses (CreditNoteLines), so the preview matches the note.
+        $invoice->load('items');
+        $prior = app(\App\Services\CreditNoteLines::class)->creditedSoFar($invoice);
+        $lines = $invoice->items->map(fn ($item) => [
+            'id' => $item->id,
+            'description' => $item->description,
+            'hsn_sac' => $item->hsn_sac,
+            'unit' => $item->unit,
+            'quantity' => (float) $item->quantity,
+            'left' => round(max(0, (float) $item->quantity - ($prior[$item->id]['qty'] ?? 0)), 3),
+            'gst_rate' => (float) $item->gst_rate,
+            'amount' => (float) $item->amount,
+            'cgst' => (float) $item->cgst_amount,
+            'sgst' => (float) $item->sgst_amount,
+            'igst' => (float) $item->igst_amount,
+            'done' => $prior[$item->id] ?? ['qty' => 0, 'taxable' => 0, 'cgst' => 0, 'sgst' => 0, 'igst' => 0],
+        ])->values();
+
         return view('credit-notes.edit', [
             'invoice' => $invoice,
             'creditable' => $creditable,
+            'lines' => CreditNote::linesAvailable() ? $lines : collect(),
             'creditNote' => new CreditNote(['credit_note_date' => now()->toDateString()]),
         ]);
     }
@@ -64,11 +85,19 @@ class CreditNoteController extends Controller
         $creditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount), 2);
         $reasons = array_keys(config('credit_note_reasons'));
 
+        $hasLines = CreditNote::linesAvailable()
+            && collect((array) $request->input('lines', []))->contains(fn ($q) => is_numeric($q) && (float) $q > 0);
         $data = $request->validate([
             'credit_note_date' => ['required', 'date', 'after_or_equal:' . $invoice->invoice_date?->toDateString(), 'before_or_equal:today'],
-            'amount' => ['required', 'numeric', 'min:0.01', "max:{$creditable}"],
+            // With lines picked the amount is worked out from them (and may
+            // differ from the typed box by the invoice round-off).
+            'amount' => $hasLines ? ['nullable', 'numeric'] : ['required', 'numeric', 'min:0.01', "max:{$creditable}"],
             'reason' => ['required', 'string', 'in:' . implode(',', $reasons)],
             'notes' => ['nullable', 'string', 'max:1000'],
+            // Optional: invoice item id => quantity returned. With lines, the
+            // note's amount and tax come from them (CreditNoteLines).
+            'lines' => ['nullable', 'array'],
+            'lines.*' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // Books-lock: cannot issue a credit note dated inside a closed FY.
@@ -78,15 +107,15 @@ class CreditNoteController extends Controller
                 ->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Credit note date must be after that.");
         }
 
-        $creditNote = DB::transaction(function () use ($invoice, $data) {
+        $creditNote = DB::transaction(function () use ($invoice, $data, $hasLines) {
             // Lock company row + allocate next CRN number atomically.
             $company = $invoice->company()->lockForUpdate()->first();
 
             // The cap was read before the lock: a double-submitted note must be
             // checked again, or two notes credit more than the invoice is worth.
             $invoice->refresh();
-            $stillCreditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->creditNotes()->sum('amount')), 2);
-            if ($invoice->isCancelled() || (float) $data['amount'] > $stillCreditable + 0.001) {
+            $stillCreditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->creditNotes()->reorder()->sum('amount')), 2);
+            if ($invoice->isCancelled() || (! $hasLines && (float) $data['amount'] > $stillCreditable + 0.001)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'amount' => 'A credit note was just issued. Only ₹' . inr($stillCreditable) . ' of this invoice can still be credited.',
                 ]);
@@ -101,11 +130,18 @@ class CreditNoteController extends Controller
                 ->where('credit_note_number', $number)
                 ->exists());
 
-            // Pro-rata the amount across the invoice's tax components so the
-            // credit note mirrors the tax structure of the original bill
-            // (taxable value + CGST/SGST/IGST for GSTR-1), never reversing
-            // more tax than the invoice charged.
-            $split = app(\App\Services\CreditNoteSplit::class)->for($invoice, (float) $data['amount']);
+            // Lines picked (a return of 1 of 7): the note is the sum of its
+            // lines. Otherwise the amount is spread pro rata across the
+            // invoice's tax heads, as it always was, never reversing more tax
+            // than the invoice charged.
+            $built = app(\App\Services\CreditNoteLines::class)->build($invoice, (array) ($data['lines'] ?? []));
+            if ($built) {
+                $amount = $built['amount'];
+                $split = array_intersect_key($built, array_flip(['taxable_value', 'total_cgst', 'total_sgst', 'total_igst']));
+            } else {
+                $amount = (float) $data['amount'];
+                $split = app(\App\Services\CreditNoteSplit::class)->for($invoice, $amount);
+            }
 
             $cn = CreditNote::create([
                 'user_id' => $invoice->user_id,
@@ -113,14 +149,19 @@ class CreditNoteController extends Controller
                 'invoice_id' => $invoice->id,
                 'credit_note_number' => $number,
                 'credit_note_date' => $data['credit_note_date'],
-                'amount' => $data['amount'],
+                'amount' => $amount,
                 ...$split,
                 'reason' => $data['reason'],
                 'notes' => $data['notes'] ?? null,
             ]);
+            if ($built) {
+                $cn->items()->createMany($built['lines']);
+                // A sales return puts the goods back in stock.
+                app(\App\Services\StockLedger::class)->recordCreditNote($cn);
+            }
 
             // Recalculate the invoice's credited_amount + balance + status.
-            $credited = (float) $invoice->creditNotes()->sum('amount');
+            $credited = (float) $invoice->creditNotes()->reorder()->sum('amount');
             $paid = (float) $invoice->paid_amount;
             // No clamp: a credit note on an invoice the customer has already
             // paid leaves a NEGATIVE balance, which is the refund owed to them.
@@ -164,9 +205,14 @@ class CreditNoteController extends Controller
         $snapshot = $creditNote->only(['credit_note_number', 'credit_note_date', 'amount', 'reason']);
 
         DB::transaction(function () use ($creditNote, $invoice) {
+            // Stock a sales return put back comes out again with the note.
+            app(\App\Services\StockLedger::class)->reverseCreditNote($creditNote);
+            if (CreditNote::linesAvailable()) {
+                $creditNote->items()->delete();
+            }
             $creditNote->delete();
 
-            $credited = (float) $invoice->creditNotes()->sum('amount');
+            $credited = (float) $invoice->creditNotes()->reorder()->sum('amount');
             $paid = (float) $invoice->paid_amount;
             // No clamp: a credit note on an invoice the customer has already
             // paid leaves a NEGATIVE balance, which is the refund owed to them.
@@ -197,7 +243,7 @@ class CreditNoteController extends Controller
     public function pdf(Request $request, CreditNote $creditNote): Response
     {
         $this->authorizeCreditNote($request, $creditNote);
-        $creditNote->load(['invoice.customer.state', 'invoice.company.state', 'invoice.placeOfSupply']);
+        $creditNote->load(array_merge(CreditNote::linesAvailable() ? ['items'] : [], ['invoice.items', 'invoice.customer.state', 'invoice.company.state', 'invoice.placeOfSupply']));
 
         $amountInWords = NumberToWords::indianRupees((float) $creditNote->amount, 'INR');
         $print = ! $request->boolean('color');

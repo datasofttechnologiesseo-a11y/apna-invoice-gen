@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="text-center">
-        <div class="text-[11px] uppercase tracking-widest font-bold text-brand-700">Invitation</div>
+        <div class="text-xs font-semibold text-brand-700">Invitation</div>
         <h1 class="mt-1 font-display text-xl font-extrabold text-gray-900">Join {{ $member->company->name }}</h1>
         <p class="mt-2 text-sm text-gray-600">
             You are invited as <strong>{{ $member->roleLabel() }}</strong>.

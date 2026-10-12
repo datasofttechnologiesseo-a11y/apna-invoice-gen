@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\State;
 use App\Rules\ValidGstin;
@@ -74,23 +75,41 @@ class CompanyController extends Controller
     {
         abort_unless($company->user_id === $request->user()->id, 403);
 
+        // The books lock has its own small form on the settings page.
+        if ($request->input('section') === 'books_lock') {
+            return $this->updateBooksLock($request, $company);
+        }
+
         $data = $this->validated($request, $company);
 
+        $imageChanges = [];
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {
                 Storage::disk('public')->delete($company->logo_path);
             }
             $data['logo_path'] = \App\Support\BrandImage::storeLogo($request->file('logo'));
+            $imageChanges[] = 'logo replaced';
+        } elseif ($request->boolean('remove_logo') && $company->logo_path) {
+            Storage::disk('public')->delete($company->logo_path);
+            $data['logo_path'] = null;
+            $imageChanges[] = 'logo removed';
         }
         if ($request->hasFile('signature')) {
             if ($company->signature_path) {
                 Storage::disk('public')->delete($company->signature_path);
             }
             $data['signature_path'] = \App\Support\BrandImage::storeSignature($request->file('signature'));
+            $imageChanges[] = 'signature replaced';
+        } elseif ($request->boolean('remove_signature') && $company->signature_path) {
+            Storage::disk('public')->delete($company->signature_path);
+            $data['signature_path'] = null;
+            $imageChanges[] = 'signature removed';
         }
         unset($data['logo'], $data['signature']);
 
-        $company->update($data);
+        $company->fill($data);
+        $this->recordChanges($company, $imageChanges);
+        $company->save();
 
         // "Set next invoice number" — handled separately so it can be validated
         // against already-issued invoices in the current FY (preventing
@@ -160,27 +179,110 @@ class CompanyController extends Controller
     }
 
     /**
-     * Send the user back to wherever they came from after a save. The form
-     * carries an optional `from` field; we whitelist a few safe values so a
-     * crafted hidden input can never bounce the user to an open redirect.
+     * After a save, stay on the settings form with the result at the top, so
+     * the owner sees what was saved and can carry on editing. The optional
+     * `from` value (settings, dashboard) is kept for the breadcrumb; it is
+     * whitelisted so a crafted hidden input can never become an open redirect.
      */
     private function redirectAfterSave(Request $request, Company $company, string $status): RedirectResponse
     {
-        $from = (string) $request->input('from');
-        $target = match ($from) {
-            'settings' => route('settings.index'),
-            'dashboard' => route('dashboard'),
-            default => route('companies.index'),
-        };
-        return redirect()->to($target)->with('status', $status);
+        $from = in_array($request->input('from'), ['settings', 'dashboard'], true) ? $request->input('from') : null;
+
+        return redirect()->route('companies.edit', array_filter(['company' => $company->id, 'from' => $from]))
+            ->with('status', $status);
+    }
+
+    /**
+     * "Lock books up to": its own form, so changing it never resubmits (or
+     * fails on) the rest of the settings. Recorded in the activity log.
+     */
+    private function updateBooksLock(Request $request, Company $company): RedirectResponse
+    {
+        $data = $request->validate([
+            'books_locked_until' => ['nullable', 'date'],
+        ]);
+        $old = $company->books_locked_until?->toDateString();
+        $new = filled($data['books_locked_until'] ?? null) ? \Illuminate\Support\Carbon::parse($data['books_locked_until'])->toDateString() : null;
+
+        if ($old !== $new) {
+            $company->update(['books_locked_until' => $new]);
+            AuditLog::record(
+                'company.books_lock_changed',
+                $new ? "{$company->name}: books locked up to " . \Illuminate\Support\Carbon::parse($new)->format('d M Y') : "{$company->name}: books unlocked",
+                $company,
+                ['books_locked_until' => [$old, $new]],
+            );
+        }
+
+        $status = $new
+            ? 'Books locked up to ' . \Illuminate\Support\Carbon::parse($new)->format('d M Y') . '.'
+            : 'Books unlocked. All entries can be edited.';
+
+        return redirect()->route('companies.edit', array_filter(['company' => $company->id, 'from' => in_array($request->input('from'), ['settings', 'dashboard'], true) ? $request->input('from') : null]))
+            ->withFragment('books-lock')
+            ->with('status', $status);
+    }
+
+    /**
+     * Write what changed to the activity log: business details and bank
+     * details as separate entries, because a changed bank account on the
+     * invoices is the change an owner most needs to be able to trace.
+     * Account numbers are masked to their last four digits.
+     */
+    private function recordChanges(Company $company, array $imageChanges): void
+    {
+        $bankFields = [
+            'bank_name' => 'bank name', 'bank_account_name' => 'payee name', 'bank_account_number' => 'account number',
+            'bank_account_type' => 'account type', 'bank_ifsc' => 'IFSC', 'bank_branch' => 'branch', 'upi_id' => 'UPI ID',
+        ];
+        $labels = [
+            'name' => 'business name', 'gstin' => 'GSTIN', 'pan' => 'PAN', 'composition_dealer' => 'composition scheme',
+            'lut_number' => 'LUT number', 'address_line1' => 'address', 'address_line2' => 'address', 'city' => 'city',
+            'state_id' => 'state', 'postal_code' => 'PIN code', 'country' => 'country', 'phone' => 'phone', 'email' => 'email',
+            'website' => 'website', 'default_terms' => 'terms', 'declaration' => 'declaration',
+            'invoice_prefix' => 'invoice prefix', 'invoice_number_padding' => 'number padding',
+            'invoice_number_format' => 'number format', 'books_locked_until' => 'books lock',
+        ];
+        $mask = fn ($v) => $v === null || $v === '' ? $v : 'ending ' . substr((string) $v, -4);
+
+        $dirty = array_keys($company->getDirty());
+        $bank = [];
+        $other = [];
+        foreach ($dirty as $field) {
+            $old = $company->getOriginal($field);
+            $new = $company->getAttribute($field);
+            if ((string) ($old instanceof \DateTimeInterface ? $old->format('Y-m-d') : $old) === (string) ($new instanceof \DateTimeInterface ? $new->format('Y-m-d') : $new)) {
+                continue;
+            }
+            if (isset($bankFields[$field])) {
+                $bank[$field] = $field === 'bank_account_number' ? [$mask($old), $mask($new)] : [$old, $new];
+            } elseif (isset($labels[$field])) {
+                $other[$field] = in_array($field, ['logo_path', 'signature_path'], true) ? null : [
+                    $old instanceof \DateTimeInterface ? $old->format('Y-m-d') : $old,
+                    $new instanceof \DateTimeInterface ? $new->format('Y-m-d') : $new,
+                ];
+            }
+        }
+
+        if ($other || $imageChanges) {
+            $what = collect(array_keys($other))->map(fn ($f) => $labels[$f])->merge($imageChanges)->unique()->implode(', ');
+            AuditLog::record('company.updated', "{$company->name}: {$what}", $company, $other ?: null);
+        }
+        if ($bank) {
+            $what = collect(array_keys($bank))->map(fn ($f) => $bankFields[$f])->unique()->implode(', ');
+            AuditLog::record('company.bank_updated', "{$company->name}: {$what}", $company, $bank);
+        }
     }
 
     public function destroy(Request $request, Company $company): RedirectResponse
     {
         abort_unless($company->user_id === $request->user()->id, 403);
 
-        if ($company->invoices()->exists()) {
-            return back()->withErrors(['company' => 'This company has invoices and cannot be deleted.']);
+        // Anything in the books (invoices, quotations, purchases, expenses,
+        // payments, bank statements, stock) would be erased with the business
+        // by ON DELETE CASCADE, input tax credit included. Refused, like invoices.
+        if (\App\Support\BusinessBooks::exist($company)) {
+            return back()->withErrors(['company' => "{$company->name} has invoices, purchases, expenses or other entries in its books, so it cannot be deleted."]);
         }
 
         $user = $request->user();
@@ -199,11 +301,18 @@ class CompanyController extends Controller
 
     public function switch(Request $request, Company $company): RedirectResponse
     {
-        $request->user()->switchCompany($company); // owner or team member, else 403
+        $user = $request->user();
+        $user->switchCompany($company); // owner or team member, else 403
 
-        // Into someone else's business: start at the home page, which every
-        // role can open (the page you were on may not be part of your role).
-        return ((int) $company->user_id === (int) $request->user()->id ? back() : redirect()->route('dashboard'))
+        // Into someone else's business: start at the first page the role
+        // opens (the page you were on may not be part of it, and billing
+        // staff have no dashboard).
+        if ((int) $company->user_id === (int) $user->id) {
+            return back()->with('status', "Switched to {$company->name}.");
+        }
+        $membership = \App\Models\CompanyMember::where('company_id', $company->id)->where('user_id', $user->id)->whereNotNull('accepted_at')->first();
+
+        return redirect()->route(\App\Support\Team::homeRoute($membership))
             ->with('status', "Switched to {$company->name}.");
     }
 
@@ -301,6 +410,29 @@ class CompanyController extends Controller
                     'invoice_number_format' => "GST invoice numbers must be 16 characters or fewer, using only letters, digits, \"-\" and \"/\" (CGST Rule 46(b)). This series would produce \"{$preview}\" (" . strlen($preview) . ' characters).',
                 ]);
             }
+        }
+
+        // IFSC and UPI print on every invoice and the UPI ID drives the pay QR,
+        // so a typo costs the business its payments. Checked when entered or
+        // changed only: a value saved before this check never blocks saving
+        // the rest of the settings.
+        if (! empty($data['bank_ifsc'])) {
+            $data['bank_ifsc'] = strtoupper(preg_replace('/\s+/', '', $data['bank_ifsc']));
+        }
+        if (! empty($data['upi_id'])) {
+            $data['upi_id'] = trim($data['upi_id']);
+        }
+        $errors = [];
+        if (! empty($data['bank_ifsc']) && $data['bank_ifsc'] !== ($company?->bank_ifsc)
+            && ! preg_match('/^[A-Z]{4}0[A-Z0-9]{6}$/', $data['bank_ifsc'])) {
+            $errors['bank_ifsc'] = 'IFSC should be 11 characters: 4 letters, a zero, then 6 letters or digits (e.g. SBIN0001234).';
+        }
+        if (! empty($data['upi_id']) && $data['upi_id'] !== ($company?->upi_id)
+            && ! preg_match('/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{1,64}$/', $data['upi_id'])) {
+            $errors['upi_id'] = 'UPI ID should look like name@bank (e.g. sharmatraders@okicici).';
+        }
+        if ($errors) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
         }
 
         return $data;

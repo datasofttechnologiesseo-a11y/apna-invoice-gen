@@ -140,6 +140,23 @@ class Invoice extends Model
             ->orderBy('id');
     }
 
+    /**
+     * The status as people read it, the same on every screen and document:
+     * Draft, Issued, Partly paid, Paid, Cancelled. ("final" is the stored key
+     * for an issued invoice; it was shown raw as "Final" on some lists.)
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Draft',
+            'final' => 'Issued',
+            'partially_paid' => 'Partly paid',
+            'paid' => 'Paid',
+            'cancelled' => 'Cancelled',
+            default => ucfirst(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)->orderBy('received_at')->orderBy('id');
@@ -265,6 +282,9 @@ class Invoice extends Model
         $cust = (new Customer())->forceFill(collect($snap)->except('state')->all());
         $cust->exists = false;
         $cust->setRelation('state', $snap['state'] ? (new State($snap['state']))->forceFill(['id' => $snap['state']['id']]) : null);
+        if (! empty($snap['state']['id'])) {
+            $cust->forceFill(['state_id' => $snap['state']['id']]);
+        }
         if ($this->customer_id) {
             $cust->forceFill(['id' => $this->customer_id]);
         }
@@ -388,6 +408,124 @@ class Invoice extends Model
             && ! $this->isCancelled()
             && (float) $this->paid_amount <= 0
             && (float) $this->credited_amount <= 0;
+    }
+
+    /**
+     * Only a draft can be deleted. An invoice that was issued keeps its row
+     * for good, cancelled or not: its number is part of the series reported
+     * in GSTR-1 Table 13, and a deleted row leaves a gap nobody can explain
+     * to the officer. (A cancelled row that never got a number is a draft in
+     * all but name, so it may go.)
+     */
+    public function canBeDeleted(): bool
+    {
+        if ($this->isEditable()) {
+            return true;
+        }
+
+        return $this->isCancelled() && $this->finalized_at === null && blank($this->invoice_number);
+    }
+
+    /** Today's date in India: the day every "not in the future" rule is read against. */
+    public static function todayInIndia(): string
+    {
+        return now('Asia/Kolkata')->toDateString();
+    }
+
+    /**
+     * Why this draft cannot be issued yet because of its date, or null.
+     * s.31: an invoice is issued before or at the time of supply, and the
+     * e-invoice portal refuses a document dated after the day it is
+     * reported. A draft may carry a later date; it is issued on that day.
+     */
+    public function issueDateProblem(): ?string
+    {
+        if ($this->invoice_date && $this->invoice_date->toDateString() > self::todayInIndia()) {
+            return 'This invoice is dated ' . $this->invoice_date->format('d M Y')
+                . '. Issue it on that day, or change the date to today or earlier.';
+        }
+
+        return null;
+    }
+
+    /**
+     * The books lock for a draft's date. A new draft cannot be dated inside
+     * a closed period. An existing draft is checked only when its date
+     * changes, so one already left there can still be opened and moved out.
+     */
+    public static function draftDateLockProblem(Company $company, ?string $date, ?self $existing = null): ?string
+    {
+        if (blank($date) || ! $company->isBooksLockedOn($date)) {
+            return null;
+        }
+        if ($existing?->invoice_date && $existing->invoice_date->toDateString() === \Illuminate\Support\Carbon::parse($date)->toDateString()) {
+            return null;
+        }
+
+        return "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the invoice after that.";
+    }
+
+    /**
+     * An issued invoice dated inside closed books is frozen as filed: not
+     * even its notes, due date or transport details change.
+     */
+    public function softEditLockProblem(): ?string
+    {
+        $company = $this->company;
+
+        return $company && $company->isBooksLockedOn($this->invoice_date)
+            ? "Books are locked up to {$company->books_locked_until->format('d M Y')}. This invoice cannot be changed."
+            : null;
+    }
+
+    /**
+     * Validation for the fields an issued invoice may still change (notes,
+     * terms, due date, transport). A due date before the invoice date would
+     * make the bill overdue before it existed; that is checked only when the
+     * due date is changed, so an older invoice saved that way keeps working.
+     */
+    public function softEditRules(array $input): array
+    {
+        $due = ['nullable', 'date'];
+        $given = $input['due_date'] ?? null;
+        if ($this->invoice_date && filled($given) && is_string($given)) {
+            try {
+                $changed = \Illuminate\Support\Carbon::parse($given)->toDateString() !== $this->due_date?->toDateString();
+            } catch (\Throwable) {
+                $changed = true; // not a date: the 'date' rule answers it
+            }
+            if ($changed) {
+                $due[] = 'after_or_equal:' . $this->invoice_date->toDateString();
+            }
+        }
+
+        return [
+            'due_date' => $due,
+            'notes' => ['nullable', 'string'],
+            'terms' => ['nullable', 'string'],
+            'transporter_name' => ['nullable', 'string', 'max:120'],
+            'transporter_id' => ['nullable', 'string', 'max:40'],
+            'vehicle_number' => ['nullable', 'string', 'max:30'],
+            'transport_mode' => ['nullable', 'string', 'in:Road,Rail,Air,Ship'],
+            'eway_bill_number' => ['nullable', 'string', 'max:30'],
+        ];
+    }
+
+    public function softEditMessages(): array
+    {
+        return [
+            'due_date.after_or_equal' => 'The due date cannot be before the invoice date ('
+                . $this->invoice_date?->format('d M Y') . ').',
+        ];
+    }
+
+    /**
+     * Whether a "pay" prompt (UPI QR, "Scan to pay", "Pay via UPI") belongs
+     * on this invoice: something is still owed and it has not been cancelled.
+     */
+    public function isPayable(): bool
+    {
+        return ! $this->isCancelled() && (float) $this->balance > 0;
     }
 
     /** Full edit (line items, customer, dates, amounts). Drafts only. */
@@ -740,10 +878,38 @@ class Invoice extends Model
      */
     public function whatsAppShareLink(string $context = 'share'): ?string
     {
-        $phone = $this->customer?->phone;
-        if (! $phone) return null;
-        $digits = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($digits) < 10) return null;
+        $digits = self::whatsAppNumber($this->customer?->phone);
+        if ($digits === null) return null;
         return 'https://wa.me/' . $digits . '?text=' . rawurlencode($this->shareMessageText($context));
+    }
+
+    /**
+     * A phone number as wa.me needs it: digits only, with the country code.
+     * Most customers are saved as a bare 10-digit Indian mobile
+     * ("98765 00001"), and wa.me/9876500001 opens no chat, so:
+     *   9876500001        → 919876500001
+     *   09876500001       → 919876500001
+     *   +91 98765 00001   → 919876500001 (already has the code)
+     *   +1 415 555 0100   → 14155550100  (left as typed)
+     * Null when there are fewer than 10 digits.
+     */
+    public static function whatsAppNumber(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D/', '', (string) $phone);
+        if (strlen($digits) < 10) {
+            return null;
+        }
+        if (strlen($digits) === 10) {
+            return '91' . $digits;
+        }
+        if (strlen($digits) === 11 && $digits[0] === '0') {
+            return '91' . substr($digits, 1);
+        }
+        // "0091 98765 00001": the international prefix, not part of the number.
+        if (str_starts_with($digits, '00')) {
+            return substr($digits, 2);
+        }
+
+        return $digits;
     }
 }

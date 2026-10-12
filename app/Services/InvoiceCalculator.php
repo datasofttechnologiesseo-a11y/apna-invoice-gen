@@ -32,8 +32,12 @@ class InvoiceCalculator
         $position = 0;
         foreach ($items as $item) {
             $position++;
-            $qty = (float) ($item['quantity'] ?? 0);
-            $rate = (float) ($item['rate'] ?? 0);
+            // Calculate on the quantity and rate as they are stored and printed
+            // (3 and 2 decimals), so quantity x rate on the invoice reproduces
+            // the line value. 0.1234 x 1,000 was billed 123.40 but printed as
+            // 0.12 x 1,000.
+            $qty = round((float) ($item['quantity'] ?? 0), 3);
+            $rate = round((float) ($item['rate'] ?? 0), 2);
             $gstRate = (float) ($item['gst_rate'] ?? 0);
             // Section 15(3) CGST: pre-tax discount reduces the *taxable value*.
             // Clamped to the line subtotal so a discount can't go negative.
@@ -113,41 +117,84 @@ class InvoiceCalculator
 
     /**
      * Spread one invoice-level discount across the lines in proportion to each
-     * line's value (qty × rate), writing it into each line's `discount`.
+     * line's value after any discount already on the line, adding the share to
+     * that line's `discount`.
      *
      * A discount on a tax invoice reduces the taxable value BEFORE GST
      * (s.15(3)(a) CGST Act), so it cannot simply be knocked off the grand
      * total. Splitting it pro rata keeps every line's taxable value - and so
      * the HSN summary and GSTR-1 rate-wise figures - correct when lines carry
-     * different GST rates. The last line takes the rounding remainder so the
-     * parts always add back to the discount exactly; no line goes below zero.
+     * different GST rates.
+     *
+     * Two rules a customer's bill depends on:
+     *  - a discount already on a line is kept; the invoice discount comes on
+     *    top (replacing it billed the customer more than agreed);
+     *  - the parts always add back to the discount exactly. The rounding
+     *    remainder goes, paisa by paisa, to the lines with room left, largest
+     *    first; giving it all to the last line lost paise when that line was
+     *    too small to take them. No line goes below zero.
      */
+    /**
+     * What the lines come to after any discount already on them: the most an
+     * invoice-level discount can take off. Same rounding as recalculate().
+     */
+    public function valueAfterLineDiscounts(array $items): float
+    {
+        $total = 0.0;
+        foreach ($items as $item) {
+            $gross = round(round((float) ($item['quantity'] ?? 0), 3) * round((float) ($item['rate'] ?? 0), 2), 2);
+            $total += max(0.0, $gross - max(0.0, min((float) ($item['discount'] ?? 0), $gross)));
+        }
+
+        return round($total, 2);
+    }
+
     public function apportionDiscount(array $items, float $discount): array
     {
         $discount = round(max(0.0, $discount), 2);
-        $gross = array_map(fn ($i) => round((float) ($i['quantity'] ?? 0) * (float) ($i['rate'] ?? 0), 2), $items);
-        $totalGross = round(array_sum($gross), 2);
-        $discount = min($discount, $totalGross);
+        $existing = [];
+        $base = [];
+        foreach ($items as $idx => $item) {
+            $gross = round(round((float) ($item['quantity'] ?? 0), 3) * round((float) ($item['rate'] ?? 0), 2), 2);
+            $existing[$idx] = round(max(0.0, min((float) ($item['discount'] ?? 0), $gross)), 2);
+            $base[$idx] = round(max(0.0, $gross - $existing[$idx]), 2);
+        }
+        $totalBase = round(array_sum($base), 2);
+        $discount = min($discount, $totalBase);
 
-        $lastIdx = null;
-        foreach ($gross as $idx => $g) {
-            if ($g > 0) {
-                $lastIdx = $idx;
+        $share = [];
+        foreach ($base as $idx => $b) {
+            $share[$idx] = ($discount > 0 && $b > 0) ? min($b, round($discount * $b / $totalBase, 2)) : 0.0;
+        }
+
+        // Settle the rounding remainder (a few paise either way) one paisa at a
+        // time on the lines that can take it, largest first.
+        $left = (int) round(($discount - array_sum($share)) * 100);
+        $order = array_keys($base);
+        usort($order, fn ($a, $b) => $base[$b] <=> $base[$a]);
+        while ($left !== 0) {
+            $moved = false;
+            foreach ($order as $idx) {
+                if ($left > 0 && $share[$idx] + 0.01 <= $base[$idx] + 0.0001) {
+                    $share[$idx] = round($share[$idx] + 0.01, 2);
+                    $left--;
+                    $moved = true;
+                } elseif ($left < 0 && $share[$idx] >= 0.01) {
+                    $share[$idx] = round($share[$idx] - 0.01, 2);
+                    $left++;
+                    $moved = true;
+                }
+                if ($left === 0) {
+                    break;
+                }
+            }
+            if (! $moved) {
+                break; // nothing can take it (cannot happen while discount <= total)
             }
         }
 
-        $allocated = 0.0;
         foreach ($items as $idx => $item) {
-            if ($discount <= 0 || $gross[$idx] <= 0) {
-                $items[$idx]['discount'] = 0;
-                continue;
-            }
-            $share = $idx === $lastIdx
-                ? round($discount - $allocated, 2)
-                : round($discount * $gross[$idx] / $totalGross, 2);
-            $share = min($share, $gross[$idx]);
-            $items[$idx]['discount'] = $share;
-            $allocated = round($allocated + $share, 2);
+            $items[$idx]['discount'] = round($existing[$idx] + $share[$idx], 2);
         }
 
         return $items;

@@ -30,10 +30,10 @@ class ProductController extends Controller
         }
 
         $products = $company->products()
-            // The list asks each row whether it has invoice history, to
-            // decide between Archive and Delete. Counting here keeps that
-            // one query instead of one per row.
-            ->withCount('invoiceItems')
+            // The list asks each row whether it has any history, to decide
+            // between Archive and Delete. Counting here keeps that one query
+            // instead of one per row.
+            ->withCount(['invoiceItems', 'purchaseBillItems', 'quotationItems', 'stockMovements'])
             // Stock on hand for items that track it, in the same query.
             ->withSum('stockMovements', 'quantity')
             // Stock filters use the real stock on hand: opening stock plus every movement.
@@ -66,7 +66,7 @@ class ProductController extends Controller
             ->withSum('stockMovements', 'quantity')
             ->get(['id', 'opening_stock', 'low_stock_level', 'purchase_rate', 'rate']);
         $inventory = $tracked->isEmpty() ? null : [
-            'items' => $tracked->count(),
+            'items' => $tracked->filter(fn ($p) => $p->stockOnHand() > 0)->count(),
             'value' => round($tracked->sum(fn ($p) => max(0, $p->stockOnHand()) * (float) ($p->purchase_rate ?? $p->rate)), 2),
             'low' => $tracked->filter(fn ($p) => $p->low_stock_level !== null && $p->stockOnHand() > 0 && $p->stockOnHand() <= (float) $p->low_stock_level)->count(),
             'out' => $tracked->filter(fn ($p) => $p->stockOnHand() <= 0)->count(),
@@ -108,7 +108,7 @@ class ProductController extends Controller
 
         $product = Product::create($data);
         return redirect()->route('products.index')
-            ->with('status', "Product '{$product->name}' added.");
+            ->with('status', "Item '{$product->name}' added.");
     }
 
     public function edit(Request $request, Product $product): View
@@ -130,14 +130,14 @@ class ProductController extends Controller
         }
         $product->update($data);
         return redirect()->route('products.index')
-            ->with('status', "Product '{$product->name}' updated.");
+            ->with('status', "Item '{$product->name}' updated.");
     }
 
     /** Stock history of one item, with a running balance, and the adjust form. */
     public function stock(Request $request, Product $product): View
     {
         $this->authorize($request, $product);
-        $movements = $product->stockMovements()->orderBy('moved_on')->orderBy('id')->get();
+        $movements = $product->stockMovements()->with('source')->orderBy('moved_on')->orderBy('id')->get();
         $running = (float) $product->opening_stock;
         $rows = $movements->map(function ($m) use (&$running) {
             $running = round($running + (float) $m->quantity, 3);
@@ -178,12 +178,15 @@ class ProductController extends Controller
     {
         $this->authorize($request, $product);
 
-        // Keep historical invoice items intact (GST audit trail). Soft-disable
-        // if the product has ever been used; hard-delete only if never billed.
-        if ($product->invoiceItems()->exists()) {
+        // Keep history intact (GST audit trail, stock ledger). Archive the item
+        // if it has ever been billed, bought or quoted, or has stock movements;
+        // delete it only if it was never used. Deleting would also erase its
+        // stock history, which cascades with the item.
+        $usedOn = $product->usedOn();
+        if ($usedOn !== null) {
             $product->update(['is_active' => false]);
             return redirect()->route('products.index')
-                ->with('status', "'{$product->name}' is used on an invoice, so it was archived, not deleted. It will not appear on new invoices. Restore it any time from the Archived tab.");
+                ->with('status', "'{$product->name}' is used on {$usedOn}, so it was archived, not deleted. It will not appear on new invoices. Restore it any time from the Archived tab.");
         }
 
         $product->delete();
@@ -290,7 +293,7 @@ class ProductController extends Controller
             'unit' => $product->unit,
             'rate' => $product->rate,
             'gst_rate' => $product->gst_rate,
-            'message' => "Product '{$product->name}' added.",
+            'message' => "Item '{$product->name}' added.",
         ], 201);
     }
 

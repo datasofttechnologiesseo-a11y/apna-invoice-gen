@@ -158,6 +158,8 @@ class ImportController extends Controller
             'token' => $token,
             'fileName' => $request->file('file')->getClientOriginalName(),
             'unmatched' => $unmatched,
+            // Every column that was read from the file, in template order.
+            'mapped' => array_values(array_filter(array_keys($importer->fields()), fn ($k) => in_array($k, $map, true))),
             'counts' => collect($results)->countBy('status')->all() + ['ready' => 0, 'error' => 0, 'duplicate' => 0],
         ]);
     }

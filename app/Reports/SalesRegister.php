@@ -76,7 +76,7 @@ class SalesRegister extends Report
                 'credited' => (float) $inv->credited_amount,
                 'balance' => $cancelled ? 0 : (float) $inv->balance,
                 'due' => $inv->due_date,
-                'status' => ucwords(str_replace('_', ' ', $inv->status)),
+                'status' => $inv->statusLabel(),
             ];
         }
     }

@@ -106,6 +106,36 @@ class CompanyBankDetailsTest extends TestCase
         $this->assertNull($company->fresh()->bank_account_type);
     }
 
+    public function test_a_mistyped_ifsc_or_upi_id_is_caught_with_a_clear_message(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::factory()->recycle($user)->create(['state_id' => $this->state()->id, 'invoice_prefix' => 'INV/', 'invoice_number_padding' => 4]);
+
+        $this->actingAs($user)->patch(route('companies.update', $company),
+            $this->companyPayload(['bank_ifsc' => 'SBIN12', 'upi_id' => 'qaupi']))
+            ->assertSessionHasErrors(['bank_ifsc', 'upi_id']);
+
+        $this->actingAs($user)->patch(route('companies.update', $company),
+            $this->companyPayload(['bank_ifsc' => ' sbin0001234 ', 'upi_id' => 'sharmatraders@okicici']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('SBIN0001234', $company->fresh()->bank_ifsc);
+        $this->assertSame('sharmatraders@okicici', $company->fresh()->upi_id);
+    }
+
+    public function test_an_old_ifsc_saved_before_the_check_does_not_block_saving_other_settings(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::factory()->recycle($user)->create([
+            'state_id' => $this->state()->id, 'invoice_prefix' => 'INV/', 'invoice_number_padding' => 4,
+            'bank_ifsc' => 'OLDVALUE', 'upi_id' => 'shop-upi',
+        ]);
+
+        $this->actingAs($user)->patch(route('companies.update', $company),
+            $this->companyPayload(['bank_ifsc' => 'OLDVALUE', 'upi_id' => 'shop-upi', 'phone' => '9876543210']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('9876543210', $company->fresh()->phone);
+    }
+
     public function test_the_invoice_prints_the_payee_name_and_account_type(): void
     {
         $user = User::factory()->create();

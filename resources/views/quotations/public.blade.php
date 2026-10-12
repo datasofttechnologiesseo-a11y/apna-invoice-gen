@@ -5,7 +5,7 @@
     $symbol = ($quotation->currency ?: 'INR') === 'INR' ? '₹' : e($quotation->currency) . ' ';
     $grand = $symbol . inr((float) $quotation->grand_total);
     $status = $quotation->effectiveStatus();
-    $ogTitle = 'Quotation ' . $number . ' from ' . ($c?->name ?: 'a business') . ' - ' . $grand;
+    $ogTitle = 'Quotation ' . $number . ' from ' . ($c?->name ?: 'a business') . ' · ' . $grand;
 @endphp
 <!DOCTYPE html>
 <html lang="en-IN">
@@ -75,7 +75,7 @@
            class="inline-flex items-center gap-2 text-brand-700 hover:text-brand-800 font-semibold">
             Make your own quotes & GST invoices free →
         </a>
-        <p class="mt-1 text-xs text-gray-500">Powered by Apna Invoice - free GST invoicing for Indian businesses</p>
+        <p class="mt-1 text-xs text-gray-500">Powered by Apna Invoice · Free GST invoicing for Indian businesses</p>
     </div>
 </main>
 

@@ -41,8 +41,8 @@
         <div class="mt-4">
             {{-- Peak marker, so the bar heights are readable as amounts rather
                  than only as a shape. --}}
-            <div class="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
-                <span class="tabular-nums"><x-inr-compact :amount="$peak" /></span>
+            <div class="flex items-center gap-2 text-xs text-gray-500 font-mono">
+                <span class="tabular-nums">₹{{ rupees($peak) }}</span>
                 <span class="flex-1 border-t border-dashed border-gray-200"></span>
             </div>
 
@@ -63,14 +63,16 @@
 
             <div class="flex gap-2 sm:gap-4 mt-2">
                 @foreach ($rows as $row)
-                    <div class="flex-1 text-center text-[11px] font-medium {{ $loop->last ? 'text-gray-900' : 'text-gray-500' }}">
+                    <div class="flex-1 text-center text-xs font-medium {{ $loop->last ? 'text-gray-900' : 'text-gray-500' }}">
                         {{ $row['label'] }}
                     </div>
                 @endforeach
             </div>
         </div>
 
-        <table class="sr-only">
+        <div class="sr-only">
+
+        <table>
             <caption>{{ $labelA }} and {{ $labelB }} by period</caption>
             <thead><tr><th>Period</th><th>{{ $labelA }} (INR)</th><th>{{ $labelB }} (INR)</th></tr></thead>
             <tbody>
@@ -78,6 +80,6 @@
                     <tr><td>{{ $row['full'] }}</td><td>{{ $row['a'] }}</td><td>{{ $row['b'] }}</td></tr>
                 @endforeach
             </tbody>
-        </table>
+        </table></div>
     @endif
 </div>

@@ -8,7 +8,7 @@
         ['route' => 'pages.features', 'label' => 'Features', 'match' => 'pages.features'],
         ['route' => 'pages.how-to-use', 'label' => 'How to use', 'match' => 'pages.how-to-use'],
         ['route' => 'pages.pricing', 'label' => 'Pricing', 'match' => 'pages.pricing'],
-        ['route' => 'blog.index', 'label' => 'Blogs', 'match' => 'blog.*'],
+        ['route' => 'blog.index', 'label' => 'Blog', 'match' => 'blog.*'],
         ['route' => 'pages.faq', 'label' => 'FAQ', 'match' => 'pages.faq'],
     ];
 @endphp

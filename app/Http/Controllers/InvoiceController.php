@@ -524,33 +524,32 @@ class InvoiceController extends Controller
     {
         $this->authorizeInvoice($request, $invoice);
 
-        // Three states can be deleted:
-        //  - Draft   → never had a number, no audit consequences
-        //  - Cancelled → had a number, but was already void; deletion just cleans
-        //               up the row. The number stays consumed (counter never
-        //               recycles), and the AuditLog entry below preserves the
-        //               trail for any future GST audit.
-        // Anything else (final / partially_paid / paid) must remain in the books.
+        // Only a draft can be deleted (it never had a number). An issued
+        // invoice stays in the books, cancelled or not: its number belongs to
+        // the series reported in GSTR-1 Table 13, so deleting the row would
+        // leave an unexplained gap. Cancelling is how an issued invoice is
+        // voided. See Invoice::canBeDeleted().
+        if ($invoice->isCancelled() && ! $invoice->canBeDeleted()) {
+            return redirect()->route('invoices.show', $invoice)->with(
+                'error',
+                "Invoice {$invoice->invoice_number} is cancelled and stays on record for GST. An issued invoice number cannot be deleted."
+            );
+        }
         abort_unless(
-            $invoice->isEditable() || $invoice->isCancelled(),
+            $invoice->canBeDeleted(),
             403,
-            'Issued invoices cannot be deleted. Cancel first, then delete.'
+            'Issued invoices cannot be deleted. Cancel the invoice instead; it stays on record for GST.'
         );
 
-        // Books-period lock applies to both drafts and cancelled invoices —
-        // anything dated inside a closed FY stays.
+        // Books-period lock: anything dated inside a closed FY stays.
         if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
-            $what = $invoice->isCancelled() ? 'cancelled invoice' : 'draft';
             return redirect()->back()->with(
                 'error',
-                "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This {$what} cannot be deleted."
+                "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This draft cannot be deleted."
             );
         }
 
-        $wasCancelled = $invoice->isCancelled();
-        $logMessage = $wasCancelled
-            ? "Cancelled invoice {$invoice->invoice_number} deleted (number stays consumed; counter not recycled)"
-            : "Draft #{$invoice->id} deleted";
+        $logMessage = "Draft #{$invoice->id} deleted";
 
         \App\Models\AuditLog::record('invoice.deleted',
             $logMessage,
@@ -566,9 +565,7 @@ class InvoiceController extends Controller
 
         $invoice->delete();
 
-        $successMessage = $wasCancelled
-            ? 'Cancelled invoice deleted. Its number stays as a gap in the series, and the deletion is recorded in the activity log.'
-            : 'Draft deleted.' . ($reopened ? ' Its quotation is open again and can be converted.' : '');
+        $successMessage = 'Draft deleted.' . ($reopened ? ' Its quotation is open again and can be converted.' : '');
 
         return redirect()->route('invoices.index')->with('status', $successMessage);
     }
@@ -966,9 +963,12 @@ class InvoiceController extends Controller
                 $totalGrand += (float) $inv->grand_total;
 
                 // A reverse-charge invoice carries ₹0 tax but is still a tax
-                // invoice (the recipient pays); only composition dealers and
-                // exempt/nil supplies issue a bill of supply (Rule 49).
-                $invoiceType = ($company->composition_dealer || (($inv->total_tax ?? 0) == 0 && ! $inv->reverse_charge))
+                // invoice (the recipient pays), and so is a zero-rated export or
+                // SEZ supply under LUT ("supply meant for export under LUT"):
+                // only composition dealers and exempt/nil supplies issue a
+                // bill of supply (Rule 49).
+                $invoiceType = ($company->composition_dealer
+                    || (($inv->total_tax ?? 0) == 0 && ! $inv->reverse_charge && ! $inv->isZeroRated()))
                     ? 'Bill of Supply' : 'Tax Invoice';
 
                 csv_put($out, [
@@ -1152,7 +1152,9 @@ class InvoiceController extends Controller
             return $data;
         }
 
-        $gross = collect($data['items'])->sum(fn ($i) => round((float) ($i['quantity'] ?? 0) * (float) ($i['rate'] ?? 0), 2));
+        // Against what the lines come to after their own discounts, so the two
+        // together can never exceed the items total.
+        $gross = $this->calculator->valueAfterLineDiscounts($data['items']);
         if ((float) $data['invoice_discount'] > $gross + 0.001) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'invoice_discount' => 'Discount (₹' . inr((float) $data['invoice_discount']) . ') cannot be more than the items total (₹' . inr($gross) . ').',
@@ -1281,9 +1283,9 @@ class InvoiceController extends Controller
             'items.*.description' => ['nullable', 'string', 'max:150'],
             // HSN required only when either party is GST-registered.
             'items.*.hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
         ];

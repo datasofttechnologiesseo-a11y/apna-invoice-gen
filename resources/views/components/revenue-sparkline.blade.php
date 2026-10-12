@@ -105,14 +105,15 @@
             </div>
 
             {{-- Axis labels: first / mid / last day --}}
-            <div class="mt-2 flex justify-between text-[10px] text-gray-500 font-mono">
+            <div class="mt-2 flex justify-between text-xs text-gray-500 font-mono">
                 <span>{{ $series->first()['label'] ?? '' }}</span>
                 <span>{{ $series->get((int) floor($count / 2))['label'] ?? '' }}</span>
                 <span>{{ $series->last()['label'] ?? '' }}</span>
             </div>
 
             {{-- Hidden screen-reader / SEO data table --}}
-            <table class="sr-only">
+            <div class="sr-only">
+            <table>
                 <caption>Payments received per day for the last 30 days</caption>
                 <thead><tr><th>Date</th><th>Amount (INR)</th></tr></thead>
                 <tbody>
@@ -120,7 +121,7 @@
                         <tr><td>{{ $row['date'] }}</td><td>{{ $row['amount'] }}</td></tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
         </div>
     @endif
 </div>

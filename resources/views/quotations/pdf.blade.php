@@ -365,7 +365,7 @@
     {{-- ─── Disclaimer ─────────────────────────────────────────────────── --}}
     <div class="disclaimer">
         <strong>This is a quotation, not a tax invoice.</strong>
-        No GST is collected at this stage. Prices and tax shown are indicative of what will appear on the tax invoice if you accept this quote. A formal GST tax invoice will be issued on confirmation of the order.
+        GST is shown at the rates that will apply. It is charged on the tax invoice issued when the order is confirmed.
     </div>
 
     {{-- ─── Closing & signatory ────────────────────────────────────────── --}}
@@ -383,7 +383,7 @@
 
     {{-- ─── Acceptance block (sign-back) ───────────────────────────────── --}}
     <div class="acceptance">
-        <div class="head">Acceptance - to confirm this order, please sign &amp; return</div>
+        <div class="head">Acceptance: to confirm this order, please sign &amp; return</div>
         <div class="body">
             <div>I/We accept this quotation and request you to proceed with the order on the terms set out above.</div>
             <table class="signrow">
@@ -402,7 +402,7 @@
     {{-- Viral loop: quotations reach prospects while they're comparing vendors -
          a high-attention reader. One tasteful, clickable byline (DomPDF renders
          <a href> as a real PDF link annotation). --}}
-    <div style="margin-top: 6mm; text-align: center; font-size: 8px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=quotation_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com - free GST invoicing for Indian businesses</a></div>
+    <div style="margin-top: 6mm; text-align: center; font-size: 8px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=quotation_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com · Free GST invoicing for Indian businesses</a></div>
 </div>
 </body>
 </html>

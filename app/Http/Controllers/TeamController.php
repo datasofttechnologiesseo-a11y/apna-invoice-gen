@@ -9,6 +9,7 @@ use App\Support\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -33,6 +34,17 @@ class TeamController extends Controller
     public function invite(Request $request): RedirectResponse
     {
         $company = $this->ownedCompany($request);
+
+        // "Resend invite" on a pending member posts here with its id.
+        if ($request->filled('resend')) {
+            return $this->resend($request, $company);
+        }
+
+        // Emails are stored lower case, so the duplicate check compares lower
+        // case too ("CA@x.in" after "ca@x.in" is the same person).
+        if (is_string($request->input('email'))) {
+            $request->merge(['email' => mb_strtolower(trim($request->input('email')))]);
+        }
         $data = $request->validate([
             'email' => ['required', 'email', 'max:255',
                 Rule::unique('company_members', 'email')->where(fn ($q) => $q->where('company_id', $company->id))],
@@ -56,6 +68,40 @@ class TeamController extends Controller
 
         return back()->with('status', ($sent ? "Invitation emailed to {$email}." : "Invitation created for {$email}.")
             . ' The invite link below can also be shared.');
+    }
+
+    /**
+     * Send the same invitation again to someone who has not joined yet. Once
+     * every five minutes per invitation, so a double tap or an impatient
+     * owner cannot flood the person's inbox (the route is throttled too).
+     */
+    private function resend(Request $request, $company): RedirectResponse
+    {
+        $member = $company->members()->whereKey((int) $request->input('resend'))->first();
+        abort_unless($member, 404);
+        if ($member->isAccepted()) {
+            return back()->with('info', "{$member->email} has already joined.");
+        }
+
+        $key = 'team-invite-resend:' . $member->id;
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $minutes = max(1, (int) ceil(RateLimiter::availableIn($key) / 60));
+
+            return back()->with('warning', "The invitation to {$member->email} was sent a moment ago. You can send it again in {$minutes} " . \Illuminate\Support\Str::plural('minute', $minutes) . '.');
+        }
+        RateLimiter::hit($key, 300);
+
+        try {
+            Mail::to($member->email)->send(new TeamInviteMail($member->setRelation('company', $company), $request->user()->name));
+            $sent = true;
+        } catch (\Throwable) {
+            $sent = false;
+        }
+        AuditLog::record('team.invite_resent', "Invitation sent again to {$member->email}", null);
+
+        return $sent
+            ? back()->with('status', "Invitation emailed again to {$member->email}.")
+            : back()->with('error', "The email to {$member->email} could not be sent. Share the invite link instead.");
     }
 
     public function update(Request $request, CompanyMember $member): RedirectResponse
@@ -108,7 +154,8 @@ class TeamController extends Controller
         $member->update(['user_id' => $user->id, 'accepted_at' => $member->accepted_at ?? now()]);
         $user->switchCompany($member->company);
 
-        return redirect()->route('dashboard')->with('status', "Invitation accepted. You now have access to {$member->company->name} as {$member->roleLabel()}.");
+        // The first page their role opens (billing staff have no dashboard).
+        return redirect()->route(Team::homeRoute($member))->with('status', "Invitation accepted. You now have access to {$member->company->name} as {$member->roleLabel()}.");
     }
 
     /** A member leaves a business they were invited into. */

@@ -7,14 +7,17 @@
                     ['label' => $customer->name],
                     ['label' => 'Ledger'],
                 ]" />
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight mt-1">{{ $customer->name }} · Ledger</h1>
-                @if ($customer->gstin)
-                    <p class="text-xs text-gray-500 mt-1">GSTIN: <span class="font-mono">{{ $customer->gstin }}</span></p>
-                @endif
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ $customer->name }}</h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    Customer ledger
+                    @if ($customer->gstin)
+                        · GSTIN <span class="font-mono">{{ $customer->gstin }}</span>
+                    @endif
+                </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('customers.edit', $customer) }}" class="text-sm text-gray-500 hover:text-gray-700">Edit customer</a>
-                <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm">
+                <a href="{{ route('customers.edit', $customer) }}" class="inline-flex items-center h-10 px-4 rounded-md text-sm font-semibold text-gray-800 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Edit customer</a>
+                <button type="button" onclick="window.print()" class="inline-flex items-center gap-2 h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-md text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Print statement
                 </button>
@@ -23,7 +26,7 @@
     </x-slot>
 
     <div class="py-6 print:py-0">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-4 print:max-w-none">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 print:max-w-none">
 
             {{-- Print header (only when printing) --}}
             <div class="hidden print:block mb-3">
@@ -38,28 +41,28 @@
 
             {{-- Summary cards --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Total Invoiced</div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="text-sm font-medium text-gray-600">Total invoiced</div>
                     <div class="mt-1 text-xl font-bold text-gray-900 font-mono tabular-nums">₹{{ rupees($totals['invoiced']) }}</div>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Received</div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="text-sm font-medium text-gray-600">Received</div>
                     <div class="mt-1 text-xl font-bold text-money-700 font-mono tabular-nums">₹{{ rupees($totals['received']) }}</div>
                 </div>
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Credit Notes</div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="text-sm font-medium text-gray-600">Credit notes</div>
                     <div class="mt-1 text-xl font-bold text-brand-700 font-mono tabular-nums">₹{{ rupees($totals['credited']) }}</div>
                 </div>
-                <div class="bg-white border-2 border-accent-300 bg-accent-50 rounded-lg p-4">
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">Outstanding</div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="text-sm font-medium text-gray-600">Outstanding</div>
                     <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-accent-800' : 'text-money-700' }} font-mono tabular-nums">₹{{ rupees($totals['outstanding']) }}</div>
                 </div>
             </div>
 
             {{-- Customer card --}}
-            <div class="bg-white border border-gray-200 rounded-lg p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white border border-gray-200 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1">Bill to</div>
+                    <div class="text-xs font-semibold text-gray-500 mb-1">Bill to</div>
                     <div class="font-semibold text-gray-900">{{ $customer->name }}</div>
                     @if ($customer->address_line1)
                         <div class="text-gray-600">{{ $customer->address_line1 }}</div>
@@ -67,15 +70,22 @@
                     @if ($customer->address_line2)
                         <div class="text-gray-600">{{ $customer->address_line2 }}</div>
                     @endif
-                    @if ($customer->city || $customer->state || $customer->postal_code)
-                        <div class="text-gray-600">{{ $customer->city }}{{ $customer->state ? ', ' . $customer->state->name : '' }}{{ $customer->postal_code ? ' - ' . $customer->postal_code : '' }}</div>
+                    @php
+                        // A customer abroad is filed under the "Foreign Country" GST
+                        // state; print their country instead of that label.
+                        $abroad = in_array((string) $customer->state?->gst_code, ['96', '97'], true);
+                        $place = collect([$customer->city, $abroad ? ($customer->country ?: null) : $customer->state?->name])->filter()->implode(', ');
+                        $place = trim($place . ($customer->postal_code ? ' ' . $customer->postal_code : ''));
+                    @endphp
+                    @if ($place !== '')
+                        <div class="text-gray-600">{{ $place }}</div>
                     @endif
                     @if ($customer->gstin)<div class="text-gray-700 mt-1">GSTIN: <span class="font-mono">{{ $customer->gstin }}</span></div>@endif
                     @if ($customer->phone)<div class="text-gray-600 text-xs">{{ $customer->phone }}</div>@endif
                     @if ($customer->email)<div class="text-gray-600 text-xs">{{ $customer->email }}</div>@endif
                 </div>
                 <div>
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-1">Issued by</div>
+                    <div class="text-xs font-semibold text-gray-500 mb-1">Issued by</div>
                     <div class="font-semibold text-gray-900">{{ $company->name }}</div>
                     @if ($company->gstin)<div class="text-gray-700">GSTIN: <span class="font-mono">{{ $company->gstin }}</span></div>@endif
                     <div class="text-gray-600 text-xs mt-2">Statement as of {{ now()->format('d M Y') }}</div>
@@ -83,10 +93,10 @@
             </div>
 
             {{-- Ledger table --}}
-            <div class="bg-white shadow sm:rounded-lg overflow-hidden print:shadow-none">
+            <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden print:shadow-none">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[700px]">
-                        <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider print:bg-white">
+                        <thead class="bg-gray-50 text-xs text-gray-600 uppercase print:bg-white">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold">Date</th>
                                 <th class="px-4 py-3 text-left font-semibold">Reference</th>
@@ -109,13 +119,13 @@
                                     </td>
                                     <td class="px-4 py-2 text-gray-700">
                                         {{ $e['particulars'] }}
-                                        <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 ml-1">{{ str_replace('_', ' ', $e['type']) }}</span>
+                                        
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['debit'] > 0 ? '' : 'text-gray-500' }}">
-                                        {{ $e['debit'] > 0 ? rupees($e['debit']) : '-' }}
+                                        {{ $e['debit'] > 0 ? rupees($e['debit']) : '–' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-money-700' : 'text-gray-500' }}">
-                                        {{ $e['credit'] > 0 ? rupees($e['credit']) : '-' }}
+                                        {{ $e['credit'] > 0 ? rupees($e['credit']) : '–' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold {{ $e['balance'] > 0 ? 'text-accent-800' : ($e['balance'] < 0 ? 'text-money-700' : 'text-gray-500') }}">
                                         {{ rupees(abs($e['balance'])) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
@@ -141,7 +151,7 @@
                 </div>
             </div>
 
-            <div class="text-xs text-gray-500 print:text-[8.5px]">
+            <div class="text-xs text-gray-500">
                 <strong>Dr</strong> = customer owes us · <strong>Cr</strong> = we owe customer (advance) · E&amp;OE
             </div>
         </div>

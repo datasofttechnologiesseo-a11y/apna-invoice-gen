@@ -10,7 +10,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <div class="p-4 bg-money-50 border border-money-200 text-money-800 rounded">{{ session('status') }}</div>
             @endif
@@ -23,7 +23,7 @@
                 <span class="text-brand-700">· New invoices and customers are created under this company.</span>
             </div>
 
-            <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+            <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
                 @if ($companies->isEmpty())
                     <div class="p-8 text-center text-gray-500">
                         <x-empty-state
@@ -49,7 +49,7 @@
                                         <div class="flex items-center gap-2">
                                             <span class="font-display font-bold text-gray-900 truncate">{{ $company->name }}</span>
                                             @if ($isActive)
-                                                <span class="px-2 py-0.5 rounded-full bg-brand-700 text-white text-[10px] font-bold uppercase tracking-wider">Active</span>
+                                                <span class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-800 ring-1 ring-brand-200 text-xs font-medium">Active</span>
                                             @endif
                                             @if ($company->gstin)
                                                 <span class="text-xs text-gray-500 font-mono">{{ $company->gstin }}</span>
@@ -94,7 +94,7 @@
 
             @if (($memberships ?? collect())->isNotEmpty())
                 {{-- Businesses this person works in as a team member. --}}
-                <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+                <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
                     <div class="px-5 py-3 border-b border-gray-100 text-sm font-semibold text-gray-900">As a team member</div>
                     <ul class="divide-y divide-gray-100">
                         @foreach ($memberships as $m)

@@ -14,8 +14,22 @@ use App\Models\User;
  */
 final class Team
 {
-    /** Pages that are always about the person signed in, not the business. */
-    public const OWN = ['profile.*', 'logout', 'verification.*', 'password.*', 'companies.switch', 'companies.index', 'team.join', 'team.accept', 'team.leave', 'guide.complete'];
+    /**
+     * Pages that are always about the person signed in, not the business.
+     * Only the member's own profile pages: the activity log (profile.activity)
+     * lists the whole business's entries, expenses and salaries included, so
+     * it follows the role rules like any other business page. The app's
+     * profile actions are named after their controller methods
+     * (profile.me, profile.updatePassword...).
+     */
+    public const OWN = [
+        'profile.edit', 'profile.update', 'profile.destroy', 'profile.privacy', 'profile.privacy.*',
+        'profile.me', 'profile.logout', 'profile.updatePassword',
+        'logout', 'verification.*', 'password.*', 'companies.switch', 'companies.index', 'team.join', 'team.accept', 'team.leave', 'guide.complete',
+    ];
+
+    /** Where a role starts: the dashboard, or for billing staff (no dashboard) the invoice list. */
+    private const HOME_FALLBACKS = ['invoices.index', 'quotations.index', 'customers.index'];
 
     public static function isOwnRoute(?string $routeName): bool
     {
@@ -47,6 +61,27 @@ final class Team
     public static function realUser(): ?User
     {
         return self::member() ?? auth()->user();
+    }
+
+    /**
+     * The first page a member lands on in a business: the dashboard when
+     * their role opens it, else the first billing page it does. Used after
+     * accepting an invitation, switching business and a refused page, so
+     * nobody arrives on a "your role does not include this page" error.
+     */
+    public static function homeRoute(?CompanyMember $membership = null): string
+    {
+        $membership ??= self::membership();
+        if ($membership === null || CompanyMember::allows($membership->role, 'dashboard')) {
+            return 'dashboard';
+        }
+        foreach (self::HOME_FALLBACKS as $route) {
+            if (CompanyMember::allows($membership->role, $route)) {
+                return $route;
+            }
+        }
+
+        return 'invoices.index';
     }
 
     /** May the person at the keyboard open this route? */

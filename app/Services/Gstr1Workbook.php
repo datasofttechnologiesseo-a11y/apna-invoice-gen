@@ -212,8 +212,6 @@ class Gstr1Workbook
             SafeExport::cell($s['taxable'], $money), SafeExport::cell($s['igst'], $money), SafeExport::cell($s['cgst'], $money), SafeExport::cell($s['sgst'], $money)]));
         $writer->addRow(new Row([SafeExport::cell('3.1(b)'), SafeExport::cell('Zero rated (exports, SEZ), net of credit notes'), SafeExport::cell(''),
             SafeExport::cell($s['zero_taxable'], $money), SafeExport::cell($s['zero_igst'], $money)]));
-        $writer->addRow(new Row([SafeExport::cell('3.1(b)'), SafeExport::cell('Zero rated (exports, SEZ), net of credit notes'), SafeExport::cell(''),
-            SafeExport::cell($s['zero_taxable'], $money), SafeExport::cell($s['zero_igst'], $money)]));
         $writer->addRow(new Row([SafeExport::cell('3.1(c)'), SafeExport::cell('Nil rated, net of credit notes'), SafeExport::cell(''), SafeExport::cell($s['nil'], $money)]));
         $writer->addRow(new Row([SafeExport::cell('-'), SafeExport::cell('Reverse-charge sales (tax paid by recipient, not in 3B)'), SafeExport::cell(''), SafeExport::cell($s['rcm_taxable'], $money)]));
         $writer->addRow(SafeExport::row([]));

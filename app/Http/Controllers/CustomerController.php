@@ -17,6 +17,9 @@ class CustomerController extends Controller
 
         $customers = $company->customers()
             ->with('state')
+            // What each customer owes: the unpaid balance of their issued
+            // invoices, the same figure as the ledger and Receivables aging.
+            ->withSum(['invoices as outstanding' => fn ($q) => $q->whereIn('status', ['final', 'partially_paid'])], 'balance')
             // Customer::scopeSearch - name, mobile, email or GSTIN, and the
             // same definition the invoice list searches customers by.
             ->when($request->search, fn ($q, $s) => $q->search($s))

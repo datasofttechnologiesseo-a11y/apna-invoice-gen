@@ -22,11 +22,14 @@ use Illuminate\Support\Collection;
  *    is aggregated in b2cs by place of supply and rate.
  *  - 0% lines are nil-rated: reported in exemp, not in b2cs, and in GSTR-3B
  *    3.1(c), not 3.1(a).
- *  - Credit notes are reported in the period of the credit note date. Each
- *    one is spread across the original invoice's lines in proportion to their
- *    taxable value, so rate-wise and HSN-wise figures stay exact. B2B notes go
- *    to cdnr, B2CL notes to cdnur, other B2C notes reduce b2cs (as the portal
- *    expects).
+ *  - Credit notes are reported in the period of the credit note date. A note
+ *    with lines (a return of 1 almirah out of 7) is reported from its own
+ *    lines: rate-wise from their tax, HSN-wise by their HSN, and for a sales
+ *    return with the quantity that came back. A note without lines (a price
+ *    reduction, and every note issued before lines existed) is spread across
+ *    the original invoice's lines in proportion to their taxable value.
+ *    B2B notes go to cdnr, B2CL notes to cdnur, other B2C notes reduce b2cs
+ *    (as the portal expects).
  *  - Reverse-charge invoices are reported (b2b with Reverse Charge = Y) but
  *    carry no liability for the supplier in GSTR-3B.
  */
@@ -53,7 +56,7 @@ class Gstr1Builder
 
         $notes = CreditNote::where('company_id', $company->id)
             ->whereBetween('credit_note_date', [$from, $to])
-            ->with(['invoice.items', 'invoice.placeOfSupply', 'invoice.customer.state'])
+            ->with(array_merge(CreditNote::linesAvailable() ? ['items'] : [], ['invoice.items', 'invoice.placeOfSupply', 'invoice.customer.state']))
             ->orderBy('credit_note_date')->orderBy('id')
             ->get()
             ->filter(fn ($cn) => $cn->invoice !== null);
@@ -131,8 +134,11 @@ class Gstr1Builder
             $inv = $cn->invoice;
             $kind = $this->kind($inv);
             $pos = $this->pos($inv);
-            $share = $this->creditShare($cn, $inv);
-            foreach ($this->byRate($inv->items, $share) as $rate => $g) {
+            $lines = $cn->lines();
+            // No lines: today's pro-rata over the invoice, unchanged.
+            $share = $lines->isEmpty() ? $this->creditShare($cn, $inv) : [];
+            $rates = $lines->isEmpty() ? $this->byRate($inv->items, $share) : $this->linesByRate($lines);
+            foreach ($rates as $rate => $g) {
                 $row = [
                     'number' => $cn->credit_note_number, 'date' => $cn->credit_note_date, 'type' => 'C',
                     'pos' => $pos, 'value' => (float) $cn->amount, 'rate' => $rate, 'taxable' => $g['taxable'], 'cess' => 0.0,
@@ -164,8 +170,15 @@ class Gstr1Builder
                 }
             }
             $this->addCreditToSummary($summary, $cn, $inv, $share);
-            foreach ($inv->items as $item) {
-                $this->addHsn($hsn, in_array($kind, ['b2b', 'sez'], true) ? 'B2B' : 'B2C', $item, -($share[$item->id] ?? 0.0));
+            $tab = in_array($kind, ['b2b', 'sez'], true) ? 'B2B' : 'B2C';
+            if ($lines->isEmpty()) {
+                foreach ($inv->items as $item) {
+                    $this->addHsn($hsn, $tab, $item, -($share[$item->id] ?? 0.0));
+                }
+            } else {
+                foreach ($lines as $line) {
+                    $this->addHsnCreditLine($hsn, $tab, $line, $cn->isSalesReturn());
+                }
             }
         }
 
@@ -309,6 +322,29 @@ class Gstr1Builder
         return $inv->items->mapWithKeys(fn ($i) => [$i->id => $fraction])->all();
     }
 
+    /**
+     * A lined credit note grouped by GST rate, from its own figures.
+     *
+     * @return array<string, array{taxable: float, igst: float, cgst: float, sgst: float}>
+     */
+    private function linesByRate(Collection $lines): array
+    {
+        $out = [];
+        foreach ($lines as $line) {
+            $rate = (string) (0 + (float) $line->gst_rate);
+            $out[$rate] ??= ['taxable' => 0.0, 'igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+            $out[$rate]['taxable'] += (float) $line->taxable_value;
+            $out[$rate]['igst'] += (float) $line->igst;
+            $out[$rate]['cgst'] += (float) $line->cgst;
+            $out[$rate]['sgst'] += (float) $line->sgst;
+        }
+        foreach ($out as $r => $g) {
+            $out[$r] = array_map(fn ($v) => round($v, 2), $g);
+        }
+
+        return $out;
+    }
+
     private function addB2cs(array &$map, string $pos, string $rate, float $taxable, float $igst, float $cgst, float $sgst): void
     {
         $key = $pos . '|' . $rate;
@@ -381,9 +417,17 @@ class Gstr1Builder
             return;
         }
         $nil = 0.0;
-        foreach ($inv->items as $item) {
-            if ((float) $item->gst_rate <= 0) {
-                $nil += (float) $item->amount * ($share[$item->id] ?? 0.0);
+        if ($cn->lines()->isNotEmpty()) {
+            foreach ($cn->lines() as $line) {
+                if ((float) $line->gst_rate <= 0) {
+                    $nil += (float) $line->taxable_value;
+                }
+            }
+        } else {
+            foreach ($inv->items as $item) {
+                if ((float) $item->gst_rate <= 0) {
+                    $nil += (float) $item->amount * ($share[$item->id] ?? 0.0);
+                }
             }
         }
         $nil = round($nil, 2);
@@ -413,6 +457,31 @@ class Gstr1Builder
         $hsn[$key]['igst'] += $sign * (float) $item->igst_amount;
         $hsn[$key]['cgst'] += $sign * (float) $item->cgst_amount;
         $hsn[$key]['sgst'] += $sign * (float) $item->sgst_amount;
+    }
+
+    /**
+     * One line of a credit note off Table 12: its HSN, taxable value and tax.
+     * The quantity comes off only for a sales return (goods came back); a
+     * price correction on a line moves no goods.
+     */
+    private function addHsnCreditLine(array &$hsn, string $tab, $line, bool $goodsReturned): void
+    {
+        $rate = (float) $line->gst_rate;
+        $uqc = strtoupper((string) ($line->unit ?: 'OTH'));
+        $code = trim((string) $line->hsn_sac);
+        $key = $tab . '|' . $code . '|' . $uqc . '|' . $rate;
+        $hsn[$key] ??= ['tab' => $tab, 'hsn' => $code, 'description' => $line->description,
+            'uqc' => $uqc, 'qty' => 0.0, 'value' => 0.0, 'rate' => $rate,
+            'taxable' => 0.0, 'igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0, 'cess' => 0.0];
+        if ($goodsReturned) {
+            $hsn[$key]['qty'] -= (float) $line->quantity;
+        }
+        $tax = (float) $line->igst + (float) $line->cgst + (float) $line->sgst;
+        $hsn[$key]['value'] -= (float) $line->taxable_value + $tax;
+        $hsn[$key]['taxable'] -= (float) $line->taxable_value;
+        $hsn[$key]['igst'] -= (float) $line->igst;
+        $hsn[$key]['cgst'] -= (float) $line->cgst;
+        $hsn[$key]['sgst'] -= (float) $line->sgst;
     }
 
     private function finishHsn(array $hsn): array

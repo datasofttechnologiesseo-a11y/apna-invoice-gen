@@ -63,7 +63,7 @@
                 </div>
                 <div class="min-w-0">
                     <div class="font-display font-extrabold text-white leading-tight truncate">Apna Invoice</div>
-                    <div class="text-[10px] uppercase tracking-widest text-gray-400 leading-tight">Admin Panel</div>
+                    <div class="text-xs text-gray-400 leading-tight">Admin panel</div>
                 </div>
             </a>
             <button type="button" @click="sidebarOpen = false" class="lg:hidden p-2 text-gray-400 hover:text-white" aria-label="Close menu">
@@ -125,7 +125,7 @@
                     @endif
                     <div class="flex items-center gap-2 sm:gap-3 sm:pl-3 sm:border-l sm:border-gray-200">
                         <div class="text-right hidden xl:block">
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Signed in</div>
+                            <div class="text-xs font-medium text-gray-500">Signed in</div>
                             <div class="text-sm font-semibold text-gray-900 leading-tight">{{ Str::limit(auth()->user()->name, 14) }}</div>
                         </div>
                         <div class="w-9 h-9 rounded-full bg-gradient-to-br from-danger-500 to-accent-500 text-white font-bold flex items-center justify-center text-sm flex-shrink-0">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>

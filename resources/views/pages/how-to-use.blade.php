@@ -63,7 +63,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="How to Make a GST Invoice Free"
+    title="How to make a GST invoice for free"
     eyebrow="Learn the tool"
     lead="Step-by-step instructions to create and issue a GST invoice, share it and get paid, pull month-end reports, and raise quotations and credit notes. The full handbook is free to download."
     description="Make and issue a GST invoice in 60 seconds, share it on WhatsApp, collect payment by UPI and export GSTR-1 and GSTR-3B. A free step-by-step guide for India."

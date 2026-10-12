@@ -1,5 +1,5 @@
 <x-layouts.marketing
-    title="Press Kit & Brand Assets"
+    title="Press kit and brand assets"
     eyebrow="Media"
     lead="Logo, boilerplate, quick facts and press contact for journalists, partners and reviewers covering Apna Invoice."
     description="Apna Invoice press kit: logos, company boilerplate and media contact for journalists covering Indian SaaS, GST tools, MSMEs, and startups."
