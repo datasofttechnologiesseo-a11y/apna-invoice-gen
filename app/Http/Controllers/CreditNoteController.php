@@ -27,9 +27,9 @@ class CreditNoteController extends Controller
         // GST via a CN. Block politely and tell the operator the deadline.
         if ($invoice->isCreditNoteWindowClosed()) {
             return redirect()->route('invoices.show', $invoice)
-                ->with('error', 'The Section 34(2) window for this invoice closed on '
+                ->with('error', 'The Section 34(2) deadline for this invoice was '
                     . $invoice->creditNoteDeadline()->format('d M Y')
-                    . '. Credit notes issued after this date cannot reduce GST liability — issue a commercial refund/note outside the GST system instead.');
+                    . ', so a credit note can no longer reduce GST. Issue a commercial refund or note outside GST instead.');
         }
 
         // Max creditable = grand_total - already credited (we don't subtract
@@ -57,8 +57,8 @@ class CreditNoteController extends Controller
         // CGST Section 34(2) — see CreditNoteController::create() for context.
         if ($invoice->isCreditNoteWindowClosed()) {
             return redirect()->route('invoices.show', $invoice)
-                ->with('error', 'The Section 34(2) window for this invoice closed on '
-                    . $invoice->creditNoteDeadline()->format('d M Y') . '. Credit notes issued after this date cannot reduce GST liability.');
+                ->with('error', 'The Section 34(2) deadline for this invoice was '
+                    . $invoice->creditNoteDeadline()->format('d M Y') . ', so a credit note can no longer reduce GST.');
         }
 
         $creditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount), 2);
@@ -81,15 +81,31 @@ class CreditNoteController extends Controller
         $creditNote = DB::transaction(function () use ($invoice, $data) {
             // Lock company row + allocate next CRN number atomically.
             $company = $invoice->company()->lockForUpdate()->first();
-            $number = $company->bumpCreditNoteCounter($data['credit_note_date']);
+
+            // The cap was read before the lock: a double-submitted note must be
+            // checked again, or two notes credit more than the invoice is worth.
+            $invoice->refresh();
+            $stillCreditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->creditNotes()->sum('amount')), 2);
+            if ($invoice->isCancelled() || (float) $data['amount'] > $stillCreditable + 0.001) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'amount' => 'A credit note was just issued. Only ₹' . inr($stillCreditable) . ' of this invoice can still be credited.',
+                ]);
+            }
+            // The counter resets each financial year but the number carries no
+            // FY part, so CRN-0001 comes round again every April. Skip past any
+            // number already issued, as invoices do, instead of tripping the
+            // unique index with a 500.
+            do {
+                $number = $company->bumpCreditNoteCounter($data['credit_note_date']);
+            } while (\App\Models\CreditNote::where('company_id', $company->id)
+                ->where('credit_note_number', $number)
+                ->exists());
 
             // Pro-rata the amount across the invoice's tax components so the
-            // credit note mirrors the tax structure of the original bill.
-            // This is the minimum needed for GSTR-1 filing: taxable value +
-            // CGST/SGST/IGST split.
-            $ratio = $invoice->grand_total > 0
-                ? min(1.0, (float) $data['amount'] / (float) $invoice->grand_total)
-                : 0;
+            // credit note mirrors the tax structure of the original bill
+            // (taxable value + CGST/SGST/IGST for GSTR-1), never reversing
+            // more tax than the invoice charged.
+            $split = app(\App\Services\CreditNoteSplit::class)->for($invoice, (float) $data['amount']);
 
             $cn = CreditNote::create([
                 'user_id' => $invoice->user_id,
@@ -98,10 +114,7 @@ class CreditNoteController extends Controller
                 'credit_note_number' => $number,
                 'credit_note_date' => $data['credit_note_date'],
                 'amount' => $data['amount'],
-                'taxable_value' => round((float) $invoice->subtotal * $ratio, 2),
-                'total_cgst' => round((float) $invoice->total_cgst * $ratio, 2),
-                'total_sgst' => round((float) $invoice->total_sgst * $ratio, 2),
-                'total_igst' => round((float) $invoice->total_igst * $ratio, 2),
+                ...$split,
                 'reason' => $data['reason'],
                 'notes' => $data['notes'] ?? null,
             ]);
@@ -109,7 +122,10 @@ class CreditNoteController extends Controller
             // Recalculate the invoice's credited_amount + balance + status.
             $credited = (float) $invoice->creditNotes()->sum('amount');
             $paid = (float) $invoice->paid_amount;
-            $balance = max(0, round((float) $invoice->grand_total - $paid - $credited, 2));
+            // No clamp: a credit note on an invoice the customer has already
+            // paid leaves a NEGATIVE balance, which is the refund owed to them.
+            // Clamping to 0 made that money disappear from the books.
+            $balance = round((float) $invoice->grand_total - $paid - $credited, 2);
             $status = $balance <= 0
                 ? 'paid'
                 : ($paid > 0 ? 'partially_paid' : 'final');
@@ -124,12 +140,12 @@ class CreditNoteController extends Controller
         });
 
         \App\Models\AuditLog::record('credit_note.created',
-            "Credit note {$creditNote->credit_note_number} issued · ₹" . number_format((float) $creditNote->amount, 2) . " · " . ($creditNote->reason ?? '') . " · against Invoice {$invoice->invoice_number}",
+            "Credit note {$creditNote->credit_note_number} issued · ₹" . inr((float) $creditNote->amount) . " · " . $creditNote->reasonLabel() . " · against Invoice {$invoice->invoice_number}",
             $creditNote
         );
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('status', "Credit note {$creditNote->credit_note_number} issued for ₹" . number_format((float) $creditNote->amount, 2));
+            ->with('status', "Credit note {$creditNote->credit_note_number} issued for ₹" . inr((float) $creditNote->amount));
     }
 
     /** Delete/reverse a credit note. Recomputes invoice totals. */
@@ -152,7 +168,10 @@ class CreditNoteController extends Controller
 
             $credited = (float) $invoice->creditNotes()->sum('amount');
             $paid = (float) $invoice->paid_amount;
-            $balance = max(0, round((float) $invoice->grand_total - $paid - $credited, 2));
+            // No clamp: a credit note on an invoice the customer has already
+            // paid leaves a NEGATIVE balance, which is the refund owed to them.
+            // Clamping to 0 made that money disappear from the books.
+            $balance = round((float) $invoice->grand_total - $paid - $credited, 2);
             $status = $balance <= 0
                 ? 'paid'
                 : ($paid > 0 ? 'partially_paid' : 'final');
@@ -165,7 +184,7 @@ class CreditNoteController extends Controller
         });
 
         \App\Models\AuditLog::record('credit_note.deleted',
-            "Credit note {$snapshot['credit_note_number']} reversed · ₹" . number_format((float) $snapshot['amount'], 2) . " · against Invoice {$invoice->invoice_number}",
+            "Credit note {$snapshot['credit_note_number']} reversed · ₹" . inr((float) $snapshot['amount']) . " · against Invoice {$invoice->invoice_number}",
             $invoice,
             $snapshot
         );

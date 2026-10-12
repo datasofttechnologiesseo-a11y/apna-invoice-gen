@@ -41,7 +41,7 @@ class BackupController extends Controller
             return back()->with('status', "Backup emailed to {$user->email}.");
         } catch (\Throwable $e) {
             Log::error('Manual backup email failed: ' . $e->getMessage());
-            return back()->withErrors(['backup' => 'Could not send backup email: ' . $e->getMessage()]);
+            return back()->withErrors(['backup' => 'The backup email could not be sent. Try again in a few minutes, or download the backup instead.']);
         } finally {
             @unlink($path);
         }
@@ -55,7 +55,7 @@ class BackupController extends Controller
         $user = $request->user();
         $user->forceFill(['auto_backup_enabled' => (bool) $data['auto_backup_enabled']])->save();
         return back()->with('status', $user->auto_backup_enabled
-            ? 'Auto-backup turned ON. You\'ll get a weekly ZIP by email.'
-            : 'Auto-backup turned OFF.');
+            ? 'Auto-backup turned on. A ZIP backup will be emailed to you every week.'
+            : 'Auto-backup turned off.');
     }
 }

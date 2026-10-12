@@ -38,7 +38,7 @@ class BlogAdminController extends Controller
     {
         $post = new Post([
             'status' => 'draft',
-            'body' => "## Introduction\n\nWrite your post here. Markdown is supported — links, lists, code blocks, tables, images.\n\n## Section\n\nDetail.\n",
+            'body' => "## Introduction\n\nWrite your post here. Markdown is supported: links, lists, code blocks, tables, images.\n\n## Section\n\nDetail.\n",
         ]);
         return view('admin.blog.edit', compact('post'));
     }

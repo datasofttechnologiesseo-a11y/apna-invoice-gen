@@ -36,7 +36,7 @@
                                     </div>
                                     <div class="text-xs text-gray-500 truncate">{{ $u->email }}</div>
                                     @if ($u->phone)
-                                        <div class="text-xs text-gray-400 font-mono">{{ $u->phone }}</div>
+                                        <div class="text-xs text-gray-500 font-mono">{{ $u->phone }}</div>
                                     @endif
                                 </div>
                             </div>
@@ -44,7 +44,7 @@
                         <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-700">{{ $u->companies_count }}</td>
                         <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-700">{{ $u->customers_count }}</td>
                         <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-700">{{ $u->invoices_count }}</td>
-                        <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold text-gray-900">₹{{ number_format((float) $u->revenue) }}</td>
+                        <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold text-gray-900">₹{{ rupees((float) $u->revenue) }}</td>
                         <td class="px-5 py-3 text-xs text-gray-500">{{ $u->created_at->format('d M Y') }}</td>
                         <td class="px-5 py-3 text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-2">
@@ -60,7 +60,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No users match.</td></tr>
+                    <tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">No users match.</td></tr>
                 @endforelse
             </tbody>
         </table>

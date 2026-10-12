@@ -93,7 +93,7 @@ class ProductController extends Controller
             $product->update(['is_active' => false]);
 
             return response()->json([
-                'message' => "'{$product->name}' is archived, not deleted - it has been on an invoice, so the records stay intact. It will stop appearing when you make a new invoice, and can be restored from the Archived tab on the web app.",
+                'message' => "'{$product->name}' is used on an invoice, so it was archived, not deleted. It will not appear on new invoices. Restore it from the Archived tab on the web app.",
                 'archived' => true,
             ]);
         }

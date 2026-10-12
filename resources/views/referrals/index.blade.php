@@ -9,6 +9,19 @@
                 <div class="p-4 bg-money-50 border border-money-200 text-money-800 rounded">{{ session('status') }}</div>
             @endif
 
+            @if ($lifetimeFreeAt)
+                <div class="p-5 bg-money-50 border border-money-200 rounded-xl flex items-start gap-3">
+                    <svg class="w-6 h-6 shrink-0 text-money-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div>
+                        <div class="font-semibold text-money-900">You have lifetime free access to Apna Invoice.</div>
+                        <div class="text-sm text-money-800 mt-0.5">
+                            Earned on {{ $lifetimeFreeAt->format('d M Y') }}{{ $rewardedBy ? ', when ' . $rewardedBy . ' issued their first invoice' : '' }}.
+                            Your account stays free when paid plans are introduced.
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Hero --}}
             <div class="bg-gradient-to-br from-brand-900 via-brand-800 to-accent-900 rounded-2xl p-8 text-white shadow-brand">
                 <div class="flex items-start gap-2 text-accent-300 text-xs font-bold uppercase tracking-widest">
@@ -17,8 +30,8 @@
                 </div>
                 <div class="mt-3 font-display font-extrabold text-4xl sm:text-5xl tracking-tight tabular-nums">{{ $code }}</div>
                 <p class="mt-3 text-brand-100 max-w-xl">
-                    Share this code with other business owners you know. They get a smoother start to GST-compliant invoicing,
-                    and your referral helps the platform grow - both of you benefit.
+                    Refer a friend and get <strong class="text-white">lifetime free access</strong> to Apna Invoice.
+                    It counts when your friend signs up with your code and issues their first invoice.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-2">
                     <a href="{{ $waShare }}" target="_blank" rel="noopener"
@@ -29,25 +42,39 @@
                     <a href="{{ $mailShare }}"
                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-brand-900 text-sm font-semibold rounded hover:bg-gray-100">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                        Email a friend
+                        Share by email
                     </a>
                     <button type="button" x-data="{ copied: false }"
                             @click="navigator.clipboard.writeText('{{ $shareUrl }}'); copied = true; setTimeout(() => copied = false, 2000)"
                             class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 text-white text-sm font-semibold rounded hover:bg-white/20">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                        <span x-text="copied ? 'Link copied!' : 'Copy signup link'"></span>
+                        <span x-text="copied ? 'Link copied' : 'Copy sign-up link'"></span>
                     </button>
                 </div>
             </div>
 
+            {{-- How it works --}}
+            <ol class="grid sm:grid-cols-3 gap-4 text-sm">
+                @foreach ([
+                    ['Share your code', 'Send your code or sign-up link on WhatsApp or by email.'],
+                    ['Your friend signs up', 'They create their account with your code.'],
+                    ['They issue an invoice', 'Your account becomes free for life. One friend is enough.'],
+                ] as $i => [$title, $text])
+                    <li class="p-4 bg-white rounded-xl shadow-card ring-1 ring-gray-100 flex gap-3">
+                        <span class="shrink-0 w-7 h-7 rounded-full bg-brand-50 text-brand-700 font-bold flex items-center justify-center">{{ $i + 1 }}</span>
+                        <span><span class="block font-semibold text-gray-900">{{ $title }}</span><span class="text-gray-600">{{ $text }}</span></span>
+                    </li>
+                @endforeach
+            </ol>
+
             {{-- Stats --}}
             <div class="grid grid-cols-3 gap-4">
                 <div class="p-5 bg-white rounded-xl shadow-card ring-1 ring-gray-100">
-                    <div class="text-xs uppercase tracking-wider font-bold text-gray-500">Sign-ups via your code</div>
+                    <div class="text-xs uppercase tracking-wider font-bold text-gray-500">Sign-ups</div>
                     <div class="text-3xl font-display font-extrabold mt-2 text-gray-900">{{ $stats['total'] }}</div>
                 </div>
                 <div class="p-5 bg-white rounded-xl shadow-card ring-1 ring-gray-100">
-                    <div class="text-xs uppercase tracking-wider font-bold text-gray-500">Pending</div>
+                    <div class="text-xs uppercase tracking-wider font-bold text-gray-500">Waiting for first invoice</div>
                     <div class="text-3xl font-display font-extrabold mt-2 text-accent-700">{{ $stats['pending'] }}</div>
                 </div>
                 <div class="p-5 bg-white rounded-xl shadow-card ring-1 ring-gray-100">
@@ -59,11 +86,11 @@
             {{-- Referrals list --}}
             <div class="bg-white rounded-xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 <div class="px-5 py-3 border-b">
-                    <h2 class="font-semibold text-gray-900">People you've referred</h2>
+                    <h2 class="font-semibold text-gray-900">Referrals</h2>
                 </div>
                 @if ($referrals->isEmpty())
                     <div class="p-8 text-center text-gray-500 text-sm">
-                        No referrals yet. Share your code above - every person helps!
+                        No referrals yet. Friends who sign up with your code are listed here.
                     </div>
                 @else
                     <ul class="divide-y divide-gray-100">
@@ -83,8 +110,8 @@
                                         'disqualified' => 'bg-gray-200 text-gray-600',
                                     ][$r->reward_status] ?? 'bg-gray-100 text-gray-700';
                                 @endphp
-                                <span class="text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded {{ $badge }}">
-                                    {{ str_replace('_', ' ', $r->reward_status) }}
+                                <span class="text-xs font-semibold px-2 py-1 rounded {{ $badge }}">
+                                    {{ ['pending' => 'Waiting for first invoice', 'rewarded' => 'Rewarded', 'disqualified' => 'Not eligible'][$r->reward_status] ?? ucfirst($r->reward_status) }}
                                 </span>
                             </li>
                         @endforeach
@@ -93,7 +120,7 @@
             </div>
 
             <div class="text-xs text-gray-500 text-center">
-                Tip: the referral code also works as a bookmark-friendly link - <span class="font-mono">{{ $shareUrl }}</span>.
+                Sign-up link: <span class="font-mono">{{ $shareUrl }}</span>
             </div>
         </div>
     </div>

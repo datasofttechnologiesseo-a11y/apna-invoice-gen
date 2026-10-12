@@ -1,8 +1,15 @@
 <x-app-layout title="Help">
     <x-slot name="header">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div class="min-w-0">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">How to use Apna Invoice</h1>
-            <p class="text-sm text-gray-500 mt-1">A quick tour of every feature, in the order you'll actually use them.</p>
+            <p class="text-sm text-gray-500 mt-1">From setting up your business to filing GST returns, in the order you will use each feature.</p>
+        </div>
+            <a href="{{ \App\Support\Team::can('dashboard') ? route('dashboard', ['tour' => 1]) : route('invoices.index', ['tour' => 1]) }}"
+               class="self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Take the tour
+            </a>
         </div>
     </x-slot>
 
@@ -17,8 +24,8 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="text-[11px] font-bold uppercase tracking-widest text-accent-300">Quick start</div>
-                    <h2 class="mt-0.5 font-display text-lg font-extrabold">Download the 17-slide getting-started deck</h2>
-                    <p class="mt-1 text-sm text-brand-100">A step-by-step PowerPoint walkthrough, sign up to first paid invoice, perfect for sharing with your team or your CA.</p>
+                    <h2 class="mt-0.5 font-display text-lg font-extrabold">Getting started guide (17 slides)</h2>
+                    <p class="mt-1 text-sm text-brand-100">PowerPoint guide from sign-up to the first paid invoice. Share it with your team or CA.</p>
                 </div>
                 <a href="{{ asset('downloads/apna-invoice-getting-started.pptx') }}" download
                    class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent-700 hover:bg-accent-800 text-white font-semibold rounded-lg shadow-sm transition whitespace-nowrap">
@@ -38,16 +45,19 @@
                 <nav class="mt-3 space-y-1.5">
                     <a href="#setup" class="block py-1.5 text-gray-700 hover:text-brand-700">1. Set up your business</a>
                     <a href="#customers" class="block py-1.5 text-gray-700 hover:text-brand-700">2. Add customers</a>
-                    <a href="#products" class="block py-1.5 text-gray-700 hover:text-brand-700">3. Save products</a>
+                    <a href="#products" class="block py-1.5 text-gray-700 hover:text-brand-700">3. Items and stock</a>
                     <a href="#quotations" class="block py-1.5 text-gray-700 hover:text-brand-700">4. Send a quotation (optional)</a>
                     <a href="#invoice" class="block py-1.5 text-gray-700 hover:text-brand-700">5. Create an invoice</a>
                     <a href="#finalize" class="block py-1.5 text-gray-700 hover:text-brand-700">6. Issue &amp; share</a>
-                    <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Record Receipts</a>
+                    <a href="#payments" class="block py-1.5 text-gray-700 hover:text-brand-700">7. Record payments</a>
                     <a href="#purchases" class="block py-1.5 text-gray-700 hover:text-brand-700">8. Purchases &amp; expenses</a>
-                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">9. Track progress</a>
-                    <a href="#reports" class="block py-1.5 text-gray-700 hover:text-brand-700">10. Reports for your CA</a>
-                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">11. FAQ</a>
-                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">12. What we don't cover</a>
+                    <a href="#bank" class="block py-1.5 text-gray-700 hover:text-brand-700">9. Bank reconciliation</a>
+                    <a href="#gst" class="block py-1.5 text-gray-700 hover:text-brand-700">10. GST returns</a>
+                    <a href="#reports" class="block py-1.5 text-gray-700 hover:text-brand-700">11. Reports for your CA</a>
+                    <a href="#dashboard" class="block py-1.5 text-gray-700 hover:text-brand-700">12. Dashboard</a>
+                    <a href="#team" class="block py-1.5 text-gray-700 hover:text-brand-700">13. Team access</a>
+                    <a href="#faq" class="block py-1.5 text-gray-700 hover:text-brand-700">14. FAQ</a>
+                    <a href="#scope" class="block py-1.5 text-gray-700 hover:text-brand-700">15. Not supported yet</a>
                 </nav>
             </details>
 
@@ -58,16 +68,19 @@
                     <nav class="space-y-1.5">
                         <a href="#setup" class="block text-gray-700 hover:text-brand-700">1. Set up your business</a>
                         <a href="#customers" class="block text-gray-700 hover:text-brand-700">2. Add customers</a>
-                        <a href="#products" class="block text-gray-700 hover:text-brand-700">3. Save products</a>
+                        <a href="#products" class="block text-gray-700 hover:text-brand-700">3. Items and stock</a>
                         <a href="#quotations" class="block text-gray-700 hover:text-brand-700">4. Send a quotation (optional)</a>
                         <a href="#invoice" class="block text-gray-700 hover:text-brand-700">5. Create an invoice</a>
                         <a href="#finalize" class="block text-gray-700 hover:text-brand-700">6. Issue &amp; share</a>
-                        <a href="#payments" class="block text-gray-700 hover:text-brand-700">7. Record Receipts</a>
+                        <a href="#payments" class="block text-gray-700 hover:text-brand-700">7. Record payments</a>
                         <a href="#purchases" class="block text-gray-700 hover:text-brand-700">8. Purchases &amp; expenses</a>
-                        <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">9. Track progress</a>
-                        <a href="#reports" class="block text-gray-700 hover:text-brand-700">10. Reports for your CA</a>
-                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">11. FAQ</a>
-                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">12. What we don't cover</a>
+                        <a href="#bank" class="block text-gray-700 hover:text-brand-700">9. Bank reconciliation</a>
+                        <a href="#gst" class="block text-gray-700 hover:text-brand-700">10. GST returns</a>
+                        <a href="#reports" class="block text-gray-700 hover:text-brand-700">11. Reports for your CA</a>
+                        <a href="#dashboard" class="block text-gray-700 hover:text-brand-700">12. Dashboard</a>
+                        <a href="#team" class="block text-gray-700 hover:text-brand-700">13. Team access</a>
+                        <a href="#faq" class="block text-gray-700 hover:text-brand-700">14. FAQ</a>
+                        <a href="#scope" class="block text-gray-700 hover:text-brand-700">15. Not supported yet</a>
                     </nav>
                 </div>
             </aside>
@@ -80,13 +93,13 @@
                             'n' => 1,
                             'title' => 'Set up your business profile',
                             'time' => '3 min',
-                            'desc' => 'Your GSTIN, PAN, address and state live here, they print on every invoice as the letterhead. Also set your invoice-number prefix and upload a logo & signature for that professional look.',
-                            'cta' => ['label' => 'Open Company settings', 'href' => route('company.edit')],
+                            'desc' => 'Your GSTIN, PAN, address and state print on every invoice as the letterhead. Set your invoice number prefix here, and upload a logo and signature.',
+                            'cta' => ['label' => 'Open company settings', 'href' => route('company.edit')],
                             'tips' => [
-                                '<strong>State matters.</strong> Your company state decides whether an invoice is intrastate (CGST + SGST) or interstate (IGST). Always set it.',
-                                '<strong>Invoice prefix.</strong> Use <code>{FY}</code> in your prefix, e.g. <code>INV/{FY}/</code> renders as <code>INV/26-27/0001</code> and auto-resets on 1 April. The receipt-number series is separate and runs continuously per company.',
-                                '<strong>Bank details &amp; UPI</strong> in settings auto-render a QR on every invoice, so customers can pay with one tap.',
-                                '<strong>Composition dealer?</strong> Tick that box in settings, every document automatically prints "Bill of Supply" instead of "Tax Invoice" and includes the Section 31(3)(c) declaration.',
+                                '<strong>State.</strong> Your company state decides whether an invoice is intra-state (CGST + SGST) or inter-state (IGST).',
+                                '<strong>Invoice prefix.</strong> Add <code>{FY}</code> to the prefix: <code>INV/{FY}/</code> prints as <code>INV/2026-27/0001</code> and restarts on 1 April. Receipt numbers run in a separate, continuous series for each company.',
+                                '<strong>Bank details and UPI</strong> add a payment QR code to every invoice.',
+                                '<strong>Composition dealer?</strong> Tick the option in settings. Documents then print "Bill of Supply" instead of "Tax Invoice", with the Section 31(3)(c) declaration.',
                             ],
                         ],
                         [
@@ -94,145 +107,190 @@
                             'n' => 2,
                             'title' => 'Add your customers',
                             'time' => '1 min per customer',
-                            'desc' => 'Save a customer once with GSTIN, address, state, email and mobile, then just pick them from a dropdown on every invoice.',
-                            'cta' => ['label' => 'Add a customer', 'href' => route('customers.create')],
+                            'desc' => 'Save a customer once with GSTIN, address, state, email and mobile, then pick them from the list on every invoice.',
+                            'cta' => ['label' => 'Add customer', 'href' => route('customers.create')],
                             'tips' => [
-                                '<strong>GSTIN is validated.</strong> We check the 15-digit format and the state code prefix matches the selected state.',
-                                '<strong>Mobile numbers</strong> are searchable from the Sales list, helpful when a customer calls to ask about a bill.',
-                                '<strong>Can\'t delete a customer?</strong> That\'s intentional, customers with invoices stay on the books for GST audit.',
+                                '<strong>GSTIN check.</strong> The 15-character format is validated, and its state code must match the selected state.',
+                                '<strong>Mobile numbers</strong> can be searched from the Invoices list, for when a customer calls about a bill.',
+                                '<strong>Customers with invoices cannot be deleted.</strong> They stay on record for GST audit.',
+                                '<strong>Import from Excel.</strong> Customers, items and vendors can be imported from an Excel or CSV file. Download the template from <em>Import</em> on each list, fill it in and upload; you see a preview before anything is saved.',
                             ],
                         ],
                         [
                             'id' => 'products',
                             'n' => 3,
-                            'title' => 'Save products / services (optional but worth it)',
+                            'title' => 'Items and stock (optional)',
                             'time' => '1 min per item',
-                            'desc' => 'Add the things you sell, name, HSN/SAC, unit, default rate, GST%. On the invoice form, picking a product auto-fills all those fields so one customer & two clicks = an invoice.',
-                            'cta' => ['label' => 'Add a product', 'href' => route('products.create')],
+                            'desc' => 'Add the goods and services you sell with name, HSN/SAC, unit, default rate and GST rate. Picking an item on the invoice form fills in all of these.',
+                            'cta' => ['label' => 'Add item', 'href' => route('products.create')],
                             'tips' => [
-                                '<strong>HSN vs SAC.</strong> Goods use HSN (4/6/8 digits). Services use SAC, which starts with 99.',
-                                '<strong>UQC units.</strong> We list the exact CBIC-notified codes (NOS, KGS, LTR…) so your GSTR-1 reconciles cleanly.',
-                                '<strong>Archived, not deleted.</strong> Delete a product that has been on an invoice and it is archived instead: the invoice keeps its line and the product stops being offered on new ones. Find it under the <em>Archived</em> tab on Products and press Restore to put it back.',
+                                '<strong>HSN or SAC.</strong> Goods use HSN (4, 6 or 8 digits). Services use SAC, which starts with 99.',
+                                '<strong>UQC units.</strong> Units use the CBIC-notified codes (NOS, KGS, LTR…) so GSTR-1 reconciles.',
+                                '<strong>Archived, not deleted.</strong> An item already used on an invoice is archived when you delete it: the invoice keeps its line and the item is no longer offered on new invoices. To bring it back, open the <em>Archived</em> tab on Items and click Restore.',
+                                '<strong>Stock (optional).</strong> Turn on <em>Track stock</em> on a goods item and enter the opening stock, a low stock level and the purchase price. For many items at once, fill the Opening Stock and Low Stock Alert columns in the Excel import.',
+                                '<strong>How stock moves.</strong> An issued invoice takes stock out (a draft does not), and cancelling it puts the stock back. A purchase invoice brings stock in for every line linked to the item. For anything else, such as damage, a supplier return or a physical count, click <em>Stock</em> next to the item on the Items page to add or remove a quantity with a reason.',
+                                '<strong>Checking stock.</strong> The top of the Items page shows stock value at purchase price and how many items are low or out of stock; click either to see those items. <em>Inventory → Stock Summary</em> gives opening, in, out, closing and value for any period, in Excel or PDF. The dashboard lists low-stock items, and the invoice form warns when a line is more than what is in stock.',
                             ],
                         ],
                         [
                             'id' => 'quotations',
                             'n' => 4,
                             'title' => 'Send a quotation first (optional)',
-                            'time' => '~30 seconds',
-                            'desc' => 'Not every sale starts with an invoice, sometimes the customer wants a price proposal first. <em>Quotations</em> let you share a formatted price quote (with GST shown for clarity), then convert it to a real tax invoice in one click once the customer confirms.',
-                            'cta' => ['label' => 'Create a quotation', 'href' => route('quotations.create')],
+                            'time' => '30 seconds',
+                            'desc' => 'For customers who want a price before the sale. A quotation shows the price with GST and converts to a tax invoice in one click once the customer confirms.',
+                            'cta' => ['label' => 'New quotation', 'href' => route('quotations.create')],
                             'tips' => [
-                                '<strong>Quotation, not tax invoice.</strong> The PDF is titled "Quotation" with a clear "this is not a tax invoice" disclaimer. Quotes don\'t go on GSTR-1 / GSTR-3B and aren\'t affected by your books-locked period.',
-                                '<strong>Lifecycle.</strong> Draft → Sent → Accepted → Converted (or Declined / Expired). Default validity is 30 days; expiry is computed automatically, no cron needed.',
-                                '<strong>Convert with one click.</strong> Once accepted, hit <em>Convert to Invoice</em>, a draft invoice is created with the same line items, ready for you to review and issue.',
-                                '<strong>Separate numbering.</strong> Quotes use their own series (default <span class="font-mono">QT-0001</span>) so they never collide with invoice numbers.',
+                                '<strong>Not a tax invoice.</strong> The PDF is titled "Quotation" and states that it is not a tax invoice. Quotations are not reported in GSTR-1 or GSTR-3B and are not affected by locked books.',
+                                '<strong>Status.</strong> Draft → Sent → Accepted → Converted (or Declined / Expired). Quotations are valid for 30 days by default and expire automatically.',
+                                '<strong>Convert to invoice.</strong> Click <em>Convert to invoice</em> on any quotation that is not declined. A draft invoice is created with the same items for you to review and issue.',
+                                '<strong>Separate numbering.</strong> Quotations have their own series (default <span class="font-mono">QT-0001</span>), separate from invoice numbers.',
                             ],
                         ],
                         [
                             'id' => 'invoice',
                             'n' => 5,
                             'title' => 'Create an invoice',
-                            'time' => '~30 seconds once set up',
-                            'desc' => 'Click <em>New invoice</em>, it opens a blank invoice straight away. Pick a customer (or type a new name), add line items (or type a new product), save. We auto-compute CGST/SGST vs IGST based on the customer\'s state. Want a starting layout? Use the <em>Browse templates</em> link inside the form.',
-                            'cta' => ['label' => 'Start a new invoice', 'href' => route('invoices.create')],
+                            'time' => '30 seconds once set up',
+                            'desc' => 'Click <em>New invoice</em>. Pick a customer (or type a new name), add items (or type a new product) and save. CGST/SGST or IGST is set from the customer\'s state. For a starting layout, use the <em>Browse templates</em> link in the form.',
+                            'cta' => ['label' => 'New invoice', 'href' => route('invoices.create')],
                             'tips' => [
-                                '<strong>Draft vs Final.</strong> Everything starts as a draft, you can edit freely. Finalizing assigns the legal invoice number and locks the amounts.',
-                                '<strong>Five template styles.</strong> Classic Navy, Executive Maroon, Minimal Slate, Mercantile Forest, and Heritage Burgundy, pick whichever matches your brand. The GST format is identical; only the colour and rule weight differ.',
-                                '<strong>Per-line discount (Section 15(3)).</strong> Discount is captured pre-tax, the discount column only renders on the PDF when at least one line has one, so service-only invoices stay clean.',
-                                '<strong>Transporter &amp; e-way bill</strong> details are optional, only fill them if you\'re shipping goods.',
-                                '<strong>Reverse charge</strong> tick-box is for RCM supplies under Section 9(3)/9(4) of the CGST Act. We zero out the tax and print the Rule 46(p) declaration automatically.',
+                                '<strong>Draft and final.</strong> Every invoice starts as a draft and can be edited freely. Issuing it assigns the invoice number and locks the amounts.',
+                                '<strong>PDF style.</strong> Pick Classic, Executive, Minimal, Mercantile or Heritage under <em>PDF style</em> on the invoice form. The GST format is the same in all of them; only the colours differ. Tick <em>Colour version</em> when downloading to see them.',
+                                '<strong>Line discount (Section 15(3)).</strong> Discounts are applied before tax. The discount column prints only when at least one line has a discount.',
+                                '<strong>Transporter and e-way bill</strong> details are optional. Fill them in only when shipping goods.',
+                                '<strong>Reverse charge</strong> is for RCM supplies under Section 9(3)/9(4) of the CGST Act. No tax is charged and the Rule 46(p) declaration prints on the invoice.',
                             ],
                         ],
                         [
                             'id' => 'finalize',
                             'n' => 6,
-                            'title' => 'Issue, download, share & edit',
-                            'time' => 'instant',
-                            'desc' => 'Open the invoice, click <em>Issue</em>, we assign the next number in your series (auto-reset on 1 April when you use the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em> for an ink-saving version, <em>Email</em> it (attaches the PDF automatically), tap the <em>WhatsApp</em> button for a pre-filled message, or <em>Copy link</em> for a 30-day signed public URL. For returns / rate corrections / post-sale discounts, use <em>Issue credit note</em>, the adjustment is GSTR-1-compliant and auto-reduces the invoice balance.',
+                            'title' => 'Issue, download, share and edit',
+                            'desc' => 'Open the invoice and click <em>Issue</em> to assign the next number in your series (it restarts on 1 April with the <span class="font-mono">{FY}</span> format). Then <em>Download PDF</em>, <em>Email</em> it with the PDF attached, send it on <em>WhatsApp</em> with a pre-filled message, or <em>Copy link</em> to share a public link valid for 30 days. For returns, rate corrections or discounts after the sale, use <em>Issue credit note</em>. The credit note is reported in GSTR-1 and reduces the invoice balance.',
                             'tips' => [
-                                '<strong>Why ink-saver by default?</strong> When you download for printing, you don\'t want coloured table headers burning toner. The on-screen version stays colourful, and the 🎨 button next to Download PDF gives you the full-colour file if you need it.',
-                                '<strong>WhatsApp share</strong> uses <span class="font-mono">wa.me</span> deep links, no extra setup, just works from any phone.',
-                                '<strong>Locked fields.</strong> After issuing, you can still edit notes, terms, due date and transporter, but not amounts, items, or customer. (GST best practice: issue a credit note instead of silently editing.)',
-                                '<strong>Cancel instead of delete.</strong> A wrong issued invoice is cancelled with a short reason, preserving the audit trail. The public link stops working the moment you cancel.',
+                                '<strong>PDF copies.</strong> Downloaded PDFs use an ink-saving print layout; tick <em>Colour version</em> for your template colours. Choose the copies to include: Original for Recipient, and the supplier and transporter copies.',
+                                '<strong>WhatsApp sharing</strong> uses <span class="font-mono">wa.me</span> links and works from any phone without setup.',
+                                '<strong>After issuing,</strong> you can still edit notes, terms, due date and transporter details, but not amounts, items or the customer. Use a credit note for corrections.',
+                                '<strong>Cancel, do not delete.</strong> A wrong invoice is cancelled with a short reason, so the audit trail stays complete. Its public link stops working on cancellation.',
                             ],
                         ],
                         [
                             'id' => 'payments',
                             'n' => 7,
-                            'title' => 'Record Receipts & issue receipts',
+                            'title' => 'Record payments and issue receipts',
                             'time' => '20 seconds per payment',
-                            'desc' => 'On an issued invoice, fill the <em>Record a payment</em> form, amount, method (UPI / NEFT / Cash / Cheque…), date, reference. We generate a sequential receipt number, update the balance, and give you a printable receipt PDF.',
+                            'desc' => 'On an issued invoice, fill in <em>Record a payment</em>: amount, method (UPI, NEFT, cash, cheque…), date and reference. A sequential receipt number is assigned, the balance is updated and a printable receipt PDF is created.',
                             'tips' => [
-                                '<strong>Part payments.</strong> Enter ₹1,000 today, ₹2,000 next week, the balance recomputes automatically.',
-                                '<strong>TDS deducted by your customer?</strong> Use the TDS fields on the payment form, section (e.g. 194C, 194J, 194Q) and rate. The deducted amount is stored against the receipt so your CA can match it to Form 26AS.',
-                                '<strong>Chasing dues?</strong> Open <em>Finance → Aging</em> for a bucketed view of who owes what (current / 31–60 / 61–90 / 91+ days), sorted biggest-first. Or click the <em>Outstanding</em> card on the dashboard for the full unpaid-invoices list.',
-                                '<strong>Reverse a payment</strong> if you entered it wrong. The receipt number stays in the log (auditable) but the balance is restored.',
-                                '<strong>UPI / cheque ref</strong> goes on the receipt PDF, customers love seeing their own txn ID on the proof of payment.',
+                                '<strong>Part payments.</strong> Record ₹1,000 today and ₹2,000 next week; the balance updates each time.',
+                                '<strong>TDS deducted by the customer?</strong> Enter the TDS section (e.g. 194C, 194J, 194Q) and rate on the payment form. The amount is stored with the receipt so your CA can match it with Form 26AS.',
+                                '<strong>Following up dues.</strong> <em>Reports → Receivables Aging</em> groups unpaid amounts by age (current / 31–60 / 61–90 / 91+ days), largest first. The <em>Outstanding</em> card on the dashboard opens the list of unpaid invoices.',
+                                '<strong>Reverse a payment</strong> entered by mistake. The receipt number stays in the log and the balance is restored.',
+                                '<strong>UPI or cheque reference</strong> prints on the receipt PDF.',
                             ],
                         ],
                         [
                             'id' => 'purchases',
                             'n' => 8,
-                            'title' => 'Track purchases & expenses',
+                            'title' => 'Track purchases and expenses',
                             'time' => 'as bills come in',
-                            'desc' => 'Invoices aren\'t the whole story, to get a real P&amp;L, capture money going out too. Apna Invoice gives you two purpose-built tools: <strong>Cash memos</strong> for documented cash purchases (the vendor doesn\'t issue you a tax invoice, so you generate one in your own books) and <strong>Expenses</strong> for everything else, rent, salaries, utilities, marketing, software.',
-                            'cta' => ['label' => 'Open Finance', 'href' => route('finance.index')],
+                            'desc' => 'Record money going out to get a true P&amp;L and claim input tax credit. Use <strong>Purchase invoices</strong> for supplier tax invoices, <strong>Cash memos</strong> for cash purchases where the seller gives no tax invoice (the voucher is made in your own books), and <strong>Expenses</strong> for everything else: rent, salaries, utilities, marketing, software.',
+                            'cta' => ['label' => 'New purchase invoice', 'href' => route('purchases.create')],
                             'tips' => [
-                                '<strong>Cash memo (purchase voucher).</strong> Records a purchase from a vendor with name, GSTIN, line items and HSN/SAC. The PDF is laid out as a professional Indian cash sale, seller letterhead at the top, "Bill To" with your details below, signature block. Same module shows your purchase history.',
-                                '<strong>Expenses.</strong> Logged with date, vendor, amount, GST input, and category (Rent, Salaries, Utilities, Marketing, etc.). Category colours flow into the dashboard P&amp;L so you can see where money goes at a glance.',
-                                '<strong>Both feed the P&amp;L.</strong> Cash memos and expenses both subtract from revenue in the Finance dashboard, accrual, cash and GST views all stay in sync.',
-                                '<strong>GST input captured.</strong> The GST portion is stored separately on each expense for ITC reconciliation when your CA files GSTR-3B.',
+                                '<strong>Purchase invoices.</strong> Enter the vendor, their invoice number and date, items and GST. The vendor\'s state is read from their GSTIN, so CGST + SGST or IGST is set correctly. Unpaid amounts show under <em>Payments Made</em> and in Payables Aging until you record the payment.',
+                                '<strong>Cash memo (purchase voucher).</strong> Records a purchase with the vendor\'s name, GSTIN, items and HSN/SAC. The PDF follows the usual Indian cash memo layout: seller letterhead at the top, your details under "Bill To", and a signature block. Past cash memos are listed in the same module.',
+                                '<strong>Expenses.</strong> Recorded with date, vendor, amount, GST input and category (rent, salaries, utilities, marketing, etc.). Categories carry through to the dashboard and P&amp;L.',
+                                '<strong>Both count in the P&amp;L.</strong> Cash memos and expenses are deducted from revenue in all three P&amp;L views: accrual, cash and GST.',
+                                '<strong>GST input.</strong> The GST on each expense is stored separately for ITC reconciliation when GSTR-3B is filed.',
                             ],
                         ],
                         [
-                            'id' => 'dashboard',
+                            'id' => 'bank',
                             'n' => 9,
-                            'title' => 'Track progress on the dashboard',
-                            'time' => 'glance',
-                            'desc' => 'The dashboard shows two numbers that actually matter: <strong>Bills issued</strong> (lifetime + this month) and <strong>Payments received</strong> (lifetime + this month). Plus outstanding, drafts, and monthly P&L.',
-                            'cta' => ['label' => 'Go to Dashboard', 'href' => route('dashboard')],
+                            'title' => 'Bank reconciliation',
+                            'time' => 'monthly',
+                            'desc' => 'Download your account statement from net banking as Excel or CSV and upload it under <em>Banking → Bank Reconciliation</em>. Each bank line is matched to a receipt, vendor payment or expense of the same amount within a few days.',
+                            'cta' => ['label' => 'Open bank reconciliation', 'href' => route('bank.index')],
                             'tips' => [
-                                '<strong>Outstanding</strong> = everything issued but not yet fully paid. It\'s your money-to-collect number.',
-                                '<strong>P&amp;L (3 views).</strong> Accrual (invoice-date), cash (when money actually moved), and GST (collected vs paid), switch with one click. A 30-second health check.',
-                                '<strong>Customer ledger.</strong> On any customer, click <em>Ledger</em> to see a Dr/Cr running balance, every invoice, payment and credit note in date order. Useful for monthly statements.',
-                                'Click any card to drill into the underlying list.',
+                                '<strong>Any bank.</strong> HDFC, SBI, ICICI, Axis, Kotak and others are read as downloaded, including statements with a single Amount and Dr/Cr column.',
+                                '<strong>Unmatched lines</strong> show what is missing in your books, with buttons to record the receipt or expense straight from the bank line.',
+                                '<strong>Overlapping statements are fine.</strong> Lines uploaded before are skipped.',
+                            ],
+                        ],
+                        [
+                            'id' => 'gst',
+                            'n' => 10,
+                            'title' => 'GST returns',
+                            'time' => 'monthly or quarterly',
+                            'desc' => 'Under <em>GST Returns</em>, choose the month or quarter. Figures come from your issued invoices, credit notes, purchase invoices, expenses and cash memos. Returns are prepared here and filed by you or your CA on the GST portal.',
+                            'cta' => ['label' => 'Open GSTR-1', 'href' => route('finance.gstr1')],
+                            'tips' => [
+                                '<strong>GSTR-1.</strong> All tables (B2B, B2CL, B2CS, credit notes, exports, nil-rated, HSN summary and documents issued). Download the JSON and upload it on the portal under <em>Returns → GSTR-1 → Prepare offline → Upload</em>, or the Excel file for the GST offline tool.',
+                                '<strong>GSTR-2B match.</strong> Download GSTR-2B from the portal (JSON, ZIP or Excel) and upload it here. Each supplier invoice is marked matched, amount mismatch, missing in your books, or not yet in 2B, so you claim only the credit you are entitled to.',
+                                '<strong>GSTR-3B.</strong> Table 3.1 (outward supplies, zero-rated, nil-rated and reverse charge), Table 4 (ITC) and Table 6.1 (tax payable), with input tax credit set off in the order Rule 88A requires. Download as PDF or CSV.',
+                                '<strong>Due dates</strong> are shown on each page: GSTR-1 by the 11th (13th for quarterly filers) and GSTR-3B by the 20th (22nd or 24th for quarterly filers, by state).',
                             ],
                         ],
                         [
                             'id' => 'reports',
-                            'n' => 10,
-                            'title' => 'Reports for your CA (and yourself)',
-                            'time' => 'monthly · sometimes weekly',
-                            'desc' => 'Apna Invoice generates four reports your CA actually asks for at month-end, all one click from the Dashboard\'s <em>Reports &amp; exports</em> panel, or the <em>Finance</em> tabs. Every report exports as both PDF (for review) and CSV (for spreadsheets, your accounting software, or GST portal upload).',
-                            'cta' => ['label' => 'Open Reports panel', 'href' => route('dashboard')],
+                            'n' => 11,
+                            'title' => 'Reports for your CA',
+                            'time' => 'monthly',
+                            'desc' => 'The month-end reports a CA asks for are in the dashboard\'s <em>Reports &amp; exports</em> panel, and under <em>Reports</em> and <em>GST Returns</em> in the menu. Reports export as PDF (for review) and CSV (for spreadsheets, accounting software or the GST portal).',
+                            'cta' => ['label' => 'Open reports', 'href' => route('reports.index')],
                             'tips' => [
-                                '<strong>Party Outstanding</strong> (<em>Finance → Aging</em>). Bucketed view of every unpaid invoice, Current (≤30 days) / 31–60 / 61–90 / 91+, aggregated per customer and sorted biggest-first. The single most-asked weekly question for any business owner: "who owes me what?". Send the PDF to a recovery agent, or the CSV to a CA.',
-                                '<strong>GSTR-3B Summary</strong> (<em>Finance → GSTR-3B</em>). Computed from your books for the selected month, Section 3.1 (outward + RCM), Section 4 (eligible ITC from purchases &amp; expenses), Section 6.1 (net cash payable). The big "Total cash to deposit" headline is the figure you pay via PMT-06. We don\'t auto-file; the PDF mirrors the GST portal form so transposing is easy.',
-                                '<strong>GSTR-1 CSV</strong> (<em>Invoices → Export → GSTR-1</em>). UTF-8 BOM, B2B + B2C split, place of supply, taxable value, CGST/SGST/IGST/cess columns. Drop into the GST portal\'s offline tool, or your CA imports it.',
-                                '<strong>Cash memo bulk export</strong> (<em>Finance → Cash Memos → Download PDF/CSV</em>). One CA-ready statement covering every cash purchase in the period, totals, payment-mode breakdown, amount in words. Email it instead of forwarding 30 individual memos.',
-                                '<strong>Expenses CSV</strong> &amp; <strong>Full data backup</strong> are also one click away from the Dashboard\'s <em>Reports</em> panel, the backup is a ZIP of every invoice, customer, payment and expense as CSVs, ready for any other tool.',
-                                '<strong>Books locked = audit-defensible.</strong> Once you set <em>Books locked until</em> in Company settings (e.g. 31 Mar after FY close), all the reports above stay accurate, no one can backdate edits into the locked period.',
+                                '<strong>Receivables Aging</strong> (<em>Reports → Receivables Aging</em>). Every unpaid invoice by age, current (up to 30 days) / 31–60 / 61–90 / 91+, totalled per customer and sorted largest first. Send the PDF to a recovery agent or the CSV to your CA.',
+                                '<strong>GSTR-3B summary</strong> (<em>GST Returns → GSTR-3B</em>). Worked out from your books for the selected month: Section 3.1 (outward supplies and RCM), Section 4 (eligible ITC from purchases and expenses) and Section 6.1 (net cash payable). "Total cash to deposit" is the amount to pay through PMT-06. The return is not filed for you; the PDF follows the portal form so the figures are easy to copy.',
+                                '<strong>GSTR-1</strong> (<em>GST Returns → GSTR-1</em>). JSON for upload on the portal, Excel for the GST offline tool, and a CSV of outward supplies for your CA.',
+                                '<strong>Cash memo export</strong> (<em>Purchases → Cash Memos</em>, PDF or CSV). One statement for every cash purchase in the period, with totals, payment-mode breakdown and amount in words.',
+                                '<strong>Expenses CSV</strong> and <strong>Full data backup</strong> are in the dashboard\'s <em>Reports &amp; exports</em> panel. The backup is a ZIP of every invoice, customer, payment and expense as CSV files.',
+                                '<strong>Locked books.</strong> After you set <em>Lock books up to</em> in Company settings (e.g. 31 Mar after year-end), entries in the locked period cannot be changed, so the reports above stay as filed.',
+                            ],
+                        ],
+                        [
+                            'id' => 'dashboard',
+                            'n' => 12,
+                            'title' => 'The dashboard',
+                            'desc' => 'The dashboard shows <strong>Bills issued</strong> and <strong>Payments received</strong> (lifetime and this month), with outstanding, drafts and this month\'s P&amp;L.',
+                            'cta' => ['label' => 'Open dashboard', 'href' => route('dashboard')],
+                            'tips' => [
+                                '<strong>Outstanding</strong> is everything issued but not fully paid: the amount still to collect.',
+                                '<strong>P&amp;L views.</strong> Accrual (by invoice date), cash (by payment date) and GST (collected vs paid).',
+                                '<strong>Customer ledger.</strong> Click <em>Ledger</em> on any customer for a running Dr/Cr balance of invoices, payments and credit notes in date order. Useful for monthly statements.',
+                                'Click any card to open the list behind it.',
+                                '<strong>Search everything.</strong> Type in the search box at the top to find an invoice or customer, or a page or action such as GSTR-1 or "add customer". Press <kbd>/</kbd> to jump to it.',
+                                '<strong>Help on every page.</strong> The <em>?</em> button at the top opens the part of this guide for the page you are on. <em>Take the tour</em> in the account menu shows where everything is.',
+                            ],
+                        ],
+                        [
+                            'id' => 'team',
+                            'n' => 13,
+                            'title' => 'Team access',
+                            'desc' => 'Invite your accountant, CA or billing staff under <em>Settings → Team</em>. Each person signs in with their own account and works in your business with the role you give them.',
+                            'cta' => ['label' => 'Open team', 'href' => route('team.index')],
+                            'tips' => [
+                                '<strong>Admin.</strong> Everything except managing the team, backups and deleting the business.',
+                                '<strong>Accountant / CA.</strong> Sales, purchases, expenses, GST returns, banking and reports. Cannot change company settings or the team.',
+                                '<strong>Billing staff.</strong> Quotations, invoices, payments received, customers and items. Cannot see purchases, accounts or GST, and cannot cancel or delete.',
+                                '<strong>Activity log.</strong> Every change a team member makes is recorded with their name.',
                             ],
                         ],
                         [
                             'id' => 'faq',
-                            'n' => 11,
-                            'title' => 'Frequently asked',
+                            'n' => 14,
+                            'title' => 'Frequently asked questions',
                             'desc' => null,
                             'faq' => [
-                                ['q' => 'Is my data secure?', 'a' => 'Yes, all data sits in Indian jurisdiction, each invoice/customer/payment is scoped to your user & company, and we never share it. Deletion of data you own is permanent.'],
-                                ['q' => 'Can I run multiple businesses?', 'a' => 'Yes. Use the <em>Companies</em> section to add more than one, each with its own GSTIN, invoice series and customers. Switch between them using the dropdown at the top of the page.'],
-                                ['q' => 'What\'s the difference between a Quotation and an Invoice?', 'a' => 'A <strong>Quotation</strong> is a price proposal you send <em>before</em> a sale, no GST is collected, nothing is reported to the GSTN, and the customer is just being told "this is what it would cost." A <strong>Tax Invoice</strong> is the legal sale document, GST is officially charged, the invoice number is locked, and it goes on GSTR-1 / GSTR-3B. In Apna Invoice, once the customer accepts a quote, click <em>Convert to Invoice</em> to turn it into a draft tax invoice in one click, same line items, ready for you to finalize.'],
-                                ['q' => 'What if I need to cancel an issued invoice?', 'a' => 'Open the invoice and click <strong>Cancel invoice</strong>. You\'ll be asked for a short reason, this is stored on the invoice so the audit trail stays complete. Cancelled invoices keep their invoice number (never reused), stop accepting further payments, and the 30-day public share link is revoked. If you need to refund money already collected, issue a credit note.'],
-                                ['q' => 'How do I export data for my CA / GSTR-1 / GSTR-3B filing?', 'a' => 'See <strong>Section 10, Reports for your CA</strong>. Quick links: <em>Invoices → Export → GSTR-1 CSV</em> for outward supplies (B2B/B2C, place of supply, CGST/SGST/IGST split), and <em>Finance → GSTR-3B</em> for the monthly summary computed from your books (sections 3.1, 4, 6.1 with PDF + CSV). All exports are UTF-8 with BOM so Excel opens them cleanly.'],
-                                ['q' => 'How do I see who owes me money, and how old the dues are?', 'a' => 'Open <strong>Finance → Aging</strong>. You\'ll get four buckets, Current (≤30 days) / 31–60 / 61–90 / 91+, with a per-customer breakdown sorted by largest outstanding first. Click any customer to drill into their ledger. Anything in the 91+ bucket is highlighted as urgent (recovery probability drops sharply beyond 90 days). Export the whole report as PDF or CSV to send to a recovery agent or your CA.'],
-                                ['q' => 'Do I have to file GSTR-3B from Apna Invoice?', 'a' => 'No, Apna Invoice <strong>computes</strong> the GSTR-3B summary from your invoices, expenses and cash sales, but doesn\'t auto-submit to the GSTN portal. Open <em>Finance → GSTR-3B</em>, pick the month, verify against your GSTR-1 filings and ITC ledger, then either you or your CA submits on the GST portal. The PDF is laid out to mirror the GSTR-3B form so transposing is straightforward.'],
-                                ['q' => 'How do I close books at year-end so old invoices can\'t be edited?', 'a' => 'In <strong>Company settings → Books locked until</strong>, set a date (e.g. 31 March). After that date is locked, the app blocks editing/deleting any invoice, payment, expense, cash sale or credit note dated on or before it. The audit trail logs the lock, auditors love this.'],
-                                ['q' => 'Can I see a running statement for a single customer?', 'a' => 'Yes. Open <strong>Customers</strong>, click any name, then <em>Ledger</em>. You\'ll see every invoice, payment and credit note for that customer in date order with a running Dr/Cr balance, perfect for sending a monthly statement or chasing dues.'],
-                                ['q' => 'Can customers pay via UPI directly?', 'a' => 'If you\'ve added your UPI ID in Company settings, every invoice PDF carries a UPI QR, customer scans, pays, done.'],
-                                ['q' => 'How do I back up my data?', 'a' => 'Go to <strong>Backups</strong> (in your profile menu) and either download a ZIP right now or enable weekly auto-backup, every Sunday morning we\'ll email a ZIP of all your invoices, customers, products, payments and expenses as CSVs.'],
-                                ['q' => 'How do referrals work?', 'a' => 'Every account gets a unique referral code (like <span class="font-mono">AI-K4X9</span>). Open <strong>Refer a friend</strong> to copy your code, share via WhatsApp or email, and track who signed up using it. Pending / Rewarded status is tracked so you always know where your referrals stand.'],
+                                ['q' => 'Is my data secure?', 'a' => 'Yes. Data is kept separate for each account and company, and never sold or shared.'],
+                                ['q' => 'Can I run more than one business?', 'a' => 'Yes. Add more firms under <em>Company</em>, each with its own GSTIN, invoice series and customers. Switch between them from the firm menu at the top of the page.'],
+                                ['q' => 'What is the difference between a quotation and an invoice?', 'a' => 'A <strong>quotation</strong> is a price proposal sent <em>before</em> a sale. No GST is charged and nothing is reported. A <strong>tax invoice</strong> is the legal sale document: GST is charged, the invoice number is fixed and it is reported in GSTR-1 and GSTR-3B. When a customer accepts a quotation, click <em>Convert to invoice</em> to create a draft tax invoice with the same items.'],
+                                ['q' => 'How do I cancel an issued invoice?', 'a' => 'Open the invoice, click <strong>Cancel invoice</strong> and enter a short reason. The reason is stored on the invoice for the audit trail. A cancelled invoice keeps its number (never reused), accepts no further payments, and its public link stops working. To refund money already collected, issue a credit note.'],
+                                ['q' => 'How do I export data for my CA or for GSTR-1 and GSTR-3B?', 'a' => 'See <strong>Section 10, GST returns</strong>. <em>GST Returns → GSTR-1</em> gives the JSON to upload on the portal and the Excel file for the offline tool, and <em>GST Returns → GSTR-3B</em> gives the summary from your books (tables 3.1, 4 and 6.1, as PDF and CSV). All CSV files are UTF-8 with BOM so Excel opens them correctly.'],
+                                ['q' => 'How do I see who owes me money, and for how long?', 'a' => 'Open <strong>Reports → Receivables Aging</strong>. It shows four buckets, current (up to 30 days) / 31–60 / 61–90 / 91+, with a per-customer breakdown, largest first. Click a customer to open their ledger. Amounts over 90 days are highlighted. Export the report as PDF or CSV for a recovery agent or your CA.'],
+                                ['q' => 'Is GSTR-3B filed from Apna Invoice?', 'a' => 'No. Apna Invoice <strong>works out</strong> the GSTR-3B summary from your invoices, expenses and cash memos but does not file it. Open <em>GST Returns → GSTR-3B</em>, choose the month, check it against your GSTR-1 and ITC ledger, then file on the GST portal yourself or through your CA. The PDF follows the GSTR-3B form layout.'],
+                                ['q' => 'How do I close the books at year-end?', 'a' => 'In <strong>Company settings → Lock books up to</strong>, set a date (e.g. 31 March). Invoices, payments, expenses, cash memos and credit notes dated on or before it can then no longer be edited or deleted. The lock is recorded in the activity log.'],
+                                ['q' => 'Can I see a running statement for one customer?', 'a' => 'Yes. Open <strong>Customers</strong> and click <em>Ledger</em> next to the name. It lists every invoice, payment and credit note for that customer in date order with a running Dr/Cr balance, ready to send as a monthly statement.'],
+                                ['q' => 'Can customers pay by UPI?', 'a' => 'Yes. Add your UPI ID in Company settings and every invoice PDF carries a UPI QR code for the customer to scan and pay.'],
+                                ['q' => 'How do I back up my data?', 'a' => 'Open <strong>Settings → Backups</strong> in the menu. Download a ZIP now, or turn on the weekly backup: every Sunday morning a ZIP of your invoices, customers, products, payments and expenses (as CSV files) is emailed to you.'],
+                                ['q' => 'How do referrals work?', 'a' => 'Every account has a referral code (like <span class="font-mono">AI-K4X9</span>). Open <strong>Refer a friend</strong> to copy the code and share it on WhatsApp or by email. When a friend signs up with your code and issues their first invoice, you get <strong>lifetime free access</strong> to Apna Invoice. One friend is enough.'],
                             ],
                         ],
                     ];
@@ -293,49 +351,50 @@
                 <section id="scope" class="scroll-mt-24">
                     <div class="bg-accent-50 border border-accent-200 rounded-2xl p-6 sm:p-8">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-accent-100 text-accent-700 font-display font-extrabold flex items-center justify-center">12</div>
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-accent-100 text-accent-700 font-display font-extrabold flex items-center justify-center">15</div>
                             <div class="flex-1 min-w-0">
-                                <h2 class="font-display text-xl sm:text-2xl font-extrabold text-accent-900">What Apna Invoice doesn't (yet) cover</h2>
+                                <h2 class="font-display text-xl sm:text-2xl font-extrabold text-accent-900">Not supported yet</h2>
                                 <p class="mt-2 text-accent-800 leading-relaxed">
-                                    We're built for small-to-mid Indian businesses doing domestic GST-taxable supplies.
-                                    A few Indian GST scenarios are <strong>intentionally out of scope</strong> today, if any
-                                    describe your workflow, we probably aren't the right tool yet.
+                                    Apna Invoice is built for small and mid-sized Indian businesses.
+                                    The following GST cases are <strong>not supported</strong> at present.
                                 </p>
                                 <ul class="mt-4 space-y-3 text-sm text-accent-900">
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>E-invoicing (IRN / signed QR via NIC IRP).</strong> Mandatory since Aug 2023 for businesses with aggregate turnover above <strong>₹5 crore</strong>. We don't generate IRNs, if you're in this bracket you'll need a GSP/ASP integration too.</span>
+                                        <span><strong>E-invoicing (IRN and signed QR from the NIC IRP).</strong> Mandatory since August 2023 for businesses with aggregate turnover above <strong>₹5 crore</strong>. IRNs are not generated here; businesses above this limit also need a GSP/ASP integration.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>Auto-filing to the GSTN portal.</strong> We don't submit returns directly. We <em>do</em> compute and export both <strong>GSTR-1</strong> (B2B/B2C CSV with HSN summary, Table 12 format) and <strong>GSTR-3B</strong> (sections 3.1 / 4 / 6.1 as PDF + CSV), your CA imports / transcribes the figures and submits on the GST portal. No GSP/ASP integration.</span>
+                                        <span><strong>Filing returns on the GST portal.</strong> Returns are not filed from the app. <strong>GSTR-1</strong> (portal JSON and offline-tool Excel) and <strong>GSTR-3B</strong> (tables 3.1, 4 and 6.1 as PDF and CSV) are prepared for you or your CA to file on the portal. There is no GSP/ASP integration.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>Exports, SEZ supplies, multi-currency.</strong> Invoices meant for export under LUT / Bond, SEZ unit supplies, or billing in USD/EUR/AED etc. We hard-code INR and the standard domestic tax-invoice format.</span>
+                                        <span><strong>Multi-currency billing.</strong> All invoices, including export and SEZ invoices, are billed in INR. Billing in USD, EUR, AED or other currencies is not available.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>Compensation cess.</strong> Demerit goods (tobacco, aerated drinks, luxury automobiles) attract GST + a separate compensation cess. We support the GST part but don't have a cess line today.</span>
+                                        <span><strong>Compensation cess.</strong> Goods such as tobacco, aerated drinks and luxury cars attract a compensation cess on top of GST. GST is supported; there is no cess line yet.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>E-way bill auto-generation.</strong> We capture the E-way bill number if you have one, but we don't call the ewaybillgst.gov.in API to generate it. For goods movement above ₹50,000 you'll still need to generate the EWB there.</span>
+                                        <span><strong>E-way bill generation.</strong> You can record an e-way bill number, but it is not generated from ewaybillgst.gov.in. For goods movement above ₹50,000, generate the e-way bill on that portal.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>TCS under Section 52 (e-commerce operators).</strong> We support <strong>TDS deducted by your customers</strong> (Section 194-x &amp; 51) on incoming payments, but not TCS that you'd collect as an e-commerce platform.</span>
+                                        <span><strong>TCS under Section 52 (e-commerce operators).</strong> <strong>TDS deducted by your customers</strong> (Section 194-x and 51) is supported on payments received; TCS collected as an e-commerce operator is not.</span>
                                     </li>
                                 </ul>
                                 <div class="mt-5 p-4 bg-white/60 rounded-lg border border-accent-200">
-                                    <div class="text-xs uppercase tracking-wider font-bold text-accent-800">What we DO cover</div>
+                                    <div class="text-xs uppercase tracking-wider font-bold text-accent-800">Supported</div>
                                     <p class="mt-2 text-sm text-accent-900 leading-relaxed">
-                                        Domestic tax invoices with CGST+SGST / IGST auto-split · HSN/SAC with UQC units ·
-                                        FY-reset invoice numbering · <strong>Composition scheme + auto Bill of Supply</strong> · <strong>Per-line discount (Section 15(3))</strong> · <strong>TDS deduction tracking (Section 194-x &amp; 51)</strong> ·
+                                        Tax invoices with CGST + SGST or IGST · Export and SEZ invoices (with IGST or under LUT) · HSN/SAC with UQC units ·
+                                        Invoice numbering that restarts each financial year · <strong>Composition scheme with Bill of Supply</strong> · <strong>Line discount (Section 15(3))</strong> · <strong>TDS deduction tracking (Section 194-x and 51)</strong> ·
                                         Credit notes (Section 34) · Reverse charge ·
-                                        Place of supply &amp; separate ship-to · Partial payments with receipt numbering · <strong>Cash memo / purchase voucher</strong> · <strong>Customer ledger (Dr/Cr running balance)</strong> ·
-                                        Invoice cancellation with audit trail · Transporter / e-way bill number capture · <strong>Books period lock (FY close protection)</strong> · <strong>Activity log (who-did-what)</strong> · <strong>GSTR-1 CSV export</strong> ·
-                                        Multi-company / multi-GSTIN · UPI QR on invoice · Amount in words (Indian lakhs/crores).
+                                        Place of supply and separate ship-to address · Part payments with receipt numbering · <strong>Cash memo / purchase voucher</strong> · <strong>Customer ledger (Dr/Cr running balance)</strong> ·
+                                        Invoice cancellation with audit trail · Transporter and e-way bill number · <strong>Books lock after year-end</strong> · <strong>Activity log</strong> ·
+                                        <strong>GSTR-1 JSON and Excel</strong> · <strong>GSTR-2B matching</strong> · <strong>GSTR-3B with Rule 88A set-off</strong> · <strong>Purchase invoices and payments made</strong> ·
+                                        <strong>Bank reconciliation</strong> · <strong>Stock tracking</strong> · <strong>Team access with roles</strong> · Import from Excel ·
+                                        Multiple companies and GSTINs · UPI QR on invoices · Amount in words (lakh/crore).
                                     </p>
                                 </div>
                             </div>
@@ -344,10 +403,10 @@
                 </section>
 
                 <div class="bg-gradient-to-br from-brand-900 to-accent-900 text-white rounded-2xl p-6 sm:p-8 shadow-brand">
-                    <h2 class="font-display text-xl font-extrabold">Still stuck?</h2>
+                    <h2 class="font-display text-xl font-extrabold">Contact support</h2>
                     <p class="mt-2 text-brand-100 text-sm leading-relaxed">
-                        WhatsApp or call us, fastest way to get unstuck during business hours (9.30 am – 7 pm IST, Mon–Sat).
-                        We reply to every support email too, usually within a business day.
+                        WhatsApp or call us between 9.30 am and 7 pm IST, Monday to Saturday.
+                        Emails are usually answered within one business day.
                     </p>
                     <div class="mt-4 flex flex-wrap gap-2">
                         <a href="{{ config('seo.contact.whatsapp_url') }}?text={{ urlencode('Hi Apna Invoice team, I need help with…') }}" target="_blank" rel="noopener"
@@ -361,7 +420,7 @@
                             Call
                         </a>
                         <a href="{{ route('pages.contact') }}" class="inline-flex items-center gap-2 px-4 py-2 text-accent-300 hover:text-accent-200 text-sm font-semibold underline">
-                            Email / contact form →
+                            Email or contact form →
                         </a>
                     </div>
                 </div>

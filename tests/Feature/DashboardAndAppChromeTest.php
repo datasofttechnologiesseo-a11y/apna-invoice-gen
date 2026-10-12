@@ -58,8 +58,8 @@ class DashboardAndAppChromeTest extends TestCase
 
         // The headline is the invoiced total, with the collected figure as the
         // supporting line - not the other way round.
-        $response->assertSee('title="₹1,18,000.00"', false);
-        $response->assertSee('₹20,000.00 received', false);
+        $response->assertSee('title="₹1,18,000"', false);
+        $response->assertSee('₹20,000 received', false);
         $response->assertSee('17%', false);   // 20,000 of 1,18,000
     }
 

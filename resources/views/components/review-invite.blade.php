@@ -1,14 +1,14 @@
-@props(['show' => false])
+@props(['show' => false, 'delay' => 0])
 
 {{--
     Google review invite.
 
-    Shown on the dashboard once the user has issued an invoice, and again a
-    week later if they put it off - until they click "Write a review" or
-    "I've already reviewed", after which it never returns. Deliberately not
-    on the invoice screen: that page already congratulates them, and its job
-    is to get the bill sent - a modal over the share buttons would block the
-    very thing being celebrated.
+    Shown to new and existing users alike - on the first dashboard after
+    registration, and right after every second invoice they issue - until
+    they click "Write a review" or "I've already reviewed", after which it
+    never returns (App\Services\ReviewPrompt). On the invoice page it opens
+    after a short delay so the issued bill is seen first, and closes with
+    one click.
 
     The poster carries its own QR code, which is what a phone user will scan.
     A clickable button is added on top only when GOOGLE_REVIEW_URL is set,
@@ -20,7 +20,7 @@
     {{-- given(): tell the server the review is done so the invite retires.
          Fire-and-forget; the modal closes either way. --}}
     <div x-data="{
-            open: true,
+            open: {{ $delay ? 'false' : 'true' }},
             given() {
                 fetch('{{ route('review-invite.given') }}', {
                     method: 'POST',
@@ -29,6 +29,7 @@
                 this.open = false;
             },
          }"
+         x-init="{{ $delay ? 'setTimeout(() => open = true, ' . (int) $delay . ')' : '' }}"
          x-show="open"
          x-cloak
          @keydown.escape.window="open = false"
@@ -84,7 +85,7 @@
                 @endif
                 <button type="button" @click="open = false"
                         class="w-full sm:w-auto px-5 py-3 text-sm font-semibold text-gray-600 hover:text-gray-900 transition">
-                    Maybe later
+                    Not now
                 </button>
             </div>
 
@@ -93,7 +94,7 @@
             <div class="px-5 pb-4 -mt-2 text-center">
                 <button type="button" @click="given()"
                         class="text-xs text-gray-500 hover:text-gray-800 underline underline-offset-2 transition">
-                    I've already reviewed - don't ask again
+                    I've already reviewed. Don't ask again.
                 </button>
             </div>
         </div>

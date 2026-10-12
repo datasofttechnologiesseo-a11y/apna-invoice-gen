@@ -2,25 +2,26 @@
     title="Cookie Settings"
     eyebrow="Preferences"
     lead="Control which cookies Apna Invoice uses. Essential cookies are always on because the product can't function without them."
-    description="Manage your Apna Invoice cookie preferences, essential, analytics, and marketing. Settings are stored locally and respected across the site."
+    description="Manage your Apna Invoice cookie preferences: essential, analytics and marketing. Your choice is stored in your browser and applied across the site."
     keywords="Apna Invoice cookies, cookie preferences India, GDPR cookies, DPDP cookies, SaaS cookie settings"
-    type="article">
+    type="article"
+    :legal="true">
 
     {{-- The three category cards below are h3s. Without a section heading the
          document jumped h1 -> h3, which breaks the outline for screen readers
          and for search engines reading page structure. --}}
     <h2>Your cookie preferences</h2>
 
-    <div class="not-prose mt-4 space-y-4" x-data="cookiePrefs()" x-init="load()">
+    <div class="mt-5 space-y-3" x-data="cookiePrefs()" x-init="load()">
 
         <div class="p-5 rounded-xl ring-1 ring-gray-200 bg-gray-50">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="font-display font-bold text-gray-900">Essential</h3>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-600">Always on</span>
+                        <span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-gray-200 text-gray-700">Always on</span>
                     </div>
-                    <p class="mt-1 text-sm text-gray-600">Authentication, CSRF protection, and security. The product cannot function without these.</p>
+                    <p class="mt-1 text-[15px] text-gray-600 leading-relaxed">Authentication, CSRF protection, and security. The product cannot function without these.</p>
                 </div>
                 <span class="inline-flex items-center h-6 w-11 rounded-full bg-brand-600 flex-shrink-0">
                     <span class="ml-5 h-5 w-5 rounded-full bg-white shadow"></span>
@@ -28,11 +29,11 @@
             </div>
         </div>
 
-        <div class="p-5 rounded-xl ring-1 ring-gray-200 bg-white">
+        <div class="p-5 rounded-xl ring-1 ring-gray-200 bg-white shadow-sm">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 class="font-display font-bold text-gray-900">Analytics</h3>
-                    <p class="mt-1 text-sm text-gray-600">Helps us understand which features are used so we can improve the product. Aggregated, never sold.</p>
+                    <p class="mt-1 text-[15px] text-gray-600 leading-relaxed">Helps us understand which features are used so we can improve the product. Aggregated, never sold.</p>
                 </div>
                 <button type="button" @click="prefs.analytics = !prefs.analytics"
                     role="switch" :aria-checked="prefs.analytics ? 'true' : 'false'"
@@ -44,11 +45,11 @@
             </div>
         </div>
 
-        <div class="p-5 rounded-xl ring-1 ring-gray-200 bg-white">
+        <div class="p-5 rounded-xl ring-1 ring-gray-200 bg-white shadow-sm">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 class="font-display font-bold text-gray-900">Marketing</h3>
-                    <p class="mt-1 text-sm text-gray-600">Measure effectiveness of campaigns and show relevant content on other sites.</p>
+                    <p class="mt-1 text-[15px] text-gray-600 leading-relaxed">Measure the effectiveness of campaigns and show relevant content on other sites.</p>
                 </div>
                 <button type="button" @click="prefs.marketing = !prefs.marketing"
                     role="switch" :aria-checked="prefs.marketing ? 'true' : 'false'"
@@ -60,20 +61,20 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-3 pt-2">
-            <button type="button" @click="save()" class="px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition">Save preferences</button>
-            <button type="button" @click="acceptAll()" class="px-5 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold transition">Accept all</button>
-            <button type="button" @click="rejectAll()" class="px-5 py-2.5 rounded-lg ring-1 ring-gray-300 hover:bg-gray-50 text-gray-700 font-semibold transition">Reject non-essential</button>
+        <div class="flex flex-wrap gap-3 pt-3">
+            <button type="button" @click="save()" class="inline-flex items-center min-h-[44px] px-5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition-colors">Save preferences</button>
+            <button type="button" @click="acceptAll()" class="inline-flex items-center min-h-[44px] px-5 rounded-lg bg-white ring-1 ring-gray-300 hover:ring-gray-400 text-gray-800 font-semibold transition">Accept all</button>
+            <button type="button" @click="rejectAll()" class="inline-flex items-center min-h-[44px] px-5 rounded-lg bg-white ring-1 ring-gray-300 hover:ring-gray-400 text-gray-800 font-semibold transition">Reject non-essential</button>
             <span x-show="saved" x-transition class="self-center text-sm text-money-700 font-medium">✓ Saved</span>
         </div>
     </div>
 
     <h2>What we use</h2>
     <ul>
-        <li><strong>Session cookies</strong> (essential), keep you logged in.</li>
-        <li><strong>XSRF-TOKEN</strong> (essential), protects against cross-site request forgery.</li>
-        <li><strong>Product analytics</strong> (optional), anonymous feature-usage metrics.</li>
-        <li><strong>Marketing</strong> (optional), ad measurement pixels for campaigns.</li>
+        <li><strong>Session cookies</strong> (essential): keep you logged in.</li>
+        <li><strong>XSRF-TOKEN</strong> (essential): protects against cross-site request forgery.</li>
+        <li><strong>Product analytics</strong> (optional): anonymous feature-usage metrics.</li>
+        <li><strong>Marketing</strong> (optional): ad measurement pixels for campaigns.</li>
     </ul>
 
     <p>

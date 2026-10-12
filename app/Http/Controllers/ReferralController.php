@@ -23,11 +23,16 @@ class ReferralController extends Controller
             'rewarded'  => $referrals->where('reward_status', 'rewarded')->count(),
         ];
 
+        // Who earned the reward first, for the "lifetime free access" banner.
+        $rewardedBy = $referrals->where('reward_status', 'rewarded')->sortBy('rewarded_at')->first();
+
         $shareUrl = url('/register?ref=' . $code);
-        $shareText = "I've been using Apna Invoice for GST-compliant billing — it's free and actually works. Sign up with my code: {$code}\n\n{$shareUrl}";
+        $shareText = "I use Apna Invoice for GST billing. It is free to use. Sign up with my code: {$code}\n\n{$shareUrl}";
 
         return view('referrals.index', [
             'code' => $code,
+            'lifetimeFreeAt' => $user->lifetime_free_at,
+            'rewardedBy' => $rewardedBy?->referee?->name,
             'referrals' => $referrals,
             'stats' => $stats,
             'shareUrl' => $shareUrl,

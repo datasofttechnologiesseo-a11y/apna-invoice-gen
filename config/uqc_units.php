@@ -51,7 +51,7 @@ return [
     /** Kind: GOODS need HSN (4/6/8 digits), SERVICES need SAC (starts with 99). */
     'kinds' => [
         'goods'    => 'Goods (HSN code)',
-        'service'  => 'Service (SAC code - starts with 99)',
+        'service'  => 'Service (SAC code, starts with 99)',
     ],
 
 ];

@@ -51,7 +51,7 @@
                         :action="route('quotations.send', $quotation)"
                         method="POST"
                         title="Mark as sent?"
-                        message="This assigns the quote number and locks the quotation against further edits. You can still mark it as accepted, declined, or convert it later."
+                        message="This assigns the quote number and locks the quotation. You can still mark it accepted or declined, or convert it to an invoice."
                         confirm-label="Mark as sent"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default">
@@ -67,7 +67,7 @@
                         :action="route('quotations.accept', $quotation)"
                         method="POST"
                         title="Mark as accepted?"
-                        message="The customer has confirmed this quote - record their acceptance. You can then convert it to a tax invoice."
+                        message="Record that the customer accepted this quote. You can then convert it to a tax invoice."
                         confirm-label="Mark as accepted"
                         confirm-class="bg-money-700 hover:bg-money-800"
                         tone="default">
@@ -88,7 +88,7 @@
                         :action="route('quotations.convert', $quotation)"
                         method="POST"
                         title="Convert to tax invoice?"
-                        message="A new draft invoice will be created with these line items. The quote is then locked. Review and click Issue to send the tax invoice."
+                        message="A draft invoice is created with these line items and the quote is locked. Review the draft, then issue it."
                         confirm-label="Convert to invoice"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default">
@@ -107,7 +107,7 @@
                         :action="route('quotations.destroy', $quotation)"
                         method="DELETE"
                         title="Delete this draft?"
-                        message="This draft quotation and its line items are permanently removed. This cannot be undone."
+                        message="The draft quotation and its line items will be deleted. This cannot be undone."
                         confirm-label="Delete draft"
                         confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
@@ -126,7 +126,7 @@
             <form method="POST" action="{{ route('quotations.decline', $quotation) }}" class="p-5 sm:p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 @csrf
                 <h2 class="font-display font-bold text-lg text-gray-900">Mark as declined?</h2>
-                <p class="text-sm text-gray-600">Record that the customer chose not to proceed. Optionally note why - useful for follow-ups.</p>
+                <p class="text-sm text-gray-600">Record that the customer did not accept this quote.</p>
                 <div>
                     <x-input-label for="decline_reason" value="Reason (optional)" />
                     <textarea id="decline_reason" name="decline_reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" maxlength="500" placeholder="e.g. Going with a different vendor"></textarea>
@@ -176,9 +176,9 @@
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>
                         @if ($daysLeft < 0)
-                            <strong>Expired</strong> {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago - the quote can still be marked accepted or converted, but the price you committed to has lapsed.
+                            <strong>Expired</strong> {{ abs($daysLeft) }} day{{ abs($daysLeft) === 1 ? '' : 's' }} ago. It can still be marked accepted or converted, but the quoted validity has lapsed.
                         @else
-                            Expires in <strong>{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }}</strong> - follow up with the customer.
+                            Expires in <strong>{{ $daysLeft }} day{{ $daysLeft === 1 ? '' : 's' }}</strong>. Follow up with the customer.
                         @endif
                     </span>
                 </div>
@@ -201,7 +201,7 @@
                         on {{ $quotation->declined_at->format('d M Y') }}
                     @endif
                     @if ($quotation->decline_reason)
-                        - {{ $quotation->decline_reason }}
+                        · Reason: {{ $quotation->decline_reason }}
                     @endif
                 </div>
             @endif
@@ -209,7 +209,7 @@
             @if ($eff === 'expired')
                 <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-lg text-sm">
                     <span class="font-semibold">This quotation has expired.</span>
-                    Validity ended on {{ $quotation->valid_until->format('d M Y') }}. You can still mark it accepted or convert it if the customer agrees, or duplicate it as a fresh quote.
+                    Validity ended on {{ $quotation->valid_until->format('d M Y') }}. You can still mark it accepted or convert it if the customer agrees.
                 </div>
             @endif
 
@@ -249,11 +249,11 @@
                         @if ($quotation->is_interstate)
                             <span class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded text-xs font-medium">Inter-state (IGST)</span>
                         @else
-                            <span class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded text-xs font-medium">Intra-state (CGST + SGST)</span>
+                            <span class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded text-xs font-medium">Intra-state (CGST + {{ $quotation->stateTaxLabel() }})</span>
                         @endif
                     </div>
                     <div class="mt-3 text-xs text-gray-500 uppercase tracking-wider">Grand total</div>
-                    <div class="mt-1 text-2xl font-mono font-bold text-gray-900">₹{{ inr($quotation->grand_total) }}</div>
+                    <div class="mt-1 text-2xl font-mono font-bold text-gray-900">₹{{ rupees($quotation->grand_total) }}</div>
                     <div class="text-[10px] text-gray-500">{{ $amountInWords }}</div>
                 </div>
             </div>
@@ -332,7 +332,7 @@
                         <div class="flex justify-between"><span>Subtotal</span><span class="font-mono">{{ inr($quotation->subtotal) }}</span></div>
                         @if (! $quotation->is_interstate)
                             <div class="flex justify-between"><span>CGST</span><span class="font-mono">{{ inr($quotation->total_cgst) }}</span></div>
-                            <div class="flex justify-between"><span>SGST</span><span class="font-mono">{{ inr($quotation->total_sgst) }}</span></div>
+                            <div class="flex justify-between"><span>{{ $quotation->stateTaxLabel() }}</span><span class="font-mono">{{ inr($quotation->total_sgst) }}</span></div>
                         @else
                             <div class="flex justify-between"><span>IGST</span><span class="font-mono">{{ inr($quotation->total_igst) }}</span></div>
                         @endif
@@ -340,7 +340,7 @@
                             <div class="flex justify-between text-gray-500"><span>Round-off</span><span class="font-mono">{{ inr($quotation->round_off) }}</span></div>
                         @endif
                         <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono">₹{{ inr($quotation->grand_total) }}</span></div>
-                        <p class="pt-3 text-[11px] text-gray-500 italic">This is a quotation, not a tax invoice. No GST is collected or filed at this stage. Convert to a tax invoice once accepted.</p>
+                        <p class="pt-3 text-[11px] text-gray-500 italic">This is a quotation, not a tax invoice. No GST is charged or reported on it.</p>
                     </div>
                 </div>
             </div>

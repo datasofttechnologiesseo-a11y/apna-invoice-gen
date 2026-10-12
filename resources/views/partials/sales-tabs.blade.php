@@ -10,7 +10,7 @@
     Optional:
         $stats = [
             'invoices'  => ['total' => 12, 'open' => 3],         // open = outstanding (unpaid)
-            'purchases' => ['total' => 40, 'this_month' => 4],   // bills recorded this month
+            'purchases' => ['total' => 40, 'unpaid' => 4],       // unpaid = still owed to vendors
         ]
         Backwards-compat: if a legacy `$counts` array is passed
         (`['invoices' => 12, ...]`) it's normalised into the new shape so
@@ -26,9 +26,9 @@
     $tabs = [
         [
             'key' => 'invoices',
-            'label' => 'Sales Bills',
+            'label' => 'Sales Invoice',
             'href' => route('invoices.index'),
-            'desc' => 'GSTR-1 reportable · official sale documents',
+            'desc' => 'Bills you issued · reported in GSTR-1',
             // Document with embedded check - distinct from quotation envelope
             'icon' => 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
             'theme' => [
@@ -53,8 +53,8 @@
         ],
         [
             'key' => 'purchases',
-            'label' => 'Purchase Bills',
-            'href' => route('finance.expenses'),
+            'label' => 'Purchase Invoice',
+            'href' => route('purchases.index'),
             'desc' => 'Bills you received · input tax credit for GSTR-3B',
             // Inbox-tray / "bills coming in" icon
             'icon' => 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
@@ -70,14 +70,16 @@
                 'cta_bg'          => 'bg-brand-700 hover:bg-brand-800',
                 'bg_active'       => 'bg-gradient-to-br from-brand-50/80 via-white to-accent-50/30',
             ],
-            'create_route' => route('finance.expenses.create'),
-            'create_label' => 'Add purchase',
-            'stat_key'   => 'this_month',
-            'stat_label' => 'this month',
-            'stat_zero'  => 'None this month',
+            'create_route' => route('purchases.create'),
+            'create_label' => 'New purchase invoice',
+            'stat_key'   => 'unpaid',
+            'stat_label' => 'unpaid',
+            'stat_zero'  => 'All paid',
             'stat_tone'  => 'accent',
         ],
     ];
+    // Billing staff don't see purchases.
+    $tabs = array_values(array_filter($tabs, fn ($t) => $t['key'] !== 'purchases' || \App\Support\Team::can('purchases.index')));
 
     // Resolve the active tab's accent stripe for the top of the card.
     $activeStripe = collect($tabs)->firstWhere('key', $active)['theme']['stripe']
@@ -163,7 +165,7 @@
                      positioned so the row click target stays as one big link. --}}
                 @if ($isActive)
                     <a href="{{ $tab['create_route'] }}"
-                       class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 {{ $t['cta_bg'] }} text-white text-xs font-semibold rounded-md shadow-sm transition"
+                       class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 {{ $t['cta_bg'] }} text-white text-xs font-semibold rounded-md shadow-sm transition"
                        title="{{ $tab['create_label'] }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                         <span class="hidden sm:inline">{{ $tab['create_label'] }}</span>

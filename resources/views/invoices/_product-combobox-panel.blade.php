@@ -29,7 +29,7 @@
 
     {{-- Empty hint --}}
     <template x-if="!combo.loading && combo.results.length === 0 && !combo.search.trim()">
-        <div class="px-3 py-2 text-xs text-gray-500">Start typing a product name…</div>
+        <div class="px-3 py-2 text-xs text-gray-500">Type to search products</div>
     </template>
 
     {{-- Results list --}}
@@ -41,13 +41,16 @@
                 :class="combo.highlight === idx ? 'bg-brand-50' : ''">
             <div class="flex items-baseline justify-between gap-2">
                 <span class="font-medium text-gray-900 truncate" x-text="p.name"></span>
-                <span class="text-xs font-mono text-gray-700">₹ <span x-text="parseFloat(p.rate || 0).toFixed(2)"></span></span>
+                <span class="text-xs font-mono text-gray-700">₹ <span x-text="(v => v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }))(Math.round((parseFloat(p.rate) || 0) * 100) / 100)"></span></span>
             </div>
             <div class="text-xs text-gray-500 flex flex-wrap gap-x-2">
                 <template x-if="p.sku"><span x-text="'SKU ' + p.sku"></span></template>
                 <template x-if="p.hsn_sac"><span x-text="'HSN ' + p.hsn_sac"></span></template>
                 <template x-if="p.gst_rate !== null && p.gst_rate !== undefined"><span x-text="'GST ' + p.gst_rate + '%'"></span></template>
                 <template x-if="p.unit"><span x-text="p.unit"></span></template>
+                <template x-if="p.stock !== null && p.stock !== undefined">
+                    <span :class="+p.stock <= 0 ? 'text-danger-700 font-semibold' : 'text-money-700 font-semibold'" x-text="'In stock ' + (+p.stock)"></span>
+                </template>
             </div>
         </button>
     </template>
@@ -57,7 +60,7 @@
             x-show="!quickAdd.open && combo.search.trim()"
             @click="openQuickAdd()"
             class="block w-full text-left px-3 py-2 text-sm bg-accent-50 hover:bg-accent-100 text-accent-900 font-semibold border-t border-accent-200 sticky bottom-0">
-        + Save as new product: "<span x-text="combo.search.trim()"></span>"
+        + Add new product "<span x-text="combo.search.trim()"></span>"
     </button>
 
     {{-- Inline mini-form for quick-create. Captures only the essentials -
@@ -70,7 +73,7 @@
 
         <div>
             <label class="block text-[10px] font-bold uppercase text-gray-500">Name *</label>
-            <input type="text" aria-label="New Item name" x-model="quickAdd.name" required maxlength="255"
+            <input type="text" aria-label="New product name" x-model="quickAdd.name" required maxlength="255"
                    class="mt-0.5 block w-full text-sm border-gray-300 rounded"
                    :class="quickAdd.errors.name && '!border-danger-400 !ring-danger-400'">
             <p x-show="quickAdd.errors.name" x-cloak class="text-[10px] text-danger-600" x-text="quickAdd.errors.name"></p>
@@ -79,14 +82,14 @@
         <div class="grid grid-cols-2 gap-2">
             <div>
                 <label class="block text-[10px] font-bold uppercase text-gray-500">Price (₹) *</label>
-                <input type="number" aria-label="New Item rate" step="any" min="0" inputmode="decimal" x-model.number="quickAdd.rate" required
+                <input type="number" aria-label="New product price" step="any" min="0" inputmode="decimal" x-model.number="quickAdd.rate" required
                        class="mt-0.5 block w-full text-sm border-gray-300 rounded text-right"
                        :class="quickAdd.errors.rate && '!border-danger-400 !ring-danger-400'">
                 <p x-show="quickAdd.errors.rate" x-cloak class="text-[10px] text-danger-600" x-text="quickAdd.errors.rate"></p>
             </div>
             <div>
                 <label class="block text-[10px] font-bold uppercase text-gray-500">GST % *</label>
-                <select aria-label="New Item GST rate" x-model.number="quickAdd.gst_rate" class="mt-0.5 block w-full text-sm border-gray-300 rounded"
+                <select aria-label="New product GST rate" x-model.number="quickAdd.gst_rate" class="mt-0.5 block w-full text-sm border-gray-300 rounded"
                         :class="quickAdd.errors.gst_rate && '!border-danger-400 !ring-danger-400'">
                     @foreach (config('gst.rates') as $r)
                         <option value="{{ $r['value'] }}">{{ $r['label'] }}</option>
@@ -102,14 +105,14 @@
                     <label class="block text-[10px] font-bold uppercase text-gray-500">HSN/SAC (optional)</label>
                     @include('partials.hsn-search-link', ['size' => 'w-3 h-3'])
                 </div>
-                <input type="text" aria-label="HSN or SAC code for the new item" x-model="quickAdd.hsn_sac" maxlength="8" inputmode="numeric" placeholder="e.g. 998314"
+                <input type="text" aria-label="HSN or SAC code for the new product" x-model="quickAdd.hsn_sac" maxlength="8" inputmode="numeric" placeholder="e.g. 998314"
                        class="mt-0.5 block w-full text-sm border-gray-300 rounded font-mono"
                        :class="quickAdd.errors.hsn_sac && '!border-danger-400 !ring-danger-400'">
                 <p x-show="quickAdd.errors.hsn_sac" x-cloak class="text-[10px] text-danger-600" x-text="quickAdd.errors.hsn_sac"></p>
             </div>
             <div>
                 <label class="block text-[10px] font-bold uppercase text-gray-500">Unit (optional)</label>
-                <input type="text" aria-label="Unit for the new item" x-model="quickAdd.unit" maxlength="6" placeholder="NOS, KGS, HRS…"
+                <input type="text" aria-label="Unit for the new product" x-model="quickAdd.unit" maxlength="6" placeholder="NOS, KGS, HRS…"
                        class="mt-0.5 block w-full text-sm border-gray-300 rounded uppercase">
                 <p x-show="quickAdd.errors.unit" x-cloak class="text-[10px] text-danger-600" x-text="quickAdd.errors.unit"></p>
             </div>

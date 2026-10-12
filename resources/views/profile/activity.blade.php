@@ -3,7 +3,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Activity Log</h1>
-                <p class="text-sm text-gray-500 mt-1">Who did what, when · {{ $company->name }}</p>
+                <p class="text-sm text-gray-500 mt-1">Changes recorded for {{ $company->name }}</p>
             </div>
             <a href="{{ route('profile.edit') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back to profile</a>
         </div>
@@ -14,7 +14,7 @@
 
             <div class="bg-brand-50 border border-brand-200 rounded-lg p-4 text-sm text-brand-900">
                 <div class="font-semibold mb-1">Audit trail (Section 128, Companies Act 2013)</div>
-                <p>Every meaningful change to your books - invoices, payments, credit notes, expenses, cash sales - is recorded here with the user, timestamp, and IP address. This is your defensibility record for GST audit, income-tax assessment, or any inquiry by a Chartered Accountant.</p>
+                <p>Changes to invoices, payments, credit notes, expenses and cash memos are recorded with the user, date, time and IP address.</p>
             </div>
 
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">
@@ -34,7 +34,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-2 whitespace-nowrap text-gray-700">
                                         <div>{{ $log->created_at->format('d M Y') }}</div>
-                                        <div class="text-xs text-gray-500">{{ $log->created_at->format('H:i:s') }}</div>
+                                        <div class="text-xs text-gray-500">{{ $log->created_at->format('h:i:s A') }}</div>
                                     </td>
                                     <td class="px-4 py-2">{{ $log->user?->name ?? '-' }}</td>
                                     <td class="px-4 py-2">
@@ -52,7 +52,7 @@
                                     <td class="px-4 py-2 text-xs text-gray-500 font-mono">{{ $log->ip_address ?: '-' }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="px-4 py-12 text-center text-gray-500">No activity recorded yet. Once you create or modify expenses, cash sales, etc., entries will appear here.</td></tr>
+                                <tr><td colspan="5" class="px-4 py-12 text-center text-gray-500">No activity recorded yet.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

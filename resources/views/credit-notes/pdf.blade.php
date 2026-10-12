@@ -100,9 +100,7 @@
     <table class="hero" style="width:100%;">
         <tr>
             <td style="vertical-align: top; width: 58%;">
-                @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
-                @endif
+                @include('partials.pdf-logo', ['c' => $c])
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted" style="margin-top: 3px; line-height: 1.45;">
                     {!! nl2br(e(trim($c->address_line1 . ($c->address_line2 ? ', ' . $c->address_line2 : '') . "\n" . trim(($c->city ?? '') . ($c->city && $c->state?->name ? ', ' : '') . ($c->state?->name ?? '') . ($c->state?->gst_code ? ' · State ' . $c->state->gst_code : '') . ' ' . ($c->postal_code ?? '')) . "\n" . $c->country))) !!}
@@ -164,7 +162,7 @@
                     <td class="mono">₹ {{ inr($creditNote->total_cgst) }}</td>
                 </tr>
                 <tr>
-                    <td class="x-small muted">SGST reduced</td>
+                    <td class="x-small muted">{{ $invoice->stateTaxLabel() }} reduced</td>
                     <td class="mono">₹ {{ inr($creditNote->total_sgst) }}</td>
                 </tr>
             @endif
@@ -190,11 +188,8 @@
     @endif
 
     {{-- SIGNATORY --}}
-    <div class="section" style="text-align: right;">
-        @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-            <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="signature" style="max-height: 45px; max-width: 150px;"><br>
-        @endif
-        <div class="sig-box">for {{ $c->name }}<br><span class="muted">Authorised signatory</span></div>
+    <div class="section">
+        @include('partials.pdf-signatory', ['c' => $c])
     </div>
 
     <div class="foot">

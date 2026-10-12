@@ -50,12 +50,12 @@
      class="p-4 border rounded flex items-start gap-3 {{ $palette }}"
      role="{{ $role }}"
      aria-live="{{ $aria }}">
-    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+    <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.7-9.3a1 1 0 00-1.4-1.4L9 10.58l-1.3-1.3a1 1 0 10-1.4 1.42l2 2a1 1 0 001.4 0l4-4z" clip-rule="evenodd"/>
     </svg>
     <div class="flex-1">{{ $message }}</div>
-    <button type="button" @click="show = false" class="text-current opacity-60 hover:opacity-100" aria-label="Dismiss notification">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button type="button" @click="show = false" class="text-current opacity-75 hover:opacity-100 p-2 -m-2" aria-label="Dismiss notification">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
     </button>

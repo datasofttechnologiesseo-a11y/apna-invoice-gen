@@ -64,6 +64,30 @@ class CompanyBankDetailsTest extends TestCase
         $this->assertSame('Current', $company->bankAccountTypeLabel());
     }
 
+    public function test_a_gstin_saved_before_the_checksum_rule_does_not_lock_the_settings(): void
+    {
+        // Older accounts can hold a GSTIN whose check digit is wrong. Left
+        // as it is, it must not stop the owner saving bank details; a new
+        // or edited GSTIN is still checked in full.
+        $user = User::factory()->create();
+        $company = Company::factory()->recycle($user)->create([
+            'state_id' => $this->state()->id,
+            'gstin' => '27AAAAA0000A1Z0',
+            'onboarded_at' => now(),
+        ]);
+
+        $this->actingAs($user)->patch(route('companies.update', $company), $this->companyPayload([
+            'gstin' => '27AAAAA0000A1Z0',
+            'bank_account_type' => 'current',
+        ]))->assertSessionHasNoErrors();
+        $this->assertSame('current', $company->fresh()->bank_account_type);
+
+        $this->actingAs($user)->patch(route('companies.update', $company), $this->companyPayload([
+            'gstin' => '27BBBBB0000B1Z0',
+        ]))->assertSessionHasErrors('gstin');
+        $this->assertSame('27AAAAA0000A1Z0', $company->fresh()->gstin);
+    }
+
     public function test_account_type_is_restricted_to_savings_or_current(): void
     {
         // The value is printed verbatim on the invoice and read by an accounts

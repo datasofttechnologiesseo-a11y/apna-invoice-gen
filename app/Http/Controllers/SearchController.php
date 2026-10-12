@@ -46,7 +46,7 @@ class SearchController extends Controller
                         'title' => $inv->displayNumber(),
                         'subtitle' => trim(($inv->customer->name ?? 'No customer')
                             . ' · ' . $inv->invoice_date?->format('d M Y')),
-                        'meta' => '₹' . number_format((float) $inv->grand_total, 2),
+                        'meta' => '₹' . rupees((float) $inv->grand_total),
                         'url' => route('invoices.show', $inv),
                         'badge' => $this->statusLabel($inv),
                         'tone' => $this->statusTone($inv),

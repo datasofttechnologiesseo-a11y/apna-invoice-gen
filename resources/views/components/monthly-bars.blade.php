@@ -41,7 +41,7 @@
         <div class="mt-4">
             {{-- Peak marker, so the bar heights are readable as amounts rather
                  than only as a shape. --}}
-            <div class="flex items-center gap-2 text-[10px] text-gray-400 font-mono">
+            <div class="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
                 <span class="tabular-nums"><x-inr-compact :amount="$peak" /></span>
                 <span class="flex-1 border-t border-dashed border-gray-200"></span>
             </div>
@@ -52,7 +52,7 @@
                     <{{ $href ? 'a' : 'div' }}
                         @if ($href) href="{{ $href }}" @endif
                         class="flex-1 h-full flex items-end justify-center gap-1 sm:gap-1.5 rounded-t-md transition group {{ $href ? 'hover:bg-gray-50' : '' }}"
-                        title="{{ $row['full'] }} — {{ $labelA }} ₹{{ number_format((float) $row['a'], 0) }}, {{ $labelB }} ₹{{ number_format((float) $row['b'], 0) }}">
+                        title="{{ $row['full'] }} · {{ $labelA }} ₹{{ rupees((float) $row['a']) }}, {{ $labelB }} ₹{{ rupees((float) $row['b']) }}">
                         <span class="w-1/2 max-w-[26px] rounded-t-[3px] transition-opacity group-hover:opacity-80"
                               style="height: {{ $h($row['a']) }}%; background: {{ $colorA }}"></span>
                         <span class="w-1/2 max-w-[26px] rounded-t-[3px] transition-opacity group-hover:opacity-80"

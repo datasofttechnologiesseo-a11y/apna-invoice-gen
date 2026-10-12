@@ -13,16 +13,31 @@ class Invoice extends Model
 {
     use HasFactory;
 
+    /**
+     * Zero-rated supplies (s.16 IGST Act) alongside the regular kind. Exports
+     * and supplies to an SEZ are always inter-state (s.7(5)); "with IGST" pays
+     * the tax and claims it back as a refund, "under LUT" charges none.
+     */
+    public const SUPPLY_TYPES = [
+        'regular' => 'Regular (within India)',
+        'export_igst' => 'Export (with payment of IGST)',
+        'export_lut' => 'Export (under LUT/bond, without IGST)',
+        'sez_igst' => 'Supply to SEZ (with payment of IGST)',
+        'sez_lut' => 'Supply to SEZ (under LUT/bond, without IGST)',
+    ];
+
     protected $fillable = [
         'user_id', 'company_id', 'customer_id',
         'invoice_number', 'invoice_date', 'due_date',
         'place_of_supply_state_id', 'is_interstate', 'reverse_charge',
+        'supply_type', 'export_port_code', 'shipping_bill_number', 'shipping_bill_date',
         'transporter_name', 'transporter_id', 'vehicle_number', 'transport_mode', 'eway_bill_number',
         'ship_to_name', 'ship_to_address_line1', 'ship_to_address_line2',
         'ship_to_city', 'ship_to_state_id', 'ship_to_postal_code', 'ship_to_gstin',
         'currency', 'exchange_rate', 'status', 'style',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
         'round_off', 'grand_total', 'paid_amount', 'credited_amount', 'balance',
+        'customer_snapshot',
         'notes', 'terms', 'finalized_at',
         'cancelled_at', 'cancellation_reason',
     ];
@@ -32,6 +47,7 @@ class Invoice extends Model
         'due_date' => 'date',
         'finalized_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'shipping_bill_date' => 'date',
         'is_interstate' => 'boolean',
         'reverse_charge' => 'boolean',
         'subtotal' => 'decimal:2',
@@ -44,8 +60,27 @@ class Invoice extends Model
         'paid_amount' => 'decimal:2',
         'credited_amount' => 'decimal:2',
         'balance' => 'decimal:2',
+        'customer_snapshot' => 'array',
         'exchange_rate' => 'decimal:6',
     ];
+
+    protected static function booted(): void
+    {
+        // The referral offer: an invoice issued for the first time by someone
+        // who was referred earns their referrer lifetime free access. Runs
+        // after the issue is committed, from the web, the app or a team member.
+        static::saved(function (Invoice $invoice) {
+            $justIssued = $invoice->finalized_at !== null
+                && ($invoice->wasRecentlyCreated || $invoice->wasChanged('finalized_at'))
+                && $invoice->getOriginal('finalized_at') === null;
+            if ($justIssued && $invoice->user_id) {
+                $userId = (int) $invoice->user_id;
+                \Illuminate\Support\Facades\DB::afterCommit(
+                    fn () => app(\App\Services\ReferralRewards::class)->invoiceIssuedBy($userId)
+                );
+            }
+        });
+    }
 
     // GSTINs are upper case by definition (checksum alphabet is 0-9A-Z).
     // Normalise on write and on read so old rows saved in mixed case still
@@ -179,11 +214,180 @@ class Invoice extends Model
         return $this->status === 'cancelled';
     }
 
+    /**
+     * Freeze the recipient as printed on the issued invoice (Rule 46(d)/(e))
+     * so later edits to the customer record - a new GSTIN, a moved office -
+     * never rewrite a document that has already gone out, nor flip its
+     * B2B/B2C classification in GSTR-1.
+     */
+    public function snapshotCustomer(): void
+    {
+        $c = $this->customer;
+        if (! $c) {
+            return;
+        }
+        $s = $c->state;
+
+        $this->forceFill(['customer_snapshot' => [
+            'name' => $c->name,
+            'gstin' => $c->gstin,
+            'address_line1' => $c->address_line1,
+            'address_line2' => $c->address_line2,
+            'city' => $c->city,
+            'postal_code' => $c->postal_code,
+            'country' => $c->country,
+            'phone' => $c->phone,
+            'email' => $c->email,
+            'state' => $s ? [
+                'id' => $s->id,
+                'name' => $s->name,
+                'gst_code' => $s->gst_code,
+                'is_union_territory' => (bool) $s->is_union_territory,
+            ] : null,
+        ]])->save();
+    }
+
+    /**
+     * The customer as it should appear on this document: the snapshot taken
+     * at issue when there is one (issued invoices), otherwise the live row
+     * (drafts). Returned as an unsaved Customer with its state attached, so
+     * views keep reading $cust->name, $cust->state->gst_code unchanged.
+     */
+    public function billedCustomer(): ?Customer
+    {
+        $snap = $this->customer_snapshot;
+        if (! $snap) {
+            return $this->customer;
+        }
+
+        // forceFill: the snapshot keys are trusted and must not be filtered by
+        // the model's fillable list.
+        $cust = (new Customer())->forceFill(collect($snap)->except('state')->all());
+        $cust->exists = false;
+        $cust->setRelation('state', $snap['state'] ? (new State($snap['state']))->forceFill(['id' => $snap['state']['id']]) : null);
+        if ($this->customer_id) {
+            $cust->forceFill(['id' => $this->customer_id]);
+        }
+
+        return $cust;
+    }
+
+    /**
+     * "SGST" or "UTGST" for the state share of an intra-state supply. UTGST
+     * applies when the place of supply is a Union Territory without a
+     * legislature (Chandigarh, DNH & DD, Lakshadweep, A&N, Ladakh); Delhi,
+     * Puducherry and J&K have legislatures and levy SGST. The amounts are
+     * identical - only the printed head differs.
+     */
+    public function stockMovements(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(StockMovement::class, 'source');
+    }
+
+    public function supplyType(): string
+    {
+        return array_key_exists((string) $this->supply_type, self::SUPPLY_TYPES) ? $this->supply_type : 'regular';
+    }
+
+    public function isExport(): bool
+    {
+        return str_starts_with($this->supplyType(), 'export_');
+    }
+
+    public function isSez(): bool
+    {
+        return str_starts_with($this->supplyType(), 'sez_');
+    }
+
+    public function isZeroRated(): bool
+    {
+        return $this->supplyType() !== 'regular';
+    }
+
+    /** Under a Letter of Undertaking / bond: zero-rated without paying IGST. */
+    public function isUnderLut(): bool
+    {
+        return str_ends_with($this->supplyType(), '_lut');
+    }
+
+    /**
+     * The line Rule 46 requires on an export / SEZ invoice, in the words of
+     * the proviso: with or without payment of integrated tax.
+     */
+    public function zeroRatedEndorsement(): ?string
+    {
+        if (! $this->isZeroRated()) {
+            return null;
+        }
+        $what = $this->isExport() ? 'SUPPLY MEANT FOR EXPORT' : 'SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS';
+
+        return $this->isUnderLut()
+            ? $what . ' UNDER BOND OR LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX'
+            : $what . ' ON PAYMENT OF INTEGRATED TAX';
+    }
+
+    /**
+     * True when a draft's saved tax split no longer matches the parties: the
+     * customer moved state, or the business did, after the draft was saved.
+     * Issuing it as-is would print the wrong heads (CGST+SGST vs IGST).
+     */
+    public function taxBasisIsStale(): bool
+    {
+        $customer = $this->customer;
+        $company = $this->company;
+        if (! $customer?->state_id || ! $company?->state_id || (float) $this->total_tax <= 0) {
+            return false; // no tax heads to get wrong
+        }
+        $interstate = $this->isZeroRated()
+            || app(\App\Services\InvoiceCalculator::class)->isInterstate($company->state_id, $customer->state_id);
+        if ((bool) $this->is_interstate === $interstate) {
+            return false;
+        }
+        // Only a change made after the draft was saved counts; anything older
+        // is how the draft was deliberately saved.
+        $savedAt = $this->updated_at;
+
+        return $savedAt !== null
+            && (($customer->updated_at && $customer->updated_at->gt($savedAt))
+                || ($company->updated_at && $company->updated_at->gt($savedAt)));
+    }
+
+    /**
+     * Place of supply to print at issue: the customer's state as it is now,
+     * when that agrees with the saved tax split (a customer who moved between
+     * two other states still gets IGST, but the new state must be printed);
+     * otherwise what the draft stored.
+     */
+    public function placeOfSupplyForIssue(): ?int
+    {
+        $state = $this->customer?->state_id;
+        $companyState = $this->company?->state_id;
+        if (! $state || ! $companyState) {
+            return $this->place_of_supply_state_id;
+        }
+        $interstate = $this->isZeroRated() || app(\App\Services\InvoiceCalculator::class)->isInterstate($companyState, $state);
+
+        return (bool) $this->is_interstate === $interstate ? $state : $this->place_of_supply_state_id;
+    }
+
+    public function stateTaxLabel(): string
+    {
+        $state = $this->placeOfSupply ?? $this->customer?->state ?? $this->company?->state;
+
+        return $state?->is_union_territory ? 'UTGST' : 'SGST';
+    }
+
     public function canBeCancelled(): bool
     {
         // Only issued invoices can be cancelled. Drafts should be deleted,
-        // cancelled invoices can't be re-cancelled.
-        return ! $this->isDraft() && ! $this->isCancelled();
+        // cancelled invoices can't be re-cancelled. Once money has moved
+        // against it - a receipt or a credit note - cancelling would leave
+        // those documents pointing at nothing and drop the receipts out of
+        // the books; the correction is a credit note (s.34).
+        return ! $this->isDraft()
+            && ! $this->isCancelled()
+            && (float) $this->paid_amount <= 0
+            && (float) $this->credited_amount <= 0;
     }
 
     /** Full edit (line items, customer, dates, amounts). Drafts only. */
@@ -396,9 +600,20 @@ class Invoice extends Model
      */
     public function bookAdvanceAsPayment(): ?Payment
     {
-        $advance = round((float) $this->paid_amount - (float) $this->payments()->sum('amount'), 2);
+        $received = (float) $this->payments()->sum('amount');
+        $advance = round((float) $this->paid_amount - $received, 2);
+        // Never a receipt for more than the bill: an advance typed larger than
+        // the total would book money the customer was never asked for.
+        $advance = min($advance, round((float) $this->grand_total - $received, 2));
         if ($advance <= 0) {
             return null;
+        }
+        if ((float) $this->paid_amount > (float) $this->grand_total) {
+            $this->forceFill([
+                'paid_amount' => $this->grand_total,
+                'balance' => round(0 - (float) $this->credited_amount, 2),
+                'status' => 'paid',
+            ])->save();
         }
 
         $company = $this->company()->lockForUpdate()->first();
@@ -442,7 +657,8 @@ class Invoice extends Model
         $business = trim($company?->name ?? '') ?: 'Us';
         $docTitle = $this->documentTitle();
         $number = $this->invoice_number ?: ('#' . $this->id);
-        $grand = number_format((float) $this->grand_total, 2);
+        // Indian grouping (₹1,17,000.00) - the message goes to an Indian customer.
+        $grand = inr((float) $this->grand_total);
         $balance = (float) $this->balance;
         $paid = (float) $this->paid_amount;
         $upi = trim((string) ($company?->upi_id ?? ''));
@@ -458,9 +674,10 @@ class Invoice extends Model
         $lines[] = '';
 
         if ($this->isCancelled()) {
-            $lines[] = "Please ignore {$docTitle} {$number} — it has been cancelled.";
+            $lines[] = "{$docTitle} {$number} has been cancelled. Please ignore it.";
             $lines[] = '';
-            $lines[] = "Sorry for any confusion. — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
@@ -470,17 +687,18 @@ class Invoice extends Model
             $lines[] = "Thank you for the payment of ₹{$grand} for {$docTitle} {$number}.";
             if ($url) {
                 $lines[] = '';
-                $lines[] = "Your receipt is here: {$url}";
+                $lines[] = "Receipt: {$url}";
             }
             $lines[] = '';
-            $lines[] = "Appreciate your business. — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
         // PARTIALLY PAID
         if ($paid > 0 && $balance > 0) {
-            $paidStr = number_format($paid, 2);
-            $balStr = number_format($balance, 2);
+            $paidStr = inr($paid);
+            $balStr = inr($balance);
             $lines[] = "Sharing {$docTitle} {$number} for ₹{$grand}.";
             $lines[] = "Already received: ₹{$paidStr}.";
             $dueClause = $this->due_date
@@ -510,7 +728,8 @@ class Invoice extends Model
             $lines[] = "Pay via UPI: {$upi}";
         }
         $lines[] = '';
-        $lines[] = "Thanks, — {$business}";
+        $lines[] = 'Regards,';
+        $lines[] = $business;
 
         return implode("\n", $lines);
     }

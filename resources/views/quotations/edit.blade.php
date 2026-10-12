@@ -1,7 +1,7 @@
-<x-app-layout :title="$quotation->exists ? 'Edit Quotation' : 'New Quotation'">
+<x-app-layout :title="$quotation->exists ? 'Edit quotation' : 'New quotation'">
     <x-slot name="header">
         <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
-            {{ $quotation->exists ? 'Edit ' . $quotation->displayNumber() : 'New Quotation' }}
+            {{ $quotation->exists ? 'Edit ' . $quotation->displayNumber() : 'New quotation' }}
         </h1>
     </x-slot>
 
@@ -20,9 +20,14 @@
         if (empty($oldItems)) {
             $oldItems = [['product_id' => null, 'description' => '', 'hsn_sac' => '', 'quantity' => 1, 'unit' => '', 'rate' => 0, 'discount' => 0, 'gst_rate' => 18]];
         }
+        // Quote-level discount box: re-shown form keeps the typed value; an
+        // existing quote opens with the sum of its saved line discounts.
+        $initialDiscount = (float) old('quote_discount', collect($oldItems)->sum(fn ($i) => (float) ($i['discount'] ?? 0)));
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
         $companyStateId = $company->state_id;
+        // Union Territories without a legislature levy UTGST instead of SGST.
+        $utStateIds = \App\Models\State::where('is_union_territory', true)->pluck('id')->values();
     @endphp
 
     <div class="py-10" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, {{ ! empty($company->gstin) ? 'true' : 'false' }})'
@@ -30,7 +35,7 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-breadcrumbs :items="[
                 ['label' => 'Quotations', 'href' => route('quotations.index')],
-                ['label' => $quotation->exists ? $quotation->displayNumber() : 'New Quotation'],
+                ['label' => $quotation->exists ? $quotation->displayNumber() : 'New quotation'],
             ]" />
 
             @if ($errors->any())
@@ -45,8 +50,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div class="text-sm">
-                        <div class="font-semibold">Quotation, not a tax invoice.</div>
-                        <div class="mt-0.5">A quote is a price proposal you send before a sale. It doesn't go on GSTR-1 or GSTR-3B. When the customer accepts, click <strong>Convert to Invoice</strong> - that's when GST is officially charged.</div>
+                        <div class="font-semibold">A quotation is not a tax invoice.</div>
+                        <div class="mt-0.5">It is not reported in GSTR-1 or GSTR-3B. GST is charged only when you use <strong>Convert to invoice</strong> after the customer accepts.</div>
                     </div>
                 </div>
             @endunless
@@ -61,14 +66,14 @@
                             <x-input-label for="customer_id" value="Customer *" />
                             <div class="flex items-center gap-2 mt-1">
                                 <select id="customer_id" name="customer_id" x-model="customerId" @change="recompute()" class="block w-full border-gray-300 rounded-md shadow-sm" required>
-                                    <option value="">- Select customer -</option>
+                                    <option value="">Select customer</option>
                                     @foreach ($customers as $c)
                                         <option value="{{ $c->id }}" @selected(old('customer_id', $quotation->customer_id) == $c->id)>
-                                            {{ $c->name }}{{ $c->state?->name ? ' - ' . $c->state->name : '' }}
+                                            {{ $c->name }}{{ $c->state?->name ? ' · ' . $c->state->name : '' }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap" title="Add a new customer without leaving this page">+ New</button>
+                                <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap" title="Add a new customer">+ New</button>
                             </div>
                         </div>
 
@@ -80,7 +85,7 @@
                             <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
                                 Edit if you use your own series
                             </p>
-                            <x-input-error :messages="$errors->get('quote_number')" class="mt-1" />
+                            <x-input-error :messages="$errors->get('quote_number')" for="quote_number" class="mt-1" />
                         </div>
 
                         <input type="hidden" name="currency" value="INR">
@@ -115,9 +120,9 @@
                             <div class="mt-2 text-sm">
                                 <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
                                 <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded">Inter-state (IGST)</span>
-                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + SGST)</span>
+                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + <span x-text="stateTaxLabel"></span>)</span>
                             </div>
-                            <p class="mt-1 text-[10px] text-gray-500">Mode is decided by your state vs. customer's state.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Based on your state and the customer's state.</p>
                         </div>
                     </div>
                 </div>
@@ -132,7 +137,7 @@
                         <x-text-input id="subject" name="subject" type="text" class="mt-1 block w-full"
                                       :value="old('subject', $quotation->subject)"
                                       placeholder="e.g. Quotation for supply of office furniture" maxlength="200" />
-                        <p class="mt-1 text-[10px] text-gray-500">A one-line title shown at the top of the PDF - helps the customer file it against their RFQ.</p>
+                        <p class="mt-1 text-[10px] text-gray-500">One line, printed at the top of the quotation.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -140,14 +145,14 @@
                             <x-text-input id="reference" name="reference" type="text" class="mt-1 block w-full"
                                           :value="old('reference', $quotation->reference)"
                                           placeholder="e.g. Your enquiry ABC/RFQ/26-27/021 dated 12-Apr-2026" maxlength="100" />
-                            <p class="mt-1 text-[10px] text-gray-500">Quote your customer's enquiry number - lets them track this against their PO chain.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">The customer's enquiry or RFQ number.</p>
                         </div>
                         <div>
                             <x-input-label for="delivery_period" value="Delivery period (optional)" />
                             <x-text-input id="delivery_period" name="delivery_period" type="text" class="mt-1 block w-full"
                                           :value="old('delivery_period', $quotation->delivery_period)"
                                           placeholder="e.g. 15-20 working days from order confirmation" maxlength="100" />
-                            <p class="mt-1 text-[10px] text-gray-500">Standard on Indian quotations - sets buyer expectation upfront.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Printed on the quotation.</p>
                         </div>
                     </div>
                 </div>
@@ -175,7 +180,7 @@
                                         <label class="text-xs text-gray-500 font-semibold">Product</label>
                                         <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
                                         <select @change="pickProduct(idx, $event.target.value)" :aria-label="`Pick a product for line item ${idx + 1}`" class="mt-1 block w-full border-gray-300 rounded text-sm">
-                                            <option value="">- Custom -</option>
+                                            <option value="">Custom</option>
                                             @foreach ($productIndex as $p)
                                                 <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
                                             @endforeach
@@ -184,7 +189,7 @@
                                 @endif
                                 <div>
                                     <label class="text-xs text-gray-500 font-semibold">Description</label>
-                                    <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                    <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional · filled from the product" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -207,14 +212,10 @@
                                         <input :name="`items[${idx}][rate]`" :aria-label="`Rate for line item ${idx + 1}`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
                                     </div>
                                     <div>
-                                        <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
-                                        <input :name="`items[${idx}][discount]`" :aria-label="`Discount for line item ${idx + 1}`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
-                                    </div>
-                                    <div>
                                         <label class="text-xs text-gray-500 font-semibold">GST rate</label>
                                         <select :name="`items[${idx}][gst_rate]`" :aria-label="`GST rate for line item ${idx + 1}`" x-model.number="item.gst_rate" @change="recompute()" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                             @foreach (config('gst.rates') as $r)
-                                                <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' - ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                                <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' · ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -244,7 +245,6 @@
                                     </th>
                                     <th class="px-3 py-2 text-left">Quantity</th>
                                     <th class="px-3 py-2 text-right">Rate (₹)</th>
-                                    <th class="px-3 py-2 text-right">Disc (₹)</th>
                                     <th class="px-3 py-2 text-right">GST%</th>
                                     <th class="px-3 py-2 text-right">Amount</th>
                                     <th class="px-3 py-2"></th>
@@ -257,27 +257,26 @@
                                             <td class="px-2 py-2">
                                                 <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
                                                 <select @change="pickProduct(idx, $event.target.value)" :aria-label="`Pick a product for line item ${idx + 1}`" class="w-40 border-gray-300 rounded text-sm">
-                                                    <option value="">- Custom -</option>
+                                                    <option value="">Custom</option>
                                                     @foreach ($productIndex as $p)
                                                         <option value="{{ $p->id }}" :selected="item.product_id == {{ $p->id }}">{{ $p->name }}{{ $p->sku ? ' (' . $p->sku . ')' : '' }}</option>
                                                     @endforeach
                                                 </select>
                                             </td>
                                         @endif
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional · filled from the product" class="w-full border-gray-300 rounded text-sm"></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" maxlength="8" placeholder="998314" class="w-28 border-gray-300 rounded text-sm font-mono"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
                                                 <input :name="`items[${idx}][quantity]`" :aria-label="`Quantity for line item ${idx + 1}`" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 border-gray-300 rounded text-sm text-right" required>
-                                                <input :name="`items[${idx}][unit]`" :aria-label="`Unit for line item ${idx + 1}`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
+                                                <input :name="`items[${idx}][unit]`" :aria-label="`Unit for line item ${idx + 1}`" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="Unit">
                                             </div>
                                         </td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" :aria-label="`Rate for line item ${idx + 1}`" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 border-gray-300 rounded text-sm text-right" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" :aria-label="`Discount for line item ${idx + 1}`" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             <select :name="`items[${idx}][gst_rate]`" :aria-label="`GST rate for line item ${idx + 1}`" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
-                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' - ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' · ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -306,21 +305,39 @@
                                 <x-input-label for="terms" value="Terms & conditions" />
                                 <textarea id="terms" name="terms" rows="6" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm font-mono text-xs"
                                           placeholder="1. Payment: 50% advance on order, balance against proforma before dispatch.&#10;2. Taxes: GST extra at applicable rates.&#10;3. Freight: At actuals, on customer's account.&#10;4. Warranty: 12 months from date of dispatch.&#10;5. Disputes: Subject to {{ $company->city ?? 'local' }} jurisdiction.">{{ old('terms', $quotation->terms ?? $company->default_terms) }}</textarea>
-                                <p class="mt-1 text-[10px] text-gray-500">Numbered terms render cleanly on the PDF. The placeholder shows a typical Indian B2B set - adapt to your business.</p>
+                                <p class="mt-1 text-[10px] text-gray-500">Put each numbered term on its own line.</p>
                             </div>
                             <div>
-                                <x-input-label for="notes" value="Notes (shown below Terms)" />
+                                <x-input-label for="notes" value="Notes (printed below the terms)" />
                                 <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ old('notes', $quotation->notes) }}</textarea>
                             </div>
                         </div>
 
                         <div class="md:pl-6 space-y-2 text-sm">
-                            <div class="flex justify-between"><span>Subtotal</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
+                            <div class="flex justify-between"><span>Items total</span><span class="font-mono" x-text="fmt(totals.gross)"></span></div>
+                            {{-- One discount for the whole quote, applied before GST and
+                                 spread across the lines (same as the invoice form). --}}
+                            <div class="flex justify-between items-center gap-2">
+                                <label for="quote_discount_input" class="flex items-center gap-1.5">
+                                    Discount
+                                    <span class="inline-flex rounded border border-gray-300 overflow-hidden text-[11px] font-semibold">
+                                        <button type="button" @click="discountMode = 'amount'; recompute()" :class="discountMode === 'amount' ? 'bg-brand-700 text-white' : 'bg-white text-gray-600'" :aria-pressed="(discountMode === 'amount').toString()" aria-label="Discount in rupees" class="px-2.5 py-1.5">₹</button>
+                                        <button type="button" @click="discountMode = 'percent'; recompute()" :class="discountMode === 'percent' ? 'bg-brand-700 text-white' : 'bg-white text-gray-600'" :aria-pressed="(discountMode === 'percent').toString()" aria-label="Discount in percent" class="px-2.5 py-1.5">%</button>
+                                    </span>
+                                </label>
+                                <input id="quote_discount_input" type="number" step="any" min="0" inputmode="decimal"
+                                       x-model.number="discountInput" @input="recompute()"
+                                       class="w-32 border-gray-300 rounded text-sm text-right" placeholder="0">
+                                <input type="hidden" name="quote_discount" :value="totals.discount">
+                            </div>
+                            <p x-show="discountMode === 'percent' && totals.discount > 0" x-cloak class="text-[11px] text-gray-500 text-right -mt-1">= ₹ <span x-text="fmt(totals.discount)"></span></p>
+                            @error('quote_discount')<p class="text-xs text-danger-600 text-right">{{ $message }}</p>@enderror
+                            <div class="flex justify-between border-t pt-2"><span>Taxable value</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
-                            <div class="flex justify-between" x-show="!isInterstate"><span>SGST</span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
+                            <div class="flex justify-between" x-show="!isInterstate"><span x-text="stateTaxLabel"></span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
                             <div class="flex justify-between" x-show="isInterstate"><span>IGST</span><span class="font-mono" x-text="fmt(totals.igst)"></span></div>
                             <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono" x-text="fmt(totals.grandTotal)"></span></div>
-                            <p class="pt-2 text-[11px] text-gray-500">This is a price proposal - no GST is charged or filed yet. Convert to a tax invoice after the customer confirms.</p>
+                            <p class="pt-2 text-[11px] text-gray-500">No GST is charged or reported on a quotation.</p>
                         </div>
                     </div>
                 </div>
@@ -339,6 +356,7 @@
 
     @push('scripts')
     <script>
+        const UT_STATE_IDS = @json($utStateIds);
         function quotationForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, companyHasGstin) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
@@ -350,7 +368,9 @@
                 companyStateId,
                 companyHasGstin: !! companyHasGstin,
                 productMap,
-                totals: {subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
+                totals: {gross: 0, discount: 0, subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
+                discountMode: 'amount',
+                discountInput: @json($initialDiscount) || '',
                 /**
                  * HSN/SAC is required only when either party is GST-registered
                  * (Rule 46(g)). For two unregistered parties, HSN is purely optional.
@@ -365,6 +385,11 @@
                     const cs = this.customerStates[this.customerId];
                     return cs && cs !== this.companyStateId;
                 },
+                // "SGST" or "UTGST" for the state share (mirrors Quotation::stateTaxLabel).
+                get stateTaxLabel() {
+                    const cs = this.customerId ? this.customerStates[this.customerId] : this.companyStateId;
+                    return UT_STATE_IDS.includes(cs) ? 'UTGST' : 'SGST';
+                },
                 init() { this.recompute(); },
                 /**
                  * Wired to @customer-added.window - pushes the new customer
@@ -377,7 +402,7 @@
                     if (select) {
                         const option = document.createElement('option');
                         option.value = c.id;
-                        option.textContent = c.name + (c.state_name ? ' - ' + c.state_name : '');
+                        option.textContent = c.name + (c.state_name ? ' · ' + c.state_name : '');
                         select.appendChild(option);
                     }
                     this.customerStates[c.id] = c.state_id;
@@ -407,11 +432,33 @@
                 recompute() {
                     const inter = this.isInterstate;
                     let sub = 0, cgst = 0, sgst = 0, igst = 0;
+
+                    // Quote-level discount spread pro rata before tax
+                    // (InvoiceCalculator::apportionDiscount on the server).
+                    const grossOf = item => +((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toFixed(2);
+                    const grossList = this.items.map(grossOf);
+                    const totalGross = +grossList.reduce((a, b) => a + b, 0).toFixed(2);
+                    const input = Math.max(0, parseFloat(this.discountInput) || 0);
+                    let discount = this.discountMode === 'percent'
+                        ? +(totalGross * Math.min(input, 100) / 100).toFixed(2)
+                        : +input.toFixed(2);
+                    discount = Math.min(discount, totalGross);
+                    let lastIdx = -1;
+                    grossList.forEach((g, i) => { if (g > 0) lastIdx = i; });
+                    let allocated = 0;
+                    this.items.forEach((item, i) => {
+                        if (discount <= 0 || grossList[i] <= 0) { item.discount = 0; return; }
+                        let share = i === lastIdx
+                            ? +(discount - allocated).toFixed(2)
+                            : +(discount * grossList[i] / totalGross).toFixed(2);
+                        share = Math.min(share, grossList[i]);
+                        item.discount = share;
+                        allocated = +(allocated + share).toFixed(2);
+                    });
+
                     this.items.forEach(item => {
-                        const qty = parseFloat(item.quantity) || 0;
-                        const rate = parseFloat(item.rate) || 0;
                         const gst = parseFloat(item.gst_rate) || 0;
-                        const gross = +(qty * rate).toFixed(2);
+                        const gross = grossOf(item);
                         const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
                         const amount = +(gross - disc).toFixed(2);
                         let c = 0, s = 0, ig = 0;
@@ -432,6 +479,8 @@
                     });
                     const totalTax = +(cgst + sgst + igst).toFixed(2);
                     this.totals = {
+                        gross: totalGross,
+                        discount: +allocated.toFixed(2),
                         subtotal: +sub.toFixed(2),
                         cgst: +cgst.toFixed(2),
                         sgst: +sgst.toFixed(2),
@@ -440,7 +489,7 @@
                         grandTotal: Math.round(sub + totalTax),
                     };
                 },
-                fmt(n) { return (parseFloat(n) || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+                fmt(n) { const v = Math.round((parseFloat(n) || 0) * 100) / 100; return v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
             };
         }
     </script>

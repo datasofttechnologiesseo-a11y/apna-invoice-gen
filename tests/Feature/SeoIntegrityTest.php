@@ -84,6 +84,23 @@ class SeoIntegrityTest extends TestCase
         $this->assertStringNotContainsString('staging.example.net', $html);
     }
 
+    public function test_no_public_page_leaks_the_request_host_into_canonical_or_schema(): void
+    {
+        // The home page was covered; blog posts, the blog index and the
+        // marketing pages built their canonical / JSON-LD from the request host
+        // through their own code paths, which is how a preview subdomain ended
+        // up named as the canonical of a real article.
+        $author = User::factory()->create();
+        Post::factory()->recycle($author)->published()->create(['slug' => 'host-check-post']);
+
+        foreach (['/blog/host-check-post', '/blog', '/features', '/pricing', '/gst-calculator'] as $path) {
+            $html = $this->get($path, ['HOST' => 'preview-7f2.staging.example.net'])->assertOk()->getContent();
+            $this->assertStringNotContainsString('staging.example.net', $html, "{$path} leaks the request host");
+            preg_match('#<link rel="canonical" href="([^"]+)"#', $html, $m);
+            $this->assertStringStartsWith(rtrim(config('app.url'), '/'), $m[1] ?? '', "{$path} canonical");
+        }
+    }
+
     public function test_every_url_the_sitemap_advertises_is_actually_served(): void
     {
         $author = User::factory()->create();

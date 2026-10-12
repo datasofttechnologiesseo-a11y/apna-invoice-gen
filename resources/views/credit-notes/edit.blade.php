@@ -20,10 +20,8 @@
             <div class="p-5 bg-brand-50 border border-brand-200 rounded-lg text-sm text-brand-900">
                 <div class="font-semibold">Section 34 of the CGST Act</div>
                 <p class="mt-1 leading-relaxed">
-                    Credit notes adjust an issued invoice when goods are returned, the rate was
-                    overcharged, or a post-sale discount is agreed. The credit note reduces the
-                    effective receivable on the original invoice and must be reported in GSTR-1
-                    for the month it's issued.
+                    Issue a credit note for goods returned, an overcharged rate or a post-sale discount.
+                    It reduces the amount receivable on this invoice and is reported in GSTR-1 for the month it is issued.
                 </p>
             </div>
 
@@ -59,8 +57,8 @@
 
                     <div>
                         <x-input-label for="amount" value="Credit amount (₹) *" />
-                        <x-text-input id="amount" name="amount" type="number" step="any" min="0.01" :max="$creditable" class="mt-1 block w-full text-right font-mono" :value="old('amount', $creditable)" required />
-                        <p class="text-xs text-gray-500 mt-1">Tax components are pro-rated automatically across CGST/SGST/IGST.</p>
+                        <x-text-input inputmode="decimal" id="amount" name="amount" type="number" step="any" min="0.01" :max="$creditable" class="mt-1 block w-full text-right font-mono" :value="plain_amount(old('amount', $creditable))" required />
+                        <p class="text-xs text-gray-500 mt-1">Tax is apportioned across CGST/SGST/IGST automatically.</p>
                     </div>
 
                     <div class="md:col-span-2">
@@ -73,7 +71,7 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <x-input-label for="notes" value="Notes (shown on the credit note PDF)" />
+                        <x-input-label for="notes" value="Notes (printed on the credit note)" />
                         <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" maxlength="1000" placeholder="e.g. Goods returned as per DC #123 dated 12 May 2026.">{{ old('notes') }}</textarea>
                     </div>
                 </div>

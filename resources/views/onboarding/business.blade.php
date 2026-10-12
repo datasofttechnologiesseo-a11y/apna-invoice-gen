@@ -42,9 +42,8 @@
         <div class="p-6 md:p-8 bg-gradient-to-br from-brand-900 to-brand-800 text-white">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="text-xs font-bold uppercase tracking-widest text-accent-300">Step 1 of 3</div>
-                    <h1 class="mt-2 font-display text-2xl md:text-3xl font-extrabold">Tell us about your business</h1>
-                    <p class="mt-2 text-brand-100">Just two things to start billing. Everything else can wait.</p>
+                    <h1 class="font-display text-2xl md:text-3xl font-extrabold">Set up your business</h1>
+                    <p class="mt-2 text-brand-100">Only the business name and state are required to start billing.</p>
                 </div>
                 <a href="{{ route('dashboard') }}"
                    class="hidden sm:inline-flex flex-shrink-0 items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-100 ring-1 ring-white/25 hover:bg-white/10 transition">
@@ -57,8 +56,8 @@
             @csrf
 
             @if ($errors->any())
-                <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
-                    <div class="font-semibold mb-1">Please fix the following before saving:</div>
+                <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
+                    <div class="font-semibold mb-1">Correct the following before saving:</div>
                     <ul class="list-disc pl-5 space-y-0.5">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -71,30 +70,30 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="md:col-span-2">
                     <x-input-label for="name" value="Business name *" />
-                    <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $company->name)" required autofocus placeholder="Acme Consulting LLP" />
-                    <p class="mt-1 text-xs text-gray-500">Appears as the letterhead on every invoice.</p>
-                    <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $company->name)" required autofocus autocomplete="organization" placeholder="Acme Consulting LLP" aria-describedby="name-hint" />
+                    <p id="name-hint" class="mt-1 text-xs text-gray-500">Printed as the letterhead on invoices.</p>
+                    <x-input-error :messages="$errors->get('name')" for="name" class="mt-2" />
                 </div>
 
                 <div>
                     <x-input-label for="state_id" value="State *" />
-                    <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm" required>
-                        <option value="">Select your state</option>
+                    <select id="state_id" name="state_id" class="mt-1 block w-full border-gray-300 focus:border-brand-600 focus:ring-brand-600 rounded-md shadow-sm" required aria-describedby="state_id-hint" @error('state_id') aria-invalid="true" @enderror>
+                        <option value="">Select state</option>
                         @foreach ($states as $s)
                             <option value="{{ $s->id }}" @selected(old('state_id', $company->state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                         @endforeach
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">Decides CGST + SGST vs IGST automatically.</p>
-                    <x-input-error :messages="$errors->get('state_id')" class="mt-2" />
+                    <p id="state_id-hint" class="mt-1 text-xs text-gray-500">Decides whether CGST and SGST or IGST applies.</p>
+                    <x-input-error :messages="$errors->get('state_id')" for="state_id" class="mt-2" />
                 </div>
 
                 <div>
                     <x-input-label for="gstin" value="GSTIN" />
                     <x-text-input id="gstin" name="gstin" type="text" class="mt-1 block w-full uppercase font-mono"
                                   x-model="gstin" x-on:input="syncStateFromGstin()"
-                                  :value="old('gstin', $company->gstin)" maxlength="15" placeholder="27AAACT2727Q1ZW" />
-                    <p class="mt-1 text-xs text-gray-500">Optional. Leave blank if you are not GST-registered.</p>
-                    <x-input-error :messages="$errors->get('gstin')" class="mt-2" />
+                                  :value="old('gstin', $company->gstin)" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="27AAACT2727Q1ZW" aria-describedby="gstin-hint" />
+                    <p id="gstin-hint" class="mt-1 text-xs text-gray-500">Optional. Leave blank if you are not GST-registered.</p>
+                    <x-input-error :messages="$errors->get('gstin')" for="gstin" class="mt-2" />
                 </div>
             </div>
 
@@ -102,23 +101,23 @@
                  Company settings. Collapsed by default so the first run is two
                  fields, not nineteen. --}}
             <div class="border-t pt-5">
-                <button type="button" x-on:click="advanced = ! advanced"
+                <button type="button" x-on:click="advanced = ! advanced" aria-controls="onboarding-more-details" x-bind:aria-expanded="advanced.toString()"
                         class="w-full flex items-center justify-between gap-3 text-left group">
                     <span>
                         <span class="font-display font-bold text-gray-900">Add more details</span>
-                        <span class="block text-sm text-gray-500 mt-0.5">Address, logo, bank &amp; UPI, invoice numbering, all optional</span>
+                        <span class="block text-sm text-gray-500 mt-0.5">Address, logo, bank and UPI, invoice numbering. All optional.</span>
                     </span>
                     <svg class="w-5 h-5 flex-shrink-0 text-gray-500 group-hover:text-gray-600 transition-transform"
                          x-bind:class="advanced && 'rotate-180'"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
 
-                <div x-show="advanced" x-cloak class="mt-6 space-y-6">
+                <div x-show="advanced" x-cloak id="onboarding-more-details" class="mt-6 space-y-6">
                     <template x-if="gstin.trim().length > 0">
-                        <div class="p-3 rounded-lg bg-accent-50 border border-accent-200 text-accent-900 text-sm">
-                            You have entered a GSTIN, so a registered address is required on your tax invoices (GST Rule 46).
+                        <div class="p-3 rounded-lg bg-accent-50 border border-accent-200 text-accent-900 text-sm" role="note">
+                            With a GSTIN, tax invoices must show your registered address (Rule 46).
                         </div>
                     </template>
 
@@ -127,30 +126,30 @@
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
                                 <x-input-label for="address_line1">Address line 1 <span class="font-normal text-gray-500">(required if GST-registered)</span></x-input-label>
-                                <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1', $company->address_line1)" placeholder="Plot 42, Tech Park" />
-                                <x-input-error :messages="$errors->get('address_line1')" class="mt-2" />
+                                <x-text-input id="address_line1" name="address_line1" type="text" class="mt-1 block w-full" :value="old('address_line1', $company->address_line1)" autocomplete="address-line1" placeholder="Plot 42, Tech Park" />
+                                <x-input-error :messages="$errors->get('address_line1')" for="address_line1" class="mt-2" />
                             </div>
                             <div class="md:col-span-2">
                                 <x-input-label for="address_line2" value="Address line 2" />
-                                <x-text-input id="address_line2" name="address_line2" type="text" class="mt-1 block w-full" :value="old('address_line2', $company->address_line2)" placeholder="Sector 5, Powai" />
+                                <x-text-input id="address_line2" name="address_line2" type="text" class="mt-1 block w-full" :value="old('address_line2', $company->address_line2)" autocomplete="address-line2" placeholder="Sector 5, Powai" />
                             </div>
                             <div>
                                 <x-input-label for="city">City <span class="font-normal text-gray-500">(required if GST-registered)</span></x-input-label>
-                                <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $company->city)" placeholder="Mumbai" />
-                                <x-input-error :messages="$errors->get('city')" class="mt-2" />
+                                <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $company->city)" autocomplete="address-level2" placeholder="Mumbai" />
+                                <x-input-error :messages="$errors->get('city')" for="city" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="postal_code" value="PIN code" />
-                                <x-text-input id="postal_code" name="postal_code" type="text" class="mt-1 block w-full" :value="old('postal_code', $company->postal_code)" maxlength="10" placeholder="400076" />
+                                <x-text-input id="postal_code" name="postal_code" type="text" inputmode="numeric" maxlength="6" autocomplete="postal-code" class="mt-1 block w-full" :value="old('postal_code', $company->postal_code)" placeholder="400076" />
                             </div>
                             <div>
                                 <x-input-label for="pan" value="PAN" />
-                                <x-text-input id="pan" name="pan" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('pan', $company->pan)" maxlength="10" placeholder="AABCU9603R" />
-                                <x-input-error :messages="$errors->get('pan')" class="mt-2" />
+                                <x-text-input id="pan" name="pan" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('pan', $company->pan)" maxlength="10" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="AABCU9603R" />
+                                <x-input-error :messages="$errors->get('pan')" for="pan" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="country" value="Country" />
-                                <x-text-input id="country" name="country" type="text" class="mt-1 block w-full" :value="old('country', $company->country ?? 'India')" />
+                                <x-text-input id="country" name="country" type="text" class="mt-1 block w-full" :value="old('country', $company->country ?? 'India')" autocomplete="country-name" />
                             </div>
                         </div>
                     </div>
@@ -160,8 +159,8 @@
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <x-input-label for="email" value="Email" />
-                                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $company->email ?? auth()->user()->email)" placeholder="billing@company.com" />
-                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $company->email ?? auth()->user()->email)" autocomplete="email" placeholder="billing@company.com" />
+                                <x-input-error :messages="$errors->get('email')" for="email" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="phone" value="Phone" />
@@ -169,21 +168,21 @@
                             </div>
                             <div class="md:col-span-2">
                                 <x-input-label for="website" value="Website" />
-                                <x-text-input id="website" name="website" type="url" class="mt-1 block w-full" :value="old('website', $company->website)" placeholder="https://company.com" />
-                                <x-input-error :messages="$errors->get('website')" class="mt-2" />
+                                <x-text-input id="website" name="website" type="url" class="mt-1 block w-full" :value="old('website', $company->website)" autocomplete="url" placeholder="https://company.com" />
+                                <x-input-error :messages="$errors->get('website')" for="website" class="mt-2" />
                             </div>
                         </div>
                     </div>
 
                     <div class="border-t pt-6">
                         <h2 class="font-display font-bold text-gray-900">Letterhead logo</h2>
-                        <p class="text-sm text-gray-500 mt-0.5">Shown at the top of every invoice PDF</p>
+                        <p class="text-sm text-gray-500 mt-0.5">Printed at the top of invoice PDFs.</p>
                         @if ($company->logo_path)
                             <img src="{{ Storage::url($company->logo_path) }}" alt="Current logo" class="mt-4 h-20 border rounded-lg bg-white p-2">
                         @endif
-                        <input id="logo" name="logo" type="file" accept="image/*" class="mt-3 block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
-                        <p class="mt-1 text-xs text-gray-500">PNG or JPG, up to 2 MB. Recommended 400×120 px.</p>
-                        <x-input-error :messages="$errors->get('logo')" class="mt-2" />
+                        <input id="logo" name="logo" type="file" accept="image/*" aria-label="Letterhead logo" aria-describedby="logo-hint" class="mt-3 block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
+                        <p id="logo-hint" class="mt-1 text-xs text-gray-500">PNG or JPG, up to 2 MB. Recommended 400×120 px.</p>
+                        <x-input-error :messages="$errors->get('logo')" for="logo" class="mt-2" />
                     </div>
 
                     <div class="border-t pt-6">
@@ -191,12 +190,11 @@
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <x-input-label for="invoice_prefix" value="Prefix" />
-                                <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="$previewPrefix" maxlength="10" />
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Your first invoice will be <strong class="font-mono text-brand-700">{{ $previewPrefix }}/{{ $fyLabel }}/0001</strong>
-                                    <span class="text-gray-500">, sequence auto-resets on 1&nbsp;April (GST best practice).</span>
+                                <x-text-input id="invoice_prefix" name="invoice_prefix" type="text" class="mt-1 block w-full font-mono" :value="$previewPrefix" maxlength="10" aria-describedby="invoice_prefix-hint" />
+                                <p id="invoice_prefix-hint" class="mt-1 text-xs text-gray-500">
+                                    First invoice number: <strong class="font-mono text-brand-700">{{ $previewPrefix }}/{{ $fyLabel }}/0001</strong><span class="text-gray-500">. Numbering restarts on 1&nbsp;April each year.</span>
                                 </p>
-                                <x-input-error :messages="$errors->get('invoice_prefix')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('invoice_prefix')" for="invoice_prefix" class="mt-2" />
                             </div>
                         </div>
                     </div>
@@ -204,24 +202,24 @@
                     <div class="border-t pt-6">
                         <h2 class="font-display font-bold text-gray-900">Payment details</h2>
                         <p class="text-sm text-gray-500 mt-0.5">
-                            Shown in the "Payment details" block on every invoice. Add a UPI ID to auto-generate a Scan-to-Pay QR on bills.
+                            Printed on invoices. Add a UPI ID to print a payment QR code.
                         </p>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="md:col-span-2">
                                 <x-input-label for="bank_account_name" value="Payee name (as in bank)" />
-                                <x-text-input id="bank_account_name" name="bank_account_name" type="text" class="mt-1 block w-full" :value="old('bank_account_name', $company->bank_account_name)" maxlength="120" :placeholder="$company->name ?: 'Name on the bank account'" />
-                                <p class="mt-1 text-xs text-gray-500">The name your bank holds on the account, if it differs from your business name.</p>
-                                <x-input-error :messages="$errors->get('bank_account_name')" class="mt-2" />
+                                <x-text-input id="bank_account_name" name="bank_account_name" type="text" class="mt-1 block w-full" :value="old('bank_account_name', $company->bank_account_name)" maxlength="120" :placeholder="$company->name ?: 'Name on the bank account'" aria-describedby="bank_account_name-hint" />
+                                <p id="bank_account_name-hint" class="mt-1 text-xs text-gray-500">Name on the bank account, if different from the business name.</p>
+                                <x-input-error :messages="$errors->get('bank_account_name')" for="bank_account_name" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="bank_name" value="Bank name" />
                                 <x-text-input id="bank_name" name="bank_name" type="text" class="mt-1 block w-full" :value="old('bank_name', $company->bank_name)" maxlength="120" placeholder="HDFC Bank" />
-                                <x-input-error :messages="$errors->get('bank_name')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('bank_name')" for="bank_name" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="bank_branch" value="Branch" />
                                 <x-text-input id="bank_branch" name="bank_branch" type="text" class="mt-1 block w-full" :value="old('bank_branch', $company->bank_branch)" maxlength="120" placeholder="Saket, New Delhi" />
-                                <x-input-error :messages="$errors->get('bank_branch')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('bank_branch')" for="bank_branch" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="bank_account_type" value="Account type" />
@@ -232,23 +230,23 @@
                                     <option value="current" @selected($accountType === 'current')>Current</option>
                                     <option value="savings" @selected($accountType === 'savings')>Savings</option>
                                 </select>
-                                <x-input-error :messages="$errors->get('bank_account_type')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('bank_account_type')" for="bank_account_type" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="bank_account_number" value="Account number" />
-                                <x-text-input id="bank_account_number" name="bank_account_number" type="text" class="mt-1 block w-full font-mono" :value="old('bank_account_number', $company->bank_account_number)" maxlength="30" />
-                                <x-input-error :messages="$errors->get('bank_account_number')" class="mt-2" />
+                                <x-text-input id="bank_account_number" name="bank_account_number" type="text" class="mt-1 block w-full font-mono" :value="old('bank_account_number', $company->bank_account_number)" maxlength="30" autocomplete="off" spellcheck="false" />
+                                <x-input-error :messages="$errors->get('bank_account_number')" for="bank_account_number" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="bank_ifsc" value="IFSC code" />
-                                <x-text-input id="bank_ifsc" name="bank_ifsc" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('bank_ifsc', $company->bank_ifsc)" maxlength="15" placeholder="HDFC0001234" />
-                                <x-input-error :messages="$errors->get('bank_ifsc')" class="mt-2" />
+                                <x-text-input id="bank_ifsc" name="bank_ifsc" type="text" class="mt-1 block w-full uppercase font-mono" :value="old('bank_ifsc', $company->bank_ifsc)" maxlength="11" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="HDFC0001234" />
+                                <x-input-error :messages="$errors->get('bank_ifsc')" for="bank_ifsc" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="upi_id" value="UPI ID (VPA)" />
-                                <x-text-input id="upi_id" name="upi_id" type="text" class="mt-1 block w-full font-mono" :value="old('upi_id', $company->upi_id)" maxlength="60" placeholder="yourname@okhdfcbank" />
-                                <p class="mt-1 text-xs text-gray-500">If set, a QR code is auto-generated on each invoice so clients can scan and pay via any UPI app.</p>
-                                <x-input-error :messages="$errors->get('upi_id')" class="mt-2" />
+                                <x-text-input id="upi_id" name="upi_id" type="text" class="mt-1 block w-full font-mono" :value="old('upi_id', $company->upi_id)" maxlength="60" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="yourname@okhdfcbank" aria-describedby="upi_id-hint" />
+                                <p id="upi_id-hint" class="mt-1 text-xs text-gray-500">Invoices show a QR code that customers can scan to pay with any UPI app.</p>
+                                <x-input-error :messages="$errors->get('upi_id')" for="upi_id" class="mt-2" />
                             </div>
                         </div>
                     </div>
@@ -258,10 +256,10 @@
             <input type="hidden" name="default_currency" value="INR">
 
             <div class="border-t pt-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
-                <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:text-gray-700">I'll do this later</a>
-                <button class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
+                <a href="{{ route('dashboard') }}" class="text-sm text-gray-600 hover:text-gray-800 py-2">Do this later</a>
+                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-brand transition">
                     Save and continue
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
                 </button>
             </div>
         </form>

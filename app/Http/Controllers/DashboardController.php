@@ -95,9 +95,15 @@ class DashboardController extends Controller
         // This month's P&L snapshot
         $start = now()->startOfMonth();
         $end = now()->endOfMonth();
-        $monthIncome = (float) (clone $invoices)->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$start, $end])->sum('subtotal');
-        $monthExpense = (float) $company->expenses()->whereBetween('entry_date', [$start, $end])->sum('amount');
+        // Same definitions as the Finance P&L: income net of credit notes
+        // issued this month (s.34), expenses including GST you cannot claim
+        // back (blocked credit, s.17(5)).
+        $monthIncome = round((float) (clone $invoices)->whereIn('status', ['final', 'partially_paid', 'paid'])
+            ->whereBetween('invoice_date', [$start, $end])->sum('subtotal')
+            - (float) \App\Models\CreditNote::where('company_id', $company->id)
+                ->whereBetween('credit_note_date', [$start, $end])->sum('taxable_value'), 2);
+        $monthExpense = round((float) $company->expenses()->whereBetween('entry_date', [$start, $end])->sum('amount')
+            + (float) $company->expenses()->whereBetween('entry_date', [$start, $end])->where('itc_eligible', false)->sum('gst_amount'), 2);
         $pnl = [
             'income' => $monthIncome,
             'expense' => $monthExpense,
@@ -138,8 +144,8 @@ class DashboardController extends Controller
                 'title' => $overdueCount === 1
                     ? '1 invoice is overdue'
                     : "{$overdueCount} invoices are overdue",
-                'sub'   => '₹' . number_format($overdueAmount, 2, '.', ',') . ' awaiting payment',
-                'cta'   => 'Send reminders',
+                'sub'   => '₹' . rupees($overdueAmount) . ' awaiting payment',
+                'cta'   => 'View overdue invoices',
                 'href'  => route('invoices.index', ['status' => 'outstanding']),
             ];
         }
@@ -150,7 +156,7 @@ class DashboardController extends Controller
                 'title' => $staleDrafts === 1
                     ? '1 draft older than a week'
                     : "{$staleDrafts} drafts older than a week",
-                'sub'   => 'Issue them or delete to keep things tidy',
+                'sub'   => 'Issue or delete them',
                 'cta'   => 'Review drafts',
                 'href'  => route('invoices.index', ['status' => 'draft']),
             ];
@@ -162,9 +168,26 @@ class DashboardController extends Controller
                 'title' => $unsentRecent === 1
                     ? '1 invoice not shared yet'
                     : "{$unsentRecent} invoices not shared yet",
-                'sub'   => 'Send on WhatsApp or email so they get paid faster',
+                'sub'   => 'Send them on WhatsApp or email',
                 'cta'   => 'See invoices',
                 'href'  => route('invoices.index', ['status' => 'outstanding']),
+            ];
+        }
+        // Items at or below their low-stock level (only for items that track
+        // stock and have a level set - nothing shows for anyone else).
+        $lowStock = $company->products()->where('track_stock', true)->whereNotNull('low_stock_level')
+            ->withSum('stockMovements', 'quantity')->get()
+            ->filter(fn ($p) => $p->stockOnHand() <= (float) $p->low_stock_level);
+        if ($lowStock->isNotEmpty()) {
+            $actionItems[] = [
+                'tone' => 'accent',
+                'icon' => 'stock',
+                'title' => $lowStock->count() === 1
+                    ? $lowStock->first()->name . ' is low on stock'
+                    : $lowStock->count() . ' items are low on stock',
+                'sub'   => 'Reorder before you run out',
+                'cta'   => 'See stock',
+                'href'  => route('reports.show', ['report' => 'stock-summary', 'status' => 'low']),
             ];
         }
 
@@ -400,18 +423,36 @@ class DashboardController extends Controller
             && $stats['receipts_issued'] === 0
             && ! $company->expenses()->exists();
 
-        // Ask for a Google review on the dashboard once the user has actually
-        // issued an invoice - and again a week later if they put it off, until
-        // they say the review is done. By now the bill has been sent and the
-        // product has proved itself, and nothing here is blocked by the modal
-        // the way the invoice screen's share buttons would be.
+        // Review invite, "registration" moment: the first dashboard a new user
+        // sees, and the first visit of an existing user never asked before.
+        // The other moment - every alternate invoice - is in finalize().
         $reviewPrompt = app(\App\Services\ReviewPrompt::class);
-        $showReviewInvite = $reviewPrompt->shouldPrompt($user, $stats['issued']);
+        $showReviewInvite = $reviewPrompt->shouldPromptOnDashboard($user);
         if ($showReviewInvite) {
             $reviewPrompt->markShown($user);
         }
 
+        // This month's GST at a glance (registered businesses with invoices):
+        // last month's returns, in the order they fall due.
+        $gstCalendar = null;
+        if ($company->gstin && ! $isFirstRun) {
+            $period = \App\Support\ReturnPeriod::for(now()->subMonthNoOverflow());
+            $g3b = app(\App\Services\Gstr3bBuilder::class)->build($company, $period->start, $period->end);
+            $twoB = \App\Models\Gstr2bEntry::where('company_id', $company->id)->where('period', $period->month())->exists();
+            $gstCalendar = [
+                'label' => $period->label(),
+                'query' => $period->query(),
+                'gstr1_due' => $period->gstr1Due(),
+                'gstr2b_from' => $period->end->copy()->addDay()->day(14),
+                'gstr2b_uploaded' => $twoB,
+                'gstr3b_due' => $period->gstr3bDue($company->state?->gst_code),
+                'cash' => (float) $g3b['netCash']['total'],
+                'invoices' => (int) $g3b['invoiceCount'],
+            ];
+        }
+
         return view('dashboard', compact(
+            'gstCalendar',
             'stats', 'recent', 'currency', 'company', 'setup', 'setupComplete',
             'setupProgress', 'pnl', 'trend30',
             'receivables', 'spendByCategory', 'chartSeries',

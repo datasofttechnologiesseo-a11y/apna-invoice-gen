@@ -1,6 +1,7 @@
 @php
     $c = $invoice->company;
-    $cust = $invoice->customer;
+    // The recipient as issued (snapshot), or the live customer on a draft.
+    $cust = $invoice->billedCustomer();
     $currencySymbol = '₹';
 
     // Document title is decided by Invoice::documentTitle() - keeps the
@@ -21,11 +22,21 @@
 
 <div class="p-8 text-gray-900 invoice-doc">
     <div class="flex justify-between items-start pb-6 border-b-2 border-gray-800">
-        <div>
-            @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                <img src="{{ asset('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 70px; max-width: 220px;">
+        @php
+            // A wide wordmark sits above the business name; a square or tall
+            // emblem sits beside it, as on a printed letterhead.
+            $logo = \App\Support\BrandImage::fit($c->logo_path, 240, 64);
+            $logoBeside = $logo && $logo['ratio'] < 2.2;
+            if ($logoBeside) {
+                $logo = \App\Support\BrandImage::fit($c->logo_path, 130, 76);
+            }
+        @endphp
+        <div class="{{ $logoBeside ? 'flex items-start gap-4' : '' }}">
+            @if ($logo)
+                <img src="{{ $logo['url'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" class="shrink-0 {{ $logoBeside ? '' : 'mb-3' }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px;">
             @endif
-            <h1 class="{{ $c->logo_path ? 'mt-2' : '' }}" style="font-size: 22px; font-weight: 700; margin: 0;">{{ $c->name }}</h1>
+            <div>
+            <h1 style="font-size: 22px; font-weight: 700; margin: 0;">{{ $c->name }}</h1>
             <div class="text-sm text-gray-600 mt-2">
                 {{ $c->address_line1 }}@if ($c->address_line2), {{ $c->address_line2 }}@endif<br>
                 {{ $c->city }}{{ $c->city && $c->state?->name ? ', ' : '' }}{{ $c->state?->name }}@if ($c->state?->gst_code) ({{ $c->state->gst_code }})@endif {{ $c->postal_code }}<br>
@@ -41,6 +52,7 @@
             @if ($c->state?->gst_code)
                 <div class="text-sm"><strong>State code:</strong> <span class="font-mono">{{ $c->state->gst_code }}</span></div>
             @endif
+            </div>
         </div>
         <div class="text-right">
             <h2 class="text-2xl font-bold tracking-wide uppercase">{{ $documentTitle }}</h2>
@@ -60,6 +72,15 @@
                 <div><strong>Place of supply:</strong> {{ $invoice->placeOfSupply?->name ?? '-' }}@if ($invoice->placeOfSupply?->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif</div>
                 @if ($invoice->reverse_charge)
                     <div class="text-accent-700"><strong>Reverse charge applicable</strong> - Section 9(3)/9(4)</div>
+                @endif
+                @if ($invoice->isZeroRated())
+                    <div class="mt-1 text-brand-800 text-xs font-semibold uppercase tracking-wide">{{ $invoice->zeroRatedEndorsement() }}</div>
+                    @if ($invoice->isUnderLut() && $invoice->company?->lut_number)
+                        <div class="text-xs"><strong>LUT / Bond No.:</strong> {{ $invoice->company->lut_number }}</div>
+                    @endif
+                    @if ($invoice->isExport() && ($invoice->export_port_code || $invoice->shipping_bill_number))
+                        <div class="text-xs"><strong>Port:</strong> {{ $invoice->export_port_code ?: '-' }} · <strong>Shipping bill:</strong> {{ $invoice->shipping_bill_number ?: '-' }}@if ($invoice->shipping_bill_date) dt. {{ $invoice->shipping_bill_date->format('d M Y') }}@endif</div>
+                    @endif
                 @endif
             </div>
         </div>
@@ -127,7 +148,9 @@
         </div>
     </div>
 
-    <table class="w-full mt-6 text-sm">
+    {{-- Scrolls sideways on a phone rather than pushing the page wider. --}}
+    <div class="mt-6 overflow-x-auto print:overflow-visible">
+    <table class="w-full text-sm min-w-[560px] print:min-w-0">
         <thead>
             <tr class="bg-gray-100 text-gray-700 text-left">
                 <th class="px-2 py-2">#</th>
@@ -143,7 +166,7 @@
                 @endif
                 <th class="px-2 py-2 text-right">GST%</th>
                 <th class="px-2 py-2 text-right">Taxable value</th>
-                <th class="px-2 py-2 text-right">{{ $invoice->is_interstate ? 'IGST' : 'CGST + SGST' }}</th>
+                <th class="px-2 py-2 text-right">{{ $invoice->is_interstate ? 'IGST' : 'CGST + ' . $invoice->stateTaxLabel() }}</th>
                 <th class="px-2 py-2 text-right">Amount</th>
             </tr>
         </thead>
@@ -201,6 +224,7 @@
             @endforeach
         </tbody>
     </table>
+    </div>
 
     <div class="grid grid-cols-2 gap-8 mt-6">
         <div class="text-sm">
@@ -231,16 +255,16 @@
                 <tr><td class="py-1">Subtotal</td><td class="py-1 text-right font-mono">{{ inr($invoice->subtotal) }}</td></tr>
                 @if ($invoice->reverse_charge)
                     @if ($invoice->is_interstate)
-                        <tr><td class="py-1 text-gray-600 text-xs">IGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0.00</td></tr>
+                        <tr><td class="py-1 text-gray-600 text-xs">IGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0</td></tr>
                     @else
-                        <tr><td class="py-1 text-gray-600 text-xs">CGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0.00</td></tr>
-                        <tr><td class="py-1 text-gray-600 text-xs">SGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0.00</td></tr>
+                        <tr><td class="py-1 text-gray-600 text-xs">CGST <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0</td></tr>
+                        <tr><td class="py-1 text-gray-600 text-xs">{{ $invoice->stateTaxLabel() }} <span class="italic">(payable by recipient)</span></td><td class="py-1 text-right font-mono text-xs">{{ $currencySymbol }}0</td></tr>
                     @endif
                 @elseif ($invoice->is_interstate)
                     <tr><td class="py-1">IGST</td><td class="py-1 text-right font-mono">{{ inr($invoice->total_igst) }}</td></tr>
                 @else
                     <tr><td class="py-1">CGST</td><td class="py-1 text-right font-mono">{{ inr($invoice->total_cgst) }}</td></tr>
-                    <tr><td class="py-1">SGST</td><td class="py-1 text-right font-mono">{{ inr($invoice->total_sgst) }}</td></tr>
+                    <tr><td class="py-1">{{ $invoice->stateTaxLabel() }}</td><td class="py-1 text-right font-mono">{{ inr($invoice->total_sgst) }}</td></tr>
                 @endif
                 @if ((float) $invoice->round_off != 0)
                     <tr><td class="py-1">Round off</td><td class="py-1 text-right font-mono">{{ inr($invoice->round_off) }}</td></tr>
@@ -253,7 +277,10 @@
                         // symbol (Indian accounting convention) and relabel as "Advance" so
                         // readers don't mistake it for an outstanding amount.
                         $balance = (float) $invoice->balance;
-                        $balanceLabel = $balance < 0 ? 'Advance (overpaid)' : 'Balance';
+                        // Negative with a credit note behind it = refund owed to the customer.
+                        $balanceLabel = $balance < 0
+                            ? ((float) $invoice->credited_amount > 0 ? 'Refund due to customer' : 'Advance (overpaid)')
+                            : 'Balance';
                         $balanceStr = ($balance < 0 ? '-' : '') . $currencySymbol . inr(abs($balance));
                     @endphp
                     <tr class="border-t"><td class="py-1 font-semibold">{{ $balanceLabel }}</td><td class="py-1 text-right font-mono font-semibold">{{ $balanceStr }}</td></tr>
@@ -325,13 +352,16 @@
             <div class="mt-0.5">Subject to <strong>{{ $c->city ?: 'India' }}</strong> jurisdiction</div>
             <div class="mt-2">This is a computer-generated invoice.</div>
         </div>
-        <div class="w-48 text-center">
-            @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-                <img src="{{ asset('storage/' . $c->signature_path) }}" alt="Signature" class="mx-auto" style="max-height: 50px;">
-            @else
-                <div style="height: 50px;"></div>
-            @endif
-            <div class="border-t border-gray-400 pt-1 mt-2">for {{ $c->name }}<br><span class="text-xs text-gray-500">Authorised signatory</span></div>
+        {{-- "For <business>", the signature (or room to sign), then the signatory line. --}}
+        @php $sig = \App\Support\BrandImage::fit($c->signature_path, 170, 54); @endphp
+        <div class="w-52 text-center">
+            <div class="font-semibold text-gray-900">For {{ $c->name }}</div>
+            <div class="h-[60px] flex items-end justify-center">
+                @if ($sig)
+                    <img src="{{ $sig['url'] }}" alt="Authorised signature" width="{{ $sig['w'] }}" height="{{ $sig['h'] }}" style="width: {{ $sig['w'] }}px; height: {{ $sig['h'] }}px;">
+                @endif
+            </div>
+            <div class="border-t border-gray-400 pt-1 mt-1 text-xs text-gray-500">Authorised signatory</div>
         </div>
     </div>
 </div>

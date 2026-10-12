@@ -71,7 +71,7 @@
                                 stroke-dasharray="{{ $arc['dash'] }}"
                                 stroke-dashoffset="{{ $arc['offset'] }}"
                                 stroke-linecap="butt">
-                            <title>{{ $arc['row']['label'] }} — {{ round($arc['pct']) }}%</title>
+                            <title>{{ $arc['row']['label'] }}: {{ round($arc['pct']) }}%</title>
                         </circle>
                     @endforeach
                 </svg>

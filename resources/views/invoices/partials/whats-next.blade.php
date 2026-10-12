@@ -43,21 +43,21 @@
             <div>
                 <div class="text-xs uppercase tracking-widest font-bold text-brand-700">
                     @if ($isPaid)
-                        Fully paid - well done!
+                        Fully paid
                     @elseif ($isDraft)
                         Draft saved
                     @else
-                        What's next?
+                        Next steps
                     @endif
                 </div>
                 <div class="text-sm text-gray-700">
                     @if ($isPaid)
+                        Payment received in full.
                         {{ $cust?->name ? "Receipt ready for {$cust->name}." : 'Receipt is ready.' }}
-                        Carry the momentum - book the next sale.
                     @elseif ($isDraft)
                         Issue the invoice to lock the number and share it with {{ $cust?->name ?? 'the customer' }}.
                     @else
-                        Invoice issued. Share with the customer and track payment until it's settled.
+                        Invoice issued. Share it with the customer and record payments as they arrive.
                     @endif
                 </div>
             </div>
@@ -74,7 +74,7 @@
                 :action="route('invoices.finalize', $invoice)"
                 method="POST"
                 title="Issue this invoice?"
-                message="Issuing assigns the next invoice number and locks the amounts, line items, and customer. Notes, terms, due date, and transporter details stay editable."
+                message="This assigns the next invoice number and locks the amounts, line items and customer. Notes, terms, due date and transporter details stay editable."
                 confirm-label="Issue invoice"
                 confirm-class="bg-brand-700 hover:bg-brand-800"
                 tone="default">
@@ -84,7 +84,7 @@
                     </span>
                     <span class="flex-1">
                         <span class="block font-semibold leading-tight">Issue invoice</span>
-                        <span class="block text-xs text-white/80">Lock the number, ready to share</span>
+                        <span class="block text-xs text-white/80">Assigns the number and locks amounts</span>
                     </span>
                 </button>
             </x-confirm-form>
@@ -95,7 +95,7 @@
                 </span>
                 <span class="flex-1">
                     <span class="block font-semibold text-gray-900 leading-tight">Continue editing</span>
-                    <span class="block text-xs text-gray-500">Add line items, change customer</span>
+                    <span class="block text-xs text-gray-500">Change items or customer</span>
                 </span>
             </a>
 
@@ -104,8 +104,8 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h11l5 5v7a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                 </span>
                 <span class="flex-1">
-                    <span class="block font-semibold text-gray-900 leading-tight">Preview as PDF</span>
-                    <span class="block text-xs text-gray-500">See how it'll look</span>
+                    <span class="block font-semibold text-gray-900 leading-tight">Preview PDF</span>
+                    <span class="block text-xs text-gray-500">Check before issuing</span>
                 </span>
             </a>
 
@@ -127,8 +127,8 @@
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
                     </span>
                     <span class="flex-1">
-                        <span class="block font-semibold text-gray-900 leading-tight">Send "thank you"</span>
-                        <span class="block text-xs text-gray-500">via WhatsApp</span>
+                        <span class="block font-semibold text-gray-900 leading-tight">Send thank-you note</span>
+                        <span class="block text-xs text-gray-500">On WhatsApp</span>
                     </span>
                 </a>
             @endif
@@ -139,7 +139,7 @@
                 </span>
                 <span class="flex-1">
                     <span class="block font-semibold text-gray-900 leading-tight">{{ $cust?->name ?? 'Customer' }} ledger</span>
-                    <span class="block text-xs text-gray-500">All bills & payments</span>
+                    <span class="block text-xs text-gray-500">All invoices and payments</span>
                 </span>
             </a>
 
@@ -157,13 +157,13 @@
                     </span>
                 </a>
             @else
-                <a href="#share-customer-phone" onclick="document.querySelector('a[href*=\'customers/{{ $invoice->customer_id }}/edit\']')?.click(); return false;" class="group flex items-center gap-3 px-4 py-3 bg-gray-100 text-gray-600 rounded-lg text-left cursor-pointer hover:bg-gray-200 transition" title="Add a mobile number to enable WhatsApp share">
+                <a href="{{ route('customers.edit', $invoice->customer_id) }}" class="group flex items-center gap-3 px-4 py-3 bg-gray-100 text-gray-600 rounded-lg text-left cursor-pointer hover:bg-gray-200 transition" title="Add the customer's mobile number to share on WhatsApp">
                     <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-200">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
                     </span>
                     <span class="flex-1">
                         <span class="block font-semibold leading-tight">Add mobile number</span>
-                        <span class="block text-xs">…to unlock WhatsApp share</span>
+                        <span class="block text-xs">Needed for WhatsApp sharing</span>
                     </span>
                 </a>
             @endif
@@ -173,8 +173,8 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
                 <span class="flex-1">
-                    <span class="block font-semibold text-gray-900 leading-tight">Record Receipt</span>
-                    <span class="block text-xs text-gray-500">₹{{ inr($invoice->balance) }} balance</span>
+                    <span class="block font-semibold text-gray-900 leading-tight">Record payment</span>
+                    <span class="block text-xs text-gray-500">Balance ₹{{ rupees($invoice->balance) }}</span>
                 </span>
             </a>
 
@@ -184,7 +184,7 @@
                 </span>
                 <span class="flex-1">
                     <span class="block font-semibold text-gray-900 leading-tight">Download PDF</span>
-                    <span class="block text-xs text-gray-500">For email / print</span>
+                    <span class="block text-xs text-gray-500">For email or print</span>
                 </span>
             </a>
 
@@ -194,7 +194,7 @@
                 </span>
                 <span class="flex-1">
                     <span class="block font-semibold text-gray-900 leading-tight">New invoice</span>
-                    <span class="block text-xs text-gray-500">Keep the momentum</span>
+                    <span class="block text-xs text-gray-500">Bill the next sale</span>
                 </span>
             </a>
         @endif

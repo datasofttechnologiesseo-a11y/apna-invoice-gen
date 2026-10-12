@@ -50,7 +50,7 @@
                         <td class="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{{ $co->created_at->format('d M Y') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No companies match.</td></tr>
+                    <tr><td colspan="7" class="px-5 py-12 text-center text-gray-500">No companies match.</td></tr>
                 @endforelse
             </tbody>
         </table>

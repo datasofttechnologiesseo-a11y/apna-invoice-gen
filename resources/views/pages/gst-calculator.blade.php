@@ -1,37 +1,49 @@
 @php
     $appName = config('seo.name', 'Apna Invoice');
-    $url = url('/gst-calculator');
+    // APP_URL, like the canonical: never the host the request arrived on.
+    $origin = rtrim(config('app.url'), '/');
+    $url = $origin . '/gst-calculator';
 
-    // WebApplication (the calculator is a real tool), HowTo (how to use it) and
-    // FAQPage (the questions below) - three rich-result types on one page.
+    // The same Organization node the home page declares, by @id, so the tool
+    // is tied to the business behind Apna Invoice.
+    $orgRef = [
+        '@type' => 'Organization',
+        '@id' => $origin . '#organization',
+        'name' => config('seo.organization.name'),
+        'url' => config('seo.organization.url'),
+    ];
+
+    // WebApplication (the calculator is a real tool) and FAQPage (the
+    // questions below). There is no HowTo: its steps were not on the page,
+    // and structured data has to describe visible content (Google also
+    // retired HowTo rich results in 2023).
     $appSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'WebApplication',
-        'name' => 'GST Calculator',
+        '@id' => $url . '#app',
+        'name' => $appName . ' GST Calculator',
         'url' => $url,
+        'image' => $origin . '/brand/og/gst-calculator.png',
         'applicationCategory' => 'FinanceApplication',
-        'operatingSystem' => 'Web',
+        'operatingSystem' => 'Any (web-based)',
+        'browserRequirements' => 'Requires JavaScript',
         'inLanguage' => 'en-IN',
-        'description' => 'Free online GST calculator for India. Add or remove GST at 5%, 12%, 18% or 28%, with automatic CGST, SGST and IGST split for intra-state and inter-state supply.',
+        'isAccessibleForFree' => true,
+        'description' => 'Free online GST calculator for India. Add or remove GST at 5%, 18% or 40%, or any custom rate, with automatic CGST, SGST and IGST split for intra-state and inter-state supply.',
+        // Only what the widget on this page actually does.
+        'featureList' => [
+            'Add GST to an amount (GST exclusive)',
+            'Remove GST from an inclusive amount (reverse GST)',
+            '5%, 18% and 40% slabs, or any custom rate',
+            'CGST and SGST split for same-state supply',
+            'IGST for inter-state supply',
+            'Share the result on WhatsApp',
+            'Embed on your own website',
+            'No sign-up needed',
+        ],
         'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'INR'],
-        'publisher' => [
-            '@type' => 'Organization',
-            'name' => config('seo.organization.name'),
-            'url' => config('seo.organization.url'),
-        ],
-    ];
-
-    $howToSchema = [
-        '@context' => 'https://schema.org',
-        '@type' => 'HowTo',
-        'name' => 'How to calculate GST online',
-        'inLanguage' => 'en-IN',
-        'step' => [
-            ['@type' => 'HowToStep', 'position' => 1, 'name' => 'Enter the amount', 'text' => 'Type the amount. Choose whether it already includes GST or not.'],
-            ['@type' => 'HowToStep', 'position' => 2, 'name' => 'Pick the GST rate', 'text' => 'Select 5%, 12%, 18% or 28%, or type a custom rate.'],
-            ['@type' => 'HowToStep', 'position' => 3, 'name' => 'Choose the supply type', 'text' => 'Same state splits into CGST and SGST. Different state shows IGST.'],
-            ['@type' => 'HowToStep', 'position' => 4, 'name' => 'Read the result', 'text' => 'See the taxable value, GST amount and total instantly.'],
-        ],
+        'creator' => $orgRef,
+        'publisher' => $orgRef,
     ];
 
     $faqs = [
@@ -40,13 +52,13 @@
         ['q' => 'What is the difference between CGST, SGST and IGST?',
          'a' => 'When the seller and buyer are in the same state, GST splits equally into CGST (central) and SGST (state). When they are in different states, the whole tax is charged as IGST (integrated). This calculator does that split for you.'],
         ['q' => 'What are the GST rates in India?',
-         'a' => 'The common GST slabs are 5%, 12%, 18% and 28%. A few items use 0%, 0.25% or 3%. Most services fall under 18%. Always confirm the rate for your specific HSN or SAC code.'],
+         'a' => 'Since 22 September 2025 (GST 2.0) the main slabs are 5% and 18%, with 40% for luxury and sin goods. A few items use 0%, 0.25% or 3%, and tobacco products stay at 28% plus cess for now. Most services fall under 18%. Always confirm the rate for your specific HSN or SAC code.'],
         ['q' => 'How do I calculate GST inclusive and exclusive amounts?',
          'a' => 'Exclusive means GST is added on top of the amount you enter. Inclusive means the amount you enter already contains GST, and the tool works backwards to find the base value and the tax inside it. Switch the toggle to do either.'],
         ['q' => 'How do I do a reverse GST calculation?',
-         'a' => 'A reverse GST calculation removes GST from a price that already includes it. Divide the inclusive amount by 1 plus the rate. For example, Rs 1,180 inclusive of 18% GST gives a base of Rs 1,000 (1,180 divided by 1.18) and GST of Rs 180. Switch this calculator to "Remove GST" to do it automatically.'],
+         'a' => 'A reverse GST calculation removes GST from a price that already includes it. Divide the inclusive amount by 1 plus the rate. For example, Rs 1,180 inclusive of 18% GST gives a base of Rs 1,000 (1,180 divided by 1.18) and GST of Rs 180. Switch this calculator to "GST inclusive" to do it automatically.'],
         ['q' => 'Is this GST calculator free?',
-         'a' => 'Yes. It is completely free, works in your browser and needs no sign up. When you are ready to turn a calculation into a proper GST invoice, you can create one free with ' . $appName . '.'],
+         'a' => 'Yes. It is free, works in your browser and needs no sign up. When you are ready to turn a calculation into a proper GST invoice, you can create one free with ' . $appName . '.'],
     ];
 
     $faqSchema = [
@@ -63,19 +75,19 @@
 <x-layouts.marketing
     title="Free GST Calculator India"
     eyebrow="Free tool"
-    lead="Add or remove GST at 5%, 12%, 18% or 28% in one tap. See the CGST and SGST split for same-state sales, or IGST for inter-state, with no sign up."
-    description="Free online GST calculator for India. Add or remove GST at 5, 12, 18 & 28% with automatic CGST, SGST & IGST split - inclusive or exclusive, no sign-up."
+    lead="Add or remove GST at 5%, 18% or 40% in one tap. See the CGST and SGST split for same-state sales, or IGST for inter-state, with no sign up."
+    description="Free online GST calculator for India. Add or remove GST at 5, 18 or 40% with automatic CGST, SGST and IGST split, inclusive or exclusive, no sign-up."
     keywords="free GST calculator, GST calculator, free GST calculator India, online GST calculator, CGST SGST IGST calculator, GST inclusive calculator, GST exclusive calculator, reverse GST calculator, GST calculator 5 12 18 28, GST percentage calculator"
-    :json-ld="[$appSchema, $howToSchema, $faqSchema]">
+    :json-ld="[$appSchema, $faqSchema]">
 
     {{-- ===== The calculator widget ===== --}}
-    <div x-data="gstCalc()" x-cloak class="not-prose -mt-2 mb-12 rounded-2xl ring-1 ring-gray-200 shadow-card overflow-hidden">
+    <div x-data="gstCalc()" x-cloak class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
         <div class="grid md:grid-cols-2">
             {{-- Inputs --}}
             <div class="p-6 sm:p-8 bg-white space-y-6">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5">Amount (₹)</label>
-                    <input type="number" min="0" step="0.01" x-model.number="amount" @input="recompute()"
+                    <label for="calc-amount" class="block text-sm font-semibold text-gray-800 mb-1.5">Amount (₹)</label>
+                    <input id="calc-amount" type="number" min="0" step="0.01" x-model.number="amount" @input="recompute()"
                            aria-label="Amount in rupees"
                            class="w-full text-lg border-gray-300 rounded-lg shadow-sm focus:ring-brand-600 focus:border-brand-600 font-mono"
                            placeholder="1000" inputmode="decimal">
@@ -85,19 +97,19 @@
                     <span class="block text-sm font-semibold text-gray-800 mb-1.5">This amount is</span>
                     <div class="grid grid-cols-2 gap-2">
                         <button type="button" @click="mode='exclusive'; recompute()"
-                                :class="mode==='exclusive' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-gray-300'"
+                                :class="mode==='exclusive' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-[#878fa0]'"
                                 class="px-3 py-2.5 rounded-lg text-sm font-semibold ring-1 transition">GST exclusive</button>
                         <button type="button" @click="mode='inclusive'; recompute()"
-                                :class="mode==='inclusive' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-gray-300'"
+                                :class="mode==='inclusive' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-[#878fa0]'"
                                 class="px-3 py-2.5 rounded-lg text-sm font-semibold ring-1 transition">GST inclusive</button>
                     </div>
-                    <p class="mt-1.5 text-xs text-gray-500" x-text="mode==='exclusive' ? 'GST will be added on top of this amount.' : 'This amount already contains GST. We work backwards to find it.'"></p>
+                    <p class="mt-1.5 text-xs text-gray-500" x-text="mode==='exclusive' ? 'GST is added on top of this amount.' : 'This amount already includes GST. The tax is worked out backwards.'"></p>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5">GST rate</label>
+                    <span class="block text-sm font-semibold text-gray-800 mb-1.5">GST rate</span>
                     <div class="flex flex-wrap gap-2">
-                        <template x-for="r in [5,12,18,28]" :key="r">
+                        <template x-for="r in [5,18,40]" :key="r">
                             <button type="button" @click="rate=r; recompute()"
                                     :class="rate===r ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-[#878fa0]'"
                                     class="px-4 py-2 rounded-lg text-sm font-semibold ring-1 transition" x-text="r + '%'"></button>
@@ -114,17 +126,17 @@
                     <span class="block text-sm font-semibold text-gray-800 mb-1.5">Supply type</span>
                     <div class="grid grid-cols-2 gap-2">
                         <button type="button" @click="supply='intra'; recompute()"
-                                :class="supply==='intra' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-gray-300'"
+                                :class="supply==='intra' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-[#878fa0]'"
                                 class="px-3 py-2.5 rounded-lg text-sm font-semibold ring-1 transition">Same state<br><span class="text-[11px] font-normal opacity-80">CGST + SGST</span></button>
                         <button type="button" @click="supply='inter'; recompute()"
-                                :class="supply==='inter' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-gray-300'"
+                                :class="supply==='inter' ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-gray-700 ring-[#878fa0]'"
                                 class="px-3 py-2.5 rounded-lg text-sm font-semibold ring-1 transition">Different state<br><span class="text-[11px] font-normal opacity-80">IGST</span></button>
                     </div>
                 </div>
             </div>
 
             {{-- Result --}}
-            <div class="p-6 sm:p-8 bg-gradient-to-br from-brand-800 via-brand-900 to-brand-950 text-white flex flex-col justify-center">
+            <div class="p-6 sm:p-8 bg-brand-900 text-white flex flex-col justify-center">
                 <div class="space-y-3 text-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-brand-200">Taxable value</span>
@@ -173,7 +185,7 @@
                 <button type="button" @click="nativeShare()"
                    class="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 ring-1 ring-white/30 text-white font-semibold text-sm hover:bg-white/20 transition w-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                    <span x-text="copied ? 'Link copied!' : 'Share…'">Share…</span>
+                    <span x-text="copied ? 'Link copied' : 'Share…'">Share…</span>
                 </button>
                 <p class="mt-2 text-center text-[11px] text-brand-100">No card. Unlimited invoices during beta.</p>
             </div>
@@ -188,9 +200,21 @@
         To <strong>remove GST</strong> from a price that already includes it, divide the total by one plus the rate.
         A ₹1,180 price that includes 18% GST has a base value of ₹1,000 and ₹180 of tax inside it.
     </p>
+    <div class="mt-5 grid sm:grid-cols-2 gap-4">
+        <div class="rounded-xl bg-gray-50 ring-1 ring-gray-200 p-5">
+            <p class="text-sm font-semibold text-gray-900">Add GST</p>
+            <p class="mt-2.5 font-mono text-[14px] leading-7 text-gray-800">GST = Base × Rate ÷ 100<br>Total = Base + GST</p>
+            <p class="mt-2.5 text-sm text-gray-600">₹1,000 at 18%: GST ₹180, total ₹1,180</p>
+        </div>
+        <div class="rounded-xl bg-gray-50 ring-1 ring-gray-200 p-5">
+            <p class="text-sm font-semibold text-gray-900">Remove GST</p>
+            <p class="mt-2.5 font-mono text-[14px] leading-7 text-gray-800">Base = Total ÷ (1 + Rate ÷ 100)<br>GST = Total − Base</p>
+            <p class="mt-2.5 text-sm text-gray-600">₹1,180 including 18%: base ₹1,000, GST ₹180</p>
+        </div>
+    </div>
     <p>
-        The formulas are simple, but doing them by hand for every line of an invoice is where mistakes creep in.
-        The calculator above handles both directions, and splits the tax the way GST actually works in India.
+        The formulas are simple, but working them by hand for every line of an invoice is where mistakes creep in.
+        The calculator above works in both directions and splits the tax the way GST works in India.
     </p>
 
     <h2>CGST, SGST and IGST, in plain words</h2>
@@ -207,26 +231,37 @@
         A <strong>reverse GST calculation</strong> works backwards from a price that already includes tax to find the
         base value and the GST inside it. Divide the inclusive amount by <strong>1 plus the rate</strong>. For example,
         ₹1,180 inclusive of 18% GST gives a base of ₹1,000 (₹1,180 ÷ 1.18) and GST of ₹180. Switch the toggle above to
-        <strong>Remove GST</strong> and the calculator does this for you - useful when your MRP or quoted price already
-        has GST baked in and you need to show the tax separately on a
+        <strong>GST inclusive</strong> and the calculator does this for you. This is useful when your MRP or quoted price
+        already includes GST and you need to show the tax separately on a
         <a href="{{ route('pages.gst-invoice-format') }}">GST invoice</a> or a
         <a href="{{ route('pages.cash-memo-format') }}">cash memo</a>.
     </p>
 
     <h2>GST rates in India</h2>
-    <p>The common slabs are below. Always confirm the exact rate for your HSN or SAC code, since a few items sit outside these.</p>
-    <ul>
-        <li><strong>5%</strong>, often basic and essential goods and some transport services.</li>
-        <li><strong>12%</strong>, a middle band covering many processed goods and services.</li>
-        <li><strong>18%</strong>, the most common rate, where most services land.</li>
-        <li><strong>28%</strong>, higher band for items like luxury and certain durables.</li>
-    </ul>
+    <p>GST 2.0, in force from 22 September 2025, cut the slabs to the ones below. Always confirm the exact rate for your HSN or SAC code, since a few items sit outside these.</p>
+    <div class="mt-5 overflow-x-auto rounded-xl ring-1 ring-gray-200">
+        <table class="w-full text-left text-[15px]">
+            <thead class="bg-gray-50 text-sm text-gray-600">
+                <tr>
+                    <th scope="col" class="px-4 py-3 font-semibold w-1/3">GST rate</th>
+                    <th scope="col" class="px-4 py-3 font-semibold">Applies to</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 align-top text-gray-700">
+                <tr><th scope="row" class="px-4 py-3 font-semibold text-gray-900 tabular-nums">5%</th><td class="px-4 py-3">Essential goods, many food items and some transport services.</td></tr>
+                <tr><th scope="row" class="px-4 py-3 font-semibold text-gray-900 tabular-nums">18%</th><td class="px-4 py-3">The standard rate, where most goods and services fall.</td></tr>
+                <tr><th scope="row" class="px-4 py-3 font-semibold text-gray-900 tabular-nums">40%</th><td class="px-4 py-3">Luxury and sin goods.</td></tr>
+                <tr><th scope="row" class="px-4 py-3 font-semibold text-gray-900 tabular-nums">0%, 0.25% and 3%</th><td class="px-4 py-3">Exempt items, rough diamonds, and gold and silver.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p>The old 12% and 28% slabs still apply to supplies made before 22 September 2025, and tobacco products stay at 28% plus cess for now.</p>
 
     <h2>From calculation to a real invoice</h2>
     <p>
         A calculator gives you a number. An invoice gives you a record. When you make a GST bill with {{ $appName }},
         the CGST, SGST and IGST split happens automatically from your customer's state, the HSN or SAC code sits on each
-        line, and you get a clean PDF you can share on WhatsApp in seconds. See the
+        line, and you get a PDF ready to share on WhatsApp. See the
         <a href="{{ route('pages.gst-invoice-format') }}">GST invoice format guide</a>, explore
         <a href="{{ route('pages.billing-software') }}">free billing software</a> for your shop, or read how a
         <a href="{{ route('pages.credit-note-format') }}">GST credit note</a> reverses a bill.
@@ -235,21 +270,25 @@
     </p>
 
     <h2>Frequently asked questions</h2>
-    @foreach ($faqs as $f)
-        <h3>{{ $f['q'] }}</h3>
-        <p>{{ $f['a'] }}</p>
-    @endforeach
+    <div class="mt-4 divide-y divide-gray-200 border-y border-gray-200">
+        @foreach ($faqs as $f)
+            <div class="py-5">
+                <h3 class="font-display text-lg font-bold leading-snug text-gray-900">{{ $f['q'] }}</h3>
+                <p class="mt-1.5 text-gray-700">{{ $f['a'] }}</p>
+            </div>
+        @endforeach
+    </div>
 
     {{-- Embeddable widget: give bloggers/CAs a copy-paste iframe. Each embed is
          a live referral + backlink surface pointing back at the tool. --}}
     <h2>Embed this GST calculator on your site</h2>
-    <p>Run a CA practice, tax blog or MSME portal? Drop this free calculator into any page - no fees, no sign-up. Just copy the snippet below.</p>
-    <div class="not-prose" x-data="{ copied: false, code: '<iframe src=&quot;{{ url('/gst-calculator/embed') }}&quot; width=&quot;100%&quot; height=&quot;520&quot; style=&quot;border:1px solid #e5e7eb;border-radius:12px;max-width:480px&quot; title=&quot;GST Calculator by Apna Invoice&quot; loading=&quot;lazy&quot;></iframe>' }">
-        <pre class="text-xs bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto"><code x-text="code"></code></pre>
+    <p>For CA practices, tax blogs and MSME portals. Add this free calculator to any page by copying the snippet below. No fees, no sign-up.</p>
+    <div class="mt-4" x-data="{ copied: false, code: '<iframe src=&quot;{{ url('/gst-calculator/embed') }}&quot; width=&quot;100%&quot; height=&quot;520&quot; style=&quot;border:1px solid #e5e7eb;border-radius:12px;max-width:480px&quot; title=&quot;GST Calculator by Apna Invoice&quot; loading=&quot;lazy&quot;></iframe>' }">
+        <pre class="text-[13px] leading-relaxed bg-gray-900 text-gray-100 rounded-xl p-4 overflow-x-auto"><code x-text="code"></code></pre>
         <button type="button"
                 @click="navigator.clipboard.writeText(code); copied = true; setTimeout(() => copied = false, 2000)"
-                class="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold transition">
-            <span x-text="copied ? 'Copied!' : 'Copy embed code'">Copy embed code</span>
+                class="mt-3 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg bg-white ring-1 ring-gray-300 hover:ring-gray-400 text-gray-800 text-sm font-semibold transition">
+            <span x-text="copied ? 'Copied' : 'Copy embed code'">Copy embed code</span>
         </button>
     </div>
 
@@ -273,7 +312,7 @@
                     this.recompute();
                 },
                 half(r) { return (((parseFloat(r) || 0) / 2)); },
-                fmt(n) { return (parseFloat(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+                fmt(n) { const v = Math.round((parseFloat(n) || 0) * 100) / 100; return v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
                 recompute() {
                     const amt = parseFloat(this.amount) || 0;
                     const rate = parseFloat(this.rate) || 0;

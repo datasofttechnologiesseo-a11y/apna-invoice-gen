@@ -98,8 +98,8 @@ class ProfileController extends Controller
         );
 
         return back()->with('status', $data['marketing_opt_in']
-            ? 'You\'ll now receive product and offer emails.'
-            : 'You\'ve been opted out of marketing emails.');
+            ? 'Subscribed to product and offer emails.'
+            : 'Unsubscribed from marketing emails.');
     }
 
     /**
@@ -126,8 +126,8 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         $message = $result['mode'] === 'deleted'
-            ? 'Your account and all personal data have been permanently deleted.'
-            : 'Your account has been closed and your personal data erased. Your GST invoice records are retained only as long as Indian tax law requires, then automatically purged.';
+            ? 'Account and all personal data permanently deleted.'
+            : 'Account closed and personal data erased. GST invoice records are kept only as long as tax law requires, then deleted automatically.';
 
         return Redirect::to('/')->with('status', $message);
     }

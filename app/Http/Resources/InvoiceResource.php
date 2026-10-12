@@ -26,6 +26,10 @@ class InvoiceResource extends JsonResource
             'place_of_supply_state_id' => $this->place_of_supply_state_id,
             'is_interstate' => (bool) $this->is_interstate,
             'reverse_charge' => (bool) $this->reverse_charge,
+            'supply_type' => $this->supplyType(),
+            'export_port_code' => $this->export_port_code,
+            'shipping_bill_number' => $this->shipping_bill_number,
+            'shipping_bill_date' => $this->shipping_bill_date?->toDateString(),
 
             // Ship-to
             'has_separate_ship_to' => $this->hasSeparateShipTo(),

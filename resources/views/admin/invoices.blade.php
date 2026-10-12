@@ -48,12 +48,12 @@
                         <td class="px-5 py-3 text-gray-700">{{ $inv->company?->name ?? '-' }}</td>
                         <td class="px-5 py-3 text-gray-700">{{ $inv->customer?->name ?? '-' }}</td>
                         <td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded font-semibold {{ $statusColor[$inv->status] ?? 'bg-gray-100 text-gray-700' }}">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>
-                        <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">₹{{ inr($inv->grand_total) }}</td>
-                        <td class="px-5 py-3 text-right font-mono tabular-nums {{ (float) $inv->balance > 0 ? 'text-accent-700 font-semibold' : 'text-gray-400' }}">₹{{ inr($inv->balance) }}</td>
+                        <td class="px-5 py-3 text-right font-mono tabular-nums font-semibold">₹{{ rupees($inv->grand_total) }}</td>
+                        <td class="px-5 py-3 text-right font-mono tabular-nums {{ (float) $inv->balance > 0 ? 'text-accent-700 font-semibold' : 'text-gray-500' }}">₹{{ rupees($inv->balance) }}</td>
                         <td class="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{{ $inv->invoice_date?->format('d M Y') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="px-5 py-12 text-center text-gray-400">No invoices match.</td></tr>
+                    <tr><td colspan="8" class="px-5 py-12 text-center text-gray-500">No invoices match.</td></tr>
                 @endforelse
             </tbody>
         </table>

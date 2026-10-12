@@ -69,6 +69,14 @@ class Quotation extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    /** "SGST" or "UTGST" - see Invoice::stateTaxLabel(). */
+    public function stateTaxLabel(): string
+    {
+        $state = $this->customer?->state ?? $this->company?->state;
+
+        return $state?->is_union_territory ? 'UTGST' : 'SGST';
+    }
+
     public function items(): HasMany
     {
         // Deterministic line order. quotation_items doesn't carry a sort_order
@@ -159,7 +167,8 @@ class Quotation extends Model
         $name = trim($cust?->name ?? '') ?: 'there';
         $business = trim($company?->name ?? '') ?: 'Us';
         $number = $this->quote_number ?: ('#' . $this->id);
-        $grand = number_format((float) $this->grand_total, 2);
+        // Indian grouping (₹1,17,000.00), as on the PDF.
+        $grand = inr((float) $this->grand_total);
         $url = ! $this->isDraft() && ! $this->isDeclined()
             ? \App\Http\Controllers\QuotationShareController::makePublicUrl($this)
             : null;
@@ -168,24 +177,27 @@ class Quotation extends Model
 
         if ($this->isAccepted() || $this->isConverted()) {
             $lines[] = "Thank you for accepting Quotation {$number}.";
-            $lines[] = "We'll proceed with the next steps and keep you posted.";
+            $lines[] = 'We will proceed with the next steps and keep you informed.';
             $lines[] = '';
-            $lines[] = "Appreciate your business. — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
         if ($this->isDeclined()) {
-            $lines[] = "Noted — Quotation {$number} has been declined. Do reach out anytime if you'd like a fresh proposal.";
+            $lines[] = "Quotation {$number} has been marked as declined. Contact us any time for a revised quotation.";
             $lines[] = '';
-            $lines[] = "Thanks, — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
         if ($this->isExpired()) {
             $lines[] = "Quotation {$number} for ₹{$grand} has expired.";
-            $lines[] = "Happy to share an updated quote whenever you're ready.";
+            $lines[] = 'We can send a revised quotation on request.';
             $lines[] = '';
-            $lines[] = "Thanks, — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
@@ -198,8 +210,10 @@ class Quotation extends Model
             $lines[] = "View & download: {$url}";
         }
         $lines[] = '';
-        $lines[] = "Let me know if you'd like to proceed or have any questions.";
-        $lines[] = "Thanks, — {$business}";
+        $lines[] = 'Please let us know if you would like to proceed or have any questions.';
+        $lines[] = '';
+        $lines[] = 'Regards,';
+        $lines[] = $business;
 
         return implode("\n", $lines);
     }

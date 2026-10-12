@@ -51,6 +51,28 @@ class CreditNoteFlowTest extends TestCase
         $this->assertSame('rate_correction', $cn->reason);
     }
 
+    public function test_credit_note_numbers_do_not_collide_across_financial_years(): void
+    {
+        // The counter resets each FY but the number carries no FY part, so the
+        // first credit note of a new year used to be CRN-0001 again and hit
+        // the unique index with a 500.
+        $user = User::factory()->create();
+        $invoice = $this->finalizedInvoice($user, 11800);
+        $invoice->forceFill(['invoice_date' => '2025-06-01'])->save();
+
+        $this->actingAs($user)->post(route('credit-notes.store', $invoice), [
+            'credit_note_date' => '2025-06-15', 'amount' => 500, 'reason' => 'rate_correction',
+        ])->assertRedirect();
+        $this->actingAs($user)->post(route('credit-notes.store', $invoice), [
+            'credit_note_date' => '2026-04-10', 'amount' => 500, 'reason' => 'rate_correction',
+        ])->assertRedirect();
+
+        $this->assertSame(
+            ['CRN-0001', 'CRN-0002'],
+            $invoice->creditNotes()->orderBy('id')->pluck('credit_note_number')->all()
+        );
+    }
+
     public function test_full_credit_flips_invoice_to_paid(): void
     {
         $user = User::factory()->create();

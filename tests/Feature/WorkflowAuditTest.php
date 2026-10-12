@@ -194,6 +194,63 @@ class WorkflowAuditTest extends TestCase
             'the sum of the lines plus round-off must equal the invoice total');
     }
 
+    public function test_an_issued_invoice_keeps_the_customer_as_it_was_issued(): void
+    {
+        // The customer registers for GST (and renames) after the invoice went
+        // out. The issued document and the GSTR-1 classification must not
+        // change; a new draft picks up the new details.
+        $customer = Customer::factory()->recycle($this->user)->recycle($this->company)
+            ->create(['name' => 'Patel Stores', 'gstin' => null, 'state_id' => $this->mh->id]);
+        $inv = $this->createInvoice([
+            ['description' => 'Consulting', 'quantity' => 1, 'rate' => 10000, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+        ], $customer);
+        $this->actingAs($this->user)->post(route('invoices.finalize', $inv))->assertRedirect();
+
+        $customer->update(['name' => 'Patel Stores Pvt Ltd', 'gstin' => '27ABCDE1234F1Z0']);
+
+        $inv->refresh();
+        $this->assertSame('Patel Stores', $inv->billedCustomer()->name);
+        $this->assertNull($inv->billedCustomer()->gstin);
+        $this->assertSame('27', $inv->billedCustomer()->state->gst_code);
+        // The document itself (print view) prints the recipient as issued. The
+        // invoice page's share/contact panel may still show the live name -
+        // that is where you want today's phone number.
+        $this->get(route('invoices.print', $inv))->assertOk()
+            ->assertSee('Patel Stores')
+            ->assertDontSee('Patel Stores Pvt Ltd')
+            ->assertDontSee('27ABCDE1234F1Z0');
+
+        $draft = $this->createInvoice([
+            ['description' => 'Consulting', 'quantity' => 1, 'rate' => 500, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+        ], $customer);
+        $this->assertSame('Patel Stores Pvt Ltd', $draft->billedCustomer()->name);
+    }
+
+    public function test_a_union_territory_supply_prints_utgst_not_sgst(): void
+    {
+        // Chandigarh has no legislature, so the state share is UTGST (UTGST
+        // Act s.2(8)); the split itself is unchanged. Delhi has a legislature
+        // and stays SGST.
+        $ch = State::factory()->create(['gst_code' => '04', 'name' => 'Chandigarh', 'is_union_territory' => true]);
+        $dl = State::factory()->create(['gst_code' => '07', 'name' => 'Delhi', 'is_union_territory' => false]);
+
+        $this->company->forceFill(['state_id' => $ch->id, 'gstin' => '04ABCDE1234F1Z8'])->save();
+        $inv = $this->createInvoice([
+            ['description' => 'Consulting', 'quantity' => 1, 'rate' => 10000, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+        ], $this->customerIn($ch));
+
+        $this->assertFalse((bool) $inv->is_interstate);
+        $this->assertEqualsWithDelta(900.0, (float) $inv->total_sgst, 0.01);
+        $this->assertSame('UTGST', $inv->stateTaxLabel());
+        $this->get(route('invoices.show', $inv))->assertOk()->assertSee('UTGST');
+
+        $this->company->forceFill(['state_id' => $dl->id, 'gstin' => '07ABCDE1234F1Z2'])->save();
+        $inv2 = $this->createInvoice([
+            ['description' => 'Consulting', 'quantity' => 1, 'rate' => 10000, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+        ], $this->customerIn($dl));
+        $this->assertSame('SGST', $inv2->stateTaxLabel());
+    }
+
     public function test_an_advance_on_the_draft_survives_the_first_payment(): void
     {
         // ₹10,000 + 18% = ₹11,800. ₹4,000 paid in advance on the draft, then a
@@ -219,6 +276,67 @@ class WorkflowAuditTest extends TestCase
         $this->assertEqualsWithDelta(6000.0, (float) $inv->paid_amount, 0.01);
         $this->assertEqualsWithDelta(5800.0, (float) $inv->balance, 0.01);
         $this->assertSame('partially_paid', $inv->status);
+    }
+
+    public function test_an_invoice_level_discount_is_spread_across_lines_before_tax(): void
+    {
+        // ₹10,000 @ 18% + ₹5,000 @ 5%, ₹1,500 off the invoice. Pro rata:
+        // ₹1,000 off the 18% line, ₹500 off the 5% line. Tax is then
+        // 9,000 × 18% = 1,620 and 4,500 × 5% = 225 - not 18% of a lump sum.
+        $inv = $this->createInvoice([
+            ['description' => 'Service A', 'quantity' => 1, 'rate' => 10000, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+            ['description' => 'Service B', 'quantity' => 1, 'rate' => 5000, 'gst_rate' => 5, 'hsn_sac' => '998315'],
+        ], null, ['invoice_discount' => 1500]);
+
+        [$a, $b] = $inv->items->values();
+        $this->assertEqualsWithDelta(1000.0, (float) $a->discount, 0.001);
+        $this->assertEqualsWithDelta(500.0, (float) $b->discount, 0.001);
+        $this->assertEqualsWithDelta(13500.0, (float) $inv->subtotal, 0.001);
+        $this->assertEqualsWithDelta(1845.0, (float) $inv->total_tax, 0.001);
+        $this->assertEqualsWithDelta(15345.0, (float) $inv->grand_total, 0.001);
+    }
+
+    public function test_an_odd_invoice_discount_splits_to_the_paisa_with_no_leak(): void
+    {
+        $inv = $this->createInvoice([
+            ['description' => 'A', 'quantity' => 3, 'rate' => 333.33, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+            ['description' => 'B', 'quantity' => 7, 'rate' => 142.85, 'gst_rate' => 12, 'hsn_sac' => '998315'],
+            ['description' => 'C', 'quantity' => 1, 'rate' => 0.99, 'gst_rate' => 5, 'hsn_sac' => '998316'],
+        ], null, ['invoice_discount' => 100.01]);
+
+        $this->assertEqualsWithDelta(100.01, (float) $inv->items->sum('discount'), 0.001, 'the parts add back to the discount exactly');
+        $this->assertEqualsWithDelta(999.99 + 999.95 + 0.99 - 100.01, (float) $inv->subtotal, 0.001);
+    }
+
+    public function test_a_discount_larger_than_the_items_is_refused(): void
+    {
+        $customer = $this->customerIn($this->mh);
+        $this->actingAs($this->user)->post(route('invoices.store'), [
+            'customer_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'invoice_discount' => 2000,
+            'items' => [['description' => 'A', 'quantity' => 1, 'rate' => 1000, 'gst_rate' => 18, 'hsn_sac' => '998314']],
+        ])->assertSessionHasErrors('invoice_discount');
+    }
+
+    public function test_a_paid_amount_larger_than_the_bill_is_refused(): void
+    {
+        $customer = $this->customerIn($this->mh);
+        $this->actingAs($this->user)->post(route('invoices.store'), [
+            'customer_id' => $customer->id,
+            'invoice_date' => now()->toDateString(),
+            'paid_amount' => 5000,
+            'items' => [['description' => 'A', 'quantity' => 1, 'rate' => 1000, 'gst_rate' => 18, 'hsn_sac' => '998314']],
+        ])->assertSessionHasErrors('paid_amount');
+    }
+
+    public function test_per_line_discounts_without_an_invoice_discount_still_work(): void
+    {
+        // API clients and older forms send discounts per line; they are kept as sent.
+        $inv = $this->createInvoice([
+            ['description' => 'A', 'quantity' => 1, 'rate' => 1000, 'discount' => 100, 'gst_rate' => 18, 'hsn_sac' => '998314'],
+        ]);
+        $this->assertEqualsWithDelta(900.0, (float) $inv->subtotal, 0.001);
     }
 
     public function test_cgst_and_sgst_are_each_half_the_rate_rounded_separately(): void
@@ -264,8 +382,8 @@ class WorkflowAuditTest extends TestCase
 
         $this->assertEqualsWithDelta(5000.0, (float) $inv->items()->first()->total, 0.01);
         $this->get(route('invoices.show', $inv))->assertOk()
-            ->assertSeeInOrder(['5,000.00', 'RCM', '5,000.00'])
-            ->assertDontSee('5,250.00');
+            ->assertSeeInOrder(['5,000', 'RCM', '5,000'])
+            ->assertDontSee('5,250');
     }
 
     // ================================================ 3. Issue / state machine

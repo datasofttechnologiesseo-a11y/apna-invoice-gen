@@ -21,8 +21,10 @@ class CompanyController extends Controller
             ->orderBy('name')
             ->get();
         $active = $user->ensureCompany();
+        // Businesses this user works in as a team member.
+        $memberships = $user->memberships()->with('company')->get()->filter(fn ($m) => $m->company);
 
-        return view('companies.index', compact('companies', 'active'));
+        return view('companies.index', compact('companies', 'active', 'memberships'));
     }
 
     public function create(): View
@@ -47,10 +49,10 @@ class CompanyController extends Controller
         $company = $user->companies()->create($data);
 
         if ($request->hasFile('logo')) {
-            $company->update(['logo_path' => $request->file('logo')->store('logos', 'public')]);
+            $company->update(['logo_path' => \App\Support\BrandImage::storeLogo($request->file('logo'))]);
         }
         if ($request->hasFile('signature')) {
-            $company->update(['signature_path' => $request->file('signature')->store('signatures', 'public')]);
+            $company->update(['signature_path' => \App\Support\BrandImage::storeSignature($request->file('signature'))]);
         }
 
         // Make the new company the active one so follow-up actions target it
@@ -72,19 +74,19 @@ class CompanyController extends Controller
     {
         abort_unless($company->user_id === $request->user()->id, 403);
 
-        $data = $this->validated($request);
+        $data = $this->validated($request, $company);
 
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {
                 Storage::disk('public')->delete($company->logo_path);
             }
-            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+            $data['logo_path'] = \App\Support\BrandImage::storeLogo($request->file('logo'));
         }
         if ($request->hasFile('signature')) {
             if ($company->signature_path) {
                 Storage::disk('public')->delete($company->signature_path);
             }
-            $data['signature_path'] = $request->file('signature')->store('signatures', 'public');
+            $data['signature_path'] = \App\Support\BrandImage::storeSignature($request->file('signature'));
         }
         unset($data['logo'], $data['signature']);
 
@@ -141,7 +143,7 @@ class CompanyController extends Controller
         // We compare counter values, not parsed strings, since the format may
         // change over time; the counter is the source of truth.
         if ($newCounter < $current) {
-            session()->flash('error', "Cannot set next invoice number to {$next} — your current counter is at {$current}, so the next invoice would already be #{$company->nextInvoiceNumber()}. Set a higher number to skip ahead.");
+            session()->flash('error', "Next invoice number cannot be set to {$next}, because the next invoice is already {$company->nextInvoiceNumber()}. Enter a higher number.");
             return '';
         }
 
@@ -178,7 +180,7 @@ class CompanyController extends Controller
         abort_unless($company->user_id === $request->user()->id, 403);
 
         if ($company->invoices()->exists()) {
-            return back()->withErrors(['company' => 'Cannot delete a company that has invoices. Archive instead.']);
+            return back()->withErrors(['company' => 'This company has invoices and cannot be deleted.']);
         }
 
         $user = $request->user();
@@ -197,19 +199,56 @@ class CompanyController extends Controller
 
     public function switch(Request $request, Company $company): RedirectResponse
     {
-        abort_unless($company->user_id === $request->user()->id, 403);
-        $request->user()->switchCompany($company);
+        $request->user()->switchCompany($company); // owner or team member, else 403
 
-        return back()->with('status', "Switched to {$company->name}.");
+        // Into someone else's business: start at the home page, which every
+        // role can open (the page you were on may not be part of your role).
+        return ((int) $company->user_id === (int) $request->user()->id ? back() : redirect()->route('dashboard'))
+            ->with('status', "Switched to {$company->name}.");
     }
 
-    private function validated(Request $request): array
+    /**
+     * What the numbering settings will print for the current financial year,
+     * using the same tokens as Company::nextInvoiceNumber ({FY}, {FY_SHORT},
+     * {YYYY}, {N}). Used to check Rule 46(b) and for the on-page warning.
+     */
+    public static function previewInvoiceNumber(string $prefix, ?string $format, int $padding, ?\Illuminate\Support\Carbon $on = null): string
     {
+        $on ??= now();
+        [$fyStart, $fyEnd] = \App\Models\Company::financialYearFor($on);
+        $padded = str_pad('1', max(1, $padding), '0', STR_PAD_LEFT);
+
+        if (! filled($format)) {
+            return $prefix . '-' . $padded;
+        }
+
+        return strtr($format, [
+            '{FY}' => sprintf('%04d-%02d', $fyStart, $fyEnd % 100),
+            '{FY_SHORT}' => sprintf('%02d-%02d', $fyStart % 100, $fyEnd % 100),
+            '{YYYY}' => $on->format('Y'),
+            '{N}' => $padded,
+        ]);
+    }
+
+    private function validated(Request $request, ?Company $company = null): array
+    {
+        // A GSTIN already on file and left as it is never blocks saving the
+        // rest of the settings (one saved before the checksum check existed
+        // would otherwise lock the whole form). A new or changed GSTIN is
+        // checked in full.
+        $unchangedGstin = $company && $company->gstin
+            && strtoupper(trim((string) $request->input('gstin'))) === strtoupper((string) $company->gstin)
+            && (int) $request->input('state_id') === (int) $company->state_id;
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'gstin' => ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
+            'gstin' => $unchangedGstin
+                ? ['nullable', 'string', 'max:15']
+                : ['nullable', 'string', new ValidGstin($request->input('state_id') ? (int) $request->input('state_id') : null)],
             'composition_dealer' => ['nullable', 'boolean'],
             'books_locked_until' => ['nullable', 'date'],
+            // Letter of Undertaking for zero-rated supplies without IGST (Rule 96A);
+            // printed on every export / SEZ invoice issued under it.
+            'lut_number' => ['nullable', 'string', 'max:40'],
             'pan' => ['nullable', 'string', new ValidPan],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
@@ -241,6 +280,29 @@ class CompanyController extends Controller
         ]);
 
         unset($data['logo'], $data['signature']);
+
+        // Rule 46(b): a tax-invoice number is at most 16 characters, from
+        // letters, digits, "-" and "/". Enforced only when the numbering is
+        // being changed, so a company whose current series is longer can
+        // still save other settings - and sees a warning on the page instead.
+        $company = $request->route('company');
+        $numberingChanged = ! $company
+            || ($data['invoice_prefix'] ?? null) !== $company->invoice_prefix
+            || ($data['invoice_number_format'] ?? null) !== $company->invoice_number_format
+            || (int) ($data['invoice_number_padding'] ?? 0) !== (int) $company->invoice_number_padding;
+        if ($numberingChanged) {
+            $preview = self::previewInvoiceNumber(
+                (string) ($data['invoice_prefix'] ?? ''),
+                $data['invoice_number_format'] ?? null,
+                (int) ($data['invoice_number_padding'] ?? 4),
+            );
+            if (strlen($preview) > 16 || ! preg_match('/^[A-Za-z0-9\/-]+$/', $preview)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'invoice_number_format' => "GST invoice numbers must be 16 characters or fewer, using only letters, digits, \"-\" and \"/\" (CGST Rule 46(b)). This series would produce \"{$preview}\" (" . strlen($preview) . ' characters).',
+                ]);
+            }
+        }
+
         return $data;
     }
 }

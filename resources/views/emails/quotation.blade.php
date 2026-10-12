@@ -3,7 +3,7 @@
     $number = $quotation->quote_number ?: 'Draft #' . $quotation->id;
 @endphp
 <!DOCTYPE html>
-<html>
+<html lang="en-IN">
 <head>
 <meta charset="utf-8">
 <title>Quotation {{ $number }}</title>
@@ -51,14 +51,14 @@
                         @endif
 
                         <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">
-                            The quotation PDF is attached for your records. This is a price proposal - no GST is collected at this stage. A formal tax invoice will be issued on order confirmation.
+                            The quotation PDF is attached. This is not a tax invoice and no GST is charged on it. A tax invoice will be issued once the order is confirmed.
                         </p>
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 16px 32px; background: #f9fafb; color: #6b7280; font-size: 11px; text-align: center;">
                         Sent from {{ $c->name }} · Powered by <a href="{{ url('/') }}?utm_source=quotation_email&utm_medium=email&utm_campaign=powered_by" style="color: #4b5563; font-weight: bold; text-decoration: underline;">{{ config('app.name') }}</a>
-                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses - <a href="{{ route('register') }}?utm_source=quotation_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
+                        <br><span style="color: #9ca3af;">GST billing software for Indian businesses · <a href="{{ route('register') }}?utm_source=quotation_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">Sign up free</a></span>
                     </td>
                 </tr>
             </table>

@@ -155,7 +155,7 @@
 
 @php
     $c = $invoice->company;
-    $cust = $invoice->customer;
+    $cust = $invoice->billedCustomer(); // as issued (snapshot), or live on a draft
     $reverseCharge = (bool) $invoice->reverse_charge;
 @endphp
 
@@ -227,11 +227,11 @@
         <div class="row xs">
             <span>
                 {{ $qtyStr }}{{ $item->unit ? ' ' . $item->unit : '' }}
-                &times; ₹{{ number_format($rate, 2) }}
-                @if ($disc > 0) − ₹{{ number_format($disc, 2) }} @endif
+                &times; ₹{{ inr($rate) }}
+                @if ($disc > 0) − ₹{{ inr($disc) }} @endif
                 @if (! $reverseCharge && $gst > 0) @ {{ (float) $gst }}% GST @endif
             </span>
-            <span class="bold" style="color:#000; font-size:12px;">₹{{ number_format($amt, 2) }}</span>
+            <span class="bold" style="color:#000; font-size:12px;">₹{{ inr($amt) }}</span>
         </div>
     @endforeach
 
@@ -240,7 +240,7 @@
     {{-- TOTALS - order matters: subtotal → tax breakdown → grand total --}}
     <div class="row">
         <span>Subtotal</span>
-        <span>₹{{ number_format((float) $invoice->subtotal, 2) }}</span>
+        <span>₹{{ inr((float) $invoice->subtotal) }}</span>
     </div>
 
     @if ($reverseCharge)
@@ -249,16 +249,16 @@
         @if ($invoice->is_interstate)
             <div class="row small">
                 <span>IGST</span>
-                <span>₹{{ number_format((float) $invoice->total_igst, 2) }}</span>
+                <span>₹{{ inr((float) $invoice->total_igst) }}</span>
             </div>
         @else
             <div class="row small">
                 <span>CGST</span>
-                <span>₹{{ number_format((float) $invoice->total_cgst, 2) }}</span>
+                <span>₹{{ inr((float) $invoice->total_cgst) }}</span>
             </div>
             <div class="row small">
-                <span>SGST</span>
-                <span>₹{{ number_format((float) $invoice->total_sgst, 2) }}</span>
+                <span>{{ $invoice->stateTaxLabel() }}</span>
+                <span>₹{{ inr((float) $invoice->total_sgst) }}</span>
             </div>
         @endif
     @endif
@@ -266,7 +266,7 @@
     @if ((float) ($invoice->round_off ?? 0) !== 0.0)
         <div class="row small">
             <span>Round-off</span>
-            <span>₹{{ number_format((float) $invoice->round_off, 2) }}</span>
+            <span>₹{{ inr((float) $invoice->round_off) }}</span>
         </div>
     @endif
 
@@ -274,18 +274,18 @@
 
     <div class="row total">
         <span>TOTAL</span>
-        <span>₹{{ number_format((float) $invoice->grand_total, 2) }}</span>
+        <span>₹{{ inr((float) $invoice->grand_total) }}</span>
     </div>
 
     @if ((float) $invoice->paid_amount > 0)
         <div class="row small">
             <span>Paid</span>
-            <span>₹{{ number_format((float) $invoice->paid_amount, 2) }}</span>
+            <span>₹{{ inr((float) $invoice->paid_amount) }}</span>
         </div>
         @if ((float) $invoice->balance > 0)
             <div class="row bold">
                 <span>Balance</span>
-                <span>₹{{ number_format((float) $invoice->balance, 2) }}</span>
+                <span>₹{{ inr((float) $invoice->balance) }}</span>
             </div>
         @endif
     @endif

@@ -1,7 +1,7 @@
-<x-app-layout :title="$product->exists ? 'Edit Item' : 'New Item'">
+<x-app-layout :title="$product->exists ? 'Edit item' : 'New item'">
     <x-slot name="header">
         <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
-            {{ $product->exists ? 'Edit Item' : 'New Item' }}
+            {{ $product->exists ? 'Edit item' : 'New item' }}
         </h1>
     </x-slot>
 
@@ -15,17 +15,18 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <x-breadcrumbs :items="[
                 ['label' => 'Products', 'href' => route('products.index')],
-                ['label' => $product->exists ? $product->name : 'New Item'],
+                ['label' => $product->exists ? $product->name : 'New item'],
             ]" />
 
             <form method="POST" action="{{ $product->exists ? route('products.update', $product) : route('products.store') }}"
+                  x-data="{ kind: @js(old('kind', $product->kind ?: 'goods')), track: @js((bool) old('track_stock', $product->track_stock)) }"
                   class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden">
                 @csrf
                 @if ($product->exists) @method('PATCH') @endif
 
                 @if ($errors->any())
                     <div class="m-6 mb-0 p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm" role="alert">
-                        <div class="font-semibold mb-1">Please fix the following before saving:</div>
+                        <div class="font-semibold mb-1">Correct the following before saving:</div>
                         <ul class="list-disc pl-5 space-y-0.5">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                     </div>
                 @endif
@@ -33,16 +34,16 @@
                 {{-- Section: Item details --}}
                 <section class="p-6 sm:p-8 border-b border-gray-100">
                     <h2 class="text-sm font-bold text-gray-900">Item details</h2>
-                    <p class="text-xs text-gray-500 mt-0.5">What you're selling. Reused across invoices via autocomplete.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Suggested on invoices as you type.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="md:col-span-2">
                             <x-input-label for="name" value="Item name *" />
                             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $product->name)" required autofocus placeholder="e.g. OPC 53 Grade Cement" />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('name')" for="name" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="kind" value="Kind *" />
-                            <select id="kind" name="kind" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
+                            <select id="kind" name="kind" required x-model="kind" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
                                 @foreach (config('uqc_units.kinds') as $value => $label)
                                     <option value="{{ $value }}" @selected(old('kind', $product->kind) === $value)>{{ $label }}</option>
                                 @endforeach
@@ -61,7 +62,7 @@
                             <label class="inline-flex items-center gap-2">
                                 <input type="hidden" name="is_active" value="0">
                                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active ?? true)) class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
-                                <span class="text-sm text-gray-700">Active, available in invoice autocomplete</span>
+                                <span class="text-sm text-gray-700">Active (offered on new invoices)</span>
                             </label>
                         </div>
                     </div>
@@ -70,7 +71,7 @@
                 {{-- Section: Tax & pricing --}}
                 <section class="p-6 sm:p-8">
                     <h2 class="text-sm font-bold text-gray-900">Tax &amp; pricing</h2>
-                    <p class="text-xs text-gray-500 mt-0.5">Defaults pre-fill the invoice line; you can still tweak per invoice.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Defaults for the invoice line. Can be changed on each invoice.</p>
                     <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <div class="flex items-center justify-between gap-2">
@@ -82,10 +83,10 @@
                                 @if ($hsnRequired)
                                     4 digits (turnover &lt; ₹5 Cr) · 6 digits (&gt; ₹5 Cr) · 8 digits for exports.
                                 @else
-                                    Optional, your business isn't GST-registered. You can add this later.
+                                    Optional, as your business is not GST-registered.
                                 @endif
                             </p>
-                            <x-input-error :messages="$errors->get('hsn_sac')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('hsn_sac')" for="hsn_sac" class="mt-2" />
                         </div>
                         {{-- Searchable UQC picker: type to filter the 30+ codes by
                              code or name (e.g. "kg", "litre"). A hidden input submits
@@ -112,12 +113,12 @@
                                     <div x-show="filtered.length === 0" class="px-3 py-2 text-sm text-gray-500">No matching unit</div>
                                 </div>
                             </div>
-                            <x-input-error :messages="$errors->get('unit')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('unit')" for="unit" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="rate" value="Sale price (₹, pre-tax) *" />
-                            <x-text-input id="rate" name="rate" type="number" step="any" min="0" class="mt-1 block w-full" :value="old('rate', $product->rate ?? 0)" required />
-                            <x-input-error :messages="$errors->get('rate')" class="mt-2" />
+                            <x-text-input inputmode="decimal" id="rate" name="rate" type="number" step="any" min="0" class="mt-1 block w-full" :value="plain_amount(old('rate', $product->rate ?? 0))" required />
+                            <x-input-error :messages="$errors->get('rate')" for="rate" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="gst_rate" value="Default GST% *" />
@@ -127,6 +128,48 @@
                                 @endforeach
                             </select>
                         </div>
+                    </div>
+                </section>
+
+                {{-- Section: Stock (goods only; off by default) --}}
+                <section id="stock" x-show="kind === 'goods'" class="p-6 sm:p-8 border-t border-gray-100 scroll-mt-20">
+                    <div class="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h2 class="text-sm font-bold text-gray-900">Stock</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">Optional. Issued invoices reduce stock; purchase invoices add to it.</p>
+                        </div>
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="hidden" name="track_stock" value="0">
+                            <input type="checkbox" name="track_stock" value="1" x-model="track" class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                            <span class="text-sm font-semibold text-gray-800">Track stock for this item</span>
+                        </label>
+                    </div>
+                    <div x-show="track" x-cloak class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div>
+                            <x-input-label for="opening_stock" value="Opening stock" />
+                            <x-text-input inputmode="decimal" id="opening_stock" name="opening_stock" type="number" step="any" min="0" class="mt-1 block w-full"
+                                          :value="old('opening_stock', $product->exists ? (0 + (float) $product->opening_stock) : 0)" />
+                            <p class="text-xs text-gray-500 mt-1">Quantity on hand today, before any new bill.</p>
+                            <x-input-error :messages="$errors->get('opening_stock')" for="opening_stock" class="mt-2" />
+                        </div>
+                        <div>
+                            <x-input-label for="low_stock_level" value="Low stock alert at" />
+                            <x-text-input inputmode="decimal" id="low_stock_level" name="low_stock_level" type="number" step="any" min="0" class="mt-1 block w-full"
+                                          :value="old('low_stock_level', $product->low_stock_level !== null ? 0 + (float) $product->low_stock_level : '')" placeholder="e.g. 5" />
+                            <p class="text-xs text-gray-500 mt-1">Leave blank for no warning.</p>
+                        </div>
+                        <div>
+                            <x-input-label for="purchase_rate" value="Purchase price (₹, pre-tax)" />
+                            <x-text-input inputmode="decimal" id="purchase_rate" name="purchase_rate" type="number" step="any" min="0" class="mt-1 block w-full"
+                                          :value="plain_amount(old('purchase_rate', $product->purchase_rate))" placeholder="Optional" />
+                            <p class="text-xs text-gray-500 mt-1">Used to value stock. If blank, the sale price is used.</p>
+                        </div>
+                        @if ($product->exists && $product->track_stock)
+                            <div class="md:col-span-3 text-sm">
+                                In stock now: <strong class="tabular-nums">{{ 0 + $product->stockOnHand() }} {{ $product->unit }}</strong>
+                                · <a href="{{ route('products.stock', $product) }}" class="text-brand-700 hover:underline font-semibold">Stock history and adjustments</a>
+                            </div>
+                        @endif
                     </div>
                 </section>
 

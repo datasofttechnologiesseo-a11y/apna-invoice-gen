@@ -23,7 +23,7 @@
                 <div class="max-w-xl flex items-start justify-between gap-4">
                     <div>
                         <h2 class="font-semibold text-gray-900">Data &amp; Privacy</h2>
-                        <p class="text-sm text-gray-600 mt-1">Manage consent, export your data, and review your DPDP rights.</p>
+                        <p class="text-sm text-gray-600 mt-1">Consent, data export and your rights under the DPDP Act.</p>
                     </div>
                     <a href="{{ route('profile.privacy') }}" class="shrink-0 inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-white ring-1 ring-brand-200 text-brand-700 hover:bg-brand-100 transition">Open</a>
                 </div>

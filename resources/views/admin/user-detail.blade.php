@@ -29,7 +29,7 @@
                     ['label' => 'Companies', 'value' => $totals['companies'], 'color' => 'brand'],
                     ['label' => 'Customers', 'value' => $totals['customers'], 'color' => 'money'],
                     ['label' => 'Invoices',  'value' => $totals['invoices'], 'color' => 'accent'],
-                    ['label' => 'Revenue',   'value' => '₹' . number_format($totals['revenue']), 'color' => 'brand'],
+                    ['label' => 'Revenue',   'value' => '₹' . rupees($totals['revenue']), 'color' => 'brand'],
                 ];
                 $bgColors = ['brand' => 'bg-brand-50 text-brand-700', 'money' => 'bg-money-50 text-money-700', 'accent' => 'bg-accent-50 text-accent-700', 'danger' => 'bg-danger-50 text-danger-700'];
             @endphp
@@ -66,12 +66,12 @@
                             <a href="https://wa.me/{{ $waDigits }}" target="_blank" rel="noopener" class="text-money-600 hover:text-money-700 text-xs font-semibold">WhatsApp →</a>
                         </div>
                     @else
-                        <span class="text-gray-400">Not provided (pre-mandatory signup)</span>
+                        <span class="text-gray-500">Not provided (pre-mandatory signup)</span>
                     @endif
                 </li>
                 @foreach ($phones as $co)
                     <li class="px-5 py-3 flex items-center justify-between gap-4 text-sm">
-                        <div class="text-gray-500">{{ $co->name }} <span class="text-gray-400 text-xs">(company)</span></div>
+                        <div class="text-gray-500">{{ $co->name }} <span class="text-gray-500 text-xs">(company)</span></div>
                         <a href="tel:{{ $co->phone }}" class="font-mono text-gray-900 hover:text-brand-600">{{ $co->phone }}</a>
                     </li>
                 @endforeach
@@ -88,14 +88,14 @@
                       onsubmit="return confirm('Reset password for {{ $user->name }}?')">
                     @csrf
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">New password</label>
-                        <input type="password" name="password" required minlength="8" autocomplete="new-password"
+                        <label for="admin-user-password" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">New password</label>
+                        <input id="admin-user-password" type="password" name="password" required minlength="8" autocomplete="new-password"
                                class="w-full border-gray-300 rounded-md shadow-sm text-sm font-mono focus:border-brand-600 focus:ring-brand-600">
                         @error('password')<div class="text-xs text-danger-600 mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Confirm</label>
-                        <input type="password" name="password_confirmation" required minlength="8"
+                        <label for="admin-user-password-confirmation" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Confirm</label>
+                        <input id="admin-user-password-confirmation" type="password" name="password_confirmation" required minlength="8"
                                class="w-full border-gray-300 rounded-md shadow-sm text-sm font-mono focus:border-brand-600 focus:ring-brand-600">
                     </div>
                     <button type="submit" class="sm:mt-6 px-4 py-2 bg-danger-600 hover:bg-danger-700 text-white text-sm font-semibold rounded shadow-sm">Reset</button>
@@ -106,7 +106,7 @@
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-200"><h2 class="font-display font-bold text-gray-900">Companies ({{ $user->companies->count() }})</h2></div>
             @if ($user->companies->isEmpty())
-                <div class="px-5 py-10 text-center text-gray-400">No companies.</div>
+                <div class="px-5 py-10 text-center text-gray-500">No companies.</div>
             @else
                 <ul class="divide-y divide-gray-100">
                     @foreach ($user->companies as $co)
@@ -138,7 +138,7 @@
                 <a href="{{ route('admin.invoices') }}" class="text-xs font-semibold text-brand-600 hover:underline">View all →</a>
             </div>
             @if ($recentInvoices->isEmpty())
-                <div class="px-5 py-10 text-center text-gray-400">No invoices yet.</div>
+                <div class="px-5 py-10 text-center text-gray-500">No invoices yet.</div>
             @else
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
@@ -158,7 +158,7 @@
                                 <td class="px-5 py-2">{{ $inv->customer?->name ?? '-' }}</td>
                                 <td class="px-5 py-2 text-xs text-gray-600">{{ $inv->company?->name ?? '-' }}</td>
                                 <td class="px-5 py-2"><span class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">{{ ucfirst(str_replace('_', ' ', $inv->status)) }}</span></td>
-                                <td class="px-5 py-2 text-right font-mono tabular-nums">₹{{ inr($inv->grand_total) }}</td>
+                                <td class="px-5 py-2 text-right font-mono tabular-nums">₹{{ rupees($inv->grand_total) }}</td>
                                 <td class="px-5 py-2 text-xs text-gray-500">{{ $inv->invoice_date?->format('d M Y') }}</td>
                             </tr>
                         @endforeach

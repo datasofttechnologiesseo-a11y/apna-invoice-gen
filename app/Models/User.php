@@ -74,6 +74,12 @@ class User extends Authenticatable
             if ($active) {
                 return $active;
             }
+            // A business this user works in as a team member.
+            $joined = Company::whereKey($this->active_company_id)
+                ->whereHas('members', fn ($q) => $q->where('user_id', $this->id)->whereNotNull('accepted_at'))->first();
+            if ($joined) {
+                return $joined;
+            }
         }
 
         $first = $this->companies()->orderBy('id')->first();
@@ -92,9 +98,16 @@ class User extends Authenticatable
         return $new;
     }
 
+    /** Businesses this user was invited into and joined. */
+    public function memberships(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CompanyMember::class)->whereNotNull('accepted_at');
+    }
+
     public function switchCompany(Company $company): void
     {
-        if ($company->user_id !== $this->id) {
+        $isMember = CompanyMember::where('company_id', $company->id)->where('user_id', $this->id)->whereNotNull('accepted_at')->exists();
+        if ((int) $company->user_id !== (int) $this->id && ! $isMember) {
             abort(403);
         }
         $this->forceFill(['active_company_id' => $company->id])->save();
@@ -147,7 +160,18 @@ class User extends Authenticatable
             'review_prompt_shown_at' => 'datetime',
             'review_given_at' => 'datetime',
             'notifications_seen_at' => 'datetime',
+            'lifetime_free_at' => 'datetime',
+            'guide_completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Earned through the referral offer (a referred friend issued an invoice).
+     * Billing, when paid plans arrive, must never charge this account.
+     */
+    public function hasLifetimeFreeAccess(): bool
+    {
+        return $this->lifetime_free_at !== null;
     }
 
     public function isSuperAdmin(): bool

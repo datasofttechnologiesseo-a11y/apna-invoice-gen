@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'team' => \App\Http\Middleware\ActAsTeamMember::class,
         ]);
 
         // Trust reverse-proxy headers (X-Forwarded-Proto / -For / -Host) so
@@ -27,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeaders::class,
             // No-op unless APP_ENV=local and LOCAL_AUTO_LOGIN=true.
             \App\Http\Middleware\LocalAutoLogin::class,
+            // Team members work in the owner's business under their role.
+            \App\Http\Middleware\ActAsTeamMember::class,
         ]);
         // ...and it has to sign in before the auth check runs, which Laravel
         // otherwise hoists ahead of anything not on its priority list.

@@ -76,7 +76,7 @@ class OnboardingController extends Controller
             'bank_branch' => ['nullable', 'string', 'max:120'],
             'upi_id' => ['nullable', 'string', 'max:60'],
         ], [
-            'address_line1.required_with' => 'A registered address is required on GST tax invoices. Please add your address (or clear the GSTIN and add it later).',
+            'address_line1.required_with' => 'A GST tax invoice must show your registered address. Add it, or clear the GSTIN and add both later.',
             'city.required_with' => 'City is required on GST tax invoices when a GSTIN is set.',
         ]);
 
@@ -87,7 +87,7 @@ class OnboardingController extends Controller
             if ($company->logo_path) {
                 Storage::disk('public')->delete($company->logo_path);
             }
-            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+            $data['logo_path'] = \App\Support\BrandImage::storeLogo($request->file('logo'));
         }
         unset($data['logo']);
 

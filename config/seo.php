@@ -8,99 +8,33 @@ return [
 
     // Appended after the site name when a page passes no title of its own -
     // must NOT contain the brand again (the component prepends it).
-    'title_suffix' => ' | Best Free GST Invoice & Bill Generator for India',
+    // No "Best": an unbacked superlative in a title reads as spam.
+    'title_suffix' => ' | Free GST Invoice and Bill Generator for India',
 
     // Kept under ~160 chars - Google truncates around there, so the value
     // proposition and CTA must fit inside the visible snippet.
     'description' => 'Free GST invoice generator for India. Auto CGST/SGST/IGST, HSN/SAC, UPI QR & WhatsApp share in 60 seconds. Unlimited invoices, no card needed.',
 
+    // Fallback meta keywords for indexable pages that pass none. Google
+    // ignores the tag and Bing reads a long one as a spam signal, so this is
+    // a short list of the phrases the product really serves. It used to be
+    // ~90 terms ("best ...", "top ...", six city names), which is stuffing.
     'keywords' => implode(', ', [
-        // Primary head terms - what users search for to find a tool
-        'best invoice generator India',
-        'top invoice generator',
-        'best bill generator online',
-        'best GST invoice generator',
-        'top GST bill generator',
-        'best billing software India',
-        'free GST invoice generator India',
-        'free invoice generator India',
-        'free bill generator online',
-        'online bill generator',
-        'online invoice maker',
         'GST invoice generator',
+        'free GST invoice generator India',
+        'GST billing software',
+        'free billing software India',
+        'online invoice generator',
         'GST bill generator',
-        'GST 2.0 invoice',
-        'invoice maker online free',
-        'invoice generator online India',
-        'bill maker app',
-        // Exact long-tail queries
-        'create GST invoice online free India',
-        'how to create GST invoice online free India',
-        'online invoice generator with GST free',
-        'invoice generator with GST calculation India free',
-        'invoice generator with GST and HSN code',
-        'GST compliant invoice generator India',
-        'GST invoice generator for small business India',
-        'free invoice maker for small business India',
-        'simple GST billing software free India',
-        'free billing software for small shop India GST',
-        'billing software for SME India free',
-        'invoice generator for MSME India',
-        'GST invoice format download for MSME',
-        'best free GST invoice generator for freelancers India',
-        'tax invoice generator India',
-        // Compliance / format keywords
-        'GST compliant invoice',
-        'GST invoice format',
         'tax invoice format India',
-        'HSN code invoice',
-        'SAC code invoice',
+        'HSN SAC invoice',
         'CGST SGST IGST invoice',
-        'credit note GST Section 34',
-        'invoice PDF generator',
-        // Audience keywords
-        'invoice software India',
-        'invoice generator for small business',
-        'invoice tool for CA',
-        'billing software for MSME',
-        'SME invoicing India',
-        'MSME invoicing India',
-        'startup invoicing India',
-        'freelancer invoice India',
-        // GST calculator (free home-page tool)
-        'GST calculator',
+        'GST credit note',
+        'GSTR-1 export',
         'free GST calculator',
-        'free GST calculator India',
-        'online GST calculator',
-        'GST calculator online India',
-        'GST tax calculator',
-        'CGST SGST IGST calculator',
-        'GST inclusive calculator',
-        'GST exclusive calculator',
-        'reverse GST calculator',
-        'GST calculator 5 12 18 28',
-        'GST calculator with HSN code',
-        'intra-state GST calculator',
-        'inter-state GST calculator',
-        'GST percentage calculator',
-        'GST amount calculator India',
-        // India-payment rails
-        'WhatsApp invoice India',
         'UPI QR invoice',
-        'UPI invoice generator',
-        // Migration intent (category-based, no competitor names)
-        'switch from Excel invoicing',
-        'replace spreadsheet invoicing India',
-        'cloud GST invoicing software',
-        'online billing software no installation',
-        'free desktop billing alternative',
-        // Geography long-tail
-        'Delhi NCR invoice software',
-        'Mumbai invoice software',
-        'Bangalore invoice software',
-        'Pune invoice software',
-        'Hyderabad invoice software',
-        'Chennai invoice software',
+        'WhatsApp invoice',
+        'invoice software for MSME',
         'Apna Invoice',
     ]),
 
@@ -111,11 +45,9 @@ return [
 
     // Dedicated 1200x630 social share card (the ideal OG aspect ratio).
     // Regenerate with: php scripts/make-og-card.php
+    // og:image:width/height/type are measured from the file by <x-seo>, so
+    // a card of any size is announced correctly; no size settings here.
     'og_image' => '/brand/og-card.png',
-
-    'og_image_width' => 1200,
-
-    'og_image_height' => 630,
 
     'locale' => 'en_IN',
 
@@ -129,11 +61,19 @@ return [
         'linkedin'  => 'https://www.linkedin.com/showcase/apna-invoice/',
     ],
 
+    // The organisation Google shows for this site is the Apna Invoice brand
+    // (its logo in the knowledge panel), operated by Datasoft Technologies,
+    // which is its legal name and parent company.
     'organization' => [
-        'name' => 'Datasoft Technologies',
+        'name' => 'Apna Invoice',
         'legal_name' => 'Datasoft Technologies',
-        'url' => 'https://www.datasofttechnologies.com/',
-        'logo' => '/brand/dst-logo.png',
+        'url' => rtrim(env('APP_URL', 'https://apnainvoice.com'), '/') . '/',
+        'logo' => '/brand/apna-invoice-logo-512.png',
+        'parent' => [
+            'name' => 'Datasoft Technologies',
+            'url' => 'https://www.datasofttechnologies.com/',
+            'logo' => '/brand/dst-logo.png',
+        ],
         'country' => 'IN',
         'locality' => 'Delhi NCR',
         'region' => 'Delhi',

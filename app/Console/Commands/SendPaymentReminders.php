@@ -36,7 +36,7 @@ class SendPaymentReminders extends Command
                 $label = $days > 0
                     ? "{$days} day(s) overdue"
                     : ($days === 0 ? 'due today' : abs($days) . ' day(s) until due');
-                $this->line("  [dry] #{$invoice->invoice_number} — {$label}, balance ₹" . number_format((float) $invoice->balance, 2));
+                $this->line("  [dry] #{$invoice->invoice_number} — {$label}, balance ₹" . inr((float) $invoice->balance));
                 continue;
             }
 

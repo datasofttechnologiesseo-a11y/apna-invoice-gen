@@ -44,7 +44,7 @@
                         <td class="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{{ $cust->created_at->format('d M Y') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-5 py-12 text-center text-gray-400">No customers match.</td></tr>
+                    <tr><td colspan="6" class="px-5 py-12 text-center text-gray-500">No customers match.</td></tr>
                 @endforelse
             </tbody>
         </table>

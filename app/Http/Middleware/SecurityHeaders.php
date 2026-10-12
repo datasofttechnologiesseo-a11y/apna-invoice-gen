@@ -53,10 +53,10 @@ class SecurityHeaders
             $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         }
 
-        // HSTS only over a real TLS connection. Sending it over plain HTTP is
-        // ignored anyway, and sending it from a local dev server would pin the
-        // developer's browser to https://localhost.
-        if ($request->isSecure()) {
+        // HSTS only in production and only over a real TLS connection. Sending
+        // it over plain HTTP is ignored anyway, and sending it from a local or
+        // staging HTTPS server would pin the developer's browser to that host.
+        if ($request->isSecure() && app()->isProduction()) {
             $response->headers->set(
                 'Strict-Transport-Security',
                 'max-age=31536000; includeSubDomains'
@@ -72,7 +72,9 @@ class SecurityHeaders
             // Customers upload their own logo and signature, and invoices embed
             // them as data URIs for the PDF renderer.
             "img-src 'self' data: blob: https:",
-            "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com",
+            // Google's documented GA4 set: hits go to region-specific hosts
+            // on both analytics domains, and gtag.js calls back to GTM.
+            "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
             "frame-src https://challenges.cloudflare.com",
             "object-src 'none'",
             "base-uri 'self'",

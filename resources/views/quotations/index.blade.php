@@ -3,10 +3,10 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Quotations') }}</h1>
             <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back to Invoices</a>
+                <x-export-toolbar report="quotations" />
                 <a href="{{ route('quotations.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                    New Quotation
+                    New quotation
                 </a>
             </div>
         </div>
@@ -24,7 +24,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span class="flex-1">
-                    Quotations don't appear on GSTR-1 / GSTR-3B and aren't affected by books-locked. Click <strong>Convert to Invoice</strong> on an accepted quote to issue the tax invoice.
+                    Quotations are not reported in GSTR-1 or GSTR-3B and are not affected by locked books. Use <strong>Convert to invoice</strong> on an accepted quote to raise the tax invoice.
                 </span>
                 <button @click="localStorage.setItem('hideQuotationsTip','1'); show=false"
                         class="shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-brand-700 hover:text-brand-900 hover:bg-brand-100"
@@ -42,15 +42,15 @@
                     </select>
                     <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
                     @if (request('search') || request('status'))
-                        <a href="{{ route('quotations.index') }}" class="text-gray-500 text-sm">clear</a>
+                        <a href="{{ route('quotations.index') }}" class="text-gray-500 text-sm">Clear</a>
                     @endif
                 </form>
 
                 @if ($quotations->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        :title="request('search') || request('status') ? 'No quotations match that filter' : 'Send your first quote'"
-                        :description="request('search') || request('status') ? 'Try a different search term or clear the filter.' : 'Send a price proposal on WhatsApp or email, your customer clicks Accept on the public link - you click Convert and it becomes a tax invoice. No re-typing.'"
+                        :title="request('search') || request('status') ? 'No quotations match that filter' : 'No quotations yet'"
+                        :description="request('search') || request('status') ? 'Change the search or clear the filters.' : 'Send a quotation by email or WhatsApp. Once accepted, convert it to a tax invoice without retyping.'"
                         :actionHref="request('search') || request('status') ? route('quotations.index') : route('quotations.create')"
                         :actionLabel="request('search') || request('status') ? 'Clear filters' : 'Create quotation'"
                     />
@@ -88,7 +88,7 @@
                                         <div class="text-xs text-gray-500">
                                             {{ $q->quote_date?->format('d M Y') }}
                                             @if ($q->valid_until)
-                                                · valid till {{ $q->valid_until->format('d M Y') }}
+                                                · valid until {{ $q->valid_until->format('d M Y') }}
                                                 @if ($showCountdown && $daysLeft < 7)
                                                     <span class="ml-1 inline-block text-[10px] font-bold uppercase tracking-wider {{ $daysLeft < 0 ? 'text-danger-700' : 'text-accent-700' }}">
                                                         @if ($daysLeft < 0) Expired @else ({{ $daysLeft }}d left) @endif
@@ -100,7 +100,7 @@
                                     <span class="shrink-0 inline-block px-2 py-0.5 rounded text-[11px] font-medium {{ $colors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
                                 </div>
                                 <div class="flex items-baseline justify-between text-sm">
-                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($q->grand_total) }}</span></span>
+                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ rupees($q->grand_total) }}</span></span>
                                 </div>
                                 <div class="flex items-center gap-3 pt-1 text-sm">
                                     <a href="{{ route('quotations.show', $q) }}" class="inline-flex items-center min-h-[36px] text-brand-700 font-semibold">View</a>
@@ -110,7 +110,7 @@
                                             :action="route('quotations.destroy', $q)"
                                             method="DELETE"
                                             title="Delete draft quotation #{{ $q->id }}?"
-                                            message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable - they're kept for record."
+                                            message="The draft and its line items will be deleted. This cannot be undone."
                                             confirm-label="Delete draft"
                                             confirm-class="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
@@ -169,7 +169,7 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">{{ $q->customer?->name }}</td>
-                                        <td class="px-4 py-3 text-right font-mono">₹{{ inr($q->grand_total) }}</td>
+                                        <td class="px-4 py-3 text-right font-mono">₹{{ rupees($q->grand_total) }}</td>
                                         <td class="px-4 py-3">
                                             <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $colors[$eff] ?? 'bg-gray-100' }}">{{ ucfirst($eff) }}</span>
                                         </td>
@@ -183,7 +183,7 @@
                                                     :action="route('quotations.destroy', $q)"
                                                     method="DELETE"
                                                     title="Delete draft quotation #{{ $q->id }}?"
-                                                    message="This draft and all its line items are permanently deleted. This cannot be undone. Sent / accepted quotations are not deletable - they're kept for record."
+                                                    message="The draft and its line items will be deleted. This cannot be undone."
                                                     confirm-label="Delete draft"
                                                     confirm-class="bg-danger-600 hover:bg-danger-700"
                                                     tone="danger">

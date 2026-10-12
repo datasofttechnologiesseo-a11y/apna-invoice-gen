@@ -23,6 +23,27 @@
 ])
 
 @php
+    // A bound attribute (:title="'Import ' . $x") reaches a component already
+    // HTML-escaped - Laravel sanitises bound component attributes - and every
+    // tag below escapes again on output, so "Products & Services" printed as
+    // "Products &amp; Services" in the tab, search results and link previews.
+    // Decode to plain text here; the output escaping keeps it safe.
+    $plain = function ($v) {
+        if (! is_string($v)) {
+            return $v;
+        }
+        for ($i = 0; $i < 3 && ($d = html_entity_decode($v, ENT_QUOTES | ENT_HTML5, 'UTF-8')) !== $v; $i++) {
+            $v = $d;
+        }
+
+        return $v;
+    };
+    $title = $plain($title);
+    $description = $plain($description);
+    $keywords = $plain($keywords);
+    $ogTitle = $plain($ogTitle);
+    $ogDescription = $plain($ogDescription);
+
     $siteName = config('seo.name', config('app.name'));
     $suffix = config('seo.title_suffix', '');
     $fullTitle = $title
@@ -30,7 +51,9 @@
         : ($siteName . $suffix);
 
     $descr = $description ?: config('seo.description');
-    $kw = $keywords ?: config('seo.keywords');
+    // The site-wide keyword fallback is for indexable pages only. A noindex
+    // page (the app, a customer's shared invoice) has nothing to rank for.
+    $kw = $keywords ?: ($noindex ? null : config('seo.keywords'));
 
     $appUrl = rtrim(config('app.url'), '/');
     // Build the canonical from the CONFIGURED production origin, not the request
@@ -65,7 +88,32 @@
     $ogImage = $imgPath && str_starts_with($imgPath, 'http')
         ? $imgPath
         : $appUrl . '/' . ltrim($imgPath, '/');
-    $ogImageType = str_ends_with(strtolower($ogImage), '.png') ? 'image/png' : 'image/jpeg';
+
+    // og:image:width/height/type describe the actual file. They used to be
+    // hard-coded to 1200x630 and PNG-or-JPEG, so a blog cover of another size
+    // or a WebP was announced with the wrong size and type, and scrapers that
+    // trust those tags (LinkedIn, WhatsApp, Facebook) crop or drop the
+    // preview. Measured from disk when the image is ours (a header read, not
+    // a decode); left out when it cannot be measured, which is better than
+    // wrong.
+    $ogImageWidth = $ogImageHeight = null;
+    $ogImageType = null;
+    $ogImageHost = parse_url($ogImage, PHP_URL_HOST);
+    $ogImagePath = rawurldecode((string) parse_url($ogImage, PHP_URL_PATH));
+    if (in_array($ogImageHost, [parse_url($appUrl, PHP_URL_HOST), request()->getHost()], true)
+        && $ogImagePath !== '' && ! str_contains($ogImagePath, '..')
+        && is_file($ogImageFile = public_path(ltrim($ogImagePath, '/')))
+        && ($ogImageSize = @getimagesize($ogImageFile))) {
+        [$ogImageWidth, $ogImageHeight] = $ogImageSize;
+        $ogImageType = $ogImageSize['mime'] ?? null;
+    }
+    $ogImageType ??= match (strtolower(pathinfo($ogImagePath, PATHINFO_EXTENSION))) {
+        'png' => 'image/png',
+        'jpg', 'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        default => null,
+    };
 
     $locale = config('seo.locale', 'en_IN');
     $twitter = config('seo.twitter_handle');
@@ -113,11 +161,12 @@
      unreadable at 16-48px. Google wants a square icon in a multiple of 48px,
      hence the 48/96 PNGs. Bump ?v= when the artwork changes so browsers and
      Google's favicon cache drop the old one. --}}
-<link rel="icon" href="/favicon.ico?v=2" sizes="16x16 32x32 48x48 64x64">
-<link rel="icon" type="image/png" sizes="48x48" href="/brand/favicon-48.png?v=2">
-<link rel="icon" type="image/png" sizes="96x96" href="/brand/favicon-96.png?v=2">
-<link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png?v=2">
-<link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png?v=2">
+<link rel="icon" href="/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
+<link rel="icon" type="image/png" sizes="48x48" href="/brand/favicon-48.png?v=3">
+<link rel="icon" type="image/png" sizes="96x96" href="/brand/favicon-96.png?v=3">
+<link rel="icon" type="image/png" sizes="144x144" href="/brand/favicon-144.png?v=3">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png?v=3">
+<link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png?v=3">
 <link rel="manifest" href="/manifest.json">
 
 {{-- Open Graph --}}
@@ -129,9 +178,13 @@
 <meta property="og:locale" content="{{ $locale }}">
 <meta property="og:image" content="{{ $ogImage }}">
 <meta property="og:image:secure_url" content="{{ $ogImage }}">
+@if ($ogImageType)
 <meta property="og:image:type" content="{{ $ogImageType }}">
-<meta property="og:image:width" content="{{ config('seo.og_image_width', 1200) }}">
-<meta property="og:image:height" content="{{ config('seo.og_image_height', 630) }}">
+@endif
+@if ($ogImageWidth && $ogImageHeight)
+<meta property="og:image:width" content="{{ $ogImageWidth }}">
+<meta property="og:image:height" content="{{ $ogImageHeight }}">
+@endif
 <meta property="og:image:alt" content="{{ $socialTitle }}">
 
 @if ($type === 'article')

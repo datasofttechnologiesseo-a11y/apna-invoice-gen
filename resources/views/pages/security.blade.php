@@ -1,10 +1,11 @@
 <x-layouts.marketing
-    title="Security at DST"
+    title="Security and Data Protection"
     eyebrow="Trust"
     lead="How we protect your invoices, customer data, and account. Transparent practices, no marketing theatre."
-    description="How we keep your invoice and customer data safe: encrypted in transit and at rest, stored in India, access controls, daily backups and responsible disclosure."
+    description="How we keep your invoice and customer data safe: encrypted in transit and at rest, access controls, daily backups and responsible disclosure."
     keywords="Apna Invoice security, invoice software security India, SaaS encryption India, GST data security, DPDP Act security, responsible disclosure Datasoft"
-    type="article">
+    type="article"
+    :legal="true">
 
     <h2>In transit</h2>
     <p>
@@ -18,10 +19,10 @@
         bcrypt. Uploaded files (e.g. business logos) are stored on encrypted object storage.
     </p>
 
-    <h2>Data residency</h2>
+    <h2>Where data is stored</h2>
     <p>
-        Primary and backup data for Apna Invoice is stored on servers located in <strong>India</strong>. We do
-        not replicate your business records outside the country.
+        Primary and backup data for Apna Invoice is stored on secured servers run by our hosting provider. Your
+        business records are not shared outside the subprocessors listed in our Privacy Policy.
     </p>
 
     <h2>Access controls</h2>

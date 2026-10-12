@@ -35,7 +35,7 @@
     table.kv { width: 100%; border-collapse: collapse; }
     table.kv th, table.kv td { padding: 6px 8px; text-align: left; font-size: 12px; }
     table.kv tr { border-bottom: 1px solid #e5e5e5; }
-    table.kv th { background: #f7f7f7; width: 32%; font-weight: 600; color: #333; }
+    table.kv th { background: #f7f7f7; width: 32%; font-weight: bold; color: #333; }
     .footer { margin-top: 28px; display: table; width: 100%; }
     .footer .col { padding-top: 50px; }
     .sign { border-top: 1px solid #111; padding-top: 4px; font-size: 10px; }
@@ -56,9 +56,7 @@
 
 <div class="row">
     <div class="col" style="width: 65%;">
-        @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-            <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="logo" style="max-height: 60px; max-width: 220px;"><br>
-        @endif
+        @include('partials.pdf-logo', ['c' => $c])
         <h2 class="company">{{ $c->name }}</h2>
         <div class="small muted">
             {{ $c->address_line1 }}@if ($c->address_line2), {{ $c->address_line2 }}@endif<br>
@@ -169,10 +167,7 @@
         <div class="xs muted">Issued via {{ config('app.name', 'Apna Invoice') }} &middot; This is a computer-generated receipt.</div>
     </div>
     <div class="col right" style="width: 40%;">
-        @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-            <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="signature" style="max-height: 50px; max-width: 160px;"><br>
-        @endif
-        <div class="sign">Authorised signatory, {{ $c->name }}</div>
+        @include('partials.pdf-signatory', ['c' => $c])
     </div>
 </div>
 

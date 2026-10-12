@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">
-                {{ $expense->exists ? 'Edit purchase' : 'Add purchase' }}
+                {{ $expense->exists ? 'Edit expense' : 'Add expense' }}
             </h1>
             <a href="{{ route('finance.expenses') }}" class="text-sm text-gray-500 hover:text-gray-700">← All expenses</a>
         </div>
@@ -24,7 +24,7 @@
                 <div>
                     <div class="mb-3">
                         <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider">How was this paid?</h2>
-                        <p class="text-xs text-gray-500 mt-0.5">Choose the option that matches the bill you have. Both update your P&amp;L the same way.</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Choose by the bill you have. Both post to your P&amp;L the same way.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -43,15 +43,15 @@
                                 </div>
                             </div>
                             <p class="text-sm text-gray-700 mt-3">
-                                Use this when you have a <strong>proper bill or tax invoice</strong> from the vendor - paid via bank transfer, UPI, card, or cheque.
+                                For a <strong>proper bill or tax invoice</strong> from the vendor, paid by bank transfer, UPI, card or cheque.
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
-                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>GST input credit (ITC) claimable if vendor is GST-registered</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>Just fill amount, date &amp; category - fast entry</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>Best for office rent, salaries, SaaS, utilities</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>ITC claimable if the vendor is GST-registered</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>Amount, date and category only</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-money-700 font-bold">✓</span><span>For office rent, salaries, SaaS and utilities</span></li>
                             </ul>
                             <div class="mt-4 text-xs text-brand-700 font-semibold inline-flex items-center gap-1">
-                                ↓ Continue with the form below
+                                ↓ Fill in the form below
                             </div>
                         </div>
 
@@ -65,19 +65,19 @@
                                 </div>
                                 <div class="flex-1">
                                     <h3 class="font-bold text-gray-900 group-hover:text-accent-700">Cash Memo <span class="text-[10px] font-semibold text-accent-700 bg-accent-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">Cash purchase without proper bill</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">Cash purchase without a proper bill</p>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-700 mt-3">
-                                Use this when paying <strong>cash to a small or unregistered vendor</strong> who doesn't issue a tax invoice. Common for petty cash, repairs, stationery, food, etc.
+                                For <strong>cash paid to a small or unregistered vendor</strong> who does not issue a tax invoice, such as petty cash, repairs, stationery or food.
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
-                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Generates a printable A4 Cash Memo as your purchase voucher</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Auto-creates the matching expense entry - no double work</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>FY-based memo number (e.g. CM/26-27/0001) for proper records</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Printable A4 cash memo as your purchase voucher</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Creates the matching expense entry automatically</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>FY-wise memo number, e.g. CM/26-27/0001</span></li>
                             </ul>
                             <div class="mt-4 text-xs text-accent-700 font-semibold inline-flex items-center gap-1 group-hover:underline">
-                                Create Cash Memo →
+                                Create cash memo →
                             </div>
                         </a>
 
@@ -92,7 +92,7 @@
 
                     @if ($errors->any())
                         <div class="p-4 rounded-lg bg-danger-50 border border-danger-200 text-danger-800 text-sm">
-                            <div class="font-semibold mb-1">Please fix the following:</div>
+                            <div class="font-semibold mb-1">Correct the following before saving:</div>
                             <ul class="list-disc pl-5 space-y-0.5">
                                 @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
                             </ul>
@@ -104,17 +104,17 @@
                             <x-input-label for="entry_date" value="Date *" />
                             <x-text-input id="entry_date" name="entry_date" type="date" class="mt-1 block w-full"
                                           :value="old('entry_date', $expense->entry_date?->toDateString() ?? now()->toDateString())" required />
-                            <x-input-error :messages="$errors->get('entry_date')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('entry_date')" for="entry_date" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="category" value="Category *" />
                             <select id="category" name="category" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600" required>
-                                <option value="">- Select -</option>
+                                <option value="">Select category</option>
                                 @foreach (config('expense_categories') as $key => $cfg)
                                     <option value="{{ $key }}" @selected(old('category', $expense->category) === $key) title="{{ $cfg['desc'] }}">{{ $cfg['label'] }}</option>
                                 @endforeach
                             </select>
-                            <x-input-error :messages="$errors->get('category')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('category')" for="category" class="mt-2" />
                         </div>
 
                         <div class="md:col-span-2">
@@ -122,7 +122,7 @@
                             <x-text-input id="description" name="description" type="text" class="mt-1 block w-full"
                                           :value="old('description', $expense->description)"
                                           placeholder="E.g. July office rent, AWS subscription May, Flight BOM→DEL" required maxlength="255" />
-                            <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('description')" for="description" class="mt-2" />
                         </div>
 
                         <div>
@@ -130,7 +130,7 @@
                             <x-text-input id="vendor_name" name="vendor_name" type="text" class="mt-1 block w-full"
                                           :value="old('vendor_name', $expense->vendor_name)" maxlength="120"
                                           placeholder="E.g. Urban Properties LLP" />
-                            <x-input-error :messages="$errors->get('vendor_name')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('vendor_name')" for="vendor_name" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="payment_method" value="Payment method" />
@@ -145,21 +145,21 @@
                             <x-input-label for="amount" value="Amount (excl. GST) *" />
                             <div class="mt-1 relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                                <x-text-input id="amount" name="amount" type="number" step="any" min="0" class="block w-full pl-8"
-                                              :value="old('amount', $expense->amount)" required />
+                                <x-text-input inputmode="decimal" id="amount" name="amount" type="number" step="any" min="0" class="block w-full pl-8"
+                                              :value="plain_amount(old('amount', $expense->amount))" required />
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">The taxable value - what it actually cost you, before GST.</p>
-                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                            <p class="mt-1 text-xs text-gray-500">Taxable value, before GST.</p>
+                            <x-input-error :messages="$errors->get('amount')" for="amount" class="mt-2" />
                         </div>
                         <div>
                             <x-input-label for="gst_amount" value="GST paid (Input Tax Credit)" />
                             <div class="mt-1 relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
-                                <x-text-input id="gst_amount" name="gst_amount" type="number" step="any" min="0" class="block w-full pl-8"
-                                              :value="old('gst_amount', $expense->gst_amount)" placeholder="0.00" />
+                                <x-text-input inputmode="decimal" id="gst_amount" name="gst_amount" type="number" step="any" min="0" class="block w-full pl-8"
+                                              :value="plain_amount(old('gst_amount', $expense->gst_amount))" placeholder="0" />
                             </div>
-                            <p class="mt-1 text-xs text-gray-500">Enter only if you have a valid tax invoice from the vendor. You can claim this back on GSTR-3B.</p>
-                            <x-input-error :messages="$errors->get('gst_amount')" class="mt-2" />
+                            <p class="mt-1 text-xs text-gray-500">Enter only with a valid tax invoice from the vendor. Claimable in GSTR-3B.</p>
+                            <x-input-error :messages="$errors->get('gst_amount')" for="gst_amount" class="mt-2" />
 
                             {{-- Interstate flag - appears only if GST has been entered. Default unchecked
                                  (intra-state) since that's the most common case for a sub-₹5cr business
@@ -171,7 +171,7 @@
                                        class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Inter-state purchase (IGST)</span>
-                                    <span class="block text-xs text-gray-500">Tick if the vendor's GSTIN is from a different state and they charged you IGST. Leave unchecked for normal local purchases (CGST + SGST).</span>
+                                    <span class="block text-xs text-gray-500">Tick if the vendor is in another state and charged IGST. Leave unticked for local purchases (CGST + SGST).</span>
                                 </span>
                             </label>
 
@@ -184,7 +184,7 @@
                                        class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Eligible for input tax credit</span>
-                                    <span class="block text-xs text-gray-500">Leave ticked for normal business purchases. Untick for blocked credits under §17(5) - motor vehicles, staff food/catering, personal-use or exempt-supply items - so this GST isn't claimed on GSTR-3B.</span>
+                                    <span class="block text-xs text-gray-500">Untick for blocked credit under Section 17(5) (motor vehicles, staff food and catering, personal use) or items for exempt supplies. This GST is then left out of GSTR-3B.</span>
                                 </span>
                             </label>
                         </div>
@@ -212,14 +212,14 @@
                                     :action="route('finance.expenses.destroy', $expense)"
                                     method="DELETE"
                                     title="Delete this expense?"
-                                    message="This expense entry will be permanently removed. This cannot be undone."
+                                    message="This cannot be undone."
                                     confirmLabel="Delete expense"
                                     confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
                                     <button type="button" class="px-3 py-2 text-danger-600 hover:bg-danger-50 rounded text-sm font-semibold">Delete</button>
                                 </x-confirm-form>
                             @endif
-                            <x-primary-button>{{ $expense->exists ? 'Save changes' : 'Add purchase' }}</x-primary-button>
+                            <x-primary-button>{{ $expense->exists ? 'Save changes' : 'Add expense' }}</x-primary-button>
                         </div>
                     </div>
                 </form>

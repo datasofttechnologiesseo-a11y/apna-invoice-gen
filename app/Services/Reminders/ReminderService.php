@@ -85,16 +85,16 @@ class ReminderService
         // This is the explicit Vyapar-trust-killer guard.
         $invoice->refresh();
         if (! $this->isEligible($invoice)) {
-            return $this->log($invoice, $channel, '', 'skipped', 0, $trigger, 'Invoice no longer eligible (paid or cancelled in the meantime).');
+            return $this->log($invoice, $channel, '', 'skipped', 0, $trigger, 'No reminder sent. This invoice has been paid or cancelled.');
         }
 
         if (! $ch->isAvailable()) {
-            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "Channel {$channel} not configured.");
+            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "Reminders by {$channel} are not set up.");
         }
 
         $recipient = $ch->recipientFor($invoice);
         if (! $recipient) {
-            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "No {$channel} recipient on customer.");
+            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "No {$channel} contact saved for this customer.");
         }
 
         $days = $thresholdOverride ?? $this->daysPastDue($invoice);
@@ -107,7 +107,7 @@ class ReminderService
             $ok ? 'sent' : 'failed',
             $days,
             $trigger,
-            $ok ? null : "Channel returned failure (see logs).",
+            $ok ? null : "Reminder could not be sent. Try again later.",
         );
     }
 

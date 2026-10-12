@@ -27,6 +27,7 @@ class Company extends Model
         'cash_memo_prefix', 'cash_memo_counter', 'cash_memo_number_padding', 'cash_memo_counter_fy',
         'quote_prefix', 'quote_counter', 'quote_number_format', 'quote_counter_fy',
         'books_locked_until',
+        'lut_number',
         'onboarded_at',
     ];
 
@@ -108,6 +109,12 @@ class Company extends Model
         return $this->belongsTo(State::class);
     }
 
+    /** People invited to work in this business (see CompanyMember). */
+    public function members(): HasMany
+    {
+        return $this->hasMany(CompanyMember::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
@@ -146,6 +153,16 @@ class Company extends Model
     public function quotations(): HasMany
     {
         return $this->hasMany(Quotation::class);
+    }
+
+    public function vendors(): HasMany
+    {
+        return $this->hasMany(Vendor::class);
+    }
+
+    public function purchaseBills(): HasMany
+    {
+        return $this->hasMany(PurchaseBill::class);
     }
 
     /**

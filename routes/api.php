@@ -41,7 +41,9 @@ Route::get('blog', [BlogController::class, 'index']);
 Route::get('blog/{slug}', [BlogController::class, 'show'])->where('slug', '[a-z0-9-]+');
 
 // --- Authenticated ---
-Route::middleware('auth:sanctum')->group(function () {
+// "team": a team member's app requests run in the business they joined,
+// under their role (see App\Http\Middleware\ActAsTeamMember).
+Route::middleware(['auth:sanctum', 'team'])->group(function () {
     // Session
     Route::get('me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);

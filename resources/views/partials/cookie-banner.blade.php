@@ -16,10 +16,10 @@
     <div class="pointer-events-auto mx-auto max-w-3xl bg-white rounded-xl shadow-2xl ring-1 ring-gray-200 p-4 sm:p-5 max-h-[50vh] overflow-y-auto">
         <div class="flex flex-col sm:flex-row sm:items-start gap-4">
             <div class="flex-1 min-w-0 text-sm leading-relaxed">
-                <p id="cookie-banner-title" class="font-display font-bold text-gray-900">We value your privacy</p>
+                <p id="cookie-banner-title" class="font-display font-bold text-gray-900">Cookies</p>
                 <p id="cookie-banner-body" class="mt-1 text-gray-600">
-                    Apna Invoice uses essential cookies to keep you signed in and, with your permission, a small set of analytics cookies to improve the product. You can change this any time on the
-                    <a href="{{ route('pages.cookies') }}" class="underline hover:text-brand-700">Cookie Settings</a> page.
+                    Apna Invoice uses essential cookies to keep you signed in and, with your consent, analytics cookies to improve the product. Change this any time in
+                    <a href="{{ route('pages.cookies') }}" class="underline hover:text-brand-700">Cookie Settings</a>.
                 </p>
             </div>
             <div class="flex flex-wrap gap-2 sm:flex-col sm:shrink-0">

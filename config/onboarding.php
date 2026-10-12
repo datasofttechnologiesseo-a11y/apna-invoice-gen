@@ -29,7 +29,7 @@ return [
         ],
         'day1' => [
             'after_days' => 1,
-            'subject' => 'Your first GST invoice is 60 seconds away',
+            'subject' => 'Create your first GST invoice',
             'heading' => 'Ready to send your first invoice?',
             'lines' => [
                 'Add a customer, type one line item, and tap Issue. We work out the tax split for you based on the customer state.',
@@ -51,7 +51,7 @@ return [
         ],
         'day7' => [
             'after_days' => 7,
-            'subject' => 'Still here whenever you are ready',
+            'subject' => 'Your Apna Invoice account is ready',
             'heading' => 'Your free account is waiting',
             'lines' => [
                 'No pressure and no cost. Whenever you have an invoice to send, Apna Invoice is ready in your browser.',

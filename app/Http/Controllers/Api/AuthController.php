@@ -38,7 +38,7 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
             'device_name' => ['nullable', 'string', 'max:255'],
         ], [
-            'phone.required' => 'Please enter your mobile number so we can help you get started.',
+            'phone.required' => 'Enter your mobile number.',
             'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
         ]);
 

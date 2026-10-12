@@ -86,12 +86,9 @@ class InvoiceController extends Controller
                     ->count(),
             ],
             'purchases' => [
-                'total' => $company->expenses()->count(),
-                // The purchase side has no status to count, so recency is the
-                // useful number: bills recorded this month.
-                'this_month' => $company->expenses()
-                    ->whereBetween('entry_date', [now()->startOfMonth(), now()->endOfMonth()])
-                    ->count(),
+                'total' => $company->purchaseBills()->count(),
+                // Unpaid = still owed to vendors, the purchase-side "outstanding".
+                'unpaid' => $company->purchaseBills()->where('balance', '>', 0)->count(),
             ],
         ];
 
@@ -115,7 +112,7 @@ class InvoiceController extends Controller
         $calc = app(\App\Services\InvoiceCalculator::class);
         $isInterstate = false; // Preview uses same-state customer
         $previewItems = [[
-            'description' => 'Sample line item — your real entries go here',
+            'description' => 'Sample item',
             'hsn_sac' => '998313',
             'quantity' => 1,
             'unit' => 'unit',
@@ -159,7 +156,7 @@ class InvoiceController extends Controller
             'currency' => $tpl['currency'] ?? $company->default_currency,
             'exchange_rate' => 1,
             'status' => 'draft',
-            'terms' => $company->default_terms ?? "Sample preview — this is how your invoice will look.\nReplace with your own terms.",
+            'terms' => $company->default_terms ?? "Sample terms.\nYour own terms print here.",
             ...$result['totals'],
             'paid_amount' => 0,
             'balance' => $result['totals']['grand_total'],
@@ -260,12 +257,16 @@ class InvoiceController extends Controller
         // Safety net: backfill blank/"0" descriptions from the product name.
         $data = $this->hydrateProductDescriptions($data, $company->id);
 
+        $data = $this->applyInvoiceDiscount($data);
         $customer = $company->customers()->findOrFail($data['customer_id']);
-        $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $reverseCharge = (bool) ($data['reverse_charge'] ?? false);
-        $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $reverseCharge);
+        // Exports / SEZ are inter-state and, under a LUT, carry no tax.
+        $supplyType = $data['supply_type'] ?? 'regular';
+        \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
+        [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $noTax);
+        $this->guardPaidAmount($data, $calc);
 
-        $invoice = DB::transaction(function () use ($user, $company, $customer, $data, $calc, $isInterstate) {
+        $invoice = DB::transaction(function () use ($user, $company, $customer, $data, $calc, $isInterstate, $supplyType) {
             $invoice = $user->invoices()->create([
                 'company_id' => $company->id,
                 'customer_id' => $customer->id,
@@ -277,6 +278,7 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
+                ...\App\Support\ZeroRatedSupply::attributes($supplyType, $data),
                 // Transporter / e-way bill fields — previously missing on the create
                 // path, causing user input to validate then silently vanish on draft save.
                 'transporter_name' => $data['transporter_name'] ?? null,
@@ -315,7 +317,7 @@ class InvoiceController extends Controller
         // on that page triggers the PDF download once the page is rendered.
         $action = $request->input('post_save_action');
         $redirect = redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => $action === 'pdf' ? 1 : null]);
-        return $redirect->with('status', $action === 'pdf' ? 'Draft saved — PDF downloading.' : 'Draft invoice created.');
+        return $redirect->with('status', $action === 'pdf' ? 'Draft saved. Downloading PDF.' : 'Draft invoice created.');
     }
 
     /**
@@ -345,6 +347,7 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $invoice->place_of_supply_state_id,
                 'is_interstate' => $invoice->is_interstate,
                 'reverse_charge' => $invoice->reverse_charge,
+                'supply_type' => $invoice->supply_type ?: 'regular',
                 'currency' => $invoice->currency,
                 'exchange_rate' => $invoice->exchange_rate,
                 'status' => 'draft',
@@ -382,7 +385,7 @@ class InvoiceController extends Controller
         );
 
         return redirect()->route('invoices.edit', $copy)
-            ->with('status', 'Invoice duplicated as a new draft. Review the date and details, then save.');
+            ->with('status', 'Invoice copied to a new draft. Check the date and details, then save.');
     }
 
     public function show(Request $request, Invoice $invoice): View
@@ -457,20 +460,23 @@ class InvoiceController extends Controller
             ]);
 
             return redirect()->route('invoices.show', $invoice)
-                ->with('status', 'Invoice details updated. (Amounts, items and customer are locked after finalisation.)');
+                ->with('status', 'Invoice details updated. Amounts, items and customer cannot be changed after issue.');
         }
 
         $company = $invoice->company;
         $data = $this->validateInvoice($request, $company);
         // Safety net: backfill blank/"0" descriptions from the product name.
         $data = $this->hydrateProductDescriptions($data, $company->id);
+        $data = $this->applyInvoiceDiscount($data);
         $user = $request->user();
         $customer = $company->customers()->findOrFail($data['customer_id']);
-        $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $reverseCharge = (bool) ($data['reverse_charge'] ?? false);
-        $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $reverseCharge);
+        $supplyType = $data['supply_type'] ?? ($invoice->supply_type ?: 'regular');
+        \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
+        [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $noTax);
+        $this->guardPaidAmount($data, $calc);
 
-        DB::transaction(function () use ($invoice, $customer, $data, $calc, $isInterstate) {
+        DB::transaction(function () use ($invoice, $customer, $data, $calc, $isInterstate, $supplyType) {
             $paid = (float) ($data['paid_amount'] ?? 0);
             $invoice->update([
                 'customer_id' => $customer->id,
@@ -482,6 +488,7 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
+                ...\App\Support\ZeroRatedSupply::attributes($supplyType, $data),
                 'transporter_name' => $data['transporter_name'] ?? null,
                 'transporter_id' => $data['transporter_id'] ?? null,
                 'vehicle_number' => $data['vehicle_number'] ?? null,
@@ -510,7 +517,7 @@ class InvoiceController extends Controller
 
         $action = $request->input('post_save_action');
         $redirect = redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => $action === 'pdf' ? 1 : null]);
-        return $redirect->with('status', $action === 'pdf' ? 'Invoice saved — PDF downloading.' : 'Invoice updated.');
+        return $redirect->with('status', $action === 'pdf' ? 'Invoice saved. Downloading PDF.' : 'Invoice updated.');
     }
 
     public function destroy(Request $request, Invoice $invoice): RedirectResponse
@@ -551,11 +558,17 @@ class InvoiceController extends Controller
             $invoice->only(['invoice_number', 'invoice_date', 'grand_total', 'status', 'cancelled_at', 'cancellation_reason'])
         );
 
+        // A draft made from a quotation: deleting it must reopen the quote, or
+        // the quote stays "converted" pointing at nothing and can never be
+        // converted again.
+        $reopened = \App\Models\Quotation::where('converted_to_invoice_id', $invoice->id)
+            ->update(['status' => 'accepted', 'converted_to_invoice_id' => null, 'converted_at' => null]);
+
         $invoice->delete();
 
         $successMessage = $wasCancelled
-            ? 'Cancelled invoice deleted. The invoice number is preserved as a gap in your series — for any GST audit, the deletion is recorded in your activity log.'
-            : 'Draft deleted.';
+            ? 'Cancelled invoice deleted. Its number stays as a gap in the series, and the deletion is recorded in the activity log.'
+            : 'Draft deleted.' . ($reopened ? ' Its quotation is open again and can be converted.' : '');
 
         return redirect()->route('invoices.index')->with('status', $successMessage);
     }
@@ -579,7 +592,7 @@ class InvoiceController extends Controller
         // editable: once the operator sets the state and saves the invoice again,
         // recalculate() applies the correct split, then finalisation is allowed.
         if (! $invoice->company->state_id && ((float) $invoice->total_tax > 0 || $invoice->company->gstin)) {
-            return redirect()->back()->with('error', 'Set your business state in Company settings, then re-open and save this invoice, before issuing it. Without your state, CGST/SGST vs IGST cannot be determined correctly.');
+            return redirect()->back()->with('error', 'Business state is not set, so CGST/SGST or IGST cannot be worked out. Set it in Company settings, then open and save this draft before issuing it.');
         }
 
         // Books-period lock: cannot issue an invoice into a closed FY.
@@ -587,8 +600,23 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot issue an invoice dated on or before that.");
         }
 
-        DB::transaction(function () use ($invoice) {
+        // The tax split was worked out when the draft was saved. If the
+        // customer's state (or yours) has changed since, issuing now would print
+        // CGST+SGST on what is now an inter-state sale, or the other way round.
+        if ($invoice->taxBasisIsStale()) {
+            return redirect()->back()->with('error', "The customer's state or your business state has changed since this draft was saved. Open the draft and save it again to update the GST split, then issue it.");
+        }
+
+        $issued = DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
+
+            // A double-click or a second tab sends "issue" twice. The second
+            // request waits on the lock above; by then the invoice is issued,
+            // and numbering it again would silently turn INV-0001 into INV-0002.
+            $invoice->refresh();
+            if (! $invoice->isDraft()) {
+                return false;
+            }
 
             if (filled($invoice->invoice_number)) {
                 // The business chose a number on the draft - keep it, whether or
@@ -616,27 +644,50 @@ class InvoiceController extends Controller
 
             $invoice->update([
                 'invoice_number' => $number,
+                'place_of_supply_state_id' => $invoice->placeOfSupplyForIssue(),
                 'status' => (float) $invoice->paid_amount >= (float) $invoice->grand_total ? 'paid' : ((float) $invoice->paid_amount > 0 ? 'partially_paid' : 'final'),
                 'finalized_at' => now(),
             ]);
+
+            // The recipient is frozen as printed; later customer edits must not
+            // rewrite an issued document (Rule 46(d)/(e), GSTR-1 integrity).
+            $invoice->snapshotCustomer();
 
             // The advance typed on the draft becomes a real receipt, so the
             // first recorded payment no longer wipes it (paid is recomputed
             // from the payments table from here on).
             $invoice->bookAdvanceAsPayment();
+            // Items that track stock leave the shelf when the invoice is issued.
+            app(\App\Services\StockLedger::class)->recordInvoice($invoice);
+
+            return true;
         });
 
+        if (! $issued) {
+            return redirect()->route('invoices.show', $invoice)
+                ->with('status', 'This invoice was already issued as ' . $invoice->invoice_number . '.');
+        }
+
         \App\Models\AuditLog::record('invoice.finalized',
-            "Invoice {$invoice->fresh()->invoice_number} finalized · ₹" . number_format($invoice->grand_total, 2),
+            "Invoice {$invoice->fresh()->invoice_number} finalized · ₹" . inr($invoice->grand_total),
             $invoice
         );
 
-        // The review invite is deliberately NOT raised here. This screen already
-        // congratulates the user, and its job is to get the bill sent - a modal
-        // over the share buttons would block exactly the thing being celebrated.
-        // The dashboard picks it up on the next visit instead.
+        // Review invite, "alternate invoice" moment: after the user's 2nd, 4th,
+        // 6th… issued invoice, until they have left the review. The invoice
+        // page shows it a moment after loading, and it closes with one click
+        // so the share buttons are never more than a click away.
+        $reviewPrompt = app(\App\Services\ReviewPrompt::class);
+        $user = $request->user();
+        $issuedCount = $user->invoices()->whereNotNull('finalized_at')->count();
+        $askForReview = $reviewPrompt->shouldPromptAfterIssue($user, $issuedCount);
+        if ($askForReview) {
+            $reviewPrompt->markShown($user);
+        }
+
         return redirect()->route('invoices.show', $invoice)
-            ->with('status', 'Invoice issued. Number: ' . $invoice->fresh()->invoice_number);
+            ->with('status', 'Invoice ' . $invoice->fresh()->invoice_number . ' issued.')
+            ->with('review_invite', $askForReview);
     }
 
     public function recordPayment(Request $request, Invoice $invoice): RedirectResponse
@@ -671,10 +722,31 @@ class InvoiceController extends Controller
             'tds_rate' => ['nullable', 'numeric', 'min:0', 'max:30'],
         ]);
 
+        // A receipt dated inside a closed period would change that period's
+        // books. Money received today against an old invoice is fine - the
+        // lock is on the receipt date, not the invoice date.
+        if ($invoice->company->isBooksLockedOn($data['received_at'])) {
+            return back()->withErrors(['received_at' => "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Date the receipt after that."])->withInput();
+        }
+
         $payment = DB::transaction(function () use ($invoice, $data, $request) {
             // Lock the company row and increment the receipt counter atomically
             // so concurrent payments can never get the same receipt number.
             $company = $invoice->company()->lockForUpdate()->first();
+
+            // The cap above was read before the lock. A double-submitted or
+            // two-tab payment must be checked again against what is owed now,
+            // or both go through and the invoice is paid twice.
+            $invoice->refresh();
+            $owed = round((float) $invoice->grand_total - (float) $invoice->payments()->sum('amount') - (float) $invoice->credited_amount, 2);
+            if ($invoice->isDraft() || $invoice->status === 'cancelled' || (float) $data['amount'] > $owed + 0.001) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'amount' => $owed > 0
+                        ? 'A payment was just recorded. Only ₹' . inr(max(0, $owed)) . ' is still owed on this invoice.'
+                        : 'A payment was just recorded. Nothing more is owed on this invoice.',
+                ]);
+            }
+
             $company->increment('receipt_counter');
 
             $receiptNumber = $company->receipt_prefix . '-' .
@@ -715,7 +787,7 @@ class InvoiceController extends Controller
         });
 
         \App\Models\AuditLog::record('payment.recorded',
-            "₹" . number_format($payment->amount, 2) . " · " . strtoupper($payment->method) . " · Receipt {$payment->receipt_number} · Invoice {$invoice->invoice_number}",
+            "₹" . inr($payment->amount) . " · " . strtoupper($payment->method) . " · Receipt {$payment->receipt_number} · Invoice {$invoice->invoice_number}",
             $payment
         );
 
@@ -770,7 +842,7 @@ class InvoiceController extends Controller
         });
 
         \App\Models\AuditLog::record('payment.reversed',
-            "Receipt {$snapshot['receipt_number']} reversed · ₹" . number_format($snapshot['amount'], 2) . " · Invoice {$invoice->invoice_number}",
+            "Receipt {$snapshot['receipt_number']} reversed · ₹" . inr($snapshot['amount']) . " · Invoice {$invoice->invoice_number}",
             $invoice,
             $snapshot
         );
@@ -802,7 +874,7 @@ class InvoiceController extends Controller
             // Not a failure — the invoice was paid (or cancelled) between the
             // eligibility check and the send. Tell the user politely, not with
             // a red error banner.
-            return back()->with('status', $record->error ?: 'No reminder needed — invoice is already settled.');
+            return back()->with('status', $record->error ?: 'No reminder sent. This invoice is already settled.');
         }
         return back()->withErrors(['reminder' => $record->error ?: 'Failed to send reminder.']);
     }
@@ -822,6 +894,12 @@ class InvoiceController extends Controller
         $company = $request->user()->ensureCompany();
         $from = $request->date('from') ?? now()->startOfMonth();
         $to = $request->date('to') ?? now()->endOfMonth();
+        if ($to->lt($from)) {
+            [$from, $to] = [$to, $from];
+        }
+
+        // Same build as the GSTR-1 page, the offline-tool workbook and GSTR-3B.
+        $g = app(\App\Services\Gstr1Builder::class)->build($company, $from, $to);
 
         $invoices = $company->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
@@ -830,46 +908,62 @@ class InvoiceController extends Controller
             ->orderBy('invoice_date')
             ->orderBy('id')
             ->get();
+        $notes = \App\Models\CreditNote::where('company_id', $company->id)
+            ->whereBetween('credit_note_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->with(['invoice.customer.state', 'invoice.placeOfSupply'])
+            ->orderBy('credit_note_date')->orderBy('id')
+            ->get();
 
         $filename = 'gstr1-' . $from->format('Y-m') . '-to-' . $to->format('Y-m') . '.csv';
 
-        return response()->streamDownload(function () use ($invoices, $company, $from, $to) {
+        return response()->streamDownload(function () use ($invoices, $notes, $g, $company, $from, $to) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+            $n = fn ($v) => number_format((float) $v, 2, '.', '');
+            $table = function (Invoice $inv): string {
+                if ($inv->isExport()) {
+                    return 'Export (6A)';
+                }
+                if ($inv->isSez()) {
+                    return 'SEZ (6B)';
+                }
+                if (! empty($inv->billedCustomer()?->gstin)) {
+                    return $inv->reverse_charge ? 'B2B (4B)' : 'B2B (4A)';
+                }
+
+                return ($inv->is_interstate && (float) $inv->grand_total > \App\Services\Gstr1Builder::B2CL_LIMIT) ? 'B2CL (5)' : 'B2CS (7)';
+            };
 
             // Context block
-            fputcsv($out, ["GSTR-1 Outward Supplies"]);
-            fputcsv($out, ["Supplier", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
-            fputcsv($out, ["Period", $from->format('d-M-Y') . ' to ' . $to->format('d-M-Y')]);
-            fputcsv($out, ["Generated", now()->format('d-M-Y H:i')]);
-            fputcsv($out, []);
+            csv_put($out, ["GSTR-1 Outward Supplies"]);
+            csv_put($out, ["Supplier", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            csv_put($out, ["Period", $from->format('d-M-Y') . ' to ' . $to->format('d-M-Y')]);
+            csv_put($out, ["Generated", now()->format('d-M-Y H:i')]);
+            csv_put($out, []);
 
-            // Detailed B2B + B2C
-            fputcsv($out, [
+            // Invoice register
+            csv_put($out, [
                 'Invoice No', 'Date', 'Customer Name', 'Customer GSTIN', 'Customer State',
                 'Type', 'Reverse Charge', 'Place of Supply', 'Invoice Type',
                 'Taxable Value (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)', 'Cess (Rs.)', 'Round-off', 'Total (Rs.)',
+                'GSTR-1 Table',
             ]);
 
             $totalTaxable = $totalCgst = $totalSgst = $totalIgst = $totalGrand = 0;
             $b2bCount = $b2cCount = 0;
 
             foreach ($invoices as $inv) {
-                $customer = $inv->customer;
+                // As issued, not as the customer row reads today: a GSTIN added
+                // in June must not turn April's B2C invoices into B2B.
+                $customer = $inv->billedCustomer();
                 $isB2B = ! empty($customer?->gstin);
                 $isB2B ? $b2bCount++ : $b2cCount++;
 
-                $cgst = (float) $inv->total_cgst;
-                $sgst = (float) $inv->total_sgst;
-                $igst = (float) $inv->total_igst;
-                $taxable = (float) $inv->subtotal;
-                $grand = (float) $inv->grand_total;
-
-                $totalTaxable += $taxable;
-                $totalCgst += $cgst;
-                $totalSgst += $sgst;
-                $totalIgst += $igst;
-                $totalGrand += $grand;
+                $totalTaxable += (float) $inv->subtotal;
+                $totalCgst += (float) $inv->total_cgst;
+                $totalSgst += (float) $inv->total_sgst;
+                $totalIgst += (float) $inv->total_igst;
+                $totalGrand += (float) $inv->grand_total;
 
                 // A reverse-charge invoice carries ₹0 tax but is still a tax
                 // invoice (the recipient pays); only composition dealers and
@@ -877,7 +971,7 @@ class InvoiceController extends Controller
                 $invoiceType = ($company->composition_dealer || (($inv->total_tax ?? 0) == 0 && ! $inv->reverse_charge))
                     ? 'Bill of Supply' : 'Tax Invoice';
 
-                fputcsv($out, [
+                csv_put($out, [
                     $inv->invoice_number,
                     $inv->invoice_date?->format('d-M-Y'),
                     $customer?->name,
@@ -887,62 +981,79 @@ class InvoiceController extends Controller
                     $inv->reverse_charge ? 'Yes' : 'No',
                     $inv->placeOfSupply?->name ?: '',
                     $invoiceType,
-                    number_format($taxable, 2, '.', ''),
-                    number_format($cgst, 2, '.', ''),
-                    number_format($sgst, 2, '.', ''),
-                    number_format($igst, 2, '.', ''),
+                    $n($inv->subtotal),
+                    $n($inv->total_cgst),
+                    $n($inv->total_sgst),
+                    $n($inv->total_igst),
                     '0.00',
-                    number_format((float) ($inv->round_off ?? 0), 2, '.', ''),
-                    number_format($grand, 2, '.', ''),
+                    $n($inv->round_off ?? 0),
+                    $n($inv->grand_total),
+                    $table($inv),
                 ]);
             }
 
-            // Totals row
-            fputcsv($out, []);
-            fputcsv($out, [
+            csv_put($out, []);
+            csv_put($out, [
                 '', '', '', '', '', 'TOTAL', '', '', '',
-                number_format($totalTaxable, 2, '.', ''),
-                number_format($totalCgst, 2, '.', ''),
-                number_format($totalSgst, 2, '.', ''),
-                number_format($totalIgst, 2, '.', ''),
-                '0.00',
-                '',
-                number_format($totalGrand, 2, '.', ''),
+                $n($totalTaxable), $n($totalCgst), $n($totalSgst), $n($totalIgst), '0.00', '', $n($totalGrand), '',
             ]);
-            fputcsv($out, []);
-            fputcsv($out, ["Summary"]);
-            fputcsv($out, ["B2B Invoices (with GSTIN)", $b2bCount]);
-            fputcsv($out, ["B2C Invoices (without GSTIN)", $b2cCount]);
-            fputcsv($out, ["Total Invoices", $b2bCount + $b2cCount]);
+            csv_put($out, []);
+            csv_put($out, ["Summary"]);
+            csv_put($out, ["B2B Invoices (with GSTIN)", $b2bCount]);
+            csv_put($out, ["B2C Invoices (without GSTIN)", $b2cCount]);
+            csv_put($out, ["Total Invoices", $b2bCount + $b2cCount]);
 
-            // HSN-wise summary (Table 12 in GSTR-1)
-            $hsnMap = [];
-            foreach ($invoices as $inv) {
-                foreach ($inv->items as $item) {
-                    $key = $item->hsn_sac ?: '—';
-                    if (! isset($hsnMap[$key])) {
-                        $hsnMap[$key] = ['qty' => 0, 'taxable' => 0, 'cgst' => 0, 'sgst' => 0, 'igst' => 0];
-                    }
-                    $hsnMap[$key]['qty'] += (float) $item->quantity;
-                    $hsnMap[$key]['taxable'] += (float) $item->amount;
-                    $hsnMap[$key]['cgst'] += (float) ($item->cgst_amount ?? 0);
-                    $hsnMap[$key]['sgst'] += (float) ($item->sgst_amount ?? 0);
-                    $hsnMap[$key]['igst'] += (float) ($item->igst_amount ?? 0);
-                }
+            // Credit notes (Table 9B; notes on small B2C invoices net inside Table 7)
+            csv_put($out, []);
+            csv_put($out, ["Credit Notes (GSTR-1 Table 9B)"]);
+            csv_put($out, ['Note No', 'Date', 'Against Invoice', 'Invoice Date', 'Customer Name', 'Customer GSTIN',
+                'Taxable Value (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)', 'Note Value (Rs.)', 'GSTR-1 Table']);
+            foreach ($notes as $cn) {
+                $inv = $cn->invoice;
+                $customer = $inv?->billedCustomer();
+                $where = ! $inv ? '' : (! empty($customer?->gstin) ? 'CDNR (9B)'
+                    : (in_array($table($inv), ['B2CL (5)', 'Export (6A)'], true) ? 'CDNUR (9B)' : 'Netted in B2CS (7)'));
+                csv_put($out, [
+                    $cn->credit_note_number, $cn->credit_note_date?->format('d-M-Y'),
+                    $inv?->invoice_number, $inv?->invoice_date?->format('d-M-Y'),
+                    $customer?->name, $customer?->gstin ?: '',
+                    $n($cn->taxable_value), $n($cn->total_cgst), $n($cn->total_sgst), $n($cn->total_igst), $n($cn->amount), $where,
+                ]);
+            }
+            if ($notes->isEmpty()) {
+                csv_put($out, ['None in this period']);
             }
 
-            fputcsv($out, []);
-            fputcsv($out, ["HSN/SAC Summary (GSTR-1 Table 12)"]);
-            fputcsv($out, ['HSN/SAC', 'Total Quantity', 'Taxable Value (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)']);
-            foreach ($hsnMap as $hsn => $totals) {
-                fputcsv($out, [
-                    $hsn,
-                    number_format($totals['qty'], 2, '.', ''),
-                    number_format($totals['taxable'], 2, '.', ''),
-                    number_format($totals['cgst'], 2, '.', ''),
-                    number_format($totals['sgst'], 2, '.', ''),
-                    number_format($totals['igst'], 2, '.', ''),
+            // Table-wise totals and the GSTR-3B tie-out
+            csv_put($out, []);
+            csv_put($out, ["GSTR-1 Table-wise Totals"]);
+            csv_put($out, ['Table', 'Section', 'Records', 'Taxable Value (Rs.)', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST/UTGST (Rs.)']);
+            foreach ($g['tables'] as $t) {
+                csv_put($out, [$t['table'], $t['label'], $t['records'], $n($t['taxable']), $n($t['igst']), $n($t['cgst']), $n($t['sgst'])]);
+            }
+            $s = $g['summary'];
+            csv_put($out, []);
+            csv_put($out, ['GSTR-3B 3.1(a) - net taxable outward (excl. reverse charge)', '', '', $n($s['taxable']), $n($s['igst']), $n($s['cgst']), $n($s['sgst'])]);
+            csv_put($out, ['GSTR-3B 3.1(c) - nil rated', '', '', $n($s['nil'])]);
+
+            // HSN-wise summary (Table 12), B2B and B2C separately
+            csv_put($out, []);
+            csv_put($out, ["HSN/SAC Summary (GSTR-1 Table 12)"]);
+            csv_put($out, ['Tab', 'HSN/SAC', 'Description', 'UQC', 'Total Quantity', 'Rate (%)', 'Total Value (Rs.)', 'Taxable Value (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)']);
+            foreach ($g['hsn'] as $h) {
+                csv_put($out, [
+                    $h['tab'], $h['hsn'] ?: '-', $h['description'], $h['uqc'],
+                    number_format((float) $h['qty'], 2, '.', ''), 0 + (float) $h['rate'],
+                    $n($h['value']), $n($h['taxable']), $n($h['cgst']), $n($h['sgst']), $n($h['igst']),
                 ]);
+            }
+
+            // Documents issued (Table 13)
+            csv_put($out, []);
+            csv_put($out, ["Documents Issued (GSTR-1 Table 13)"]);
+            csv_put($out, ['Nature of Document', 'Sr. No. From', 'Sr. No. To', 'Total Number', 'Cancelled']);
+            foreach ($g['docs'] as $d) {
+                csv_put($out, [$d['nature'], $d['from'], $d['to'], $d['total'], $d['cancelled']]);
             }
 
             fclose($out);
@@ -1014,6 +1125,45 @@ class InvoiceController extends Controller
      * an empty description column. We never overwrite a real, meaningful
      * description that the user typed; we only fill the obviously-bad ones.
      */
+    /**
+     * The web form sends one invoice-level discount instead of a discount per
+     * line. Spread it across the lines before tax. Requests that still send
+     * per-line discounts (the API, older clients) are left exactly as they are.
+     */
+    /**
+     * An advance on a draft cannot exceed the bill: at issue it becomes a
+     * receipt, and a receipt larger than the invoice would leave a negative
+     * balance nobody asked for.
+     */
+    private function guardPaidAmount(array $data, array $calc): void
+    {
+        $paid = round((float) ($data['paid_amount'] ?? 0), 2);
+        $grand = (float) $calc['totals']['grand_total'];
+        if ($paid > $grand + 0.001) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'paid_amount' => 'Paid amount (₹' . inr($paid) . ') cannot be more than the grand total (₹' . inr($grand) . ').',
+            ]);
+        }
+    }
+
+    private function applyInvoiceDiscount(array $data): array
+    {
+        if (! array_key_exists('invoice_discount', $data)) {
+            return $data;
+        }
+
+        $gross = collect($data['items'])->sum(fn ($i) => round((float) ($i['quantity'] ?? 0) * (float) ($i['rate'] ?? 0), 2));
+        if ((float) $data['invoice_discount'] > $gross + 0.001) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'invoice_discount' => 'Discount (₹' . inr((float) $data['invoice_discount']) . ') cannot be more than the items total (₹' . inr($gross) . ').',
+            ]);
+        }
+
+        $data['items'] = $this->calculator->apportionDiscount($data['items'], (float) ($data['invoice_discount'] ?? 0));
+
+        return $data;
+    }
+
     private function hydrateProductDescriptions(array $data, int $companyId): array
     {
         if (empty($data['items']) || ! is_array($data['items'])) {
@@ -1087,7 +1237,8 @@ class InvoiceController extends Controller
             // A custom number also teaches the counter (see
             // Company::learnSeriesFrom) so later auto-numbers continue the
             // same series rather than diverging from it.
-            'invoice_number' => ['nullable', 'string', 'max:40',
+            // Rule 46(b): at most 16 characters, letters/digits/"-"/"/" only.
+            'invoice_number' => ['nullable', 'string', 'max:16', 'regex:/^[A-Za-z0-9\/-]+$/',
                 Rule::unique('invoices', 'invoice_number')
                     ->where(fn ($q) => $q->where('company_id', $companyId))
                     ->ignore($request->route('invoice')?->id)],
@@ -1095,6 +1246,7 @@ class InvoiceController extends Controller
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['nullable', 'string', 'size:3'],
             'reverse_charge' => ['nullable', 'boolean'],
+            ...\App\Support\ZeroRatedSupply::rules(),
             'style' => ['nullable', 'string', 'in:' . implode(',', array_keys(config('invoice_styles')))],
             'transporter_name' => ['nullable', 'string', 'max:120'],
             'transporter_id' => ['nullable', 'string', 'max:40'],
@@ -1114,6 +1266,9 @@ class InvoiceController extends Controller
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            // One discount for the whole invoice (the form's bottom box); it is
+            // spread across the lines before tax - see apportionDiscount().
+            'invoice_discount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => [
                 'nullable',

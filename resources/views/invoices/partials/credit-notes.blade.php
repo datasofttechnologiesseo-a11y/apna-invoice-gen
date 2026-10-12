@@ -15,7 +15,7 @@
             <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <div class="text-accent-900">
                 <div class="font-semibold">Credit-note window closes {{ $cnDaysLeft === 0 ? 'today' : 'in ' . $cnDaysLeft . ' ' . \Illuminate\Support\Str::plural('day', $cnDaysLeft) }} ({{ $cnDeadline->format('d M Y') }}).</div>
-                <div class="mt-0.5">Under CGST Section 34(2), after this date a credit note against this invoice can no longer reduce your GST liability. If you expect a return or adjustment, issue the credit note before then.</div>
+                <div class="mt-0.5">After this date a credit note cannot reduce GST on this invoice (Section 34(2), CGST Act). Issue any credit note for returns or adjustments before then.</div>
             </div>
         </div>
     @elseif ($cnWindowClosed)
@@ -23,7 +23,7 @@
             <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <div class="text-gray-600">
                 <div class="font-semibold text-gray-700">Credit-note window closed on {{ $cnDeadline->format('d M Y') }}.</div>
-                <div class="mt-0.5">Per CGST Section 34(2), a credit note issued now can't reduce the GST on this invoice. A commercial/accounting adjustment is still possible outside GST.</div>
+                <div class="mt-0.5">A credit note issued now cannot reduce GST on this invoice (Section 34(2), CGST Act). A commercial adjustment outside GST is still possible.</div>
             </div>
         </div>
     @endif
@@ -34,10 +34,10 @@
         <div class="px-5 py-3 border-b flex items-center justify-between">
             <div>
                 <h3 class="font-semibold text-gray-900">Credit notes issued</h3>
-                <div class="text-xs text-gray-500">Section 34 adjustments against this invoice</div>
+                <div class="text-xs text-gray-500">Issued under Section 34 against this invoice</div>
             </div>
             <div class="text-xs text-gray-500">
-                Total credited: <span class="font-mono font-semibold text-gray-900">₹{{ inr($invoice->credited_amount) }}</span>
+                Total credited: <span class="font-mono font-semibold text-gray-900">₹{{ rupees($invoice->credited_amount) }}</span>
             </div>
         </div>
         <div class="overflow-x-auto">
@@ -57,7 +57,7 @@
                             <td class="px-4 py-2 font-mono text-sm font-semibold">{{ $cn->credit_note_number }}</td>
                             <td class="px-4 py-2">{{ $cn->credit_note_date?->format('d M Y') }}</td>
                             <td class="px-4 py-2 text-xs">{{ $cn->reasonLabel() }}</td>
-                            <td class="px-4 py-2 text-right font-mono font-semibold">₹{{ inr($cn->amount) }}</td>
+                            <td class="px-4 py-2 text-right font-mono font-semibold">₹{{ rupees($cn->amount) }}</td>
                             <td class="px-4 py-2 text-right whitespace-nowrap">
                                 <a href="{{ route('credit-notes.pdf', $cn) }}" class="text-brand-700 hover:underline text-sm">PDF</a>
                                 <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
@@ -65,7 +65,7 @@
                                     :action="route('credit-notes.destroy', $cn)"
                                     method="DELETE"
                                     title="Reverse {{ $cn->credit_note_number }}?"
-                                    :message="'The credit note is removed and the invoice balance is restored by ₹' . inr($cn->amount) . '. The credit note number stays reserved in the audit log.'"
+                                    :message="'The credit note is removed and the invoice balance is restored by ₹' . rupees($cn->amount) . '. The credit note number stays reserved in the audit log.'"
                                     confirm-label="Reverse credit note"
                                     confirm-class="bg-danger-600 hover:bg-danger-700"
                                     tone="warning">

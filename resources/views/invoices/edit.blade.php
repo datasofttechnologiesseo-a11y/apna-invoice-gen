@@ -7,9 +7,9 @@
                 @if ($restricted)
                     <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-accent-50 text-accent-700 uppercase font-bold tracking-wider">Limited edit</span>
                 @elseif ($isSample)
-                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Sample · edit &amp; save</span>
+                    <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-money-50 text-money-700 uppercase font-bold tracking-wider">Sample · not saved yet</span>
                 @elseif (! $invoice->exists && ! empty($templateLabel))
-                    <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Using template: {{ $templateLabel }}</span>
+                    <span class="ml-2 text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700 font-medium">Template: {{ $templateLabel }}</span>
                 @endif
             </h1>
             @unless ($invoice->exists || $restricted)
@@ -47,10 +47,18 @@
             }
         }
         $isSample = ! $invoice->exists && request()->boolean('sample');
+        // Invoice-level discount box: a re-shown form keeps what was typed; an
+        // existing draft opens with the sum of its saved line discounts.
+        $initialDiscount = (float) old('invoice_discount', collect($oldItems)->sum(fn ($i) => (float) ($i['discount'] ?? 0)));
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
         $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
         $companyStateId = $company->state_id;
+        // Union Territories without a legislature levy UTGST instead of SGST;
+        // the form label follows the customer's state the same way the PDF does.
+        $utStateIds = \App\Models\State::where('is_union_territory', true)->pluck('id')->values();
+        // GST place-of-supply 96: a customer abroad - billed as an export.
+        $foreignStateId = \App\Models\State::where('gst_code', '96')->value('id');
         // Lean customer index for the typeahead combobox - searchable on name,
         // phone, GSTIN, city, and state name (matches how Indian SMEs look up
         // customers - by phone or trade name, not by formal database lookup).
@@ -73,7 +81,13 @@
             ? collect([])
             : $company->products()
                 ->whereIn('id', $itemProductIds)
-                ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
+                ->withSum('stockMovements', 'quantity')
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => $p->id, 'name' => $p->name, 'sku' => $p->sku, 'hsn_sac' => $p->hsn_sac, 'unit' => $p->unit,
+                    'rate' => $p->rate, 'gst_rate' => $p->gst_rate,
+                    'stock' => $p->track_stock ? $p->stockOnHand() : null,
+                ])->values();
 
         // Map failed line-item validation to { rowIndex: { field: message } } so
         // the form can highlight the exact rows/fields that need fixing after a
@@ -87,6 +101,7 @@
     @endphp
 
     <div class="py-10" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }}, @json((object) $itemErrors))'
+         data-restricted="{{ $restricted ? '1' : '0' }}"
          @customer-added.window="addCustomer($event.detail)"
          {{-- power-user keyboard shortcuts. Listen at window level so they
               fire from anywhere on the page (combobox dropdowns, side panels
@@ -106,7 +121,7 @@
                     <div class="flex items-start gap-2">
                         <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                         <div>
-                            <div class="font-semibold">Please fix {{ $errors->count() === 1 ? 'this' : 'these' }} before saving:</div>
+                            <div class="font-semibold">Correct the following before saving:</div>
                             <ul class="list-disc pl-6 mt-1">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                             @if (! empty($itemErrors))
                                 <div class="mt-1.5 text-xs text-danger-600">The affected {{ count($itemErrors) === 1 ? 'row is' : 'rows are' }} highlighted below.</div>
@@ -120,8 +135,8 @@
                 <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded flex items-start gap-3">
                     <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                     <div class="text-sm">
-                        <div class="font-semibold">This invoice is issued - limited editing only.</div>
-                        <div class="mt-0.5">You can update <strong>notes, terms, due date, and transporter details</strong>. Amounts, line items, customer, and invoice number are legally locked per GST rules. To change those, cancel this invoice and issue a credit note / revised invoice.</div>
+                        <div class="font-semibold">Issued invoice. Only some fields can be changed.</div>
+                        <div class="mt-0.5">Editable: <strong>notes, terms, due date and transporter details</strong>. Amounts, line items, customer and invoice number are locked under GST rules. To change them, issue a credit note, or cancel this invoice and issue a new one.</div>
                     </div>
                 </div>
             @endif
@@ -135,13 +150,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div class="text-sm flex-1">
-                        <div class="font-semibold">New to invoicing? Here's all you need to do:</div>
+                        <div class="font-semibold">Creating an invoice</div>
                         <ol class="mt-1 list-decimal pl-5 space-y-0.5">
-                            <li>Pick a <strong>customer</strong> (or click <em>+ New</em> to add one).</li>
-                            <li>Fill <strong>at least one line item</strong> - description, HSN/SAC, qty, rate, GST%.</li>
-                            <li>Click <strong>Create draft</strong> - it stays editable. <strong>Issue</strong> locks the invoice number and makes the PDF.</li>
+                            <li>Select a <strong>customer</strong>, or click <em>+ New</em>.</li>
+                            <li>Add <strong>at least one line item</strong>: description, HSN/SAC, quantity, rate, GST %.</li>
+                            <li>Save as a <strong>draft</strong>; it stays editable. <strong>Issue</strong> assigns the invoice number and locks the amounts.</li>
                         </ol>
-                        <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to fields are optional - open them only if needed.</div>
+                        <div class="mt-1.5 text-xs text-brand-700">Transporter, e-way bill and ship-to details are optional.</div>
                     </div>
                     <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -m-2 text-brand-700 hover:text-brand-900 hover:bg-brand-100 rounded-lg text-2xl leading-none" aria-label="Dismiss tip">×</button>
                 </div>
@@ -157,7 +172,7 @@
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">No customers yet.</span>
-                        Click <strong>+ New</strong> next to the Customer field below - takes 10 seconds, no need to leave this page.
+                        Click <strong>+ New</strong> beside the Customer field to add one.
                     </div>
                     <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         + Add customer
@@ -177,7 +192,7 @@
                     </svg>
                     <div class="flex-1 text-sm">
                         <span class="font-semibold">Your business state is not set.</span>
-                        Until you set it, we can't tell a same-state sale from an inter-state one, so GST defaults to intra-state (CGST/SGST) and an inter-state sale would be split incorrectly. Set your state so CGST/SGST and IGST apply correctly. You'll need it set before issuing a GST invoice.
+                        Until it is set, every sale is taxed as intra-state (CGST/SGST), so inter-state sales are split wrongly. A GST invoice cannot be issued without it.
                     </div>
                     <a href="{{ route('company.edit') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white font-semibold rounded-md text-sm whitespace-nowrap">
                         Set business state
@@ -199,7 +214,7 @@
                                 @php $lockedCustomer = $customers->firstWhere('id', $invoice->customer_id); @endphp
                                 <input type="hidden" name="customer_id" value="{{ $invoice->customer_id }}">
                                 <div class="mt-1 px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-sm text-gray-800">
-                                    {{ $lockedCustomer?->name }}{{ $lockedCustomer?->state?->name ? ' - ' . $lockedCustomer->state->name : '' }}
+                                    {{ $lockedCustomer?->name }}{{ $lockedCustomer?->state?->name ? ' · ' . $lockedCustomer->state->name : '' }}
                                 </div>
                             @else
                                 {{-- Combobox: type-to-search across name/phone/GSTIN/city/state.
@@ -220,7 +235,7 @@
                                                    @keydown.arrow-up.prevent="customerComboMove(-1)"
                                                    @keydown.enter.prevent="customerComboEnter()"
                                                    @keydown.escape="customerCombo.open = false"
-                                                   placeholder="Type customer name, phone, or GSTIN…"
+                                                   placeholder="Search by name, phone or GSTIN…"
                                                    autocomplete="off"
                                                    class="block w-full border-gray-300 rounded-md shadow-sm pr-10">
                                             {{-- Clear button - only visible when a customer is selected. Lets
@@ -236,7 +251,7 @@
                                             <div x-show="customerCombo.open" x-cloak
                                                  class="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-72 overflow-y-auto">
                                                 <template x-if="customerComboFiltered.length === 0 && !customerCombo.search.trim()">
-                                                    <div class="px-3 py-2 text-sm text-gray-500">Start typing to find a customer…</div>
+                                                    <div class="px-3 py-2 text-sm text-gray-500">Type to search customers</div>
                                                 </template>
                                                 <template x-for="(c, idx) in customerComboFiltered" :key="c.id">
                                                     <button type="button"
@@ -257,13 +272,13 @@
                                                         x-show="customerCombo.search.trim()"
                                                         @click="quickAddCustomer(customerCombo.search.trim())"
                                                         class="block w-full text-left px-3 py-2 text-sm bg-accent-50 hover:bg-accent-100 text-accent-900 font-semibold border-t border-accent-200 sticky bottom-0">
-                                                    + Use new customer: "<span x-text="customerCombo.search.trim()"></span>"
+                                                    + Add new customer "<span x-text="customerCombo.search.trim()"></span>"
                                                 </button>
                                             </div>
                                         </div>
                                         <button type="button" @click="quickAddCustomer('')"
                                                 class="inline-flex items-center justify-center min-h-[40px] px-3 text-brand-700 hover:text-white hover:bg-brand-600 ring-1 ring-brand-200 rounded-md text-sm font-semibold whitespace-nowrap"
-                                                title="Add a new customer without leaving this page">+ New</button>
+                                                title="Add a new customer">+ New</button>
                                     </div>
                                     <p class="mt-1 text-xs text-gray-500" x-show="customerId && selectedCustomerLabel">
                                         <span class="text-money-700 font-medium">✓ Selected:</span>
@@ -293,7 +308,7 @@
                                     maxlength="40"
                                     placeholder="{{ $previewNumber ?? $company->nextInvoiceNumber() }}" />
                                 <p class="mt-1 text-[10px] text-gray-500 uppercase tracking-wider">Leave blank to auto-number · a number you type continues your series</p>
-                                <x-input-error :messages="$errors->get('invoice_number')" class="mt-1" />
+                                <x-input-error :messages="$errors->get('invoice_number')" for="invoice_number" class="mt-1" />
                             @endif
                         </div>
 
@@ -310,18 +325,73 @@
                         </div>
 
                         <div>
+                            <x-input-label for="style" value="PDF style" />
+                            <select id="style" name="style" @disabled($restricted)
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600 {{ $restricted ? 'bg-gray-100 cursor-not-allowed' : '' }}">
+                                @foreach (config('invoice_styles') as $key => $styleDef)
+                                    <option value="{{ $key }}" @selected(old('style', $invoice->style ?: 'classic') === $key)>{{ $styleDef['label'] }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Colours of the colour PDF. The GST layout is the same in every style.</p>
+                        </div>
+
+                        <div>
                             <x-input-label value="Tax mode (auto)" />
                             <div class="mt-2 text-sm">
                                 <span x-show="!customerId" class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Select a customer…</span>
                                 <span x-show="customerId && isInterstate" class="inline-block px-2 py-0.5 bg-accent-100 text-accent-800 rounded">Inter-state (IGST)</span>
-                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + SGST)</span>
+                                <span x-show="customerId && !isInterstate" class="inline-block px-2 py-0.5 bg-money-100 text-money-800 rounded">Intra-state (CGST + <span x-text="stateTaxLabel"></span>)</span>
                             </div>
-                            <label class="mt-3 flex items-start gap-2 text-sm text-gray-700">
+                            {{-- Supply type: regular, or zero-rated export / SEZ (s.16 IGST Act). --}}
+                            <div class="mt-3">
+                                <label for="supply_type" class="text-xs font-semibold text-gray-600">Supply type</label>
+                                <select id="supply_type" name="supply_type" x-model="supplyType" @change="if (supplyType !== 'regular') reverseCharge = false; recompute()"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                                    @foreach (\App\Models\Invoice::SUPPLY_TYPES as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <p x-show="customerAbroad && !isExport" x-cloak class="mt-1 text-xs text-accent-800">Customer is outside India. Choose an <strong>Export</strong> supply type.</p>
+                                <p x-show="isZeroRated" x-cloak class="mt-1 text-xs text-gray-500">
+                                    Zero-rated: always IGST.
+                                    <span x-show="underLut">
+                                        No tax is charged under LUT/bond.
+                                        @if ($company->lut_number)
+                                            LUT no. {{ $company->lut_number }}.
+                                        @else
+                                            Add your LUT number in <a href="{{ route('companies.edit', $company) }}" class="underline">Company settings</a> to print it on the invoice.
+                                        @endif
+                                    </span>
+                                    <span x-show="!underLut">IGST is charged and can be claimed as a refund.</span>
+                                </p>
+                            </div>
+                            <div x-show="isExport" x-cloak class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div>
+                                    <label for="export_port_code" class="text-xs font-semibold text-gray-600">Port code</label>
+                                    <input id="export_port_code" name="export_port_code" type="text" maxlength="10" placeholder="e.g. INNSA1"
+                                           value="{{ old('export_port_code', $invoice->export_port_code) }}"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm uppercase focus:border-brand-600 focus:ring-brand-600">
+                                </div>
+                                <div>
+                                    <label for="shipping_bill_number" class="text-xs font-semibold text-gray-600">Shipping bill no.</label>
+                                    <input id="shipping_bill_number" name="shipping_bill_number" type="text" maxlength="20"
+                                           value="{{ old('shipping_bill_number', $invoice->shipping_bill_number) }}"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                                </div>
+                                <div>
+                                    <label for="shipping_bill_date" class="text-xs font-semibold text-gray-600">Shipping bill date</label>
+                                    <input id="shipping_bill_date" name="shipping_bill_date" type="date"
+                                           value="{{ old('shipping_bill_date', $invoice->shipping_bill_date?->toDateString()) }}"
+                                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
+                                </div>
+                                <p class="sm:col-span-3 text-[11px] text-gray-500">Optional until the shipping bill is filed. Reported in GSTR-1 Table 6A.</p>
+                            </div>
+                            <label x-show="!isZeroRated" class="mt-3 flex items-start gap-2 text-sm text-gray-700">
                                 <input type="checkbox" name="reverse_charge" value="1" x-model="reverseCharge" @change="recompute()"
                                        class="mt-0.5 rounded border-gray-300 text-brand-700 focus:ring-brand-600">
                                 <span>
                                     <span class="font-medium">Reverse charge applicable</span>
-                                    <span class="block text-xs text-gray-500">Section 9(3)/9(4) - recipient pays GST. CGST/SGST/IGST will be set to ₹0 on the invoice; the recipient self-assesses.</span>
+                                    <span class="block text-xs text-gray-500">Section 9(3)/9(4). CGST/SGST/IGST show as ₹0; the recipient pays the GST.</span>
                                 </span>
                             </label>
                         </div>
@@ -330,10 +400,10 @@
 
                 <div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 overflow-hidden {{ $restricted ? 'opacity-70' : '' }}">
                     <div class="px-6 py-4 border-b flex items-center justify-between gap-3 flex-wrap">
-                        <h2 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-accent-700 font-normal">🔒 Locked - amounts are immutable</span>@endif</h2>
+                        <h2 class="font-medium text-gray-900">Line items @if ($restricted)<span class="ml-2 text-xs text-accent-700 font-normal">Locked after issue</span>@endif</h2>
                         <div class="flex items-center gap-3">
                             @if (! $restricted)
-                                <span class="hidden md:inline text-xs text-gray-500">Tip: type a product name in the row - pick existing or save a new one inline.</span>
+                                <span class="hidden md:inline text-xs text-gray-500">Type in the Product column to pick an item or add a new one.</span>
                                 <button type="button" @click="addRow" class="inline-flex items-center justify-center min-h-[40px] px-3 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-md text-sm font-semibold">+ Add row</button>
                             @endif
                         </div>
@@ -377,7 +447,7 @@
                                                    @keydown.enter.prevent="enterKey()"
                                                    @keydown.escape="combo.open = false; quickAdd.open = false"
                                                    @blur="commitTypedText()"
-                                                   placeholder="Type product name, SKU, or HSN…"
+                                                   placeholder="Search by name, SKU or HSN…"
                                                    autocomplete="off"
                                                    class="mt-1 block w-full border-gray-300 rounded text-sm pr-8">
                                             <button type="button" x-show="item.product_id || combo.search" @click="clearRow()"
@@ -393,7 +463,7 @@
                                     {{-- Description is optional. If left blank and a product is picked,
                                          the server backfills it from the product's name. The user can also
                                          leave it blank entirely for a one-line custom charge. --}}
-                                    <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product if picked" class="mt-1 block w-full border-gray-300 rounded text-sm">
+                                    <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional · filled from the product" class="mt-1 block w-full border-gray-300 rounded text-sm">
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
@@ -404,7 +474,7 @@
                                             <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                target="_blank" rel="noopener"
                                                onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                               class="text-brand-700 hover:text-brand-800"
+                                               class="inline-flex items-center justify-center p-2 -m-2 rounded text-brand-700 hover:text-brand-800"
                                                aria-label="Search HSN/SAC code on the official GST portal"
                                                title="Search HSN/SAC code on the official GST portal">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -415,13 +485,13 @@
                                             <template x-if="!item.hsn_sac || item.hsn_sac.length === 0">
                                                 <span x-text="hsnRequired
                                                     ? 'Required. 4 digits if turnover < ₹5 Cr · 6 if > ₹5 Cr · 8 for exports.'
-                                                    : 'Optional - neither you nor the customer is GST-registered.'"></span>
+                                                    : 'Optional. Neither party is GST-registered.'"></span>
                                             </template>
                                             <template x-if="item.hsn_sac && item.hsn_sac.length > 0 && item.hsn_sac.length < 4">
-                                                <span>⚠ HSN should be at least 4 digits per Rule 46(g).</span>
+                                                <span>Enter at least 4 digits (Rule 46(g)).</span>
                                             </template>
                                             <template x-if="item.hsn_sac && item.hsn_sac.length >= 4">
-                                                <span class="text-money-700">✓ <span x-text="item.hsn_sac.length"></span>-digit HSN - valid format.</span>
+                                                <span class="text-money-700">✓ Valid <span x-text="item.hsn_sac.length"></span>-digit code</span>
                                             </template>
                                         </p>
                                     </div>
@@ -432,15 +502,11 @@
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Quantity</label>
                                         <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
+                                        <p x-show="stockShort(item)" x-cloak class="mt-0.5 text-[11px] font-semibold text-accent-800" x-text="'Only ' + (+item._stock) + ' in stock'"></p>
                                     </div>
                                     <div>
                                         <label class="text-xs text-gray-500 font-semibold">Rate (₹)</label>
                                         <input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" required>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs text-gray-500 font-semibold">Discount (₹)</label>
-                                        <input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="mt-1 block w-full border-gray-300 rounded text-sm text-right" placeholder="0.00">
-                                        <p class="mt-0.5 text-[10px] text-gray-500">Section 15(3) - pre-tax</p>
                                     </div>
                                 </div>
                                 <div>
@@ -452,7 +518,10 @@
                                          vertical space. The hidden input is the actual form value
                                          so Alpine reactivity stays consistent with the rest. --}}
                                     @php
-                                        $commonRates = [0, 5, 12, 18, 28];
+                                        // GST 2.0 (22 Sep 2025): the live slabs are 0, 5, 18 and 40.
+                                        // 12% and 28% stay reachable under "Other" for backdated
+                                        // invoices and the brick scheme.
+                                        $commonRates = [0, 5, 18, 40];
                                         $rareRates = collect(config('gst.rates'))->whereNotIn('value', $commonRates)->values();
                                     @endphp
                                     <input type="hidden" :name="`items[${idx}][gst_rate]`" :aria-label="`GST rate for line item ${idx + 1}`" :value="item.gst_rate">
@@ -470,16 +539,16 @@
                                          Its current value reflects the row's rate when it's not
                                          one of the common 5, so the user always sees what's set. --}}
                                     <div class="mt-1.5 flex items-center gap-2 text-[11px] text-gray-500">
-                                        <span>Or pick a special rate:</span>
+                                        <span>Other rates:</span>
                                         <select @change="item.gst_rate = parseFloat($event.target.value); recompute()"
-                                                aria-label="Pick a special GST rate"
+                                                aria-label="Other GST rate"
                                                 class="flex-1 border-gray-300 rounded text-xs py-1">
-                                            <option value="">- Other -</option>
+                                            <option value="">Other</option>
                                             @foreach ($rareRates as $r)
                                                 <option value="{{ $r['value'] }}"
                                                         :selected="parseFloat(item.gst_rate) === {{ $r['value'] }}"
-                                                        title="{{ $r['label'] . ' - ' . $r['note'] }}">
-                                                    {{ (float) $r['value'] }}% - {{ Str::after($r['label'], '· ') }}
+                                                        title="{{ $r['label'] . ' · ' . $r['note'] }}">
+                                                    {{ (float) $r['value'] }}% · {{ Str::after($r['label'], '· ') }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -511,7 +580,7 @@
                                             <a href="https://services.gst.gov.in/services/searchhsnsac"
                                                target="_blank" rel="noopener"
                                                onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                               class="text-brand-700 hover:text-brand-800"
+                                               class="inline-flex items-center justify-center p-2 -m-2 rounded text-brand-700 hover:text-brand-800"
                                                aria-label="Search HSN/SAC code on the official GST portal"
                                                title="Search HSN/SAC code on the official GST portal">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
@@ -520,7 +589,6 @@
                                     </th>
                                     <th class="px-3 py-2 text-left">Quantity</th>
                                     <th class="px-3 py-2 text-right">Rate (₹)</th>
-                                    <th class="px-3 py-2 text-right" title="Pre-tax discount per Section 15(3) CGST">Disc (₹)</th>
                                     <th class="px-3 py-2 text-right">GST%</th>
                                     <th class="px-3 py-2 text-right">Amount <span class="font-normal normal-case">(incl. GST)</span></th>
                                     <th class="px-3 py-2"></th>
@@ -548,7 +616,7 @@
                                                                @keydown.enter.prevent="enterKey()"
                                                                @keydown.escape="combo.open = false; quickAdd.open = false"
                                                                @blur="commitTypedText()"
-                                                               placeholder="Type product or + new"
+                                                               placeholder="Search or add item"
                                                                autocomplete="off"
                                                                class="w-full border-gray-300 rounded text-sm pr-7">
                                                         <button type="button" x-show="item.product_id || combo.search" @click="clearRow()"
@@ -560,16 +628,16 @@
                                                 </div>
                                             </td>
                                         @endunless
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional - auto-fills from product" class="w-full border-gray-300 rounded text-sm"></td>
+                                        <td class="px-2 py-2"><input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Optional · filled from the product" class="w-full border-gray-300 rounded text-sm"></td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? '998314' : 'Optional'" class="w-28 rounded text-sm font-mono" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired"></td>
                                         <td class="px-2 py-2">
                                             <div class="flex items-center gap-1">
                                                 <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 rounded text-sm text-right" :class="fieldHasError(idx, 'quantity') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required>
-                                                <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="unit">
+                                                <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="w-20 border-gray-300 rounded text-sm" placeholder="Unit">
                                             </div>
+                                            <p x-show="stockShort(item)" x-cloak class="mt-0.5 text-[11px] font-semibold text-accent-800" x-text="'Only ' + (+item._stock) + ' in stock'"></p>
                                         </td>
                                         <td class="px-2 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-28 rounded text-sm text-right" :class="fieldHasError(idx, 'rate') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required></td>
-                                        <td class="px-2 py-2"><input :name="`items[${idx}][discount]`" aria-label="Discount" x-model.number="item.discount" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00" class="w-24 border-gray-300 rounded text-sm text-right"></td>
                                         <td class="px-2 py-2">
                                             {{-- Compact GST cell - just "18%". Full descriptive text + regulatory
                                                  note are in the option's `title` so a hover still tells the user
@@ -578,7 +646,7 @@
                                                  container at common laptop widths. --}}
                                             <select :name="`items[${idx}][gst_rate]`" aria-label="GST rate" x-model.number="item.gst_rate" @change="recompute()" class="w-20 border-gray-300 rounded text-sm">
                                                 @foreach (config('gst.rates') as $r)
-                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' - ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
+                                                    <option value="{{ $r['value'] }}" title="{{ $r['label'] . ' · ' . $r['note'] }}">{{ (float) $r['value'] }}%</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -627,8 +695,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6 0a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
                                 </svg>
                                 <div>
-                                    <div class="text-sm font-semibold text-gray-900">Shipping goods? Add transporter details</div>
-                                    <div class="text-xs text-gray-500">Skip this if you're billing for services. Used for e-way bill and goods delivery.</div>
+                                    <div class="text-sm font-semibold text-gray-900">Transporter details</div>
+                                    <div class="text-xs text-gray-500">Optional. For goods sent by transport and the e-way bill.</div>
                                 </div>
                             </div>
                             <svg class="w-5 h-5 text-gray-500 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -652,7 +720,7 @@
                                 <div>
                                     <x-input-label for="transport_mode" value="Mode" />
                                     <select id="transport_mode" name="transport_mode" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="">- Select -</option>
+                                        <option value="">Select</option>
                                         @foreach (['Road', 'Rail', 'Air', 'Ship'] as $m)
                                             <option value="{{ $m }}" @selected(old('transport_mode', $invoice->transport_mode) === $m)>{{ $m }}</option>
                                         @endforeach
@@ -681,8 +749,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
                                 <div>
-                                    <div class="text-sm font-semibold text-gray-900">Ship to a different address?</div>
-                                    <div class="text-xs text-gray-500">For goods delivered to a site that isn't the customer's billing address (warehouse, branch, project site…).</div>
+                                    <div class="text-sm font-semibold text-gray-900">Ship-to address</div>
+                                    <div class="text-xs text-gray-500">Optional. For delivery to an address other than the billing address.</div>
                                 </div>
                             </div>
                             <svg class="w-5 h-5 text-gray-500 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -710,7 +778,7 @@
                                 <div>
                                     <x-input-label for="ship_to_state_id" value="State" />
                                     <select id="ship_to_state_id" name="ship_to_state_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="">- Select -</option>
+                                        <option value="">Select</option>
                                         @foreach ($states as $s)
                                             <option value="{{ $s->id }}" @selected(old('ship_to_state_id', $invoice->ship_to_state_id) == $s->id)>{{ $s->name }} ({{ $s->gst_code }})</option>
                                         @endforeach
@@ -718,16 +786,15 @@
                                 </div>
                                 <div>
                                     <x-input-label for="ship_to_postal_code" value="PIN" />
-                                    <x-text-input id="ship_to_postal_code" name="ship_to_postal_code" type="text" inputmode="numeric" class="mt-1 block w-full" :value="old('ship_to_postal_code', $invoice->ship_to_postal_code)" />
+                                    <x-text-input id="ship_to_postal_code" name="ship_to_postal_code" type="text" inputmode="numeric" maxlength="10" autocomplete="off" class="mt-1 block w-full" :value="old('ship_to_postal_code', $invoice->ship_to_postal_code)" placeholder="6 digits" />
                                 </div>
                                 <div>
                                     <x-input-label for="ship_to_gstin" value="Consignee GSTIN (optional)" />
-                                    <x-text-input id="ship_to_gstin" name="ship_to_gstin" type="text" class="mt-1 block w-full uppercase font-mono" maxlength="15" :value="old('ship_to_gstin', $invoice->ship_to_gstin)" />
+                                    <x-text-input id="ship_to_gstin" name="ship_to_gstin" type="text" class="mt-1 block w-full uppercase font-mono" maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false" :value="old('ship_to_gstin', $invoice->ship_to_gstin)" />
                                 </div>
                             </div>
                             <p class="text-xs text-gray-500">
-                                If the consignee's state differs from the Bill-to state, GST is still determined by the <strong>place of supply</strong>
-                                (the customer's state on record), not the ship-to state. This is correct per the IGST Act - use the Bill-to state for tax mode.
+                                GST follows the <strong>place of supply</strong> (the bill-to customer's state), not the ship-to state, as per the IGST Act.
                             </p>
                         </div>
                     </div>
@@ -737,8 +804,8 @@
                         <div class="flex items-start gap-2 text-sm text-accent-900">
                             <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
-                                <div class="font-semibold">B2C invoice of ₹50,000 or more - Rule 46(e) applies</div>
-                                <div class="mt-0.5">The customer has no GSTIN and the taxable value is ₹50,000 or more. Per CGST Rule 46(e), the invoice must carry the recipient's <strong>name, full address, delivery address, and state name with code</strong>. Double-check the customer record has those filled in.</div>
+                                <div class="font-semibold">B2C invoice, taxable value ₹50,000 or more</div>
+                                <div class="mt-0.5">Under Rule 46(e) the invoice must show the customer's <strong>name, full address, delivery address and state name with code</strong>. Check that the customer record has them.</div>
                             </div>
                         </div>
                     </div>
@@ -750,24 +817,46 @@
                                 <textarea id="terms" name="terms" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ old('terms', $invoice->terms ?? $company->default_terms) }}</textarea>
                             </div>
                             <div>
-                                <x-input-label for="notes" value="Notes (shown below Terms)" />
+                                <x-input-label for="notes" value="Notes (printed below the terms)" />
                                 <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ old('notes', $invoice->notes) }}</textarea>
                             </div>
                         </div>
 
                         <div class="md:pl-6 space-y-2 text-sm">
-                            <div class="flex justify-between"><span>Subtotal</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
+                            <div class="flex justify-between"><span>Items total</span><span class="font-mono" x-text="fmt(totals.gross)"></span></div>
+                            {{-- One discount for the whole invoice. Applied BEFORE GST and
+                                 spread across the lines in proportion to their value
+                                 (s.15(3)(a)) - so it sits above the tax lines here, and
+                                 the GST below is worked out on the discounted value. --}}
+                            <div class="flex justify-between items-center gap-2">
+                                <label for="invoice_discount_input" class="flex items-center gap-1.5">
+                                    Discount
+                                    <span class="inline-flex rounded border border-gray-300 overflow-hidden text-[11px] font-semibold">
+                                        <button type="button" @click="discountMode = 'amount'; recompute()" :class="discountMode === 'amount' ? 'bg-brand-700 text-white' : 'bg-white text-gray-600'" :aria-pressed="(discountMode === 'amount').toString()" aria-label="Discount in rupees" class="px-2.5 py-1.5">₹</button>
+                                        <button type="button" @click="discountMode = 'percent'; recompute()" :class="discountMode === 'percent' ? 'bg-brand-700 text-white' : 'bg-white text-gray-600'" :aria-pressed="(discountMode === 'percent').toString()" aria-label="Discount in percent" class="px-2.5 py-1.5">%</button>
+                                    </span>
+                                </label>
+                                <input id="invoice_discount_input" type="number" step="any" min="0" inputmode="decimal"
+                                       x-model.number="discountInput" @input="recompute()"
+                                       :max="discountMode === 'percent' ? 100 : null"
+                                       class="w-32 border-gray-300 rounded text-sm text-right" placeholder="0">
+                                <input type="hidden" name="invoice_discount" :value="totals.discount">
+                            </div>
+                            <p x-show="discountMode === 'percent' && totals.discount > 0" x-cloak class="text-[11px] text-gray-500 text-right -mt-1">= ₹ <span x-text="fmt(totals.discount)"></span></p>
+                            @error('invoice_discount')<p class="text-xs text-danger-600 text-right">{{ $message }}</p>@enderror
+                            <div class="flex justify-between border-t pt-2"><span>Taxable value</span><span class="font-mono" x-text="fmt(totals.subtotal)"></span></div>
                             <div x-show="reverseCharge" class="p-2 rounded bg-accent-50 border border-accent-200 text-xs text-accent-900">
-                                🛈 <strong>Reverse charge:</strong> CGST/SGST/IGST set to ₹0 on this invoice - recipient pays GST directly (Section 9(3)/9(4)).
+                                <strong>Reverse charge:</strong> CGST/SGST/IGST are ₹0 on this invoice. The recipient pays GST directly (Section 9(3)/9(4)).
                             </div>
                             <div class="flex justify-between" x-show="!isInterstate"><span>CGST</span><span class="font-mono" x-text="fmt(totals.cgst)"></span></div>
-                            <div class="flex justify-between" x-show="!isInterstate"><span>SGST</span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
+                            <div class="flex justify-between" x-show="!isInterstate"><span x-text="stateTaxLabel"></span><span class="font-mono" x-text="fmt(totals.sgst)"></span></div>
                             <div class="flex justify-between" x-show="isInterstate"><span>IGST</span><span class="font-mono" x-text="fmt(totals.igst)"></span></div>
                             <div class="flex justify-between border-t pt-2 text-lg font-bold"><span>Grand total</span><span class="font-mono" x-text="fmt(totals.grandTotal)"></span></div>
                             <div class="flex justify-between items-center">
                                 <label for="paid_amount">Paid amount</label>
-                                <input id="paid_amount" name="paid_amount" type="number" step="any" min="0" value="{{ old('paid_amount', $invoice->paid_amount ?? 0) }}" x-ref="paidInput" @input="recompute()" class="w-32 border-gray-300 rounded text-sm text-right">
+                                <input inputmode="decimal" id="paid_amount" name="paid_amount" type="number" step="any" min="0" value="{{ plain_amount(old('paid_amount', $invoice->paid_amount ?? 0)) }}" x-ref="paidInput" @input="recompute()" class="w-32 border-gray-300 rounded text-sm text-right">
                             </div>
+                            <p x-show="paidExceedsTotal" x-cloak class="text-xs text-danger-700 text-right">Paid amount is more than the grand total.</p>
                             <div class="flex justify-between border-t pt-2"><span>Balance</span><span class="font-mono" x-text="fmt(balance)"></span></div>
                         </div>
                     </div>
@@ -785,7 +874,7 @@
                          pending blur handlers flush before the form posts. --}}
                     <button type="button" @click="submitForm('')"
                             class="inline-flex items-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg shadow-sm transition">
-                        {{ $restricted ? 'Save changes' : ($invoice->exists ? 'Save draft' : 'Create draft') }}
+                        {{ $restricted ? 'Save changes' : 'Save draft' }}
                     </button>
                 </div>
             </form>
@@ -795,7 +884,7 @@
                  far down the form they've scrolled. On mobile we already show
                  totals inline + the FAB. --}}
             @unless ($restricted)
-            <div class="hidden lg:block fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+            <div class="bottom-action-bar hidden lg:block fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
                 {{-- power-user keyboard shortcut strip - kept subtle so it doesn't
                      compete with the action buttons, but always visible for power
                      users (a common complaint in Indian billing apps is missing shortcuts). --}}
@@ -803,14 +892,14 @@
                     <span class="font-semibold text-gray-700 uppercase tracking-wider text-[10px]">Shortcuts</span>
                     <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">F2</kbd> add row</span>
                     <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">Ctrl+S</kbd> save draft</span>
-                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">F9</kbd> save &amp; download PDF</span>
-                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">Esc</kbd> close dropdown</span>
+                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">F9</kbd> save and download PDF</span>
+                    <span><kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded font-mono text-[10px] text-gray-700">Esc</kbd> close list</span>
                 </div>
                 <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
                     <div class="text-xs text-gray-500">
-                        Subtotal <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.subtotal)"></span>
+                        Taxable <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.subtotal)"></span>
                         <span class="mx-1 text-gray-400" aria-hidden="true">·</span>
-                        <span x-show="!isInterstate">CGST <span class="font-mono text-gray-900" x-text="fmt(totals.cgst)"></span> · SGST <span class="font-mono text-gray-900" x-text="fmt(totals.sgst)"></span></span>
+                        <span x-show="!isInterstate">CGST <span class="font-mono text-gray-900" x-text="fmt(totals.cgst)"></span> · <span x-text="stateTaxLabel"></span> <span class="font-mono text-gray-900" x-text="fmt(totals.sgst)"></span></span>
                         <span x-show="isInterstate">IGST <span class="font-mono text-gray-900" x-text="'₹ ' + fmt(totals.igst)"></span></span>
                     </div>
                     <div class="flex-1"></div>
@@ -828,13 +917,13 @@
                         <button type="button"
                                 @click="submitForm('')"
                                 class="px-4 py-2.5 ring-1 ring-gray-300 text-gray-700 hover:bg-gray-50 font-semibold rounded-lg text-sm transition">
-                            {{ $invoice->exists ? 'Save draft' : 'Save as draft' }}
+                            Save draft
                         </button>
                         <button type="button"
                                 @click="submitForm('pdf')"
                                 class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm shadow-sm transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h11l5 5v7a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-                            Save &amp; Download PDF
+                            Save and download PDF
                         </button>
                     </div>
                 </div>
@@ -847,13 +936,13 @@
                 <div class="mt-6 p-5 bg-danger-50 border border-danger-200 rounded-lg flex items-center justify-between">
                     <div class="text-sm">
                         <div class="font-semibold text-danger-800">Delete this draft</div>
-                        <div class="text-danger-700">Once deleted, the draft and its line items are gone permanently.</div>
+                        <div class="text-danger-700">The draft and its line items are deleted permanently.</div>
                     </div>
                     <x-confirm-form
                         :action="route('invoices.destroy', $invoice)"
                         method="DELETE"
                         title="Delete this draft?"
-                        message="This draft and all its line items are permanently removed. This cannot be undone."
+                        message="The draft and its line items will be deleted. This cannot be undone."
                         confirm-label="Delete draft"
                         confirm-class="bg-danger-600 hover:bg-danger-700"
                         tone="danger">
@@ -871,6 +960,9 @@
 
     @push('scripts')
     <script>
+        const UT_STATE_IDS = @json($utStateIds);
+        const FOREIGN_STATE_ID = @json($foreignStateId);
+        const HAS_LUT = @json((bool) $company->lut_number);
         function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, customerIndex, companyHasGstin, itemErrors) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
@@ -883,7 +975,14 @@
             // Math.random fallback is good enough for purely-local keys.
             const newUid = () => (window.crypto?.randomUUID?.() || ('row-' + Math.random().toString(36).slice(2) + '-' + Date.now()));
             return {
-                items: initialItems.map(i => ({product_id: null, _uid: newUid(), _prevProductName: null, ...i, amount: 0, tax: 0, total: 0})),
+                items: initialItems.map(i => ({product_id: null, _uid: newUid(), _prevProductName: null, ...i,
+                    _stock: (i.product_id && productMap[i.product_id]) ? (productMap[i.product_id].stock ?? null) : null,
+                    amount: 0, tax: 0, total: 0})),
+                // More on the line than is on the shelf: warn, never block - the
+                // purchase may simply not be entered yet.
+                stockShort(item) {
+                    return item._stock !== null && item._stock !== undefined && (parseFloat(item.quantity) || 0) > +item._stock;
+                },
                 _newUid: newUid,
                 // Per-row validation errors from the last server submit, keyed by
                 // the row's original index: { "2": { hsn_sac: "Row 3: …" } }.
@@ -911,12 +1010,33 @@
                 customers,
                 customerCombo: { search: '', open: false, highlight: 0 },
                 reverseCharge: @json((bool) old('reverse_charge', $invoice->reverse_charge ?? false)),
-                totals: {subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
+                // regular | export_igst | export_lut | sez_igst | sez_lut
+                supplyType: @json(old('supply_type', $invoice->supply_type ?: 'regular')),
+                get isZeroRated() { return this.supplyType !== 'regular'; },
+                get isExport() { return this.supplyType.startsWith('export_'); },
+                get underLut() { return this.supplyType.endsWith('_lut'); },
+                // A customer whose state is "Foreign Country" on a regular invoice.
+                get customerAbroad() {
+                    return !!this.customerId && !!FOREIGN_STATE_ID && this.customerStates[this.customerId] == FOREIGN_STATE_ID;
+                },
+                totals: {gross: 0, discount: 0, subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
+                // Invoice-level discount: typed as ₹ or %, stored as ₹. An existing
+                // draft opens with the sum of its saved line discounts.
+                discountMode: 'amount',
+                discountInput: @json($initialDiscount) || '',
+                paidExceedsTotal: false,
                 balance: 0,
                 get isInterstate() {
+                    // Exports and SEZ supplies are inter-state by law (s.7(5) IGST Act).
+                    if (this.supplyType !== 'regular') return true;
                     if (!this.customerId || !this.companyStateId) return false;
                     const cs = this.customerStates[this.customerId];
                     return cs && cs !== this.companyStateId;
+                },
+                // "SGST" or "UTGST" for the state share (mirrors Invoice::stateTaxLabel).
+                get stateTaxLabel() {
+                    const cs = this.customerId ? this.customerStates[this.customerId] : this.companyStateId;
+                    return UT_STATE_IDS.includes(cs) ? 'UTGST' : 'SGST';
                 },
                 get showB2cWarning() {
                     if (!this.customerId) return false;
@@ -971,6 +1091,17 @@
                         if (c) this.customerCombo.search = c.name;
                     }
                     this.recompute();
+
+                    // Picking a customer abroad switches a regular invoice to an
+                    // export (under LUT when one is on file), and back again.
+                    this.$watch('customerId', () => {
+                        if (this.customerAbroad && this.supplyType === 'regular') {
+                            this.supplyType = HAS_LUT ? 'export_lut' : 'export_igst';
+                        } else if (!this.customerAbroad && this.isExport) {
+                            this.supplyType = 'regular';
+                        }
+                        this.recompute();
+                    });
 
                     // After a server validation error, scroll the first flagged
                     // row into view so the user isn't hunting through a long list.
@@ -1155,6 +1286,7 @@
                     }
                     row._prevProductName = p.name; // remember for the next swap
                     row.hsn_sac = p.hsn_sac;
+                    row._stock = (p.stock ?? null);
                     row.unit = p.unit;
                     row.rate = parseFloat(p.rate) || 0;
                     row.gst_rate = parseFloat(p.gst_rate) || 0;
@@ -1162,14 +1294,37 @@
                 },
                 recompute() {
                     const inter = this.isInterstate;
-                    const rcm = this.reverseCharge;
+                    // Reverse charge, or zero-rated under a LUT: no tax collected.
+                    const rcm = this.reverseCharge || this.supplyType.endsWith('_lut');
                     let sub = 0, cgst = 0, sgst = 0, igst = 0;
+
+                    // Invoice-level discount, spread across the lines pro rata to
+                    // their value before tax - the same split as
+                    // InvoiceCalculator::apportionDiscount on the server.
+                    const grossOf = item => +((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toFixed(2);
+                    const grossList = this.items.map(grossOf);
+                    const totalGross = +grossList.reduce((a, b) => a + b, 0).toFixed(2);
+                    const input = Math.max(0, parseFloat(this.discountInput) || 0);
+                    let discount = this.discountMode === 'percent'
+                        ? +(totalGross * Math.min(input, 100) / 100).toFixed(2)
+                        : +input.toFixed(2);
+                    discount = Math.min(discount, totalGross);
+                    let lastIdx = -1;
+                    grossList.forEach((g, i) => { if (g > 0) lastIdx = i; });
+                    let allocated = 0;
+                    this.items.forEach((item, i) => {
+                        if (discount <= 0 || grossList[i] <= 0) { item.discount = 0; return; }
+                        let share = i === lastIdx
+                            ? +(discount - allocated).toFixed(2)
+                            : +(discount * grossList[i] / totalGross).toFixed(2);
+                        share = Math.min(share, grossList[i]);
+                        item.discount = share;
+                        allocated = +(allocated + share).toFixed(2);
+                    });
+
                     this.items.forEach(item => {
-                        const qty = parseFloat(item.quantity) || 0;
-                        const rate = parseFloat(item.rate) || 0;
                         const gst = parseFloat(item.gst_rate) || 0;
-                        const gross = +(qty * rate).toFixed(2);
-                        // Pre-tax discount per Section 15(3) - clamp to gross
+                        const gross = grossOf(item);
                         const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
                         const amount = +(gross - disc).toFixed(2);
                         let c = 0, s = 0, ig = 0;
@@ -1193,6 +1348,8 @@
                     const raw = sub + totalTax;
                     const grand = Math.round(raw);
                     this.totals = {
+                        gross: totalGross,
+                        discount: +allocated.toFixed(2),
                         subtotal: +sub.toFixed(2),
                         cgst: +cgst.toFixed(2),
                         sgst: +sgst.toFixed(2),
@@ -1201,9 +1358,12 @@
                         grandTotal: grand,
                     };
                     const paid = parseFloat(this.$refs.paidInput?.value || 0) || 0;
+                    // Balance never shows below zero on the form; an advance larger
+                    // than the bill is flagged separately (paidExceedsTotal).
                     this.balance = +(grand - paid).toFixed(2);
+                    this.paidExceedsTotal = paid > grand + 0.001;
                 },
-                fmt(n) { return (parseFloat(n) || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+                fmt(n) { const v = Math.round((parseFloat(n) || 0) * 100) / 100; return v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
             };
         }
 
@@ -1502,7 +1662,7 @@
                         }
                         this.quickAdd.error = 'Could not save (status ' + res.status + '). Try again.';
                     } catch (e) {
-                        this.quickAdd.error = 'Network error - check your connection.';
+                        this.quickAdd.error = 'Network error. Check your connection and try again.';
                     } finally {
                         this.quickAdd.submitting = false;
                     }

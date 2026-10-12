@@ -51,7 +51,10 @@ class AuditLog extends Model
                 'subject_type' => $subject ? $subject::class : null,
                 'subject_id' => $subject?->getKey(),
                 'action' => $action,
-                'summary' => $summary,
+                // A team member's action is the owner's data, but says who did it.
+                'summary' => ($member = \App\Support\Team::member())
+                    ? trim(($summary ?? '') . ' · by ' . $member->name . ' (' . \App\Support\Team::membership()?->roleLabel() . ')')
+                    : $summary,
                 'changes' => $changes,
                 'ip_address' => request()->ip(),
                 'created_at' => now(),

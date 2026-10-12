@@ -83,7 +83,7 @@ class NewUserCalmDashboardTest extends TestCase
         $res->assertDontSee('Reports & exports', false);
         // What they get instead: the numbered checklist and a route to a human.
         $res->assertSee('Step 1');
-        $res->assertSee('Need a hand getting started?');
+        $res->assertSee('Need help getting started?');
     }
 
     public function test_the_first_invoice_instruction_is_not_duplicated(): void
@@ -93,7 +93,7 @@ class NewUserCalmDashboardTest extends TestCase
         // The checklist owns the instruction; the panel below must not repeat it.
         $this->assertSame(
             1,
-            substr_count($res->getContent(), 'Make your first invoice'),
+            substr_count($res->getContent(), 'Create your first invoice'),
             'the "make your first invoice" instruction should appear exactly once'
         );
     }

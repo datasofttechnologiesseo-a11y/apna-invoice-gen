@@ -1,6 +1,6 @@
 @props(['step'])
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en-IN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,6 +13,7 @@
     @include('partials.google-analytics')
 </head>
 <body class="font-sans antialiased bg-gradient-to-br from-brand-50 via-white to-accent-50 min-h-screen">
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <header class="bg-white border-b border-gray-100">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-3">
@@ -20,10 +21,10 @@
             <x-brand-logo class="h-10 w-auto block" />
         </a>
         <div class="flex items-center gap-4 text-sm">
-            <span class="hidden md:inline text-gray-500">Hi, {{ auth()->user()->name }}</span>
+            <span class="hidden md:inline text-gray-500">Signed in as {{ auth()->user()->name }}</span>
             <form method="POST" action="{{ route('logout') }}" class="inline">
                 @csrf
-                <button class="text-gray-500 hover:text-gray-700 underline">Log out</button>
+                <button type="submit" class="text-gray-600 hover:text-gray-800 underline py-2">Log out</button>
             </form>
         </div>
     </div>
@@ -43,7 +44,7 @@
         <div>Step <strong class="text-gray-900">{{ $currentIndex + 1 }}</strong> of {{ count($steps) }}</div>
         <div>{{ round((($currentIndex + 1) / count($steps)) * 100) }}% complete</div>
     </div>
-    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+    <div class="h-2 bg-gray-200 rounded-full overflow-hidden" role="progressbar" aria-label="Setup progress" aria-valuemin="0" aria-valuemax="{{ count($steps) }}" aria-valuenow="{{ $currentIndex + 1 }}" aria-valuetext="Step {{ $currentIndex + 1 }} of {{ count($steps) }}">
         <div class="h-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all duration-500" style="width: {{ (($currentIndex + 1) / count($steps)) * 100 }}%"></div>
     </div>
 
@@ -81,24 +82,23 @@
     </div>
 </div>
 
-<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<main id="main-content" tabindex="-1" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     {{ $slot }}
 
     {{-- Universal skip-out: setup is optional. Users can always jump to the dashboard
          and fill missing details from there (or from inside the invoice form). --}}
     @if ($step !== 'done')
         <div class="mt-6 text-center text-sm text-gray-500">
-            In a hurry?
             <a href="{{ route('dashboard') }}" class="text-brand-700 hover:text-brand-800 hover:underline font-medium">
-                Skip setup, take me to the dashboard
+                Skip setup and go to the dashboard
             </a>
-            <span class="block mt-0.5 text-xs">You can always fill missing details later from the dashboard or inside the invoice form.</span>
+            <span class="block mt-0.5 text-xs">Missing details can be added later from the dashboard or the invoice form.</span>
         </div>
     @endif
 </main>
 
 <footer class="text-center py-6 text-xs text-gray-500">
-    © 2026 <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a> · All rights reserved.
+    © {{ now()->year }} <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="hover:text-brand-700 font-medium transition">Datasoft Technologies</a>. All rights reserved.
 </footer>
 
 </body>

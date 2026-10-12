@@ -350,3 +350,44 @@ html {
     /* Ensure h1/h2/h3 stay with their following content. */
     h1, h2, h3, h4 { page-break-after: avoid; }
 }
+
+/* WhatsApp "Chat with us" (components/whatsapp-float): bottom-right, and
+   lifted clear of whatever else lives at the bottom of the page so it never
+   covers a control - the phone "+" quick action and the invoice form's
+   desktop save bar. */
+.wa-float {
+    right: 1.25rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 1023.98px) {
+    body:has(.quick-fab) .wa-float {
+        bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+        right: 1.5rem;
+    }
+}
+@media (min-width: 1024px) {
+    body:has(.bottom-action-bar) .wa-float {
+        bottom: calc(var(--bottom-bar-h, 6.5rem) + 0.75rem);
+    }
+}
+/* Room at the end of every page so the last line (footer links, the final
+   table row) scrolls clear of the floating button instead of under it. */
+body:has(.wa-float) {
+    --wa-reserve: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--wa-reserve);
+}
+@media (max-width: 1023.98px) {
+    body:has(.wa-float):has(.quick-fab) {
+        --wa-reserve: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+/* On a short page the footer used to sit on the bottom edge - right under
+   the button. The shell is shortened by the reserved strip instead, so the
+   page still fills the screen and the strip holds only the button. */
+body:has(.wa-float) .app-shell {
+    min-height: calc(100vh - var(--wa-reserve));
+}
+@media print {
+    .wa-float { display: none !important; }
+    body:has(.wa-float) { padding-bottom: 0 !important; }
+}

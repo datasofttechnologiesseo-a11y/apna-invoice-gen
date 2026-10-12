@@ -122,7 +122,7 @@ class CashMemoController extends Controller
             $expense->update(['cash_memo_id' => $memo->id]);
 
             AuditLog::record('cash_memo.created',
-                "Cash Memo {$memoNumber} · ₹" . number_format($memo->grand_total, 2) . " · " . $memo->seller_name,
+                "Cash Memo {$memoNumber} · ₹" . inr($memo->grand_total) . " · " . $memo->seller_name,
                 $memo
             );
 
@@ -153,12 +153,12 @@ class CashMemoController extends Controller
         });
 
         AuditLog::record('cash_memo.deleted',
-            "Cash Memo {$snapshot['memo_number']} deleted · ₹" . number_format($snapshot['grand_total'], 2) . " · " . $snapshot['seller_name'],
+            "Cash Memo {$snapshot['memo_number']} deleted · ₹" . inr($snapshot['grand_total']) . " · " . $snapshot['seller_name'],
             null,
             $snapshot
         );
 
-        return response()->json(['message' => 'Cash memo deleted (linked expense removed too).']);
+        return response()->json(['message' => 'Cash memo and its expense entry deleted.']);
     }
 
     public function pdf(Request $request, CashMemo $cashMemo): Response
@@ -192,7 +192,7 @@ class CashMemoController extends Controller
             'seller_phone' => ['nullable', 'string', 'max:30'],
             'seller_state' => ['nullable', 'string', 'max:80'],
             'discount' => ['nullable', 'numeric', 'min:0'],
-            'gst_rate' => ['nullable', 'numeric', 'min:0', 'max:28'],
+            'gst_rate' => ['nullable', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
             'is_interstate' => ['nullable', 'boolean'],
             'payment_mode' => ['required', 'string', 'in:cash,upi,card,bank,cheque,other'],
             'reference_number' => ['nullable', 'string', 'max:60'],

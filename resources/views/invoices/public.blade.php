@@ -4,7 +4,7 @@
     $number = $invoice->invoice_number ?: ('#' . $invoice->id);
     $docTitle = $invoice->documentTitle();
     $symbol = ($invoice->currency ?: 'INR') === 'INR' ? '₹' : e($invoice->currency) . ' ';
-    $grand = $symbol . number_format((float) $invoice->grand_total, 2);
+    $grand = $symbol . inr((float) $invoice->grand_total);
     $balance = (float) $invoice->balance;
     $isPaid = $balance <= 0.005;
     $upi = trim((string) ($c?->upi_id ?? ''));
@@ -75,7 +75,7 @@
 
             <div class="pt-4 border-t border-gray-100 flex justify-between items-baseline">
                 <span class="text-gray-500 text-sm">{{ $isPaid ? 'Total paid' : 'Amount due' }}</span>
-                <span class="text-3xl font-extrabold text-gray-900">{{ $isPaid ? $grand : $symbol . number_format($balance, 2) }}</span>
+                <span class="text-3xl font-extrabold text-gray-900">{{ $isPaid ? $grand : $symbol . inr($balance) }}</span>
             </div>
         </div>
 
@@ -87,7 +87,7 @@
             @if ($upiLink)
                 <a href="{{ $upiLink }}"
                    class="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-money-600 hover:bg-money-700 text-white font-semibold shadow-sm transition">
-                    Pay {{ $symbol . number_format($balance, 2) }} via UPI
+                    Pay {{ $symbol . inr($balance) }} via UPI
                 </a>
                 <p class="text-center text-xs text-gray-500">Opens your UPI app (GPay, PhonePe, Paytm…)</p>
             @endif

@@ -96,7 +96,7 @@ class CustomerController extends Controller
                     'date' => optional($cn->credit_note_date)->toDateString() ?? (string) $cn->credit_note_date,
                     'type' => 'credit_note',
                     'ref' => $cn->credit_note_number,
-                    'particulars' => 'Credit note · ' . ($cn->reason ?? ''),
+                    'particulars' => 'Credit note · ' . $cn->reasonLabel(),
                     'debit' => 0.0,
                     'credit' => (float) $cn->amount,
                 ]);
@@ -134,7 +134,7 @@ class CustomerController extends Controller
 
         if ($customer->invoices()->exists()) {
             return response()->json([
-                'message' => 'Cannot delete — customer has invoices.',
+                'message' => 'This customer has invoices and cannot be deleted.',
             ], 422);
         }
 

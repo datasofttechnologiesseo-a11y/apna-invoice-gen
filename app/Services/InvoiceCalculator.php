@@ -112,8 +112,69 @@ class InvoiceCalculator
     }
 
     /**
+     * Spread one invoice-level discount across the lines in proportion to each
+     * line's value (qty × rate), writing it into each line's `discount`.
+     *
+     * A discount on a tax invoice reduces the taxable value BEFORE GST
+     * (s.15(3)(a) CGST Act), so it cannot simply be knocked off the grand
+     * total. Splitting it pro rata keeps every line's taxable value - and so
+     * the HSN summary and GSTR-1 rate-wise figures - correct when lines carry
+     * different GST rates. The last line takes the rounding remainder so the
+     * parts always add back to the discount exactly; no line goes below zero.
+     */
+    public function apportionDiscount(array $items, float $discount): array
+    {
+        $discount = round(max(0.0, $discount), 2);
+        $gross = array_map(fn ($i) => round((float) ($i['quantity'] ?? 0) * (float) ($i['rate'] ?? 0), 2), $items);
+        $totalGross = round(array_sum($gross), 2);
+        $discount = min($discount, $totalGross);
+
+        $lastIdx = null;
+        foreach ($gross as $idx => $g) {
+            if ($g > 0) {
+                $lastIdx = $idx;
+            }
+        }
+
+        $allocated = 0.0;
+        foreach ($items as $idx => $item) {
+            if ($discount <= 0 || $gross[$idx] <= 0) {
+                $items[$idx]['discount'] = 0;
+                continue;
+            }
+            $share = $idx === $lastIdx
+                ? round($discount - $allocated, 2)
+                : round($discount * $gross[$idx] / $totalGross, 2);
+            $share = min($share, $gross[$idx]);
+            $items[$idx]['discount'] = $share;
+            $allocated = round($allocated + $share, 2);
+        }
+
+        return $items;
+    }
+
+    /**
      * Determine if a transaction is interstate based on company and customer states.
      */
+    /**
+     * How an invoice is taxed: [inter-state?, collect no tax?].
+     *
+     * Exports and supplies to an SEZ are inter-state by law (s.7(5) IGST Act)
+     * whatever the states; under a LUT/bond no tax is charged (like reverse
+     * charge, the rate stays on the line).
+     *
+     * @return array{0: bool, 1: bool}
+     */
+    public function taxBasis(?int $companyStateId, ?int $customerStateId, string $supplyType, bool $reverseCharge): array
+    {
+        $zeroRated = $supplyType !== '' && $supplyType !== 'regular';
+
+        return [
+            $zeroRated || $this->isInterstate($companyStateId, $customerStateId),
+            $reverseCharge || str_ends_with($supplyType, '_lut'),
+        ];
+    }
+
     public function isInterstate(?int $companyStateId, ?int $customerStateId): bool
     {
         if ($companyStateId === null || $customerStateId === null) {

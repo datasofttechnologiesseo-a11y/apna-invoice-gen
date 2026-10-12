@@ -1,6 +1,7 @@
 @php
-    // Indian (lakh/crore) money formatter - $inr(1234567) → "12,34,567.00"
-    $inr = fn ($n, $d = 2) => \App\Support\IndianNumber::format($n, $d);
+    // Indian (lakh/crore) money formatter - $inr(1234567) → "12,34,567"
+    // (whole amounts without ".00", real paise kept; see inr()).
+    $inr = fn ($n, $d = 2) => inr($n, $d);
 
     $c = $quotation->company;
     $cust = $quotation->customer;
@@ -150,9 +151,7 @@
     <table class="header-table">
         <tr>
             <td style="width: 60%;">
-                @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
-                @endif
+                @include('partials.pdf-logo', ['c' => $c])
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted">
                     @if ($c->address_line1){{ $c->address_line1 }}@endif
@@ -183,7 +182,7 @@
             <td class="lbl">Valid until</td>
             <td>{{ $quotation->valid_until?->format('d M Y') ?? '-' }}</td>
             <td class="lbl">Tax mode</td>
-            <td>{{ $quotation->is_interstate ? 'Inter-state (IGST)' : 'Intra-state (CGST + SGST)' }}</td>
+            <td>{{ $quotation->is_interstate ? 'Inter-state (IGST)' : 'Intra-state (CGST + ' . $quotation->stateTaxLabel() . ')' }}</td>
         </tr>
         @if ($quotation->reference)
             <tr>
@@ -267,7 +266,7 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>
-                        <div style="font-weight: 600;">{{ $primary }}</div>
+                        <div style="font-weight: bold;">{{ $primary }}</div>
                         @if ($secondary)
                             <div style="font-size: 9px; color: #555; margin-top: 2px;">{{ $secondary }}</div>
                         @endif
@@ -295,7 +294,7 @@
                 <td class="tr mono">₹ {{ $inr($quotation->total_cgst) }}</td>
             </tr>
             <tr>
-                <td>SGST</td>
+                <td>{{ $quotation->stateTaxLabel() }}</td>
                 <td class="tr mono">₹ {{ $inr($quotation->total_sgst) }}</td>
             </tr>
         @else
@@ -376,8 +375,7 @@
             <tr>
                 <td style="width: 50%;"></td>
                 <td style="width: 50%;" class="tr">
-                    <div class="line">Authorized signatory</div>
-                    <div class="x-small muted" style="margin-top: 2px;">For {{ $c->name }}</div>
+                    @include('partials.pdf-signatory', ['c' => $c])
                 </td>
             </tr>
         </table>

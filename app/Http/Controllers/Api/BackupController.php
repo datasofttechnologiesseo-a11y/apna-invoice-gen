@@ -49,7 +49,7 @@ class BackupController extends Controller
         } catch (\Throwable $e) {
             Log::error('Manual backup email failed: ' . $e->getMessage());
 
-            return response()->json(['message' => 'Could not send backup email right now.'], 422);
+            return response()->json(['message' => 'Backup email could not be sent. Try again later.'], 422);
         } finally {
             @unlink($path);
         }
@@ -67,8 +67,8 @@ class BackupController extends Controller
         return response()->json([
             'auto_backup_enabled' => (bool) $user->auto_backup_enabled,
             'message' => $user->auto_backup_enabled
-                ? "Auto-backup ON. You'll get a weekly ZIP by email."
-                : 'Auto-backup OFF.',
+                ? 'Auto-backup turned on. A ZIP backup will be emailed to you every week.'
+                : 'Auto-backup turned off.',
         ]);
     }
 }

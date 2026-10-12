@@ -11,12 +11,15 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Invoices') }}</h1>
             <div class="flex flex-wrap items-center gap-2">
+                <x-export-toolbar report="sales-register" />
+                @if (\App\Support\Team::can('invoices.gstr1'))
                 <a href="{{ route('invoices.gstr1', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->endOfMonth()->toDateString()]) }}"
                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-white ring-1 ring-gray-300 hover:ring-brand-400 text-gray-700 hover:text-brand-700 text-sm font-medium rounded-md transition"
-                   title="Download invoices in GSTR-1 friendly CSV format for your CA">
+                   title="Download this month's invoices as a GSTR-1 CSV">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                     GSTR-1 (this month)
                 </a>
+                @endif
                 <a href="{{ route('invoices.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     New invoice
@@ -44,7 +47,7 @@
                         all-label="See all invoices matching" />
                     <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
-                        <option value="outstanding" @selected(request('status') === 'outstanding')>⚠ Outstanding (unpaid)</option>
+                        <option value="outstanding" @selected(request('status') === 'outstanding')>Outstanding (unpaid)</option>
                         @foreach (['draft','final','partially_paid','paid','cancelled'] as $s)
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                         @endforeach
@@ -59,7 +62,7 @@
                     </label>
                     <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
                     @if ($hasFilters)
-                        <a href="{{ route('invoices.index') }}" class="text-gray-500 text-sm">clear</a>
+                        <a href="{{ route('invoices.index') }}" class="text-gray-500 text-sm">Clear</a>
                     @endif
                 </form>
                 @endif
@@ -67,8 +70,8 @@
                 @if ($invoices->isEmpty())
                     <x-empty-state
                         icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        :title="$hasFilters ? 'No invoices match that filter' : 'Apna pehla invoice banayein!'"
-                        :description="$hasFilters ? 'Try a different search term or clear the filter.' : '30 seconds, that\'s all. Type the customer name, add the items (we save them as you go), hit Save & Download PDF. Done - share on WhatsApp from the next screen.'"
+                        :title="$hasFilters ? 'No invoices match that filter' : 'No invoices yet'"
+                        :description="$hasFilters ? 'Change the search or clear the filters.' : 'Add the customer and items, then save. Share the PDF on WhatsApp or email from the next screen.'"
                         :actionHref="$hasFilters ? route('invoices.index') : route('invoices.create')"
                         :actionLabel="$hasFilters ? 'Clear filters' : 'Create invoice'"
                         :secondaryHref="$hasFilters ? null : route('invoices.create', ['sample' => 1])"
@@ -103,9 +106,9 @@
                                     <span class="shrink-0 inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium {{ $colors[$inv->status] ?? 'bg-gray-100 text-gray-600' }}">{{ ucfirst(str_replace('_',' ',$inv->status)) }}</span>
                                 </div>
                                 <div class="flex items-baseline justify-between text-sm">
-                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ inr($inv->grand_total) }}</span></span>
+                                    <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ rupees($inv->grand_total) }}</span></span>
                                     @if ((float) $inv->balance > 0)
-                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-accent-700 ml-1">₹{{ inr($inv->balance) }}</span></span>
+                                        <span class="text-gray-500">Balance <span class="font-mono font-semibold text-accent-700 ml-1">₹{{ rupees($inv->balance) }}</span></span>
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-3 pt-1 text-sm">
@@ -116,7 +119,7 @@
                                             :action="route('invoices.destroy', $inv)"
                                             method="DELETE"
                                             title="Delete draft #{{ $inv->id }}?"
-                                            message="This draft and all its line items are permanently deleted. This cannot be undone."
+                                            message="The draft and its line items will be deleted. This cannot be undone."
                                             confirm-label="Delete draft"
                                             confirm-class="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
@@ -158,17 +161,17 @@
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <span>{{ $inv->customer?->name }}</span>
                                             @if ($inv->customer?->gstin)
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-money-50 text-money-700 font-bold uppercase tracking-wider" title="Customer has GSTIN - B2B reportable in GSTR-1">B2B</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-money-50 text-money-700 font-bold uppercase tracking-wider" title="Registered customer. Reported as B2B in GSTR-1.">B2B</span>
                                             @else
-                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer - B2C">B2C</span>
+                                                <span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-bold uppercase tracking-wider" title="Unregistered customer (B2C)">B2C</span>
                                             @endif
                                         </div>
                                         @if ($inv->customer?->phone)
                                             <div class="text-xs text-gray-500 font-mono">{{ $inv->customer->phone }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-right font-mono">₹{{ inr($inv->grand_total) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono">₹{{ inr($inv->balance) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ rupees($inv->grand_total) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">₹{{ rupees($inv->balance) }}</td>
                                     <td class="px-4 py-3">
                                         @php
                                             $colors = [
@@ -191,7 +194,7 @@
                                                 :action="route('invoices.destroy', $inv)"
                                                 method="DELETE"
                                                 title="Delete draft #{{ $inv->id }}?"
-                                                message="This draft and all its line items are permanently deleted. This cannot be undone."
+                                                message="The draft and its line items will be deleted. This cannot be undone."
                                                 confirm-label="Delete draft"
                                                 confirm-class="bg-danger-600 hover:bg-danger-700"
                                                 tone="danger">

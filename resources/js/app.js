@@ -120,7 +120,9 @@ document.addEventListener('submit', (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement)) return;
     if (form.hasAttribute('data-no-submit-state')) return;
-    if ((form.method || 'get').toLowerCase() === 'get') return;
+    // getAttribute, not form.method: a field named "method" (the payment
+    // forms have one) shadows the property with the element itself.
+    if ((form.getAttribute('method') || 'get').toLowerCase() === 'get') return;
 
     // HTML5 validation failed — do not lock the button.
     if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;

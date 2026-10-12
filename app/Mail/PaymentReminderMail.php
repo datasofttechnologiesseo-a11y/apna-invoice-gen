@@ -34,8 +34,8 @@ class PaymentReminderMail extends Mailable
             : $platformFrom;
 
         $subject = $this->daysPastDue <= 0
-            ? 'Friendly reminder — invoice ' . $this->invoice->invoice_number . ' is due'
-            : 'Payment reminder — invoice ' . $this->invoice->invoice_number . ' is ' . $this->daysPastDue . ' days overdue';
+            ? 'Payment reminder: invoice ' . $this->invoice->invoice_number . ' is due'
+            : 'Payment reminder: invoice ' . $this->invoice->invoice_number . ' is ' . $this->daysPastDue . ' days overdue';
 
         return new Envelope(from: $platformFrom, replyTo: [$replyTo], subject: $subject);
     }

@@ -3,9 +3,10 @@
     title="Terms of Service"
     eyebrow="Legal"
     lead="The rules of the road for using Apna Invoice. Plain English where we can, precise where we must."
-    description="Apna Invoice Terms of Service, account rules, acceptable use, GST responsibility, fees, liability, and Indian jurisdiction. Plain English where possible."
+    description="Apna Invoice Terms of Service: account rules, acceptable use, GST responsibility, fees, liability and Indian jurisdiction, in plain English where possible."
     keywords="Apna Invoice terms of service, GST invoice software terms, SaaS terms India, Datasoft Technologies legal, invoice generator terms"
-    type="article">
+    type="article"
+    :legal="true">
 
     <p class="text-sm text-gray-500">Effective: {{ $effective }}</p>
 

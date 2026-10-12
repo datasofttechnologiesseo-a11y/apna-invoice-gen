@@ -49,7 +49,8 @@ class QuotationController extends Controller
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->where('quote_number', 'like', "%{$s}%")
-                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%"));
+                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%")
+                        ->orWhere('gstin', 'like', '%' . strtoupper($s) . '%'));
             }))
             ->orderByDesc('quote_date')
             ->orderByDesc('id')
@@ -66,13 +67,13 @@ class QuotationController extends Controller
 
         if (! $company->state_id) {
             return redirect()->route('company.edit')
-                ->with('status', 'Set your company state before creating quotations.');
+                ->with('warning', 'Set your business state before creating a quotation.');
         }
 
         $customers = $company->customers()->orderBy('name')->get();
         if ($customers->isEmpty()) {
             return redirect()->route('customers.create')
-                ->with('status', 'Add at least one customer before creating a quotation.');
+                ->with('warning', 'Add at least one customer before creating a quotation.');
         }
 
         $states = State::orderBy('name')->get();
@@ -106,6 +107,7 @@ class QuotationController extends Controller
         $data = $this->validateQuotation($request, $company->id);
         $data = $this->hydrateProductDescriptions($data, $company->id);
 
+        $data = $this->applyQuoteDiscount($data);
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
         $result = $this->calculator->recalculate(new \App\Models\Invoice(), $data['items'], $isInterstate);
@@ -139,7 +141,7 @@ class QuotationController extends Controller
         });
 
         AuditLog::record('quotation.created',
-            "Quotation draft created · ₹" . number_format($quotation->grand_total, 2) . " · " . $customer->name,
+            "Quotation draft created · ₹" . inr($quotation->grand_total) . " · " . $customer->name,
             $quotation
         );
 
@@ -159,7 +161,7 @@ class QuotationController extends Controller
         abort_unless($quotation->user_id === $request->user()->id, 403);
         if (! $quotation->isEditable()) {
             return redirect()->route('quotations.show', $quotation)
-                ->with('error', 'This quotation can no longer be edited. Drafts only — once sent, accepted, or converted, quotes become read-only.');
+                ->with('error', 'This quotation can no longer be edited. Only drafts can be changed.');
         }
 
         $company = $quotation->company;
@@ -187,6 +189,7 @@ class QuotationController extends Controller
         $data = $this->validateQuotation($request, $company->id);
         $data = $this->hydrateProductDescriptions($data, $company->id);
 
+        $data = $this->applyQuoteDiscount($data);
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
         $result = $this->calculator->recalculate(new \App\Models\Invoice(), $data['items'], $isInterstate);
@@ -224,7 +227,7 @@ class QuotationController extends Controller
     {
         abort_unless($quotation->user_id === $request->user()->id, 403);
         if (! $quotation->isDraft()) {
-            return redirect()->back()->with('error', 'Only draft quotations can be deleted. Sent quotations are kept for record.');
+            return redirect()->back()->with('error', 'Only draft quotations can be deleted. Sent quotations are kept on record.');
         }
         $snapshot = $quotation->only(['quote_number', 'quote_date', 'grand_total', 'customer_id']);
         $quotation->delete();
@@ -266,7 +269,7 @@ class QuotationController extends Controller
         );
 
         return redirect()->route('quotations.show', $quotation)
-            ->with('status', "Quotation {$quotation->fresh()->quote_number} is now ready to share. Use the WhatsApp / Email links on this page.");
+            ->with('status', "Quotation {$quotation->fresh()->quote_number} is ready to share by WhatsApp or email.");
     }
 
     public function accept(Request $request, Quotation $quotation): RedirectResponse
@@ -280,7 +283,7 @@ class QuotationController extends Controller
             $quotation
         );
         return redirect()->route('quotations.show', $quotation)
-            ->with('status', 'Marked as accepted. You can now convert it to a tax invoice.');
+            ->with('status', 'Quotation marked as accepted. It can now be converted to a tax invoice.');
     }
 
     public function decline(Request $request, Quotation $quotation): RedirectResponse
@@ -311,9 +314,26 @@ class QuotationController extends Controller
     public function convertToInvoice(Request $request, Quotation $quotation): RedirectResponse
     {
         abort_unless($quotation->user_id === $request->user()->id, 403);
-        abort_unless($quotation->canBeConverted(), 422, 'This quotation cannot be converted (already converted or declined).');
+        abort_unless($quotation->canBeConverted(), 422, 'This quotation is already converted or declined, so it cannot be converted.');
 
         $invoice = DB::transaction(function () use ($quotation) {
+            // Taxes are recomputed at conversion, not copied: the quote may be
+            // weeks old, and the customer's state - hence CGST/SGST vs IGST and
+            // the place of supply - is read as it stands today, exactly as a
+            // new invoice would.
+            $isInterstate = $this->calculator->isInterstate($quotation->company?->state_id, $quotation->customer?->state_id);
+            $calc = $this->calculator->recalculate(new Invoice(), $quotation->items->map(fn ($qi) => [
+                'product_id' => $qi->product_id,
+                'description' => $qi->description,
+                'hsn_sac' => $qi->hsn_sac,
+                'quantity' => $qi->quantity,
+                'unit' => $qi->unit,
+                'rate' => $qi->rate,
+                'discount' => $qi->discount,
+                'gst_rate' => $qi->gst_rate,
+            ])->all(), $isInterstate, false);
+            $t = $calc['totals'];
+
             $invoice = Invoice::create([
                 'user_id' => $quotation->user_id,
                 'company_id' => $quotation->company_id,
@@ -321,45 +341,28 @@ class QuotationController extends Controller
                 'invoice_date' => now()->toDateString(),
                 'due_date' => now()->addDays(30)->toDateString(),
                 'place_of_supply_state_id' => $quotation->customer?->state_id,
-                'is_interstate' => $quotation->is_interstate,
+                'is_interstate' => $isInterstate,
                 'reverse_charge' => false,
                 'currency' => $quotation->currency,
                 'exchange_rate' => $quotation->exchange_rate,
                 'status' => 'draft',
-                'subtotal' => $quotation->subtotal,
-                'total_cgst' => $quotation->total_cgst,
-                'total_sgst' => $quotation->total_sgst,
-                'total_igst' => $quotation->total_igst,
-                'total_tax' => $quotation->total_tax,
-                'round_off' => $quotation->round_off,
-                'grand_total' => $quotation->grand_total,
+                'subtotal' => $t['subtotal'],
+                'total_cgst' => $t['total_cgst'],
+                'total_sgst' => $t['total_sgst'],
+                'total_igst' => $t['total_igst'],
+                'total_tax' => $t['total_tax'],
+                'round_off' => $t['round_off'],
+                'grand_total' => $t['grand_total'],
                 'paid_amount' => 0,
-                'balance' => $quotation->grand_total,
+                'balance' => $t['grand_total'],
                 'notes' => $quotation->notes,
                 'terms' => $quotation->terms,
                 'style' => $quotation->style,
             ]);
 
-            foreach ($quotation->items as $qi) {
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'product_id' => $qi->product_id,
-                    'description' => $qi->description,
-                    'hsn_sac' => $qi->hsn_sac,
-                    'quantity' => $qi->quantity,
-                    'unit' => $qi->unit,
-                    'rate' => $qi->rate,
-                    'discount' => $qi->discount,
-                    'gst_rate' => $qi->gst_rate,
-                    'amount' => $qi->amount,
-                    'cgst_amount' => $qi->cgst_amount,
-                    'sgst_amount' => $qi->sgst_amount,
-                    'igst_amount' => $qi->igst_amount,
-                    // Quotation items have no total column; the invoice line's
-                    // Amount (GST-inclusive) reads this, so it must be filled.
-                    'total' => round((float) $qi->amount + (float) $qi->cgst_amount + (float) $qi->sgst_amount + (float) $qi->igst_amount, 2),
-                ]);
-            }
+            // Lines come from the same calculation, so amount, tax heads and
+            // the GST-inclusive total all agree with the invoice totals.
+            $invoice->items()->createMany($calc['items']);
 
             $quotation->update([
                 'status' => 'converted',
@@ -377,7 +380,7 @@ class QuotationController extends Controller
         );
 
         return redirect()->route('invoices.edit', $invoice)
-            ->with('status', "Quotation converted to a draft invoice. Review and click Issue to send the tax invoice.");
+            ->with('status', "Quotation converted to a draft invoice. Check it, then click Issue.");
     }
 
     public function pdf(Request $request, Quotation $quotation): Response
@@ -428,6 +431,26 @@ class QuotationController extends Controller
         return $data;
     }
 
+    /**
+     * Spread the quote-level discount across the lines before tax (same rule
+     * as invoices). Requests carrying per-line discounts are left unchanged.
+     */
+    private function applyQuoteDiscount(array $data): array
+    {
+        if (! array_key_exists('quote_discount', $data)) {
+            return $data;
+        }
+        $gross = collect($data['items'])->sum(fn ($i) => round((float) ($i['quantity'] ?? 0) * (float) ($i['rate'] ?? 0), 2));
+        if ((float) $data['quote_discount'] > $gross + 0.001) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'quote_discount' => 'Discount cannot be more than the items total (₹' . inr($gross) . ').',
+            ]);
+        }
+        $data['items'] = $this->calculator->apportionDiscount($data['items'], (float) ($data['quote_discount'] ?? 0));
+
+        return $data;
+    }
+
     private function validateQuotation(Request $request, int $companyId): array
     {
         return $request->validate([
@@ -456,7 +479,9 @@ class QuotationController extends Controller
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
-            'items.*.gst_rate' => ['required', 'numeric', 'min:0', 'max:50'],
+            // One discount for the whole quote (bottom box), spread before tax.
+            'quote_discount' => ['nullable', 'numeric', 'min:0'],
+            'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
             'items.*.product_id' => ['nullable', 'integer', "exists:products,id,company_id,{$companyId}"],
         ]);
     }

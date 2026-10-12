@@ -1,14 +1,14 @@
-<x-app-layout title="Party Outstanding">
+<x-app-layout title="Receivables aging">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Party Outstanding</h1>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Receivables aging</h1>
                 <p class="text-sm text-gray-500 mt-1">As on {{ $today->format('d M Y') }} · {{ $company->name }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <a href="{{ route('finance.aging.export.pdf') }}"
                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-money-600 hover:bg-money-700 text-white text-sm font-semibold rounded shadow-sm"
-                   title="Download a landscape A4 aging report - perfect for sending to a recovery team or your CA">
+                   title="Landscape A4 aging report for your CA or recovery team">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download PDF
                 </a>
@@ -39,8 +39,8 @@
                     <div class="w-16 h-16 mx-auto rounded-full bg-money-100 text-money-700 flex items-center justify-center">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <h2 class="mt-4 font-display text-xl font-extrabold text-gray-900">All clear - nothing outstanding!</h2>
-                    <p class="mt-2 text-gray-500 max-w-md mx-auto">Every issued invoice is fully paid. When customers fall behind, this page will show you who and by how much.</p>
+                    <h2 class="mt-4 font-display text-xl font-extrabold text-gray-900">Nothing outstanding</h2>
+                    <p class="mt-2 text-gray-500 max-w-md mx-auto">All issued invoices are fully paid.</p>
                     <a href="{{ route('invoices.index') }}" class="mt-6 inline-flex items-center gap-1.5 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg">View all invoices →</a>
                 </div>
             @else
@@ -49,28 +49,28 @@
                 <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
                     <div class="p-5 rounded-xl bg-gradient-to-br from-accent-50 to-accent-50 ring-1 ring-accent-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">Total outstanding</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['total']) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ rupees($summary['total']) }}</div>
                         <div class="mt-1 text-xs text-accent-700">{{ $summary['invoices'] }} {{ Str::plural('invoice', $summary['invoices']) }} · {{ $summary['customers'] }} {{ Str::plural('customer', $summary['customers']) }}</div>
                     </div>
                     <div class="p-5 rounded-xl bg-money-50 ring-1 ring-money-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-money-800">Current (≤ 30 days)</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-money-900 tabular-nums">₹{{ inr($summary['current']) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-money-900 tabular-nums">₹{{ rupees($summary['current']) }}</div>
                         <div class="mt-1 text-xs text-money-700">{{ $summary['total'] > 0 ? round(($summary['current'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
                     <div class="p-5 rounded-xl bg-accent-50 ring-1 ring-accent-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">31 – 60 days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['b30_60']) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ rupees($summary['b30_60']) }}</div>
                         <div class="mt-1 text-xs text-accent-700">{{ $summary['total'] > 0 ? round(($summary['b30_60'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
                     <div class="p-5 rounded-xl bg-accent-50 ring-1 ring-accent-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">61 – 90 days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ inr($summary['b60_90']) }}</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-accent-900 tabular-nums">₹{{ rupees($summary['b60_90']) }}</div>
                         <div class="mt-1 text-xs text-accent-700">{{ $summary['total'] > 0 ? round(($summary['b60_90'] / $summary['total']) * 100) : 0 }}% of total</div>
                     </div>
                     <div class="p-5 rounded-xl bg-danger-50 ring-1 ring-danger-200">
                         <div class="text-[10px] uppercase tracking-wider font-bold text-danger-800">91+ days</div>
-                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-danger-900 tabular-nums">₹{{ inr($summary['b90_plus']) }}</div>
-                        <div class="mt-1 text-xs text-danger-700">{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% - chase / write-off</div>
+                        <div class="mt-1 font-display text-xl sm:text-2xl font-extrabold text-danger-900 tabular-nums">₹{{ rupees($summary['b90_plus']) }}</div>
+                        <div class="mt-1 text-xs text-danger-700">{{ $summary['total'] > 0 ? round(($summary['b90_plus'] / $summary['total']) * 100) : 0 }}% · follow up or write off</div>
                     </div>
                 </div>
 
@@ -80,8 +80,8 @@
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 shrink-0 text-danger-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
                             <div>
-                                <strong>You have ₹{{ inr($summary['b90_plus']) }} overdue by 90+ days.</strong>
-                                These need urgent follow-up - beyond 90 days, recovery probability drops sharply. Consider sending payment reminders or an issuing-credit-note conversation.
+                                <strong>₹{{ rupees($summary['b90_plus']) }} is overdue by more than 90 days.</strong>
+                                Send payment reminders, or settle the balance with a credit note.
                             </div>
                         </div>
                     </div>
@@ -92,7 +92,7 @@
                     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
                         <div>
                             <h2 class="font-display font-bold text-gray-900">By customer</h2>
-                            <p class="text-xs text-gray-500 mt-0.5">Sorted by total outstanding (chase the biggest first)</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Sorted by total outstanding, highest first</p>
                         </div>
                         <span class="text-xs text-gray-500">{{ $byCustomer->count() }} {{ Str::plural('customer', $byCustomer->count()) }}</span>
                     </div>
@@ -124,11 +124,11 @@
                                         <td class="px-5 py-3 text-right font-mono tabular-nums {{ $c['oldest_days'] > 90 ? 'text-danger-700 font-semibold' : ($c['oldest_days'] > 60 ? 'text-accent-700' : ($c['oldest_days'] > 30 ? 'text-accent-700' : 'text-gray-600')) }}">
                                             {{ $c['oldest_days'] }}d
                                         </td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ $c['current'] > 0 ? '₹' . inr($c['current']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-accent-700">{{ $c['b30_60'] > 0 ? '₹' . inr($c['b30_60']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-accent-700">{{ $c['b60_90'] > 0 ? '₹' . inr($c['b60_90']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-danger-700 font-semibold">{{ $c['b90_plus'] > 0 ? '₹' . inr($c['b90_plus']) : '-' }}</td>
-                                        <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900">₹{{ inr($c['total']) }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">{{ $c['current'] > 0 ? '₹' . rupees($c['current']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-accent-700">{{ $c['b30_60'] > 0 ? '₹' . rupees($c['b30_60']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-accent-700">{{ $c['b60_90'] > 0 ? '₹' . rupees($c['b60_90']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono tabular-nums text-danger-700 font-semibold">{{ $c['b90_plus'] > 0 ? '₹' . rupees($c['b90_plus']) : '-' }}</td>
+                                        <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900">₹{{ rupees($c['total']) }}</td>
                                         <td class="px-5 py-3 text-right whitespace-nowrap print:hidden">
                                             <a href="{{ route('customers.ledger', $c['customer_id']) }}" class="text-money-700 hover:underline text-xs font-semibold">Ledger →</a>
                                         </td>
@@ -138,11 +138,11 @@
                             <tfoot class="bg-gray-50 border-t-2 border-gray-900">
                                 <tr>
                                     <td class="px-5 py-3 font-bold uppercase text-xs text-gray-700" colspan="3">TOTAL</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-money-700">₹{{ inr($summary['current']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-accent-700">₹{{ inr($summary['b30_60']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-accent-700">₹{{ inr($summary['b60_90']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-danger-700">₹{{ inr($summary['b90_plus']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900 text-base">₹{{ inr($summary['total']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-money-700">₹{{ rupees($summary['current']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-accent-700">₹{{ rupees($summary['b30_60']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-accent-700">₹{{ rupees($summary['b60_90']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-danger-700">₹{{ rupees($summary['b90_plus']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums text-gray-900 text-base">₹{{ rupees($summary['total']) }}</td>
                                     <td class="px-5 py-3 print:hidden"></td>
                                 </tr>
                             </tfoot>
@@ -162,26 +162,26 @@
                                     @endif
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <div class="font-display text-lg font-extrabold text-gray-900 tabular-nums">₹{{ number_format($c['total']) }}</div>
+                                    <div class="font-display text-lg font-extrabold text-gray-900 tabular-nums">₹{{ rupees($c['total']) }}</div>
                                     <div class="text-[10px] text-gray-500">{{ $c['invoice_count'] }} {{ Str::plural('invoice', $c['invoice_count']) }} · oldest {{ $c['oldest_days'] }}d</div>
                                 </div>
                             </div>
                             <div class="mt-3 grid grid-cols-4 gap-1 text-[10px]">
                                 <div class="px-2 py-1 rounded bg-money-50 text-money-800 text-center">
                                     <div class="font-semibold">≤30d</div>
-                                    <div class="font-mono mt-0.5">{{ $c['current'] > 0 ? '₹' . number_format($c['current']) : '-' }}</div>
+                                    <div class="font-mono mt-0.5">{{ $c['current'] > 0 ? '₹' . rupees($c['current']) : '-' }}</div>
                                 </div>
                                 <div class="px-2 py-1 rounded bg-accent-50 text-accent-800 text-center">
                                     <div class="font-semibold">31–60</div>
-                                    <div class="font-mono mt-0.5">{{ $c['b30_60'] > 0 ? '₹' . number_format($c['b30_60']) : '-' }}</div>
+                                    <div class="font-mono mt-0.5">{{ $c['b30_60'] > 0 ? '₹' . rupees($c['b30_60']) : '-' }}</div>
                                 </div>
                                 <div class="px-2 py-1 rounded bg-accent-50 text-accent-800 text-center">
                                     <div class="font-semibold">61–90</div>
-                                    <div class="font-mono mt-0.5">{{ $c['b60_90'] > 0 ? '₹' . number_format($c['b60_90']) : '-' }}</div>
+                                    <div class="font-mono mt-0.5">{{ $c['b60_90'] > 0 ? '₹' . rupees($c['b60_90']) : '-' }}</div>
                                 </div>
                                 <div class="px-2 py-1 rounded bg-danger-50 text-danger-800 text-center">
                                     <div class="font-semibold">91+</div>
-                                    <div class="font-mono mt-0.5">{{ $c['b90_plus'] > 0 ? '₹' . number_format($c['b90_plus']) : '-' }}</div>
+                                    <div class="font-mono mt-0.5">{{ $c['b90_plus'] > 0 ? '₹' . rupees($c['b90_plus']) : '-' }}</div>
                                 </div>
                             </div>
                             <a href="{{ route('customers.ledger', $c['customer_id']) }}" class="mt-3 inline-block text-xs text-money-700 font-semibold hover:underline">View ledger →</a>
@@ -192,7 +192,7 @@
                 {{-- ─── Invoice-level detail (collapsed by default, opens for power users) ─── --}}
                 <details class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 print:hidden group">
                     <summary class="px-5 py-4 cursor-pointer flex items-center justify-between font-semibold text-gray-900 hover:bg-gray-50 rounded-2xl">
-                        <span>Show invoice-level breakdown ({{ $rows->count() }} {{ Str::plural('invoice', $rows->count()) }})</span>
+                        <span>Invoice-wise breakdown ({{ $rows->count() }} {{ Str::plural('invoice', $rows->count()) }})</span>
                         <svg class="w-5 h-5 text-gray-500 transition group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                     </summary>
                     <div class="overflow-x-auto border-t border-gray-100">
@@ -233,7 +233,7 @@
                                         <td class="px-5 py-3 text-xs text-gray-600">{{ $r['due_date']?->format('d M Y') ?? '-' }}</td>
                                         <td class="px-5 py-3 text-right font-mono tabular-nums">{{ $r['days_overdue'] }}d</td>
                                         <td class="px-5 py-3"><span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded {{ $bucketColor }}">{{ $bucketLabel }}</span></td>
-                                        <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($r['balance']) }}</td>
+                                        <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ rupees($r['balance']) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

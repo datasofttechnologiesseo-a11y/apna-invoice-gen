@@ -3,7 +3,7 @@
     $cust = $quotation->customer;
     $number = $quotation->displayNumber();
     $symbol = ($quotation->currency ?: 'INR') === 'INR' ? '₹' : e($quotation->currency) . ' ';
-    $grand = $symbol . number_format((float) $quotation->grand_total, 2);
+    $grand = $symbol . inr((float) $quotation->grand_total);
     $status = $quotation->effectiveStatus();
     $ogTitle = 'Quotation ' . $number . ' from ' . ($c?->name ?: 'a business') . ' - ' . $grand;
 @endphp

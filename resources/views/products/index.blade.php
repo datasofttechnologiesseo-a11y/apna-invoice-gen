@@ -1,17 +1,52 @@
-<x-app-layout title="Products / Services">
+<x-app-layout title="Items">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">{{ __('Products') }}</h1>
-            <a href="{{ route('products.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm whitespace-nowrap transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                Add new product
-            </a>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Items</h1>
+            <div class="flex flex-wrap items-center gap-2">
+                <x-export-toolbar report="products" :import="route('imports.show', 'products')" />
+                <a href="{{ route('products.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm whitespace-nowrap transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Add item
+                </a>
+            </div>
         </div>
     </x-slot>
 
     <div class="py-10">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash />
+
+            {{-- Inventory at a glance (items that track stock). --}}
+            @if ($inventory)
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <a href="{{ route('reports.show', ['report' => 'stock-summary']) }}" class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm px-4 py-3 hover:ring-brand-300">
+                        <div class="text-xs font-semibold text-gray-500">Stock value</div>
+                        <div class="mt-0.5 font-display text-xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($inventory['value']) }}</div>
+                        <div class="text-xs text-gray-500">at purchase price</div>
+                    </a>
+                    <a href="{{ route('reports.show', ['report' => 'stock-summary']) }}" class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm px-4 py-3 hover:ring-brand-300">
+                        <div class="text-xs font-semibold text-gray-500">Items in stock</div>
+                        <div class="mt-0.5 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $inventory['items'] }}</div>
+                        <div class="text-xs text-brand-700 font-semibold">Stock summary →</div>
+                    </a>
+                    <a href="{{ route('products.index', ['stock' => 'low']) }}" class="rounded-xl bg-white ring-1 shadow-sm px-4 py-3 {{ $inventory['low'] ? 'ring-accent-300 hover:ring-accent-400' : 'ring-gray-200 hover:ring-brand-300' }}">
+                        <div class="text-xs font-semibold text-gray-500">Low stock</div>
+                        <div class="mt-0.5 font-display text-xl font-extrabold tabular-nums {{ $inventory['low'] ? 'text-accent-800' : 'text-gray-900' }}">{{ $inventory['low'] }}</div>
+                        <div class="text-xs text-gray-500">at or below reorder level</div>
+                    </a>
+                    <a href="{{ route('products.index', ['stock' => 'out']) }}" class="rounded-xl bg-white ring-1 shadow-sm px-4 py-3 {{ $inventory['out'] ? 'ring-danger-300 hover:ring-danger-400' : 'ring-gray-200 hover:ring-brand-300' }}">
+                        <div class="text-xs font-semibold text-gray-500">Out of stock</div>
+                        <div class="mt-0.5 font-display text-xl font-extrabold tabular-nums {{ $inventory['out'] ? 'text-danger-700' : 'text-gray-900' }}">{{ $inventory['out'] }}</div>
+                        <div class="text-xs text-gray-500">nothing left to sell</div>
+                    </a>
+                </div>
+            @endif
+            @if (in_array(request('stock'), ['low', 'out'], true))
+                <div class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg bg-accent-50 ring-1 ring-accent-200 text-sm text-accent-900">
+                    <span>Showing items that are <strong>{{ request('stock') === 'out' ? 'out of stock' : 'low on stock' }}</strong>.</span>
+                    <a href="{{ route('products.index') }}" class="font-semibold underline">Show all items</a>
+                </div>
+            @endif
 
             <div class="bg-white shadow sm:rounded-lg">
                 {{-- Nothing to filter until there is something in the list. Showing an
@@ -22,7 +57,8 @@
                     // the clear link and the empty state. Landing on In use is the
                     // ordinary view of a catalogue, not a filter someone applied,
                     // so it only counts once the tab has been moved off it.
-                    $hasFilters = filled(request('search')) || filled(request('kind')) || $status !== 'active';
+                    $stockFilter = in_array(request('stock'), ['low', 'out'], true) ? request('stock') : null;
+                    $hasFilters = filled(request('search')) || filled(request('kind')) || $status !== 'active' || $stockFilter !== null;
                     $tabs = ['active' => 'In use', 'archived' => 'Archived', 'all' => 'All'];
                 @endphp
 
@@ -48,7 +84,7 @@
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, SKU or HSN/SAC" class="w-full sm:w-80 border-gray-300 rounded-md shadow-sm" aria-label="Search name, SKU or HSN/SAC">
                         {{-- max-w-full: the long "Service (SAC …)" option otherwise sets an
                              intrinsic width wider than small phone viewports. --}}
-                        <select name="kind" class="border-gray-300 rounded-md shadow-sm max-w-full" onchange="this.form.submit()">
+                        <select name="kind" aria-label="Filter by kind" class="border-gray-300 rounded-md shadow-sm max-w-full" onchange="this.form.submit()">
                             <option value="">All kinds</option>
                             @foreach (config('uqc_units.kinds') as $k => $label)
                                 <option value="{{ $k }}" @selected(request('kind') === $k)>{{ $label }}</option>
@@ -56,7 +92,7 @@
                         </select>
                         <button class="px-3 py-1.5 bg-brand-700 text-white rounded text-sm hover:bg-brand-800">Filter</button>
                         @if ($hasFilters)
-                            <a href="{{ route('products.index') }}" class="text-gray-500 text-sm">clear</a>
+                            <a href="{{ route('products.index') }}" class="text-gray-500 text-sm">Clear</a>
                         @endif
                     </form>
                 </div>
@@ -68,9 +104,9 @@
                 @if ($status === 'archived')
                     <div class="px-4 py-3 bg-accent-50 border-b border-accent-200 text-sm text-accent-900">
                         <strong>Archived is not deleted.</strong>
-                        A product lands here when you remove one that has already been on an invoice - those bills are untouched, and your GST records stay complete.
-                        The only thing archiving changes is that the product stops being offered when you make a new invoice.
-                        <span class="block mt-1">Press <strong>Restore</strong> on any row to put it back in use.</span>
+                        Deleting a product already used on an invoice archives it; those invoices do not change.
+                        Archived products are not offered on new invoices.
+                        <span class="block mt-1">Use <strong>Restore</strong> on a row to bring it back into use.</span>
                     </div>
                 @endif
 
@@ -81,17 +117,25 @@
                         <x-empty-state
                             icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                             title="Nothing is archived"
-                            description="Products you retire land here. Deleting one that has already been on an invoice archives it instead: the invoice keeps its line, and the product simply stops being offered on new ones. Nothing has been archived yet."
+                            description="Deleting a product already used on an invoice archives it instead."
                             :actionHref="route('products.index')"
                             actionLabel="Back to products in use"
                         />
+                    @elseif ($stockFilter)
+                    <x-empty-state
+                        icon="M5 13l4 4L19 7"
+                        :title="$stockFilter === 'low' ? 'Nothing is low on stock' : 'Nothing is out of stock'"
+                        :description="$stockFilter === 'low' ? 'An item shows here when its stock falls to the low stock level set on the item.' : 'An item shows here when its stock runs out.'"
+                        :actionHref="route('products.index')"
+                        actionLabel="Show all items"
+                    />
                     @else
                     <x-empty-state
                         icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                        :title="$hasFilters ? 'No products match that filter' : 'Save the things you sell'"
-                        :description="$hasFilters ? 'Try a different search term or clear the filter.' : 'Save the name, HSN or SAC code, unit, price and GST rate once. After that, typing the first few letters on an invoice fills in the rest. You can also add a product while making an invoice, without coming back here.'"
+                        :title="$hasFilters ? 'No products match the filter' : 'No products yet'"
+                        :description="$hasFilters ? 'Change the search or clear the filter.' : 'Save HSN/SAC, unit, price and GST rate once and they fill in on invoices. Products can also be added from the invoice form.'"
                         :actionHref="$hasFilters ? route('products.index') : route('products.create')"
-                        :actionLabel="$hasFilters ? 'Clear filters' : 'Add your first product'"
+                        :actionLabel="$hasFilters ? 'Clear filters' : 'Add product'"
                     />
                     @endif
                 @else
@@ -104,6 +148,7 @@
                                 <th class="px-4 py-3">Kind</th>
                                 <th class="px-4 py-3">HSN/SAC</th>
                                 <th class="px-4 py-3">Unit</th>
+                                <th class="px-4 py-3 text-right">In stock</th>
                                 <th class="px-4 py-3 text-right">Rate (₹)</th>
                                 <th class="px-4 py-3 text-right">GST</th>
                                 <th class="px-4 py-3"></th>
@@ -116,16 +161,35 @@
                                         {{ $p->name }}
                                         @unless ($p->is_active)
                                             <span class="ml-2 text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-600 uppercase tracking-wider"
-                                                  title="Kept for the invoices that already use it, but not offered when you make a new one. Press Restore to bring it back.">Archived</span>
+                                                  title="Kept for existing invoices; not offered on new ones.">Archived</span>
                                         @endunless
                                     </td>
                                     <td class="px-4 py-3 text-gray-600 font-mono text-sm">{{ $p->sku ?? '-' }}</td>
                                     <td class="px-4 py-3 text-sm">{{ ucfirst($p->kind) }}</td>
                                     <td class="px-4 py-3 font-mono text-sm">{{ $p->hsn_sac }}</td>
                                     <td class="px-4 py-3 text-sm">{{ $p->unit }}</td>
+                                    <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
+                                        @if ($p->track_stock)
+                                            @php $onHand = $p->stockOnHand(); $low = $p->low_stock_level !== null && $onHand <= (float) $p->low_stock_level; @endphp
+                                            <a href="{{ route('products.stock', $p) }}" title="Stock history and adjustments"
+                                               class="font-mono font-semibold hover:underline {{ $onHand < 0 || $low ? 'text-danger-700' : 'text-gray-900' }}">{{ rtrim(rtrim(number_format($onHand, 3, '.', ''), '0'), '.') }}</a>
+                                            @if ($onHand < 0)
+                                                <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-danger-100 text-danger-800 font-bold uppercase">Short</span>
+                                            @elseif ($low)
+                                                <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-danger-100 text-danger-800 font-bold uppercase">Low</span>
+                                            @endif
+                                        @elseif ($p->kind === 'service')
+                                            <span class="text-gray-400" aria-label="Not applicable for a service">-</span>
+                                        @else
+                                            <a href="{{ route('products.edit', $p) }}#stock" class="text-gray-500 hover:text-brand-700 hover:underline" title="Turn on stock tracking for this item">Not tracked</a>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-right font-mono">₹{{ inr($p->rate) }}</td>
                                     <td class="px-4 py-3 text-right text-sm">{{ rtrim(rtrim(number_format((float) $p->gst_rate, 2, '.', ''), '0'), '.') }}%</td>
-                                    <td class="px-4 py-3 text-right space-x-2">
+                                    <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                                        @if ($p->track_stock)
+                                            <a href="{{ route('products.stock', $p) }}" class="text-brand-700 hover:underline text-sm" title="Add or remove stock, and see its history">Stock</a>
+                                        @endif
                                         <a href="{{ route('products.edit', $p) }}" class="text-brand-700 hover:underline text-sm">Edit</a>
                                         @if ($p->is_active)
                                             {{-- invoice_items_count is eager-loaded by the
@@ -136,7 +200,7 @@
                                                 :action="route('products.destroy', $p)"
                                                 method="DELETE"
                                                 title="{{ $willArchive ? 'Archive' : 'Delete' }} {{ $p->name }}?"
-                                                message="{{ $willArchive ? 'This product is on ' . $p->invoice_items_count . ' invoice line' . ($p->invoice_items_count === 1 ? '' : 's') . ', so it gets archived rather than deleted. Those invoices do not change. It stops being offered when you make a new invoice, and you can restore it from the Archived tab whenever you want it back.' : 'This product has never been on an invoice, so there is nothing to keep - it is deleted for good.' }}"
+                                                message="{{ $willArchive ? 'This product is on ' . $p->invoice_items_count . ' invoice line' . ($p->invoice_items_count === 1 ? '' : 's') . ', so it will be archived, not deleted. Those invoices do not change. It will not be offered on new invoices; restore it any time from the Archived tab.' : 'This product has never been on an invoice, so it will be deleted. This cannot be undone.' }}"
                                                 confirm-label="{{ $willArchive ? 'Archive' : 'Delete' }} product"
                                                 confirm-class="{{ $willArchive ? 'bg-accent-600 hover:bg-accent-700' : 'bg-danger-600 hover:bg-danger-700' }}"
                                                 tone="{{ $willArchive ? 'warning' : 'danger' }}">

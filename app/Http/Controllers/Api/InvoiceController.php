@@ -56,6 +56,18 @@ class InvoiceController extends Controller
         return InvoiceListResource::collection($invoices);
     }
 
+    /** Same rule as the web form: an advance cannot be more than the bill. */
+    private function guardPaidAmount(array $data, array $calc): void
+    {
+        $paid = round((float) ($data['paid_amount'] ?? 0), 2);
+        $grand = (float) $calc['totals']['grand_total'];
+        if ($paid > $grand + 0.001) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'paid_amount' => 'Paid amount (₹' . inr($paid) . ') cannot be more than the grand total (₹' . inr($grand) . ').',
+            ]);
+        }
+    }
+
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -64,11 +76,13 @@ class InvoiceController extends Controller
         $data = $this->hydrateProductDescriptions($data, $company->id);
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
-        $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $reverseCharge = (bool) ($data['reverse_charge'] ?? false);
-        $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $reverseCharge);
+        $supplyType = $data['supply_type'] ?? 'regular';
+        \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
+        [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $noTax);
+        $this->guardPaidAmount($data, $calc);
 
-        $invoice = DB::transaction(function () use ($user, $company, $customer, $data, $calc, $isInterstate) {
+        $invoice = DB::transaction(function () use ($user, $company, $customer, $data, $calc, $isInterstate, $supplyType) {
             $invoice = $user->invoices()->create([
                 'company_id' => $company->id,
                 'customer_id' => $customer->id,
@@ -78,6 +92,7 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
+                ...\App\Support\ZeroRatedSupply::attributes($supplyType, $data),
                 'transporter_name' => $data['transporter_name'] ?? null,
                 'transporter_id' => $data['transporter_id'] ?? null,
                 'vehicle_number' => $data['vehicle_number'] ?? null,
@@ -150,11 +165,14 @@ class InvoiceController extends Controller
         $data = $this->validateInvoice($request, $company);
         $data = $this->hydrateProductDescriptions($data, $company->id);
         $customer = $company->customers()->findOrFail($data['customer_id']);
-        $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $reverseCharge = (bool) ($data['reverse_charge'] ?? false);
-        $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $reverseCharge);
+        // Left out of an update, the draft keeps its supply type.
+        $supplyType = $data['supply_type'] ?? ($invoice->supply_type ?: 'regular');
+        \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
+        [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $noTax);
+        $this->guardPaidAmount($data, $calc);
 
-        DB::transaction(function () use ($invoice, $customer, $data, $calc, $isInterstate) {
+        DB::transaction(function () use ($invoice, $customer, $data, $calc, $isInterstate, $supplyType) {
             $paid = (float) ($data['paid_amount'] ?? 0);
             $invoice->update([
                 'customer_id' => $customer->id,
@@ -163,6 +181,7 @@ class InvoiceController extends Controller
                 'place_of_supply_state_id' => $customer->state_id,
                 'is_interstate' => $isInterstate,
                 'reverse_charge' => (bool) ($data['reverse_charge'] ?? false),
+                ...\App\Support\ZeroRatedSupply::attributes($supplyType, $data),
                 'transporter_name' => $data['transporter_name'] ?? null,
                 'transporter_id' => $data['transporter_id'] ?? null,
                 'vehicle_number' => $data['vehicle_number'] ?? null,
@@ -217,6 +236,9 @@ class InvoiceController extends Controller
             $invoice->only(['invoice_number', 'invoice_date', 'grand_total', 'status', 'cancelled_at', 'cancellation_reason'])
         );
 
+        // A quotation converted into this invoice is open again, as on the web.
+        \App\Models\Quotation::where('converted_to_invoice_id', $invoice->id)
+            ->update(['status' => 'accepted', 'converted_to_invoice_id' => null, 'converted_at' => null]);
         $invoice->delete();
 
         return response()->json(['message' => 'Invoice deleted.']);
@@ -235,14 +257,34 @@ class InvoiceController extends Controller
         if ((float) $invoice->grand_total <= 0) {
             return response()->json(['message' => 'Cannot issue a zero-amount invoice.'], 422);
         }
+        // Same guard as the web path: without the business's own state the
+        // calculator cannot tell CGST/SGST from IGST, so a taxed invoice could
+        // go out with the wrong heads.
+        if (! $invoice->company->state_id && ((float) $invoice->total_tax > 0 || $invoice->company->gstin)) {
+            return response()->json([
+                'message' => 'Business state is not set, so CGST/SGST or IGST cannot be worked out. Set it in Company settings, then save this draft again before issuing it.',
+            ], 422);
+        }
         if ($invoice->company->isBooksLockedOn($invoice->invoice_date)) {
             return response()->json([
                 'message' => "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot issue an invoice dated on or before that.",
             ], 422);
         }
 
-        DB::transaction(function () use ($invoice) {
+        if ($invoice->taxBasisIsStale()) {
+            return response()->json([
+                'message' => "The customer's state or your business state has changed since this draft was saved. Save the draft again to update the GST split, then issue it.",
+            ], 422);
+        }
+
+        $issued = DB::transaction(function () use ($invoice) {
             $company = $invoice->company()->lockForUpdate()->first();
+            // A retried or double-sent request waits here; the invoice may be
+            // issued by then and must not be numbered a second time.
+            $invoice->refresh();
+            if (! $invoice->isDraft()) {
+                return false;
+            }
 
             // Same rule as the web path: a number the business already put on
             // the draft is kept, and the series is carried forward from it.
@@ -267,13 +309,27 @@ class InvoiceController extends Controller
 
             $invoice->update([
                 'invoice_number' => $number,
+                'place_of_supply_state_id' => $invoice->placeOfSupplyForIssue(),
                 'status' => (float) $invoice->paid_amount >= (float) $invoice->grand_total ? 'paid' : ((float) $invoice->paid_amount > 0 ? 'partially_paid' : 'final'),
                 'finalized_at' => now(),
             ]);
+
+            // Same as the web path: freeze the recipient as printed, and turn
+            // the draft's advance into a receipt so later recomputes keep it.
+            $invoice->snapshotCustomer();
+            $invoice->bookAdvanceAsPayment();
+            // Items that track stock leave the shelf when the invoice is issued.
+            app(\App\Services\StockLedger::class)->recordInvoice($invoice);
+
+            return true;
         });
 
+        if (! $issued) {
+            return new InvoiceResource($invoice->fresh(['items', 'customer.state', 'payments']));
+        }
+
         AuditLog::record('invoice.finalized',
-            "Invoice {$invoice->fresh()->invoice_number} finalized · ₹" . number_format($invoice->grand_total, 2),
+            "Invoice {$invoice->fresh()->invoice_number} finalized · ₹" . inr($invoice->grand_total),
             $invoice
         );
 
@@ -299,14 +355,27 @@ class InvoiceController extends Controller
             'cancellation_reason' => ['required', 'string', 'min:5', 'max:500'],
         ]);
 
-        $invoice->update([
-            'status' => 'cancelled',
-            'cancelled_at' => now(),
-            'cancellation_reason' => $data['cancellation_reason'],
-        ]);
+        $cancelled = DB::transaction(function () use ($invoice, $data) {
+            $invoice->company()->lockForUpdate()->first();
+            $invoice->refresh();
+            if (! $invoice->canBeCancelled()) {
+                return false;
+            }
+            $invoice->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'cancellation_reason' => $data['cancellation_reason'],
+            ]);
+            app(\App\Services\StockLedger::class)->reverseInvoice($invoice);
+
+            return true;
+        });
+        if (! $cancelled) {
+            return response()->json(['message' => 'This invoice can no longer be cancelled. A payment or credit note was just recorded against it.'], 422);
+        }
 
         AuditLog::record('invoice.cancelled',
-            "Invoice {$invoice->invoice_number} cancelled · ₹" . number_format($invoice->grand_total, 2) . " · Reason: " . $data['cancellation_reason'],
+            "Invoice {$invoice->invoice_number} cancelled · ₹" . inr($invoice->grand_total) . " · Reason: " . $data['cancellation_reason'],
             $invoice,
             ['reason' => $data['cancellation_reason'], 'grand_total' => $invoice->grand_total]
         );
@@ -395,7 +464,7 @@ class InvoiceController extends Controller
         if ($record->status === 'skipped') {
             return response()->json([
                 'status' => 'skipped',
-                'message' => $record->error ?: 'No reminder needed — invoice is already settled.',
+                'message' => $record->error ?: 'No reminder sent. This invoice is already settled.',
             ]);
         }
 
@@ -418,7 +487,8 @@ class InvoiceController extends Controller
             return response()->json(['message' => 'Cancelled invoices cannot accept payments.'], 422);
         }
 
-        $remaining = max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount - (float) $invoice->credited_amount);
+        // Rounded to paise: an unrounded float tail made the last ₹0.10 unpayable.
+        $remaining = round(max(0, (float) $invoice->grand_total - (float) $invoice->paid_amount - (float) $invoice->credited_amount), 2);
         $methods = array_keys(config('payment_methods.methods'));
 
         $data = $request->validate([
@@ -432,8 +502,25 @@ class InvoiceController extends Controller
             'tds_rate' => ['nullable', 'numeric', 'min:0', 'max:30'],
         ]);
 
+        if ($invoice->company->isBooksLockedOn($data['received_at'])) {
+            return response()->json([
+                'message' => "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Date the receipt after that.",
+                'errors' => ['received_at' => ['Inside the locked period.']],
+            ], 422);
+        }
+
         $payment = DB::transaction(function () use ($invoice, $data) {
             $company = $invoice->company()->lockForUpdate()->first();
+
+            // Checked again under the lock: two sends of the same payment must not both go through.
+            $invoice->refresh();
+            $owed = round((float) $invoice->grand_total - (float) $invoice->payments()->sum('amount') - (float) $invoice->credited_amount, 2);
+            if ($invoice->isDraft() || $invoice->status === 'cancelled' || (float) $data['amount'] > $owed + 0.001) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'amount' => 'Only ₹' . inr(max(0, $owed)) . ' is still owed on this invoice.',
+                ]);
+            }
+
             $company->increment('receipt_counter');
 
             $receiptNumber = $company->receipt_prefix . '-' .
@@ -466,7 +553,7 @@ class InvoiceController extends Controller
         });
 
         AuditLog::record('payment.recorded',
-            "₹" . number_format($payment->amount, 2) . " · " . strtoupper($payment->method) . " · Receipt {$payment->receipt_number} · Invoice {$invoice->invoice_number}",
+            "₹" . inr($payment->amount) . " · " . strtoupper($payment->method) . " · Receipt {$payment->receipt_number} · Invoice {$invoice->invoice_number}",
             $payment
         );
 
@@ -503,7 +590,7 @@ class InvoiceController extends Controller
         });
 
         AuditLog::record('payment.reversed',
-            "Receipt {$snapshot['receipt_number']} reversed · ₹" . number_format($snapshot['amount'], 2) . " · Invoice {$invoice->invoice_number}",
+            "Receipt {$snapshot['receipt_number']} reversed · ₹" . inr($snapshot['amount']) . " · Invoice {$invoice->invoice_number}",
             $invoice, $snapshot
         );
 
@@ -561,6 +648,7 @@ class InvoiceController extends Controller
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'currency' => ['nullable', 'string', 'size:3'],
             'reverse_charge' => ['nullable', 'boolean'],
+            ...\App\Support\ZeroRatedSupply::rules(),
             'style' => ['nullable', 'string', 'in:' . implode(',', array_keys(config('invoice_styles')))],
             'transporter_name' => ['nullable', 'string', 'max:120'],
             'transporter_id' => ['nullable', 'string', 'max:40'],

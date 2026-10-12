@@ -1,4 +1,4 @@
 <x-errors.minimal
     code="500"
-    title="Something went wrong"
-    message="A server error occurred on our side. We've been notified - try refreshing in a minute, or email support if it persists." />
+    title="Server error"
+    message="An error occurred on our side. Try again in a few minutes. If it continues, contact support." />

@@ -47,6 +47,7 @@ class CustomerController extends Controller
 
         $invoices = $customer->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
+            ->with(['payments', 'creditNotes']) // read per invoice below
             ->orderBy('invoice_date')
             ->orderBy('id')
             ->get();
@@ -85,7 +86,7 @@ class CustomerController extends Controller
                     'date' => $cn->credit_note_date,
                     'type' => 'credit_note',
                     'ref' => $cn->credit_note_number,
-                    'particulars' => 'Credit note · ' . ($cn->reason ?? ''),
+                    'particulars' => 'Credit note · ' . $cn->reasonLabel(),
                     'debit' => 0.0,
                     'credit' => (float) $cn->amount,
                 ]);
@@ -138,7 +139,9 @@ class CustomerController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
         ]);
 
-        $data['country'] = 'India';
+        // Quick-add has no country box: a customer put in "Foreign Country"
+        // (GST code 96) is abroad, not in India - edit the country later.
+        $data['country'] = \App\Models\State::whereKey($data['state_id'])->value('gst_code') === '96' ? 'Outside India' : 'India';
         $data['company_id'] = $company->id;
         $customer = $user->customers()->create($data);
         $customer->load('state');
@@ -177,7 +180,7 @@ class CustomerController extends Controller
         abort_unless($customer->user_id === $request->user()->id, 403);
 
         if ($customer->invoices()->exists()) {
-            return back()->withErrors(['customer' => 'Cannot delete — customer has invoices.']);
+            return back()->withErrors(['customer' => 'This customer has invoices and cannot be deleted.']);
         }
 
         $customer->delete();

@@ -28,31 +28,12 @@ class FinanceController extends Controller
         $company = $request->user()->ensureCompany();
         [$start, $end, $label, $key] = $this->resolvePeriod($request);
 
-        $invoicesInPeriod = $company->invoices()
-            ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$start, $end]);
-
-        $revenue = [
-            'taxable' => (float) (clone $invoicesInPeriod)->sum('subtotal'),
-            'gst_collected' => (float) (clone $invoicesInPeriod)->sum('total_tax'),
-            'grand_total' => (float) (clone $invoicesInPeriod)->sum('grand_total'),
-            'received' => (float) (clone $invoicesInPeriod)->sum('paid_amount'),
-            'outstanding' => (float) $company->invoices()
-                ->whereIn('status', ['final', 'partially_paid'])
-                ->sum('balance'),
-        ];
-
+        // Same figures as the web P&L (App\Services\ProfitAndLoss): net of
+        // credit notes, blocked credit as cost, purchase invoices by payment.
+        $pnl = app(\App\Services\ProfitAndLoss::class)->summary($company, $start, $end);
+        ['revenue' => $revenue, 'expense' => $expense, 'netProfit' => $netProfit, 'margin' => $margin,
+            'cashInHand' => $cashInHand, 'gstPayable' => $gstPayable] = $pnl;
         $expensesInPeriod = $company->expenses()->whereBetween('entry_date', [$start, $end]);
-        $expense = [
-            'taxable' => (float) (clone $expensesInPeriod)->sum('amount'),
-            'gst_itc' => (float) (clone $expensesInPeriod)->sum('gst_amount'),
-        ];
-        $expense['cash_out'] = $expense['taxable'] + $expense['gst_itc'];
-
-        $netProfit = $revenue['taxable'] - $expense['taxable'];
-        $margin = $revenue['taxable'] > 0 ? ($netProfit / $revenue['taxable']) * 100 : 0;
-        $cashInHand = $revenue['received'] - $expense['cash_out'];
-        $gstPayable = $revenue['gst_collected'] - $expense['gst_itc'];
 
         $byCategory = (clone $expensesInPeriod)
             ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
@@ -135,12 +116,14 @@ class FinanceController extends Controller
     public function gstr3b(Request $request): JsonResponse
     {
         $company = $request->user()->ensureCompany();
-        [$start, $end, $label] = $this->resolveGstr3bPeriod($request);
+        [$start, $end, $label, $period] = $this->resolveGstr3bPeriod($request);
 
         $data = $this->buildGstr3b($company, $start, $end);
 
         return response()->json(array_merge($data, [
-            'period' => ['start' => $start->toDateString(), 'end' => $end->toDateString(), 'label' => $label, 'month' => $start->format('Y-m')],
+            'period' => ['start' => $start->toDateString(), 'end' => $end->toDateString(), 'label' => $label, 'month' => $start->format('Y-m'),
+                'frequency' => $period->quarterly ? 'quarterly' : 'monthly',
+                'due_date' => $period->gstr3bDue($company->state?->gst_code)->toDateString()],
         ]));
     }
 
@@ -156,6 +139,7 @@ class FinanceController extends Controller
             ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->with('customer:id,name,gstin')
             ->get();
+        $built = app(\App\Services\Gstr1Builder::class)->build($company, $from, $to);
 
         $summarise = function ($group) {
             return [
@@ -168,14 +152,18 @@ class FinanceController extends Controller
             ];
         };
 
-        $b2b = $invoices->filter(fn ($i) => ! empty($i->customer?->gstin));
-        $b2c = $invoices->reject(fn ($i) => ! empty($i->customer?->gstin));
+        // B2B by the GSTIN on the invoice as issued, not the customer row today.
+        $b2b = $invoices->filter(fn ($i) => ! empty($i->billedCustomer()?->gstin));
+        $b2c = $invoices->reject(fn ($i) => ! empty($i->billedCustomer()?->gstin));
 
         return response()->json([
             'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
             'b2b' => $summarise($b2b),
             'b2c' => $summarise($b2c),
             'all' => $summarise($invoices),
+            // Table-wise GSTR-1 and the net figures GSTR-3B 3.1 takes from it.
+            'tables' => $built['tables'],
+            'gstr3b_outward' => $built['summary'],
         ]);
     }
 
@@ -249,63 +237,31 @@ class FinanceController extends Controller
         });
     }
 
+    /**
+     * Same figures as the web GSTR-3B (App\Services\Gstr3bBuilder), under the
+     * snake_case keys API clients already read; the newer rows are added
+     * alongside, never in place of, the old keys.
+     */
     private function buildGstr3b(Company $company, Carbon $from, Carbon $to): array
     {
-        $invoices = $company->invoices()
-            ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get();
-
-        $regular = $invoices->where('reverse_charge', false);
-        $rcm = $invoices->where('reverse_charge', true);
-
-        $outward = [
-            'taxable' => round((float) $regular->sum('subtotal'), 2),
-            'igst' => round((float) $regular->sum('total_igst'), 2),
-            'cgst' => round((float) $regular->sum('total_cgst'), 2),
-            'sgst' => round((float) $regular->sum('total_sgst'), 2),
-        ];
-
-        $rcm_outward = [
-            'taxable' => round((float) $rcm->sum('subtotal'), 2),
-            'igst' => 0.0,
-            'cgst' => 0.0,
-            'sgst' => 0.0,
-        ];
-
-        $expensesInPeriod = $company->expenses()
-            ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get(['gst_amount', 'is_interstate']);
-
-        $intraExpenseGst = (float) $expensesInPeriod->where('is_interstate', false)->sum('gst_amount');
-        $interExpenseGst = (float) $expensesInPeriod->where('is_interstate', true)->sum('gst_amount');
-
-        $cashMemos = $company->cashMemos()
-            ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get();
-
-        $itc = [
-            'igst' => round((float) $cashMemos->sum('total_igst') + $interExpenseGst, 2),
-            'cgst' => round((float) $cashMemos->sum('total_cgst') + ($intraExpenseGst / 2), 2),
-            'sgst' => round((float) $cashMemos->sum('total_sgst') + ($intraExpenseGst / 2), 2),
-        ];
-        $itc['total'] = round($itc['igst'] + $itc['cgst'] + $itc['sgst'], 2);
-
-        $netCash = [
-            'igst' => round(max(0, $outward['igst'] - $itc['igst']), 2),
-            'cgst' => round(max(0, $outward['cgst'] - $itc['cgst']), 2),
-            'sgst' => round(max(0, $outward['sgst'] - $itc['sgst']), 2),
-        ];
-        $netCash['total'] = round($netCash['igst'] + $netCash['cgst'] + $netCash['sgst'], 2);
+        $d = app(\App\Services\Gstr3bBuilder::class)->build($company, $from, $to);
 
         return [
-            'outward' => $outward,
-            'rcm_outward' => $rcm_outward,
-            'itc' => $itc,
-            'net_cash' => $netCash,
-            'invoice_count' => $invoices->count(),
-            'expense_count' => $company->expenses()->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
-            'cash_memo_count' => $cashMemos->count(),
+            'outward' => $d['outward'],
+            'outward_nil' => $d['outward_nil'],
+            'outward_zero' => $d['outward_zero'],
+            'rcm_inward' => $d['rcm_inward'],
+            'purchase_bill_count' => $d['purchaseBillCount'],
+            'itc' => $d['itc'],
+            'itc_rcm' => $d['itc_rcm'],
+            'itc_other' => $d['itc_other'],
+            'itc_used' => $d['itc_used'],
+            'net_cash' => $d['netCash'],
+            'itc_carried' => $d['itc_carried'],
+            'invoice_count' => $d['invoiceCount'],
+            'credit_note_count' => $d['creditNoteCount'],
+            'expense_count' => $d['expenseCount'],
+            'cash_memo_count' => $d['cashMemoCount'],
         ];
     }
 
@@ -366,15 +322,9 @@ class FinanceController extends Controller
 
     private function resolveGstr3bPeriod(Request $request): array
     {
-        $month = $request->input('month');
-        if ($month && preg_match('/^\d{4}-\d{2}$/', $month)) {
-            $start = Carbon::parse($month . '-01')->startOfMonth();
-        } else {
-            $start = now()->subMonthNoOverflow()->startOfMonth();
-        }
-        $end = $start->copy()->endOfMonth();
+        $period = \App\Support\ReturnPeriod::fromRequest($request);
 
-        return [$start, $end, $start->format('F Y')];
+        return [$period->start, $period->end, $period->label(), $period];
     }
 
     private function resolvePeriod(Request $request): array

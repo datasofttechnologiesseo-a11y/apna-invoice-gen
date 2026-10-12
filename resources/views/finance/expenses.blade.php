@@ -1,8 +1,8 @@
-<x-app-layout title="Purchases &amp; Expenses">
+<x-app-layout title="Expenses">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Purchases &amp; Expenses</h1>
+                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Expenses</h1>
                 <p class="text-sm text-gray-500 mt-1">{{ $expenses->total() }} entries · {{ $periodLabel }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -11,7 +11,7 @@
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Cash Memos
                 </a>
-                <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ Add purchase</a>
+                <a href="{{ route('finance.expenses.create') }}" class="inline-flex items-center px-3 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ Add expense</a>
             </div>
         </div>
     </x-slot>
@@ -41,8 +41,6 @@
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
-
-            @include('partials.sales-tabs', ['active' => 'purchases', 'stats' => $salesStats ?? []])
 
             @include('finance.partials.tabs')
 
@@ -78,7 +76,7 @@
                             <label class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">To</label>
                             <input type="date" name="to" aria-label="To date" value="{{ request('to', $periodEnd->toDateString()) }}" class="border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600">
                         </div>
-                        <button class="px-3 py-2 bg-gray-800 text-white rounded text-sm">Apply custom</button>
+                        <button class="px-3 py-2 bg-gray-800 text-white rounded text-sm">Apply</button>
                     </form>
                 </div>
 
@@ -112,19 +110,19 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 print:hidden">
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Entries</div>
-                    <div class="mt-1 text-2xl font-bold text-gray-900">{{ number_format($summary['count']) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-gray-900">{{ \App\Support\IndianNumber::format($summary['count'], 0) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Taxable value</div>
-                    <div class="mt-1 text-2xl font-bold text-gray-900 font-mono tabular-nums">₹{{ inr($summary['taxable']) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-gray-900 font-mono tabular-nums">₹{{ rupees($summary['taxable']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">GST (Input Tax Credit)</div>
-                    <div class="mt-1 text-2xl font-bold text-money-700 font-mono tabular-nums">₹{{ inr($summary['gst']) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-money-700 font-mono tabular-nums">₹{{ rupees($summary['gst']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Total cash out</div>
-                    <div class="mt-1 text-2xl font-bold text-danger-700 font-mono tabular-nums">₹{{ inr($summary['cash_out']) }}</div>
+                    <div class="mt-1 text-2xl font-bold text-danger-700 font-mono tabular-nums">₹{{ rupees($summary['cash_out']) }}</div>
                 </div>
             </div>
 
@@ -154,9 +152,9 @@
                                             <span class="inline-block text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider" style="background: {{ $cat['color'] }}20; color: {{ $cat['color'] }};">{{ $cat['label'] }}</span>
                                         </td>
                                         <td class="px-4 py-2 text-right font-mono tabular-nums">{{ $cat['count'] }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums">{{ inr($cat['taxable']) }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-money-700">{{ $cat['gst'] > 0 ? inr($cat['gst']) : '-' }}</td>
-                                        <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold">{{ inr($cat['taxable'] + $cat['gst']) }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums">{{ rupees($cat['taxable']) }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums text-money-700">{{ $cat['gst'] > 0 ? rupees($cat['gst']) : '-' }}</td>
+                                        <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold">{{ rupees($cat['taxable'] + $cat['gst']) }}</td>
                                         <td class="px-4 py-2 text-right text-xs text-gray-500">{{ $summary['taxable'] > 0 ? number_format($cat['taxable'] / $summary['taxable'] * 100, 1) . '%' : '-' }}</td>
                                     </tr>
                                 @endforeach
@@ -222,28 +220,34 @@
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ inr($e->amount) }}</div>
+                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ rupees($e->amount) }}</div>
                                 @if ((float) $e->gst_amount > 0)
-                                    <div class="text-[10px] text-money-700 font-mono">+ ₹{{ inr($e->gst_amount) }} GST</div>
+                                    <div class="text-[10px] text-money-700 font-mono">+ ₹{{ rupees($e->gst_amount) }} GST</div>
                                 @endif
                             </div>
                         </div>
                         <div class="mt-3 pt-2 border-t border-gray-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                            <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">View</a>
-                            <a href="{{ route('finance.expenses.pdf', $e) }}" class="text-money-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
-                            <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
+                            <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-[36px] text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">View</a>
+                            <a href="{{ route('finance.expenses.pdf', $e) }}" class="inline-flex items-center min-h-[36px] text-money-700 hover:underline font-medium" title="Download voucher PDF">PDF</a>
+                            @if ($e->purchase_bill_id)
+                                <a href="{{ route('purchases.show', $e->purchase_bill_id) }}" class="inline-flex items-center min-h-[36px] text-brand-700 hover:underline font-medium">Open purchase invoice</a>
+                            @elseif ($e->cash_memo_id)
+                                <a href="{{ route('finance.cash-memos.show', $e->cash_memo_id) }}" class="inline-flex items-center min-h-[36px] text-brand-700 hover:underline font-medium">Open cash memo</a>
+                            @else
+                            <a href="{{ route('finance.expenses.edit', $e) }}" class="inline-flex items-center min-h-[36px] text-brand-700 hover:underline font-medium">Edit</a>
                             <span class="ml-auto">
                                 <x-confirm-form
                                     :action="route('finance.expenses.destroy', $e)"
                                     method="DELETE"
                                     title="Delete this expense?"
-                                    message="This expense entry will be permanently removed. This cannot be undone."
+                                    message="This cannot be undone."
                                     confirmLabel="Delete expense"
                                     confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
-                                    <button type="button" class="text-danger-600 hover:underline">Delete</button>
+                                    <button type="button" class="inline-flex items-center min-h-[36px] text-danger-600 hover:underline">Delete</button>
                                 </x-confirm-form>
                             </span>
+                            @endif
                         </div>
                     </div>
                 @empty
@@ -251,9 +255,9 @@
                         <x-empty-state
                             icon="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                             title="No expenses in this period"
-                            description="Record what you spend and the software works out your real profit and the GST you can claim back as input tax credit."
+                            description="Recorded expenses count towards your profit and your input tax credit."
                             :actionHref="route('finance.expenses.create')"
-                            actionLabel="Add your first expense"
+                            actionLabel="Add expense"
                         />
                     </div>
                 @endforelse
@@ -287,8 +291,8 @@
                                             <div class="text-xs text-gray-500">{{ $e->vendor_name }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($e->amount) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . inr($e->gst_amount) : '-' }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ rupees($e->amount) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono text-gray-600 tabular-nums">{{ (float) $e->gst_amount > 0 ? '₹' . rupees($e->gst_amount) : '-' }}</td>
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $e->payment_method ?? '-' }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
                                         <a href="{{ route('finance.expenses.pdf', ['expense' => $e, 'inline' => 1]) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-gray-700 hover:text-brand-700 hover:underline font-medium" title="View voucher in browser">
@@ -301,18 +305,24 @@
                                             PDF
                                         </a>
                                         <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
-                                        <a href="{{ route('finance.expenses.edit', $e) }}" class="text-brand-700 hover:underline font-medium">Edit</a>
+                                        @if ($e->purchase_bill_id)
+                                            <a href="{{ route('purchases.show', $e->purchase_bill_id) }}" class="text-brand-700 hover:underline font-medium" title="Edit or delete from the purchase invoice">Open purchase invoice</a>
+                                        @elseif ($e->cash_memo_id)
+                                            <a href="{{ route('finance.cash-memos.show', $e->cash_memo_id) }}" class="text-brand-700 hover:underline font-medium" title="Edit or delete from the cash memo">Open cash memo</a>
+                                        @else
+                                        <a href="{{ route('finance.expenses.edit', $e) }}" class="inline-flex items-center min-h-[36px] text-brand-700 hover:underline font-medium">Edit</a>
                                         <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <x-confirm-form
                                             :action="route('finance.expenses.destroy', $e)"
                                             method="DELETE"
                                             title="Delete this expense?"
-                                            message="This expense entry will be permanently removed. This cannot be undone."
+                                            message="This cannot be undone."
                                             confirmLabel="Delete expense"
                                             confirmClass="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
                                             <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                         </x-confirm-form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -320,9 +330,9 @@
                                     <x-empty-state
                                         icon="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                                         title="No expenses in this period"
-                                        description="Record what you spend to see real profit and the GST you can claim back."
+                                        description="Recorded expenses count towards your profit and your input tax credit."
                                         :actionHref="route('finance.expenses.create')"
-                                        actionLabel="Add your first expense"
+                                        actionLabel="Add expense"
                                     />
                                 </td></tr>
                             @endforelse
@@ -330,10 +340,10 @@
                         @if ($summary['count'] > 0)
                             <tfoot class="bg-gray-50 print:bg-white">
                                 <tr class="font-bold border-t-2 border-gray-300">
-                                    <td colspan="3" class="px-5 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Total ({{ number_format($summary['count']) }} entries)</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ inr($summary['taxable']) }}</td>
-                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">₹{{ inr($summary['gst']) }}</td>
-                                    <td class="px-5 py-3" colspan="2"><span class="text-xs text-gray-500 uppercase tracking-wider">Cash out:</span> <span class="font-mono tabular-nums text-danger-700">₹{{ inr($summary['cash_out']) }}</span></td>
+                                    <td colspan="3" class="px-5 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Total ({{ \App\Support\IndianNumber::format($summary['count'], 0) }} entries)</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ rupees($summary['taxable']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-money-700">₹{{ rupees($summary['gst']) }}</td>
+                                    <td class="px-5 py-3" colspan="2"><span class="text-xs text-gray-500 uppercase tracking-wider">Cash out:</span> <span class="font-mono tabular-nums text-danger-700">₹{{ rupees($summary['cash_out']) }}</span></td>
                                 </tr>
                             </tfoot>
                         @endif

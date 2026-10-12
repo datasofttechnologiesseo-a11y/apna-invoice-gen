@@ -84,6 +84,45 @@ class QuotationShareTest extends TestCase
         $this->assertSame('QT-0001', $q->quote_number);
     }
 
+    public function test_emailing_a_draft_keeps_a_number_the_user_typed(): void
+    {
+        Mail::fake();
+        ['user' => $user, 'company' => $company, 'customer' => $customer] = $this->setupOwner();
+        $q = Quotation::factory()->create([
+            'user_id' => $user->id, 'company_id' => $company->id, 'customer_id' => $customer->id,
+            'quote_number' => 'EST/OCT/7',
+        ]);
+
+        $this->actingAs($user)->post(route('quotations.share.email', $q), [
+            'to' => 'customer@example.com', 'subject' => 'Your quote', 'body' => 'Attached.',
+        ])->assertRedirect();
+
+        $this->assertSame('EST/OCT/7', $q->fresh()->quote_number);
+        $this->assertSame(0, (int) $company->fresh()->quote_counter, 'the automatic series is not used up');
+    }
+
+    public function test_a_failed_email_leaves_the_quotation_a_draft_and_the_retry_reuses_its_number(): void
+    {
+        ['user' => $user, 'company' => $company, 'customer' => $customer] = $this->setupOwner();
+        $q = Quotation::factory()->create(['user_id' => $user->id, 'company_id' => $company->id, 'customer_id' => $customer->id]);
+        $payload = ['to' => 'customer@example.com', 'subject' => 'Your quote', 'body' => 'Attached.'];
+
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('SMTP down'));
+        $this->actingAs($user)->post(route('quotations.share.email', $q), $payload)->assertSessionHasErrors('email');
+
+        $q->refresh();
+        $this->assertSame('draft', $q->status, 'not sent, so not marked sent');
+        $this->assertNull($q->sent_at);
+        $this->assertSame('QT-0001', $q->quote_number);
+
+        Mail::fake();
+        $this->actingAs($user)->post(route('quotations.share.email', $q), $payload)->assertSessionHasNoErrors();
+        $q->refresh();
+        $this->assertSame('sent', $q->status);
+        $this->assertSame('QT-0001', $q->quote_number, 'the retry reuses the number');
+        $this->assertSame(1, (int) $company->fresh()->quote_counter, 'no number skipped');
+    }
+
     public function test_email_requires_valid_recipient(): void
     {
         Mail::fake();

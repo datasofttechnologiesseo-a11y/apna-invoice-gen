@@ -24,7 +24,14 @@ class CompanyController extends Controller
             ->get();
 
         return CompanyResource::collection($companies)
-            ->additional(['meta' => ['active_company_id' => $user->active_company_id]]);
+            ->additional(['meta' => [
+                'active_company_id' => $user->active_company_id,
+                // Businesses this user works in as a team member (switch to them by id).
+                'memberships' => $user->memberships()->with('company:id,name,gstin')->get()
+                    ->filter(fn ($m) => $m->company)
+                    ->map(fn ($m) => ['company_id' => $m->company->id, 'name' => $m->company->name, 'gstin' => $m->company->gstin, 'role' => $m->role, 'role_label' => $m->roleLabel()])
+                    ->values(),
+            ]]);
     }
 
     /** The currently active company for this user. */
@@ -65,8 +72,7 @@ class CompanyController extends Controller
 
     public function switch(Request $request, Company $company): CompanyResource
     {
-        $this->authorizeCompany($request, $company);
-        $request->user()->switchCompany($company);
+        $request->user()->switchCompany($company); // owner or team member, else 403
         $company->load('state');
 
         return new CompanyResource($company);

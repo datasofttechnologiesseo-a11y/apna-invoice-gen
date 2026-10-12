@@ -59,8 +59,8 @@
 
         <template x-if="!loading && items.length === 0 && q.trim() !== ''">
             <div class="px-3 py-3 text-sm text-gray-500">
-                Nothing matches "<span class="font-medium text-gray-700" x-text="q.trim()"></span>".
-                <span class="block text-xs mt-0.5">Try part of a customer name, a mobile number, a GSTIN or an amount.</span>
+                No matches for "<span class="font-medium text-gray-700" x-text="q.trim()"></span>".
+                <span class="block text-xs mt-0.5">Search by customer name, mobile number, GSTIN or amount.</span>
             </div>
         </template>
 
@@ -68,7 +68,7 @@
             <div>
                 {{-- Group heading, printed once when the group changes. --}}
                 <template x-if="isGroupStart(i)">
-                    <div class="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-400 bg-gray-50 border-y border-gray-100"
+                    <div class="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-500 bg-gray-50 border-y border-gray-100"
                          x-text="item._group"></div>
                 </template>
 

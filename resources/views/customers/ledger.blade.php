@@ -16,7 +16,7 @@
                 <a href="{{ route('customers.edit', $customer) }}" class="text-sm text-gray-500 hover:text-gray-700">Edit customer</a>
                 <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Print Statement
+                    Print statement
                 </button>
             </div>
         </div>
@@ -32,7 +32,7 @@
                     @if ($company->gstin)<div class="text-xs">GSTIN: {{ $company->gstin }}</div>@endif
                     <div class="text-base font-semibold mt-1">CUSTOMER LEDGER</div>
                     <div class="text-sm text-gray-700">{{ $customer->name }}@if ($customer->gstin) · GSTIN: {{ $customer->gstin }}@endif</div>
-                    <div class="text-xs text-gray-500">Generated: {{ now()->format('d M Y H:i') }}</div>
+                    <div class="text-xs text-gray-500">Generated: {{ now()->format('d M Y, h:i A') }}</div>
                 </div>
             </div>
 
@@ -40,19 +40,19 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Total Invoiced</div>
-                    <div class="mt-1 text-xl font-bold text-gray-900 font-mono tabular-nums">₹{{ inr($totals['invoiced']) }}</div>
+                    <div class="mt-1 text-xl font-bold text-gray-900 font-mono tabular-nums">₹{{ rupees($totals['invoiced']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Received</div>
-                    <div class="mt-1 text-xl font-bold text-money-700 font-mono tabular-nums">₹{{ inr($totals['received']) }}</div>
+                    <div class="mt-1 text-xl font-bold text-money-700 font-mono tabular-nums">₹{{ rupees($totals['received']) }}</div>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500">Credit Notes</div>
-                    <div class="mt-1 text-xl font-bold text-brand-700 font-mono tabular-nums">₹{{ inr($totals['credited']) }}</div>
+                    <div class="mt-1 text-xl font-bold text-brand-700 font-mono tabular-nums">₹{{ rupees($totals['credited']) }}</div>
                 </div>
                 <div class="bg-white border-2 border-accent-300 bg-accent-50 rounded-lg p-4">
                     <div class="text-[10px] uppercase tracking-wider font-bold text-accent-800">Outstanding</div>
-                    <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-accent-800' : 'text-money-700' }} font-mono tabular-nums">₹{{ inr($totals['outstanding']) }}</div>
+                    <div class="mt-1 text-xl font-bold {{ $totals['outstanding'] > 0 ? 'text-accent-800' : 'text-money-700' }} font-mono tabular-nums">₹{{ rupees($totals['outstanding']) }}</div>
                 </div>
             </div>
 
@@ -111,28 +111,28 @@
                                         {{ $e['particulars'] }}
                                         <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 ml-1">{{ str_replace('_', ' ', $e['type']) }}</span>
                                     </td>
-                                    <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['debit'] > 0 ? '' : 'text-gray-300' }}">
-                                        {{ $e['debit'] > 0 ? inr($e['debit']) : '-' }}
+                                    <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['debit'] > 0 ? '' : 'text-gray-500' }}">
+                                        {{ $e['debit'] > 0 ? rupees($e['debit']) : '-' }}
                                     </td>
-                                    <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-money-700' : 'text-gray-300' }}">
-                                        {{ $e['credit'] > 0 ? inr($e['credit']) : '-' }}
+                                    <td class="px-4 py-2 text-right font-mono tabular-nums {{ $e['credit'] > 0 ? 'text-money-700' : 'text-gray-500' }}">
+                                        {{ $e['credit'] > 0 ? rupees($e['credit']) : '-' }}
                                     </td>
                                     <td class="px-4 py-2 text-right font-mono tabular-nums font-semibold {{ $e['balance'] > 0 ? 'text-accent-800' : ($e['balance'] < 0 ? 'text-money-700' : 'text-gray-500') }}">
-                                        {{ inr(abs($e['balance'])) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
+                                        {{ rupees(abs($e['balance'])) }} {{ $e['balance'] < 0 ? 'Cr' : ($e['balance'] > 0 ? 'Dr' : '') }}
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-12 text-center text-gray-500">No invoices or payments yet for this customer.</td></tr>
+                                <tr><td colspan="6" class="px-4 py-12 text-center text-gray-500">No invoices or payments for this customer.</td></tr>
                             @endforelse
                         </tbody>
                         @if ($entries->isNotEmpty())
                             <tfoot class="bg-gray-50 print:bg-white">
                                 <tr class="font-bold border-t-2 border-gray-300">
                                     <td colspan="3" class="px-4 py-3 text-right text-xs uppercase tracking-wider text-gray-700">Closing balance</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums">₹{{ inr($totals['invoiced']) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums text-money-700">₹{{ inr($totals['received'] + $totals['credited']) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums">₹{{ rupees($totals['invoiced']) }}</td>
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums text-money-700">₹{{ rupees($totals['received'] + $totals['credited']) }}</td>
                                     <td class="px-4 py-3 text-right font-mono tabular-nums {{ $totals['outstanding'] > 0 ? 'text-accent-800' : 'text-money-700' }}">
-                                        ₹{{ inr($totals['outstanding']) }} {{ $totals['outstanding'] > 0 ? 'Dr' : ($totals['outstanding'] < 0 ? 'Cr' : '') }}
+                                        ₹{{ rupees($totals['outstanding']) }} {{ $totals['outstanding'] > 0 ? 'Dr' : ($totals['outstanding'] < 0 ? 'Cr' : '') }}
                                     </td>
                                 </tr>
                             </tfoot>

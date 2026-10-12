@@ -80,7 +80,7 @@
                         <a href="{{ route('admin.blog.edit', $p) }}" class="text-xs font-semibold text-brand-600 hover:underline whitespace-nowrap">Edit</a>
                     </li>
                 @empty
-                    <li class="px-5 py-10 text-center text-gray-400">
+                    <li class="px-5 py-10 text-center text-gray-500">
                         No posts yet. <a href="{{ route('admin.blog.create') }}" class="text-brand-600 font-semibold hover:underline">Write your first post →</a>
                     </li>
                 @endforelse
@@ -93,19 +93,19 @@
                 <div class="absolute top-0 right-0 w-48 h-48 bg-money-400 rounded-full blur-3xl opacity-20 -translate-y-12 translate-x-12"></div>
                 <div class="relative">
                     <div class="text-xs font-bold uppercase tracking-widest text-money-200">Revenue processed · All time</div>
-                    <div class="mt-2 font-display text-4xl lg:text-5xl font-extrabold tabular-nums">₹{{ inr($stats['revenue']['grand_total_all_time']) }}</div>
+                    <div class="mt-2 font-display text-4xl lg:text-5xl font-extrabold tabular-nums">₹{{ rupees($stats['revenue']['grand_total_all_time']) }}</div>
                     <div class="mt-5 grid grid-cols-3 gap-4 text-sm">
                         <div class="border-l-2 border-money-400/50 pl-3">
                             <div class="text-money-200 text-[10px] uppercase tracking-wider font-bold">Collected</div>
-                            <div class="font-bold tabular-nums text-lg mt-0.5">₹{{ number_format($stats['revenue']['collected_all_time']) }}</div>
+                            <div class="font-bold tabular-nums text-lg mt-0.5">₹{{ rupees($stats['revenue']['collected_all_time']) }}</div>
                         </div>
                         <div class="border-l-2 border-accent-300/70 pl-3">
                             <div class="text-accent-200 text-[10px] uppercase tracking-wider font-bold">Outstanding</div>
-                            <div class="font-bold tabular-nums text-lg mt-0.5">₹{{ number_format($stats['revenue']['outstanding']) }}</div>
+                            <div class="font-bold tabular-nums text-lg mt-0.5">₹{{ rupees($stats['revenue']['outstanding']) }}</div>
                         </div>
                         <div class="border-l-2 border-money-400/50 pl-3">
                             <div class="text-money-200 text-[10px] uppercase tracking-wider font-bold">This month</div>
-                            <div class="font-bold tabular-nums text-lg mt-0.5">₹{{ number_format($stats['revenue']['this_month_billed']) }}</div>
+                            <div class="font-bold tabular-nums text-lg mt-0.5">₹{{ rupees($stats['revenue']['this_month_billed']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
                     </div>
                 @endforeach
             </div>
-            <div class="mt-2 flex justify-between text-[10px] text-gray-400 font-medium">
+            <div class="mt-2 flex justify-between text-[10px] text-gray-500 font-medium">
                 <span>{{ $trend[0]['label'] }}</span>
                 <span>{{ $trend[count($trend) - 1]['label'] }}</span>
             </div>
@@ -192,10 +192,10 @@
                                     <div class="text-xs text-gray-500 truncate">{{ $u->email }}</div>
                                 </td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ $u->invoices_count }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ number_format((float) $u->revenue) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums">₹{{ rupees((float) $u->revenue) }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="px-5 py-10 text-center text-gray-400">No invoices yet.</td></tr>
+                            <tr><td colspan="3" class="px-5 py-10 text-center text-gray-500">No invoices yet.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -217,10 +217,10 @@
                                 </div>
                                 <div class="text-xs text-gray-500 truncate">{{ $u->email }}</div>
                             </div>
-                            <div class="text-xs text-gray-400 whitespace-nowrap">{{ $u->created_at->diffForHumans() }}</div>
+                            <div class="text-xs text-gray-500 whitespace-nowrap">{{ $u->created_at->diffForHumans() }}</div>
                         </li>
                     @empty
-                        <li class="px-5 py-10 text-center text-gray-400">No users yet.</li>
+                        <li class="px-5 py-10 text-center text-gray-500">No users yet.</li>
                     @endforelse
                 </ul>
             </div>
@@ -255,7 +255,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="px-5 py-10 text-center text-gray-400">No invoice items yet.</td></tr>
+                        <tr><td colspan="3" class="px-5 py-10 text-center text-gray-500">No invoice items yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

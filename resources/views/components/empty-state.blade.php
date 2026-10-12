@@ -9,7 +9,7 @@
 ])
 
 <div class="p-10 sm:p-14 text-center">
-    <div class="mx-auto w-16 h-16 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center" aria-hidden="true">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $icon }}"/>
         </svg>
@@ -23,7 +23,7 @@
             <a href="{{ $actionHref }}"
                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg shadow-sm transition">
                 {{ $actionLabel }}
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>

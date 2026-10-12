@@ -9,8 +9,8 @@
         'when' => $invoice->created_at,
         'icon' => 'M12 4v16m8-8H4',
         'tone' => 'gray',
-        'title' => 'Created',
-        'sub' => 'Invoice draft was started',
+        'title' => 'Draft created',
+        'sub' => '',
     ];
 
     // 2. Finalized - when an invoice number was assigned and amounts locked
@@ -20,7 +20,7 @@
             'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
             'tone' => 'brand',
             'title' => 'Issued',
-            'sub' => 'Issued as ' . ($invoice->invoice_number ?? 'invoice') . ' - line items locked',
+            'sub' => 'Issued as ' . ($invoice->invoice_number ?? 'invoice') . '; line items locked',
         ];
     }
 
@@ -33,7 +33,7 @@
             'display' => $payment->received_at ?? $payment->created_at,
             'icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
             'tone' => 'money',
-            'title' => '₹' . inr($payment->amount) . ' received',
+            'title' => '₹' . rupees($payment->amount) . ' received',
             'sub' => trim(
                 ($payment->method ? ucfirst(str_replace('_', ' ', $payment->method)) : 'Payment')
                 . ($payment->receipt_number ? ' · Receipt ' . $payment->receipt_number : '')
@@ -49,7 +49,7 @@
             'icon' => 'M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
             'tone' => 'accent',
             'title' => 'Credit note ' . ($cn->credit_note_number ?? '#' . $cn->id) . ' issued',
-            'sub' => '₹' . inr(($cn->grand_total ?? 0)) . ' credited back to customer',
+            'sub' => '₹' . rupees((float) $cn->amount) . ' credited to customer',
         ];
     }
 
@@ -61,7 +61,7 @@
             'icon' => 'M5 13l4 4L19 7',
             'tone' => 'money',
             'title' => 'Fully paid',
-            'sub' => 'Outstanding balance is ₹0',
+            'sub' => 'Balance ₹0',
             'final' => true,
         ];
     }

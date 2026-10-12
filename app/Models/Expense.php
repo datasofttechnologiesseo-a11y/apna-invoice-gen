@@ -14,7 +14,7 @@ class Expense extends Model
         'user_id', 'entry_date', 'category', 'vendor_name', 'description',
         'amount', 'gst_amount', 'is_interstate', 'itc_eligible',
         'payment_method', 'reference_number', 'notes',
-        'cash_memo_id',
+        'cash_memo_id', 'purchase_bill_id',
     ];
 
     protected $casts = [
@@ -54,5 +54,20 @@ class Expense extends Model
     public function cashOutflow(): float
     {
         return (float) $this->amount + (float) $this->gst_amount;
+    }
+
+    /**
+     * GST on a purchase cannot be more than 40% of its value - the highest
+     * slab. A slip like GST 18,000 on a 1,000 bill would otherwise go straight
+     * into GSTR-3B as input credit.
+     */
+    public static function assertGstWithinSlab(float $amount, float $gst): void
+    {
+        if ($gst > round($amount * 0.40, 2) + 0.5) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'gst_amount' => 'GST of ₹' . inr($gst) . ' is more than the highest rate (40%) on ₹' . inr($amount) . '. '
+                    . 'Enter the amount before GST in Amount and only the tax in GST.',
+            ]);
+        }
     }
 }

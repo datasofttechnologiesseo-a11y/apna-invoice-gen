@@ -7,7 +7,7 @@
             </div>
             <div class="flex items-center gap-2 print:hidden">
                 <a href="{{ route('finance.expenses') }}" class="text-sm text-gray-500 hover:text-gray-700">← All expenses</a>
-                <a href="{{ route('finance.cash-memos.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ New cash sale</a>
+                <a href="{{ route('finance.cash-memos.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm whitespace-nowrap">+ New cash memo</a>
             </div>
         </div>
     </x-slot>
@@ -23,8 +23,8 @@
             </div>
 
             <div class="bg-brand-50 border border-brand-200 rounded-lg p-4 text-sm text-brand-900 print:hidden">
-                <div class="font-semibold mb-1">What is a Cash Memo?</div>
-                <p>A self-prepared purchase voucher used when you buy something for cash and the seller doesn't issue a formal tax invoice - common with small / unregistered vendors. Each memo also auto-creates a matching Expense entry so it flows into your P&amp;L.</p>
+                <div class="font-semibold mb-1">Purchase voucher for cash purchases</div>
+                <p>Use when the seller does not issue a tax invoice, as with small or unregistered vendors. Each memo also creates a matching expense entry.</p>
             </div>
 
             <div class="bg-white p-4 rounded-xl border border-gray-200 print:hidden">
@@ -59,7 +59,7 @@
                         ? (request('from') && request('to')
                             ? \Carbon\Carbon::parse(request('from'))->format('d M Y') . ' → ' . \Carbon\Carbon::parse(request('to'))->format('d M Y')
                             : 'Filtered')
-                        : now()->format('F Y') . ' (defaults to this month - set From/To above for any other range)';
+                        : now()->format('F Y') . ' (current month; set From and To for another range)';
                 @endphp
                 <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-sm">
@@ -69,19 +69,19 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('finance.cash-memos.export.pdf', $exportQuery) }}"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-money-600 hover:bg-money-700 text-white text-xs font-semibold rounded"
-                           title="One-page summary PDF of every cash sale in this range - perfect for emailing to your CA">
+                           title="Summary PDF of all cash memos in this range">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Download PDF
                         </a>
                         <a href="{{ route('finance.cash-memos.export.csv', $exportQuery) }}"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold rounded"
-                           title="Excel-friendly CSV for your books-of-accounts software">
+                           title="CSV for Excel or your accounting software">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h13M3 7h13v6m0 0H3"/></svg>
                             Excel / CSV
                         </a>
                         <button onclick="window.print()"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold rounded"
-                                title="Print the on-screen list of cash sales">
+                                title="Print the list on this page">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             Print
                         </button>
@@ -106,7 +106,7 @@
                                 </div>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ inr($m->grand_total) }}</div>
+                                <div class="font-mono font-bold text-gray-900 tabular-nums">₹{{ rupees($m->grand_total) }}</div>
                             </div>
                         </div>
                         <div class="mt-3 pt-2 border-t border-gray-100 flex items-center gap-3 text-xs print:hidden">
@@ -116,8 +116,8 @@
                                 <x-confirm-form
                                     :action="route('finance.cash-memos.destroy', $m)"
                                     method="DELETE"
-                                    title="Delete cash sale {{ $m->memo_number }}?"
-                                    message="The linked expense entry will also be removed. This cannot be undone."
+                                    title="Delete cash memo {{ $m->memo_number }}?"
+                                    message="The linked expense entry will also be deleted. This cannot be undone."
                                     confirmLabel="Delete memo"
                                     confirmClass="bg-danger-600 hover:bg-danger-700"
                                     tone="danger">
@@ -131,9 +131,9 @@
                         <x-empty-state
                             icon="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
                             title="No cash memos yet"
-                            description="A cash memo is a quick bill for an over-the-counter cash sale. It gets its own number series and prints on a normal or thermal printer."
+                            description="Record cash purchases from vendors who do not issue a tax invoice."
                             :actionHref="route('finance.cash-memos.create')"
-                            actionLabel="Create your first cash memo"
+                            actionLabel="Create cash memo"
                         />
                     </div>
                 @endforelse
@@ -147,7 +147,7 @@
                         ? 'From ' . \Carbon\Carbon::parse(request('from'))->format('d M Y')
                         : (request('to')
                             ? 'Up to ' . \Carbon\Carbon::parse(request('to'))->format('d M Y')
-                            : 'All cash sales'));
+                            : 'All cash memos'));
                 // Sum totals for the in-page rows (current page only - full-period totals come from the PDF).
                 $pageTaxable = $memos->sum('taxable_value');
                 $pageTax     = $memos->sum(fn ($m) => (float) $m->total_cgst + (float) $m->total_sgst + (float) $m->total_igst);
@@ -162,8 +162,8 @@
                 </div>
                 @if ($memos->lastPage() > 1)
                     <div class="print-warning">
-                        Note: Only the {{ $memos->count() }} memo{{ $memos->count() === 1 ? '' : 's' }} on this page will print.
-                        Use <strong>Download PDF</strong> for a complete statement covering all {{ $memos->total() }} memos in this period.
+                        Only the {{ $memos->count() }} memo{{ $memos->count() === 1 ? '' : 's' }} on this page will print.
+                        Use <strong>Download PDF</strong> for all {{ $memos->total() }} memos in this period.
                     </div>
                 @endif
             </div>
@@ -193,14 +193,14 @@
                                             <div class="text-xs text-gray-500 truncate max-w-xs">{{ $m->seller_address }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ inr($m->grand_total) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-semibold tabular-nums">₹{{ rupees($m->grand_total) }}</td>
                                     <td class="px-5 py-3 text-xs text-gray-600 uppercase">{{ $m->payment_mode }}</td>
                                     <td class="px-5 py-3 text-right text-sm whitespace-nowrap print:hidden">
-                                        <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open the memo on screen">View / Print</a>
+                                        <a href="{{ route('finance.cash-memos.show', $m) }}" class="text-brand-700 hover:underline font-medium" title="Open memo">View / Print</a>
                                         <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('finance.cash-memos.pdf', $m) }}"
                                            class="inline-flex items-center gap-1 text-money-700 hover:underline font-medium"
-                                           title="Download this cash sale as a PDF">
+                                           title="Download memo PDF">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                             PDF
                                         </a>
@@ -208,8 +208,8 @@
                                         <x-confirm-form
                                             :action="route('finance.cash-memos.destroy', $m)"
                                             method="DELETE"
-                                            title="Delete cash sale {{ $m->memo_number }}?"
-                                            message="The linked expense entry will also be removed. This cannot be undone."
+                                            title="Delete cash memo {{ $m->memo_number }}?"
+                                            message="The linked expense entry will also be deleted. This cannot be undone."
                                             confirmLabel="Delete memo"
                                             confirmClass="bg-danger-600 hover:bg-danger-700"
                                             tone="danger">
@@ -222,9 +222,9 @@
                                     <x-empty-state
                                         icon="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
                                         title="No cash memos yet"
-                                        description="A cash memo is a quick bill for an over-the-counter cash sale, with its own number series."
+                                        description="Record cash purchases from vendors who do not issue a tax invoice."
                                         :actionHref="route('finance.cash-memos.create')"
-                                        actionLabel="Create your first cash memo"
+                                        actionLabel="Create cash memo"
                                     />
                                 </td></tr>
                             @endforelse
@@ -233,7 +233,7 @@
                             <tfoot class="hidden print:table-footer-group bg-gray-50 border-t-2 border-gray-900">
                                 <tr>
                                     <td class="px-5 py-3 font-bold uppercase text-gray-700 text-xs" colspan="3">Page total ({{ $memos->count() }} {{ Str::plural('memo', $memos->count()) }})</td>
-                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums">₹{{ inr($pageGrand) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono font-bold tabular-nums">₹{{ rupees($pageGrand) }}</td>
                                     <td class="px-5 py-3" colspan="2"></td>
                                 </tr>
                             </tfoot>

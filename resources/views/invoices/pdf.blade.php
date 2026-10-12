@@ -1,6 +1,7 @@
 @php
-    // Tiny inline alias so the templates below stay readable: $inr(1234567) → "12,34,567.00"
-    $inr = fn ($n, $d = 2) => \App\Support\IndianNumber::format($n, $d);
+    // Tiny inline alias so the templates below stay readable: $inr(1234567) → "12,34,567"
+    // (whole amounts without ".00", real paise kept; see inr()).
+    $inr = fn ($n, $d = 2) => inr($n, $d);
 
     $styles = config('invoice_styles');
     $styleKey = $style ?? ($invoice->style ?? 'classic');
@@ -33,7 +34,8 @@
     }
 
     $c = $invoice->company;
-    $cust = $invoice->customer;
+    // The recipient as issued (snapshot), or the live customer on a draft.
+    $cust = $invoice->billedCustomer();
     $currencySymbol = '₹';
     $invoiceNumber = $invoice->isDraft()
         ? 'DRAFT · ' . ($invoice->company->nextInvoiceNumber() ?? 'preview')
@@ -263,9 +265,25 @@
     <table class="hero" style="width:100%;">
         <tr>
             <td style="vertical-align: top; width: 58%;">
-                @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
+                @php
+                    // A wide wordmark sits above the business name; a square or
+                    // tall emblem sits beside it, as on a printed letterhead.
+                    $logo = \App\Support\BrandImage::fit($c->logo_path, 200, 52);
+                    $logoBeside = $logo && $logo['ratio'] < 2.2;
+                    if ($logoBeside) {
+                        $logo = \App\Support\BrandImage::fit($c->logo_path, 110, 64);
+                    }
+                @endphp
+                @if ($logo && ! $logoBeside)
+                    <img src="{{ $logo['file'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px; margin-bottom: 6px;">
                 @endif
+                <table style="width: 100%;"><tr>
+                @if ($logoBeside)
+                    <td style="vertical-align: top; width: {{ $logo['w'] }}px; padding-right: 10px;">
+                        <img src="{{ $logo['file'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px;">
+                    </td>
+                @endif
+                <td style="vertical-align: top;">
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted" style="margin-top: 3px; line-height: 1.45;">
                     {!! nl2br(e(trim($c->address_line1 . ($c->address_line2 ? ', ' . $c->address_line2 : '') . "\n" . trim(($c->city ?? '') . ($c->city && $c->state?->name ? ', ' : '') . ($c->state?->name ?? '') . ($c->state?->gst_code ? ' · State ' . $c->state->gst_code : '') . ' ' . ($c->postal_code ?? '')) . "\n" . $c->country))) !!}
@@ -287,6 +305,8 @@
                         <span class="muted upper">PAN</span> <span class="mono bold">{{ $c->pan }}</span>
                     @endif
                 </div>
+                </td>
+                </tr></table>
             </td>
             @php
                 // 3-way title resolved by the model - consistent across show
@@ -318,8 +338,16 @@
                     @if ($invoice->placeOfSupply?->name)
                         <br><strong>Place of supply:</strong> {{ $invoice->placeOfSupply->name }}@if ($invoice->placeOfSupply->gst_code) ({{ $invoice->placeOfSupply->gst_code }})@endif
                     @endif
+                    {{-- Rule 46(p): every tax invoice states whether tax is payable on
+                         reverse charge - "No" is a required statement, not an omission. --}}
                     @if ($invoice->reverse_charge)
-                        <br><strong class="accent">Reverse charge applicable - Section 9(3)/9(4)</strong>
+                        <br><strong class="accent">Reverse charge: Yes - Section 9(3)/9(4)</strong>
+                    @else
+                        <br><strong>Reverse charge:</strong> No
+                    @endif
+                    @if ($invoice->isExport() && ($invoice->export_port_code || $invoice->shipping_bill_number))
+                        <br><strong>Port:</strong> {{ $invoice->export_port_code ?: '-' }}
+                        · <strong>Shipping bill:</strong> {{ $invoice->shipping_bill_number ?: '-' }}@if ($invoice->shipping_bill_date) dt. {{ $invoice->shipping_bill_date->format('d M Y') }}@endif
                     @endif
                 </div>
             </td>
@@ -437,7 +465,7 @@
                 <tr>
                     <td class="muted">{{ $idx + 1 }}</td>
                     <td>
-                        <div style="font-weight: 600;">{{ $primary }}</div>
+                        <div style="font-weight: bold;">{{ $primary }}</div>
                         @if ($secondary)
                             <div style="font-size: 9px; color: #555; margin-top: 2px;">{{ $secondary }}</div>
                         @endif
@@ -471,7 +499,7 @@
                         <th class="tr" style="width: 85px;">IGST {{ $currencySymbol }}</th>
                     @else
                         <th class="tr" style="width: 85px;">CGST {{ $currencySymbol }}</th>
-                        <th class="tr" style="width: 85px;">SGST {{ $currencySymbol }}</th>
+                        <th class="tr" style="width: 85px;">{{ $invoice->stateTaxLabel() }} {{ $currencySymbol }}</th>
                     @endif
                     <th class="tr" style="width: 85px;">Total tax {{ $currencySymbol }}</th>
                 </tr>
@@ -500,6 +528,16 @@
             <td style="width: 55%; vertical-align: top; padding-right: 14px;">
                 <div class="label">Amount in words (INR)</div>
                 <div class="aiw-text">{{ $amountInWords }}</div>
+
+                @if ($invoice->zeroRatedEndorsement())
+                    {{-- Rule 46 proviso: an export / SEZ invoice carries this endorsement. --}}
+                    <div style="margin-top: 8px; padding: 8px 10px; border: 1.5px solid #167c88; background: #ecfeff; border-radius: 3px;">
+                        <div style="font-size: 9.5px; font-weight: bold; color: #134e4a; letter-spacing: 0.3px;">{{ $invoice->zeroRatedEndorsement() }}</div>
+                        @if ($invoice->isUnderLut() && $invoice->company?->lut_number)
+                            <div style="font-size: 9px; color: #134e4a; margin-top: 2px;">LUT / Bond No.: {{ $invoice->company->lut_number }}</div>
+                        @endif
+                    </div>
+                @endif
 
                 @if ($invoice->reverse_charge)
                     {{-- Section 9(3)/9(4) CGST + Rule 46(p): mandatory declaration
@@ -530,19 +568,19 @@
                             <td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->subtotal) }}</td>
                         </tr>
                         @if ($invoice->reverse_charge)
-                            {{-- RCM: tax shown as "0.00 (RCM)" so recipient sees the line was
+                            {{-- RCM: tax shown as "0 (payable by recipient)" so the recipient sees the line was
                                  considered but not collected. --}}
                             @if ($invoice->is_interstate)
-                                <tr><td class="muted">IGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
+                                <tr><td class="muted">IGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0</td></tr>
                             @else
-                                <tr><td class="muted">CGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
-                                <tr><td class="muted">SGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0.00</td></tr>
+                                <tr><td class="muted">CGST <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0</td></tr>
+                                <tr><td class="muted">{{ $invoice->stateTaxLabel() }} <span class="x-small">(payable by recipient)</span></td><td class="tr mono x-small">{{ $currencySymbol }}0</td></tr>
                             @endif
                         @elseif ($invoice->is_interstate)
                             <tr><td class="muted">IGST</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_igst) }}</td></tr>
                         @else
                             <tr><td class="muted">CGST</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_cgst) }}</td></tr>
-                            <tr><td class="muted">SGST</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_sgst) }}</td></tr>
+                            <tr><td class="muted">{{ $invoice->stateTaxLabel() }}</td><td class="tr mono">{{ $currencySymbol }}{{ $inr($invoice->total_sgst) }}</td></tr>
                         @endif
                         @if ((float) $invoice->round_off != 0)
                             <tr><td class="muted x-small">Round off</td><td class="tr mono x-small">{{ $inr($invoice->round_off) }}</td></tr>
@@ -653,14 +691,19 @@
                         Subject to <strong>{{ $jurisdictionCity }}</strong> jurisdiction
                     </div>
                 </td>
-                <td style="vertical-align: top; text-align: right;">
-                    @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-                        <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="Authorised signature" style="max-height: 32px; margin-bottom: 2px;"><br>
-                    @endif
-                    <div class="sig-box">
-                        For {{ $c->name }}
-                        <div class="x-small muted" style="font-weight: normal; margin-top: 1px;">Authorised signatory</div>
-                    </div>
+                <td style="vertical-align: bottom; text-align: right;">
+                    {{-- "For <business>", the signature (or room to sign), then the
+                         signatory line: the usual order on an Indian tax invoice. --}}
+                    @php $sig = \App\Support\BrandImage::fit($c->signature_path, 150, 46); @endphp
+                    <table style="width: 190px; margin-left: auto;">
+                        <tr><td style="text-align: center; font-size: 9px; font-weight: bold;">For {{ $c->name }}</td></tr>
+                        <tr><td style="height: 50px; vertical-align: bottom; text-align: center;">
+                            @if ($sig)
+                                <img src="{{ $sig['file'] }}" alt="Authorised signature" width="{{ $sig['w'] }}" height="{{ $sig['h'] }}" style="width: {{ $sig['w'] }}px; height: {{ $sig['h'] }}px;">
+                            @endif
+                        </td></tr>
+                        <tr><td class="x-small muted" style="text-align: center; padding-top: 3px; border-top: 1px solid {{ $t['divider'] }};">Authorised signatory</td></tr>
+                    </table>
                 </td>
             </tr>
         </table>

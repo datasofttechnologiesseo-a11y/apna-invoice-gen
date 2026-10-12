@@ -38,13 +38,13 @@ class SocialAuthController extends Controller
             $googleUser = Socialite::driver('google')->user();
         } catch (\Throwable $e) {
             return redirect()->route('register')
-                ->withErrors(['email' => 'Google sign-in could not be completed. Please try again or use email.']);
+                ->withErrors(['email' => 'Google sign-in could not be completed. Try again or sign up with email.']);
         }
 
         $email = strtolower((string) $googleUser->getEmail());
         if ($email === '') {
             return redirect()->route('register')
-                ->withErrors(['email' => 'Google did not share an email address, so we can\'t create your account.']);
+                ->withErrors(['email' => 'Google did not share an email address, so the account cannot be created. Sign up with email instead.']);
         }
 
         // Returning user — match on google_id first, then on a pre-existing

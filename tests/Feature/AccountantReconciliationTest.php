@@ -208,7 +208,10 @@ class AccountantReconciliationTest extends TestCase
 
         $inv->refresh();
         $this->assertEqualsWithDelta(10000.0, (float) $inv->credited_amount, 0.001);
-        $this->assertEqualsWithDelta(0.0, (float) $inv->balance, 0.001, 'paid + credited covers the invoice');
+        // Paid in full and then credited ₹10,000: the customer is owed ₹10,000
+        // back. The balance goes negative to say so (the document prints it as
+        // "Refund due to customer"); clamping it to 0 hid that liability.
+        $this->assertEqualsWithDelta(-10000.0, (float) $inv->balance, 0.001, 'refund owed to the customer stays on the books');
         $this->assertSame('paid', $inv->status);
 
         // The credit note's taxable value + tax must reconcile back to its gross amount.

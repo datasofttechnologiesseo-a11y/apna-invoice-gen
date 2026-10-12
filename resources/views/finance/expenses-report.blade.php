@@ -196,7 +196,7 @@
             <tr>
                 <td style="width: 50%;">
                     <div style="font-size: 8.5px; color: #666;">
-                        Notes: This is a computer-generated expense statement. Figures shown are taxable value and GST as recorded against each entry. Total cash out = taxable + GST. Subject to verification of underlying invoices and cash sales. E&amp;OE.
+                        Notes: This is a computer-generated expense statement. Figures shown are taxable value and GST as recorded against each entry. Total cash out = taxable + GST. Subject to verification of underlying invoices and cash memos. E&amp;OE.
                     </div>
                 </td>
                 <td style="width: 50%; text-align: right;">

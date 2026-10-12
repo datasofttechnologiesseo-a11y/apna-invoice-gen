@@ -64,7 +64,7 @@
                 <div class="label">Generated</div>
                 <div style="font-size: 9.5px; margin-top: 2px;">{{ now()->format('d M Y · H:i') }}</div>
                 <div style="font-size: 9.5px;">From {{ $invoiceCount }} {{ \Illuminate\Support\Str::plural('invoice', $invoiceCount) }} · {{ $expenseCount }} {{ \Illuminate\Support\Str::plural('expense', $expenseCount) }} · {{ $cashMemoCount }} cash {{ \Illuminate\Support\Str::plural('memo', $cashMemoCount) }}</div>
-                <div style="font-size: 9px; margin-top: 4px; color: #555;">Filing due: <strong>{{ $periodEnd->copy()->addMonth()->day(20)->format('d M Y') }}</strong></div>
+                <div style="font-size: 9px; margin-top: 4px; color: #555;">Filing due: <strong>{{ $dueDate->format('d M Y') }}</strong></div>
             </td>
         </tr>
     </table>
@@ -93,19 +93,19 @@
                     <td class="r">{{ inr($outward['igst']) }}</td>
                     <td class="r">{{ inr($outward['cgst']) }}</td>
                     <td class="r">{{ inr($outward['sgst']) }}</td>
-                    <td class="r muted">0.00</td>
+                    <td class="r muted">0</td>
                 </tr>
                 <tr>
-                    <td><strong>(b)</strong> Outward taxable supplies <span class="label-sub">(zero rated)</span></td>
-                    <td class="r muted">0.00</td>
-                    <td class="r muted">0.00</td>
-                    <td class="r muted">0.00</td>
-                    <td class="r muted">0.00</td>
-                    <td class="r muted">0.00</td>
+                    <td><strong>(b)</strong> Outward taxable supplies <span class="label-sub">(zero rated - exports, SEZ)</span></td>
+                    <td class="r {{ $outward_zero['taxable'] ? '' : 'muted' }}">{{ inr($outward_zero['taxable']) }}</td>
+                    <td class="r {{ $outward_zero['igst'] ? '' : 'muted' }}">{{ inr($outward_zero['igst']) }}</td>
+                    <td class="r muted">0</td>
+                    <td class="r muted">0</td>
+                    <td class="r muted">0</td>
                 </tr>
                 <tr>
                     <td><strong>(c)</strong> Other outward supplies <span class="label-sub">(Nil rated, exempted)</span></td>
-                    <td class="r muted">0.00</td>
+                    <td class="r {{ $outward_nil ? '' : 'muted' }}">{{ inr($outward_nil) }}</td>
                     <td class="r muted">-</td>
                     <td class="r muted">-</td>
                     <td class="r muted">-</td>
@@ -113,15 +113,15 @@
                 </tr>
                 <tr class="highlight">
                     <td><strong>(d)</strong> Inward supplies <span class="label-sub">(liable to reverse charge)</span></td>
-                    <td class="r">{{ inr($rcm_outward['taxable']) }}</td>
-                    <td class="r">{{ inr($rcm_outward['igst']) }}</td>
-                    <td class="r">{{ inr($rcm_outward['cgst']) }}</td>
-                    <td class="r">{{ inr($rcm_outward['sgst']) }}</td>
-                    <td class="r muted">0.00</td>
+                    <td class="r">{{ inr($rcm_inward['taxable']) }}</td>
+                    <td class="r">{{ inr($rcm_inward['igst']) }}</td>
+                    <td class="r">{{ inr($rcm_inward['cgst']) }}</td>
+                    <td class="r">{{ inr($rcm_inward['sgst']) }}</td>
+                    <td class="r muted">0</td>
                 </tr>
                 <tr>
                     <td><strong>(e)</strong> Non-GST outward supplies</td>
-                    <td class="r muted">0.00</td>
+                    <td class="r muted">0</td>
                     <td class="r muted">-</td>
                     <td class="r muted">-</td>
                     <td class="r muted">-</td>
@@ -130,7 +130,7 @@
             </tbody>
         </table>
         <div class="note">
-            Rows (b), (c), (e) are zero because the app does not yet track exports / nil-rated / non-GST supplies. If applicable, fill manually on the GST portal.
+            Same figures as GSTR-1 for the month: issued invoices less credit notes dated in the month; 0% lines shown in (c) as nil rated. Sales where the customer pays tax under reverse charge are not part of 3.1 (GSTR-1 only). Exports and SEZ supplies are in (b). Row (e) (non-GST) is not tracked - fill on the portal if applicable.
         </div>
     </div>
 
@@ -151,18 +151,25 @@
                 </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td><strong>(A)(3)</strong> Inward supplies liable to reverse charge</td>
+                    <td class="r">{{ inr($itc_rcm['igst']) }}</td>
+                    <td class="r">{{ inr($itc_rcm['cgst']) }}</td>
+                    <td class="r">{{ inr($itc_rcm['sgst']) }}</td>
+                    <td class="r muted">0</td>
+                </tr>
                 <tr class="highlight">
-                    <td><strong>(A)(5)</strong> All other ITC <span class="label-sub">(from your expenses + cash memos)</span></td>
-                    <td class="r">{{ inr($itc['igst']) }}</td>
-                    <td class="r">{{ inr($itc['cgst']) }}</td>
-                    <td class="r">{{ inr($itc['sgst']) }}</td>
-                    <td class="r muted">0.00</td>
+                    <td><strong>(A)(5)</strong> All other ITC <span class="label-sub">(purchase invoices, expenses + cash memos)</span></td>
+                    <td class="r">{{ inr($itc_other['igst']) }}</td>
+                    <td class="r">{{ inr($itc_other['cgst']) }}</td>
+                    <td class="r">{{ inr($itc_other['sgst']) }}</td>
+                    <td class="r muted">0</td>
                 </tr>
                 <tr>
                     <td><strong>(B)</strong> ITC reversed</td>
-                    <td class="r muted">0.00</td>
-                    <td class="r muted">0.00</td>
-                    <td class="r muted">0.00</td>
+                    <td class="r muted">0</td>
+                    <td class="r muted">0</td>
+                    <td class="r muted">0</td>
                     <td class="r muted">-</td>
                 </tr>
                 <tr class="total">
@@ -170,7 +177,7 @@
                     <td class="r">{{ inr($itc['igst']) }}</td>
                     <td class="r">{{ inr($itc['cgst']) }}</td>
                     <td class="r">{{ inr($itc['sgst']) }}</td>
-                    <td class="r muted">0.00</td>
+                    <td class="r muted">0</td>
                 </tr>
             </tbody>
         </table>
@@ -193,16 +200,22 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Total tax payable <span class="label-sub">(from outward supplies)</span></td>
-                    <td class="r">{{ inr($outward['igst']) }}</td>
-                    <td class="r">{{ inr($outward['cgst']) }}</td>
-                    <td class="r">{{ inr($outward['sgst']) }}</td>
+                    <td>Tax on outward supplies <span class="label-sub">(3.1(a) + (b))</span></td>
+                    <td class="r">{{ inr($liability['igst']) }}</td>
+                    <td class="r">{{ inr($liability['cgst']) }}</td>
+                    <td class="r">{{ inr($liability['sgst']) }}</td>
                 </tr>
                 <tr>
-                    <td>Less: ITC available</td>
-                    <td class="r">−{{ inr($itc['igst']) }}</td>
-                    <td class="r">−{{ inr($itc['cgst']) }}</td>
-                    <td class="r">−{{ inr($itc['sgst']) }}</td>
+                    <td>Less: paid through ITC <span class="label-sub">(s.49(5) order)</span></td>
+                    <td class="r">−{{ inr($itc_used['igst']) }}</td>
+                    <td class="r">−{{ inr($itc_used['cgst']) }}</td>
+                    <td class="r">−{{ inr($itc_used['sgst']) }}</td>
+                </tr>
+                <tr>
+                    <td>Add: reverse charge on inward supplies <span class="label-sub">(3.1(d), cash only)</span></td>
+                    <td class="r">+{{ inr($rcm_inward['igst']) }}</td>
+                    <td class="r">+{{ inr($rcm_inward['cgst']) }}</td>
+                    <td class="r">+{{ inr($rcm_inward['sgst']) }}</td>
                 </tr>
                 <tr class="total">
                     <td>Net cash payable</td>
@@ -210,6 +223,14 @@
                     <td class="r">{{ inr($netCash['cgst']) }}</td>
                     <td class="r">{{ inr($netCash['sgst']) }}</td>
                 </tr>
+                @if ($itc_carried['total'] > 0)
+                    <tr>
+                        <td>ITC carried forward <span class="label-sub">(available next month)</span></td>
+                        <td class="r">{{ inr($itc_carried['igst']) }}</td>
+                        <td class="r">{{ inr($itc_carried['cgst']) }}</td>
+                        <td class="r">{{ inr($itc_carried['sgst']) }}</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
 
@@ -231,7 +252,7 @@
     </div>
 
     <div class="footer">
-        Generated by <strong>Apna Invoice</strong> for {{ $company->name }}. Filing due: {{ $periodEnd->copy()->addMonth()->day(20)->format('d M Y') }}. <strong>E. &amp; O.E.</strong>
+        Generated by <strong>Apna Invoice</strong> for {{ $company->name }}. Filing due: {{ $dueDate->format('d M Y') }}. <strong>E. &amp; O.E.</strong>
     </div>
 
 </body>

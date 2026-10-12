@@ -88,7 +88,7 @@ class QuotationController extends Controller
         });
 
         AuditLog::record('quotation.created',
-            "Quotation draft created · ₹" . number_format($quote->grand_total, 2) . " · " . $customer->name,
+            "Quotation draft created · ₹" . inr($quote->grand_total) . " · " . $customer->name,
             $quote
         );
 
@@ -123,7 +123,7 @@ class QuotationController extends Controller
     {
         $this->authorize($request, $quotation);
         if (! $quotation->isEditable()) {
-            return response()->json(['message' => 'This quotation can no longer be edited (drafts only).'], 422);
+            return response()->json(['message' => 'This quotation can no longer be edited. Only drafts can be changed.'], 422);
         }
 
         $company = $quotation->company;
@@ -226,12 +226,28 @@ class QuotationController extends Controller
     {
         $this->authorize($request, $quotation);
         if (! $quotation->canBeConverted()) {
-            return response()->json(['message' => 'This quotation cannot be converted (already converted or declined).'], 422);
+            return response()->json(['message' => 'This quotation is already converted or declined, so it cannot be converted.'], 422);
         }
 
         $quotation->loadMissing('items', 'customer');
 
         $invoice = DB::transaction(function () use ($quotation) {
+            // Same as the web path: taxes are recomputed at conversion from the
+            // customer's state as it stands today, not copied from the quote.
+            $calculator = app(\App\Services\InvoiceCalculator::class);
+            $isInterstate = $calculator->isInterstate($quotation->company?->state_id, $quotation->customer?->state_id);
+            $calc = $calculator->recalculate(new Invoice(), $quotation->items->map(fn ($qi) => [
+                'product_id' => $qi->product_id,
+                'description' => $qi->description,
+                'hsn_sac' => $qi->hsn_sac,
+                'quantity' => $qi->quantity,
+                'unit' => $qi->unit,
+                'rate' => $qi->rate,
+                'discount' => $qi->discount,
+                'gst_rate' => $qi->gst_rate,
+            ])->all(), $isInterstate, false);
+            $t = $calc['totals'];
+
             $invoice = Invoice::create([
                 'user_id' => $quotation->user_id,
                 'company_id' => $quotation->company_id,
@@ -239,44 +255,27 @@ class QuotationController extends Controller
                 'invoice_date' => now()->toDateString(),
                 'due_date' => now()->addDays(30)->toDateString(),
                 'place_of_supply_state_id' => $quotation->customer?->state_id,
-                'is_interstate' => $quotation->is_interstate,
+                'is_interstate' => $isInterstate,
                 'reverse_charge' => false,
                 'currency' => $quotation->currency,
                 'exchange_rate' => $quotation->exchange_rate,
                 'status' => 'draft',
-                'subtotal' => $quotation->subtotal,
-                'total_cgst' => $quotation->total_cgst,
-                'total_sgst' => $quotation->total_sgst,
-                'total_igst' => $quotation->total_igst,
-                'total_tax' => $quotation->total_tax,
-                'round_off' => $quotation->round_off,
-                'grand_total' => $quotation->grand_total,
+                'subtotal' => $t['subtotal'],
+                'total_cgst' => $t['total_cgst'],
+                'total_sgst' => $t['total_sgst'],
+                'total_igst' => $t['total_igst'],
+                'total_tax' => $t['total_tax'],
+                'round_off' => $t['round_off'],
+                'grand_total' => $t['grand_total'],
                 'paid_amount' => 0,
-                'balance' => $quotation->grand_total,
+                'balance' => $t['grand_total'],
                 'notes' => $quotation->notes,
                 'terms' => $quotation->terms,
                 'style' => $quotation->style,
             ]);
 
-            foreach ($quotation->items as $qi) {
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'product_id' => $qi->product_id,
-                    'description' => $qi->description,
-                    'hsn_sac' => $qi->hsn_sac,
-                    'quantity' => $qi->quantity,
-                    'unit' => $qi->unit,
-                    'rate' => $qi->rate,
-                    'discount' => $qi->discount,
-                    'gst_rate' => $qi->gst_rate,
-                    'amount' => $qi->amount,
-                    'cgst_amount' => $qi->cgst_amount,
-                    'sgst_amount' => $qi->sgst_amount,
-                    'igst_amount' => $qi->igst_amount,
-                    // The invoice line's GST-inclusive Amount reads this.
-                    'total' => round((float) $qi->amount + (float) $qi->cgst_amount + (float) $qi->sgst_amount + (float) $qi->igst_amount, 2),
-                ]);
-            }
+            // Lines come from the same calculation as the totals above.
+            $invoice->items()->createMany($calc['items']);
 
             $quotation->update([
                 'status' => 'converted',
@@ -350,7 +349,7 @@ class QuotationController extends Controller
             'items.*.unit' => ['nullable', 'string', 'max:20'],
             'items.*.rate' => ['required', 'numeric', 'min:0'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
-            'items.*.gst_rate' => ['required', 'numeric', 'min:0', 'max:50'],
+            'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
             'items.*.product_id' => ['nullable', 'integer'],
         ]);
     }
