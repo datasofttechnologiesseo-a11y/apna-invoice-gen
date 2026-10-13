@@ -188,6 +188,10 @@ class PaymentBook
         ]);
 
         DB::transaction(function () use ($payment, $invoice) {
+            // Same company lock as recording a payment, and the invoice read
+            // again under it: a concurrent payment must not be lost.
+            $invoice->company()->lockForUpdate()->first();
+            $invoice->refresh();
             $payment->delete();
             $this->recompute($invoice);
         });

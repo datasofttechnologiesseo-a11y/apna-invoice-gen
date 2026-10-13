@@ -8,6 +8,9 @@ class VendorImporter extends Importer
 {
     private ?array $existing = null;
 
+    /** Vendors already taken from earlier rows of this file, by GSTIN and by name. */
+    private array $inFile = ['gstin' => [], 'name' => []];
+
     public function key(): string
     {
         return 'vendors';
@@ -80,7 +83,18 @@ class VendorImporter extends Importer
             'country' => 'India',
         ];
 
-        return ['data' => $data, 'errors' => [], 'duplicate' => $this->duplicateOf($data)];
+        $duplicate = $this->duplicateOf($data);
+        if ($duplicate === null) {
+            $this->inFile['file'][$this->fileKey($data)] = true;
+            // A later row for the same vendor in this sheet is skipped, as it
+            // would be on any later import once this one is saved.
+            if ($data['gstin']) {
+                $this->inFile['gstin'][$data['gstin']] = $data['name'];
+            }
+            $this->inFile['name'][Str::lower($data['name'])] = $data['name'];
+        }
+
+        return ['data' => $data, 'errors' => [], 'duplicate' => $duplicate];
     }
 
     public function fileKey(array $data): string
@@ -104,6 +118,17 @@ class VendorImporter extends Importer
         }
         if (isset($this->existing['name'][Str::lower($data['name'])])) {
             return 'Already a vendor named ' . $this->existing['name'][Str::lower($data['name'])];
+        }
+        // The same file key again is reported by the import itself, with
+        // its row number; this catches the same record under the other key.
+        if (isset($this->inFile['file'][$this->fileKey($data)])) {
+            return null;
+        }
+        if ($data['gstin'] && isset($this->inFile['gstin'][$data['gstin']])) {
+            return 'Same GSTIN as ' . $this->inFile['gstin'][$data['gstin']] . ' higher up in this file';
+        }
+        if (isset($this->inFile['name'][Str::lower($data['name'])])) {
+            return 'Same vendor as a row higher up in this file';
         }
 
         return null;

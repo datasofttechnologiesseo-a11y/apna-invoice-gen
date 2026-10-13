@@ -8,7 +8,8 @@ use Illuminate\Console\Command;
 
 /**
  * Completes DPDP erasure for accounts that were depersonalised because GST
- * records had to be retained. Once every retained invoice has aged past the
+ * records had to be retained. Once every retained record (sales and purchase
+ * side alike, see AccountErasureService::statutoryRecords) has aged past the
  * statutory window, the de-identified shell (and its now-stale books) is
  * hard-deleted, so we keep personal data no longer than the law requires.
  */
@@ -22,11 +23,15 @@ class PurgeErasedAccounts extends Command
     {
         $cutoff = self::retentionCutoff(now(), (int) config('legal.gst_retention_months', 72));
 
-        // Depersonalised shells with no issued invoice still inside the retention window.
+        // Depersonalised shells with no retained record still inside the
+        // retention window: the latest of all of them (sale, credit note,
+        // receipt, purchase invoice and its payment, cash memo, GST expense)
+        // is older than the cutoff. Counting sales alone purged a purchase
+        // invoice of last month because the last sale was years old.
         $users = User::query()
             ->whereNotNull('erased_at')
-            ->whereDoesntHave('invoices', fn ($q) => $q->whereNotNull('finalized_at')->whereDate('invoice_date', '>=', $cutoff))
-            ->get();
+            ->get()
+            ->reject(fn (User $user) => $eraser->hasStatutoryRecords($user, since: $cutoff));
 
         $this->info("Found {$users->count()} erased account(s) past retention.");
 

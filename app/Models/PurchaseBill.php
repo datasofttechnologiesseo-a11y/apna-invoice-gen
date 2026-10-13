@@ -138,4 +138,69 @@ class PurchaseBill extends Model
     {
         return $this->booked_on ?? $this->bill_date;
     }
+
+    /**
+     * CGST s.16(4): credit on a supplier invoice can be taken in a return
+     * filed by 30 November after the end of the invoice's financial year.
+     * The last return due before then is October's (due 20 November), and
+     * for a quarterly (QRMP) filer July to September; so the return period
+     * must end on or before 31 October after that year. Sales side twin:
+     * Invoice::creditNoteDeadline().
+     */
+    public static function itcPeriodDeadline(\Carbon\CarbonInterface $billDate): \Illuminate\Support\Carbon
+    {
+        $fyEndYear = $billDate->month >= 4 ? $billDate->year + 1 : $billDate->year;
+
+        return \Illuminate\Support\Carbon::create($fyEndYear, 10, 31)->endOfDay();
+    }
+
+    /**
+     * Whether the credit on this bill is past the s.16(4) limit for the
+     * return it falls in: by default the month it is booked in, or the
+     * given return period's last day.
+     */
+    public function isItcTimeBarred(?\Carbon\CarbonInterface $periodEnd = null): bool
+    {
+        if (! $this->bill_date) {
+            return false;
+        }
+        $periodEnd ??= $this->bookedDate()->copy()->endOfMonth();
+
+        return $periodEnd->copy()->startOfDay()->gt(self::itcPeriodDeadline($this->bill_date));
+    }
+
+    /**
+     * Rule 37 (second proviso to s.16(2)): a supplier not paid within 180
+     * days of the invoice date. This is the last day a payment still counts.
+     */
+    public function rule37PayBy(): ?\Illuminate\Support\Carbon
+    {
+        return $this->bill_date?->copy()->addDays(180);
+    }
+
+    /**
+     * The day the credit on the part still unpaid after 180 days is reversed
+     * (GSTR-3B Table 4(B)(2)): the 181st day, or the day the bill was booked
+     * if it was booked later than that.
+     */
+    public function rule37ReversalOn(): ?\Illuminate\Support\Carbon
+    {
+        if (! $this->bill_date) {
+            return null;
+        }
+        $day181 = $this->bill_date->copy()->addDays(181);
+
+        return $this->booked_on && $this->booked_on->gt($day181) ? $this->booked_on->copy() : $day181;
+    }
+
+    /**
+     * Whether Rule 37 can apply at all: credit taken on the supplier's
+     * invoice (not reverse charge, not blocked, not time-barred) and
+     * something owed to the supplier.
+     */
+    public function rule37Applies(): bool
+    {
+        return $this->itc_eligible && ! $this->reverse_charge && (float) $this->grand_total > 0
+            && (float) $this->total_tax > 0 && ! $this->isItcTimeBarred();
+    }
 }

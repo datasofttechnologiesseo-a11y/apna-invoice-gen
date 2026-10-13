@@ -307,12 +307,30 @@ class Company extends Model
             return ($this->invoice_prefix ?: 'INV') . '-' . $padded;
         }
 
-        return strtr($format, [
-            '{FY}' => sprintf('%04d-%02d', $fyStartYear, $fyEndYear % 100),
-            '{FY_SHORT}' => sprintf('%02d-%02d', $fyStartYear % 100, $fyEndYear % 100),
+        return $this->renderNumber($format, $fyStartYear, $fyEndYear, $ref, $padded);
+    }
+
+    /**
+     * An invoice number from the format. Rule 46(b) allows 16 characters: a
+     * format that fits at its normal length ("INV/2026-27/0001") but outgrows
+     * it once the count needs another digit (the 10,000th bill of the year)
+     * takes the short year instead ("INV/26-27/10000"). A format that is too
+     * long even at its normal length is left as chosen; settings warn about it.
+     */
+    private function renderNumber(string $format, int $fyS, int $fyE, \Illuminate\Support\Carbon $ref, string $padded): string
+    {
+        $tokens = [
+            '{FY}' => sprintf('%04d-%02d', $fyS, $fyE % 100),
+            '{FY_SHORT}' => sprintf('%02d-%02d', $fyS % 100, $fyE % 100),
             '{YYYY}' => $ref->format('Y'),
-            '{N}' => $padded,
-        ]);
+        ];
+        $number = strtr($format, $tokens + ['{N}' => $padded]);
+        $normal = strtr($format, $tokens + ['{N}' => str_repeat('0', $this->invoice_number_padding ?: 4)]);
+        if (mb_strlen($number) > 16 && mb_strlen($normal) <= 16 && str_contains($format, '{FY}')) {
+            $number = strtr(str_replace('{FY}', '{FY_SHORT}', $format), $tokens + ['{N}' => $padded]);
+        }
+
+        return $number;
     }
 
     /**
@@ -338,7 +356,7 @@ class Company extends Model
      *   - a format is only derived when none has been chosen, so a deliberate
      *     setting is never overwritten.
      */
-    public function learnSeriesFrom(string $number): void
+    public function learnSeriesFrom(string $number, $invoiceDate = null): void
     {
         if (! preg_match('/^(.*?)(\d+)$/', trim($number), $m)) {
             return;   // no trailing number to continue from
@@ -346,16 +364,30 @@ class Company extends Model
 
         [, $prefix, $digits] = $m;
         $value = (int) $digits;
+        $ref = $invoiceDate ? \Illuminate\Support\Carbon::parse($invoiceDate) : now();
+        [$fyS, $fyE] = self::financialYearFor($ref);
+        $currentFy = self::financialYearFor(now())[0];
 
         $changes = [];
 
-        if ($value > (int) ($this->invoice_counter ?? 0)) {
+        // Only a number from this financial year moves this year's counter.
+        // A late bill numbered in last year's book (INV/2025-26/0151) moved
+        // it to 151, so the next bill of this year was 0152 after 0010.
+        $counter = ($this->invoice_counter_fy !== null && $this->invoice_counter_fy < $currentFy) ? 0 : (int) ($this->invoice_counter ?? 0);
+        if ($fyS >= $currentFy && $value > $counter) {
             $changes['invoice_counter'] = $value;
-            $changes['invoice_counter_fy'] = self::financialYearFor(now())[0];
+            $changes['invoice_counter_fy'] = $currentFy;
         }
 
         if (blank($this->invoice_number_format)) {
-            $changes['invoice_number_format'] = $prefix . '{N}';
+            // A year written in the number becomes the year token, so the
+            // series follows the financial year instead of repeating this one.
+            $template = str_replace(
+                [sprintf('%04d-%02d', $fyS, $fyE % 100), sprintf('%02d-%02d', $fyS % 100, $fyE % 100)],
+                ['{FY}', '{FY_SHORT}'],
+                $prefix
+            );
+            $changes['invoice_number_format'] = $template . '{N}';
             $changes['invoice_number_padding'] = strlen($digits);
         }
 
@@ -396,12 +428,7 @@ class Company extends Model
         if (! $format) {
             return ($this->invoice_prefix ?: 'INV') . '-' . $padded;
         }
-        return strtr($format, [
-            '{FY}' => sprintf('%04d-%02d', $fyS, $fyE % 100),
-            '{FY_SHORT}' => sprintf('%02d-%02d', $fyS % 100, $fyE % 100),
-            '{YYYY}' => $ref->format('Y'),
-            '{N}' => $padded,
-        ]);
+        return $this->renderNumber($format, $fyS, $fyE, $ref, $padded);
     }
 
     /** Does the invoice number carry the year, so each FY has its own series? */
@@ -426,21 +453,26 @@ class Company extends Model
             '{YYYY}' => $ref->format('Y'),
         ];
         $format = (string) $this->invoice_number_format;
-        $pattern = '/^' . str_replace('\{N\}', '(\d+)', preg_quote(strtr($format, $tokens), '/')) . '$/';
+        $patterns = array_unique([
+            '/^' . str_replace('\{N\}', '(\d+)', preg_quote(strtr($format, $tokens), '/')) . '$/',
+            '/^' . str_replace('\{N\}', '(\d+)', preg_quote(strtr(str_replace('{FY}', '{FY_SHORT}', $format), $tokens), '/')) . '$/',
+        ]);
 
         $highest = 0;
         $numbers = Invoice::where('company_id', $this->id)->whereNotNull('invoice_number')
             ->whereBetween('invoice_date', [sprintf('%04d-04-01', $fyS), sprintf('%04d-03-31', $fyE)])
             ->pluck('invoice_number');
         foreach ($numbers as $number) {
-            if (preg_match($pattern, (string) $number, $m)) {
-                $highest = max($highest, (int) $m[1]);
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, (string) $number, $m)) {
+                    $highest = max($highest, (int) $m[1]);
+                }
             }
         }
 
         $padding = $this->invoice_number_padding ?: 4;
         do {
-            $number = strtr($format, $tokens + ['{N}' => str_pad((string) ++$highest, $padding, '0', STR_PAD_LEFT)]);
+            $number = $this->renderNumber($format, $fyS, $fyE, $ref, str_pad((string) ++$highest, $padding, '0', STR_PAD_LEFT));
         } while (Invoice::where('company_id', $this->id)->where('invoice_number', $number)->exists());
 
         return $number;

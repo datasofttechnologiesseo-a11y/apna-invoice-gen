@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CreditNote;
 use App\Models\Invoice;
+use App\Services\CreditNoteLines;
 use App\Support\NumberToWords;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -85,8 +86,10 @@ class CreditNoteController extends Controller
         $creditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount), 2);
         $reasons = array_keys(config('credit_note_reasons'));
 
+        // "Has lines" is read from the quantities CreditNoteLines will use
+        // (rounded as stored), never the raw input: 0.0004 rounds to nothing.
         $hasLines = CreditNote::linesAvailable()
-            && collect((array) $request->input('lines', []))->contains(fn ($q) => is_numeric($q) && (float) $q > 0);
+            && CreditNoteLines::picked((array) $request->input('lines', [])) !== [];
         $data = $request->validate([
             'credit_note_date' => ['required', 'date', 'after_or_equal:' . $invoice->invoice_date?->toDateString(), 'before_or_equal:today'],
             // With lines picked the amount is worked out from them (and may
@@ -97,7 +100,7 @@ class CreditNoteController extends Controller
             // Optional: invoice item id => quantity returned. With lines, the
             // note's amount and tax come from them (CreditNoteLines).
             'lines' => ['nullable', 'array'],
-            'lines.*' => ['nullable', 'numeric', 'min:0'],
+            'lines.*' => CreditNoteLines::quantityRules(),
         ]);
 
         // Books-lock: cannot issue a credit note dated inside a closed FY.
@@ -115,11 +118,23 @@ class CreditNoteController extends Controller
             // checked again, or two notes credit more than the invoice is worth.
             $invoice->refresh();
             $stillCreditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->creditNotes()->reorder()->sum('amount')), 2);
-            if ($invoice->isCancelled() || (! $hasLines && (float) $data['amount'] > $stillCreditable + 0.001)) {
+            if ($invoice->isCancelled()) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'amount' => 'A credit note was just issued. Only ₹' . inr($stillCreditable) . ' of this invoice can still be credited.',
                 ]);
             }
+
+            // Lines picked (a return of 1 of 7): the note is the sum of its
+            // lines. Otherwise the amount is spread pro rata across the
+            // invoice's tax heads, as it always was, never reversing more tax
+            // than the invoice charged.
+            $built = $hasLines ? app(CreditNoteLines::class)->build($invoice, (array) ($data['lines'] ?? [])) : null;
+            $amount = $built ? (float) $built['amount'] : round((float) ($data['amount'] ?? 0), 2);
+            $this->assertCreditable($amount, $stillCreditable, (bool) $built);
+            $split = $built
+                ? array_intersect_key($built, array_flip(['taxable_value', 'total_cgst', 'total_sgst', 'total_igst']))
+                : app(\App\Services\CreditNoteSplit::class)->for($invoice, $amount);
+
             // The counter resets each financial year but the number carries no
             // FY part, so CRN-0001 comes round again every April. Skip past any
             // number already issued, as invoices do, instead of tripping the
@@ -129,19 +144,6 @@ class CreditNoteController extends Controller
             } while (\App\Models\CreditNote::where('company_id', $company->id)
                 ->where('credit_note_number', $number)
                 ->exists());
-
-            // Lines picked (a return of 1 of 7): the note is the sum of its
-            // lines. Otherwise the amount is spread pro rata across the
-            // invoice's tax heads, as it always was, never reversing more tax
-            // than the invoice charged.
-            $built = app(\App\Services\CreditNoteLines::class)->build($invoice, (array) ($data['lines'] ?? []));
-            if ($built) {
-                $amount = $built['amount'];
-                $split = array_intersect_key($built, array_flip(['taxable_value', 'total_cgst', 'total_sgst', 'total_igst']));
-            } else {
-                $amount = (float) $data['amount'];
-                $split = app(\App\Services\CreditNoteSplit::class)->for($invoice, $amount);
-            }
 
             $cn = CreditNote::create([
                 'user_id' => $invoice->user_id,
@@ -205,6 +207,12 @@ class CreditNoteController extends Controller
         $snapshot = $creditNote->only(['credit_note_number', 'credit_note_date', 'amount', 'reason']);
 
         DB::transaction(function () use ($creditNote, $invoice) {
+            // The company lock store() and recordPayment take, then the invoice
+            // read again under it, so a payment saved meanwhile is not lost
+            // when paid, credited and balance are written back below.
+            $invoice->company()->lockForUpdate()->first();
+            $invoice->refresh();
+
             // Stock a sales return put back comes out again with the note.
             app(\App\Services\StockLedger::class)->reverseCreditNote($creditNote);
             if (CreditNote::linesAvailable()) {
@@ -258,6 +266,25 @@ class CreditNoteController extends Controller
 
         $safeNumber = preg_replace('~[\\\\/\\:\\*\\?"<>\\|\\s]+~', '-', $creditNote->credit_note_number);
         return $pdf->download('credit-note-' . $safeNumber . '.pdf');
+    }
+
+    /**
+     * The note as it will be saved, checked under the lock whatever it was
+     * built from: it credits something, and never more than is left (s.34).
+     * Lines that come to ₹0 (a free item) cannot make a note on their own.
+     */
+    private function assertCreditable(float $amount, float $stillCreditable, bool $fromLines): void
+    {
+        if ($amount < 0.01) {
+            throw \Illuminate\Validation\ValidationException::withMessages($fromLines
+                ? ['lines' => 'These lines come to ₹0. Pick a line with a value, or clear the lines and type the amount.']
+                : ['amount' => 'Enter the amount to credit.']);
+        }
+        if ($amount > $stillCreditable + 0.001) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'amount' => 'A credit note was just issued. Only ₹' . inr($stillCreditable) . ' of this invoice can still be credited.',
+            ]);
+        }
     }
 
     private function authorizeInvoice(Request $request, Invoice $invoice): void

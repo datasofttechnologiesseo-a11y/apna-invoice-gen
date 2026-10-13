@@ -260,6 +260,11 @@ class FinanceController extends Controller
             'itc_carried' => $d['itc_carried'],
             'negative_liability_in' => $d['negative_carry_in'],
             'negative_liability_out' => $d['negative_carry_out'],
+            // Table 4(B)(2) Rule 37 reversal, the Rule 37 re-claim inside
+            // 4(A)(5), and credit left out under the s.16(4) time limit.
+            'itc_reversed' => $d['itc_reversed'],
+            'itc_reclaimed' => $d['itc_reclaimed'],
+            'itc_time_barred' => $d['itc_time_barred'],
             'invoice_count' => $d['invoiceCount'],
             'credit_note_count' => $d['creditNoteCount'],
             'expense_count' => $d['expenseCount'],

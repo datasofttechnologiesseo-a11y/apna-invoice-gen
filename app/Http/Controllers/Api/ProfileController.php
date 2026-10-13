@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * JSON API for the user's own profile — update name/email, change password,
@@ -27,10 +28,21 @@ class ProfileController extends Controller
         ]);
 
         $user->fill($data);
-        if ($user->isDirty('email')) {
+        // A new email is unproven until its owner opens the link we mail to
+        // it (same as the web profile page).
+        $emailChanged = $user->isDirty('email');
+        if ($emailChanged) {
             $user->email_verified_at = null;
         }
         $user->save();
+
+        if ($emailChanged) {
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                report($e); // a mail failure never undoes the save
+            }
+        }
 
         return response()->json([
             'message' => 'Profile updated.',
@@ -50,7 +62,15 @@ class ProfileController extends Controller
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
-        $request->user()->update(['password' => Hash::make($data['password'])]);
+        $user = $request->user();
+        $user->update(['password' => Hash::make($data['password'])]);
+
+        // Sign out every other device signed in with the old password. The
+        // token making this request stays, so the app in hand keeps working.
+        $current = $user->currentAccessToken();
+        $user->tokens()
+            ->when($current instanceof PersonalAccessToken, fn ($q) => $q->whereKeyNot($current->getKey()))
+            ->delete();
 
         return response()->json(['message' => 'Password updated.']);
     }

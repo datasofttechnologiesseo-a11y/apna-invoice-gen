@@ -268,6 +268,9 @@ class InvoiceController extends Controller
         $supplyType = $data['supply_type'] ?? 'regular';
         \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
         [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        // A composition dealer issues a bill of supply and cannot collect tax
+        // on it (s.10(4), s.31(3)(c)): the rate stays on the line, the tax is nil.
+        $noTax = $noTax || (bool) $company->composition_dealer;
         $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $noTax);
         $this->guardPaidAmount($data, $calc);
 
@@ -310,6 +313,7 @@ class InvoiceController extends Controller
                 // payments sum (see recordPayment) and clamp the same way.
                 'balance' => max(0, round($calc['totals']['grand_total'] - (float) ($data['paid_amount'] ?? 0), 2)),
                 'paid_amount' => (float) ($data['paid_amount'] ?? 0),
+                ...$this->paidVia($data),
             ]);
 
             $invoice->items()->createMany($calc['items']);
@@ -342,15 +346,27 @@ class InvoiceController extends Controller
             ? (int) $invoice->invoice_date->diffInDays($invoice->due_date)
             : 30;
 
-        $copy = DB::transaction(function () use ($request, $invoice, $termDays) {
+        // The copy is taxed as a new invoice would be today: the customer may
+        // have moved state since (CGST/SGST vs IGST and the place of supply
+        // follow them), or the business joined the composition scheme.
+        $company = $invoice->company;
+        $customer = $invoice->customer;
+        $supplyType = $invoice->supply_type ?: 'regular';
+        [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer?->state_id, $supplyType, (bool) $invoice->reverse_charge);
+        $noTax = $noTax || (bool) $company->composition_dealer;
+        $calc = $this->calculator->recalculate(new Invoice(), $invoice->items->map(fn ($item) => $item->only([
+            'product_id', 'description', 'hsn_sac', 'quantity', 'unit', 'rate', 'discount', 'gst_rate', 'sort_order',
+        ]))->all(), $isInterstate, $noTax);
+
+        $copy = DB::transaction(function () use ($request, $invoice, $termDays, $customer, $isInterstate, $calc) {
             $new = $request->user()->invoices()->create([
                 'company_id' => $invoice->company_id,
                 'customer_id' => $invoice->customer_id,
                 'invoice_number' => null,
                 'invoice_date' => now()->toDateString(),
                 'due_date' => now()->addDays($termDays)->toDateString(),
-                'place_of_supply_state_id' => $invoice->place_of_supply_state_id,
-                'is_interstate' => $invoice->is_interstate,
+                'place_of_supply_state_id' => $customer?->state_id ?? $invoice->place_of_supply_state_id,
+                'is_interstate' => $isInterstate,
                 'reverse_charge' => $invoice->reverse_charge,
                 'supply_type' => $invoice->supply_type ?: 'regular',
                 'currency' => $invoice->currency,
@@ -359,27 +375,13 @@ class InvoiceController extends Controller
                 'style' => $invoice->style,
                 'notes' => $invoice->notes,
                 'terms' => $invoice->terms,
-                // Money snapshot copied as-is (identical items → identical totals);
-                // the editor recomputes on the next save regardless.
-                'subtotal' => $invoice->subtotal,
-                'total_cgst' => $invoice->total_cgst,
-                'total_sgst' => $invoice->total_sgst,
-                'total_igst' => $invoice->total_igst,
-                'total_tax' => $invoice->total_tax,
-                'round_off' => $invoice->round_off,
-                'grand_total' => $invoice->grand_total,
+                ...$calc['totals'],
                 'paid_amount' => 0,
                 'credited_amount' => 0,
-                'balance' => $invoice->grand_total,
+                'balance' => $calc['totals']['grand_total'],
             ]);
 
-            foreach ($invoice->items as $item) {
-                $new->items()->create($item->only([
-                    'product_id', 'description', 'hsn_sac', 'quantity', 'unit', 'rate',
-                    'discount', 'amount', 'gst_rate', 'cgst_amount', 'sgst_amount',
-                    'igst_amount', 'total', 'sort_order',
-                ]));
-            }
+            $new->items()->createMany($calc['items']);
 
             return $new;
         });
@@ -484,6 +486,9 @@ class InvoiceController extends Controller
         $supplyType = $data['supply_type'] ?? ($invoice->supply_type ?: 'regular');
         \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
         [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        // A composition dealer issues a bill of supply and cannot collect tax
+        // on it (s.10(4), s.31(3)(c)): the rate stays on the line, the tax is nil.
+        $noTax = $noTax || (bool) $company->composition_dealer;
         $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $noTax);
         $this->guardPaidAmount($data, $calc);
 
@@ -519,6 +524,7 @@ class InvoiceController extends Controller
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
                 'paid_amount' => $paid,
+                ...$this->paidVia($data),
                 'balance' => max(0, round($calc['totals']['grand_total'] - $paid, 2)),
             ]);
 
@@ -592,6 +598,9 @@ class InvoiceController extends Controller
         if ((float) $invoice->grand_total <= 0) {
             return back()->withErrors(['finalize' => 'Cannot issue a zero-amount invoice.']);
         }
+        if ($rows = $this->rowsMissingHsn($invoice)) {
+            return back()->withErrors(['finalize' => 'Enter the HSN/SAC code on row ' . implode(', ', $rows) . ' before issuing. It is required when either party has a GSTIN.']);
+        }
 
         // GST place-of-supply integrity. When the company's own state is unknown,
         // the calculator cannot tell an intra-state sale (CGST/SGST) from an
@@ -642,7 +651,7 @@ class InvoiceController extends Controller
                 // The series is carried forward from it so the next auto-numbered
                 // bill continues (5464 -> 5465) instead of restarting at 0001.
                 $number = $invoice->invoice_number;
-                $company->learnSeriesFrom($number);
+                $company->learnSeriesFrom($number, $invoice->invoice_date);
             } else {
                 // Atomic: resets counter on FY boundary, increments, stamps format.
                 // Skip past any number a custom-numbered invoice already claimed,
@@ -846,6 +855,13 @@ class InvoiceController extends Controller
         ]);
 
         DB::transaction(function () use ($payment, $invoice) {
+            // The same company lock recordPayment and credit notes take, then
+            // the invoice read again under it: a payment or credit note saved
+            // while this request was on its way would otherwise be overwritten
+            // by the paid and credited figures loaded before the lock.
+            $invoice->company()->lockForUpdate()->first();
+            $invoice->refresh();
+
             $payment->delete();
 
             $paid = (float) $invoice->payments()->sum('amount');
@@ -1158,6 +1174,39 @@ class InvoiceController extends Controller
      * receipt, and a receipt larger than the invoice would leave a negative
      * balance nobody asked for.
      */
+    /**
+     * How the "Paid amount" was paid, for the receipt booked at issue. Nothing
+     * paid, nothing stored.
+     */
+    private function paidVia(array $data): array
+    {
+        $paid = (float) ($data['paid_amount'] ?? 0) > 0;
+
+        return [
+            'paid_method' => $paid ? ($data['paid_method'] ?? null) : null,
+            'paid_reference' => $paid ? (trim((string) ($data['paid_reference'] ?? '')) ?: null) : null,
+        ];
+    }
+
+    /**
+     * Rows (1-based) with no HSN/SAC code, when the code is required: Rule
+     * 46(g) once either party has a GSTIN, the same rule the invoice form
+     * applies on save. A draft made from a quotation, whose form does not
+     * ask for it, could otherwise be issued without one.
+     *
+     * @return list<int>
+     */
+    private function rowsMissingHsn(Invoice $invoice): array
+    {
+        if (! $invoice->company?->gstin && ! $invoice->billedCustomer()?->gstin) {
+            return [];
+        }
+
+        return $invoice->items()->orderBy('sort_order')->orderBy('id')->get()->values()
+            ->filter(fn ($item) => trim((string) $item->hsn_sac) === '')
+            ->keys()->map(fn ($k) => $k + 1)->all();
+    }
+
     private function guardPaidAmount(array $data, array $calc): void
     {
         $paid = round((float) ($data['paid_amount'] ?? 0), 2);
@@ -1291,6 +1340,8 @@ class InvoiceController extends Controller
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'paid_method' => ['nullable', Rule::in(array_keys(config('payment_methods.methods', [])))],
+            'paid_reference' => ['nullable', 'string', 'max:80'],
             // One discount for the whole invoice (the form's bottom box); it is
             // spread across the lines before tax - see apportionDiscount().
             'invoice_discount' => ['nullable', 'numeric', 'min:0'],

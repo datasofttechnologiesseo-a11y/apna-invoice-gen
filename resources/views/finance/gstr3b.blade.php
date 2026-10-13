@@ -146,30 +146,59 @@
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($itc_rcm['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
                             </tr>
+                            @php
+                                $reversed = $itc_reversed ?? ['igst' => 0, 'cgst' => 0, 'sgst' => 0, 'total' => 0];
+                                $reclaimedTotal = (float) ($itc_reclaimed['total'] ?? 0);
+                                $barred = $itc_time_barred ?? ['total' => 0, 'count' => 0];
+                                // Net credit below nil in a head is shown with a minus sign.
+                                $signed = fn ($v) => (float) $v < 0 ? '−' . rupees(-(float) $v) : rupees($v);
+                            @endphp
                             <tr class="bg-money-50/30">
-                                <td class="px-5 py-3"><strong>(A)(5)</strong> All other ITC <span class="text-xs text-gray-500">(purchase invoices, expenses and cash memos)</span></td>
+                                <td class="px-5 py-3"><strong>(A)(5)</strong> All other ITC <span class="text-xs text-gray-500">(purchase invoices, expenses and cash memos)</span>
+                                    @if ($reclaimedTotal > 0)
+                                        <span class="block text-xs text-gray-500">Includes ₹{{ inr($reclaimedTotal) }} re-claimed under Rule 37 on bills paid after 180 days</span>
+                                    @endif
+                                </td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($itc_other['igst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($itc_other['cgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($itc_other['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
                             </tr>
                             <tr>
-                                <td class="px-5 py-3"><strong>(B)</strong> ITC reversed</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
+                                <td class="px-5 py-3"><strong>(B)(2)</strong> ITC reversed <span class="text-xs text-gray-500">(Rule 37: supplier not paid within 180 days of the invoice)</span></td>
+                                @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums {{ (float) $reversed[$head] > 0 ? '' : 'text-gray-500' }}">{{ rupees($reversed[$head]) }}</td>
+                                @endforeach
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
                             </tr>
                             <tr class="bg-money-100/50 border-t-2 border-money-300">
                                 <td class="px-5 py-3 font-bold">(C) Net ITC available <span class="text-xs font-normal text-gray-500">(A − B)</span></td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ rupees($itc['igst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ rupees($itc['cgst']) }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ rupees($itc['sgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ $signed($itc['igst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ $signed($itc['cgst']) }}</td>
+                                <td class="px-5 py-3 text-right font-mono tabular-nums font-bold">{{ $signed($itc['sgst']) }}</td>
                                 <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">0</td>
                             </tr>
+                            @if ((float) $barred['total'] > 0)
+                                <tr class="text-gray-600">
+                                    <td class="px-5 py-3">Time-barred, not claimed <span class="text-xs text-gray-500">(Section 16(4): {{ $barred['count'] }} {{ \Illuminate\Support\Str::plural('purchase invoice', $barred['count']) }} booked after the time limit for credit)</span></td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($barred['igst']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($barred['cgst']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums">{{ rupees($barred['sgst']) }}</td>
+                                    <td class="px-5 py-3 text-right font-mono tabular-nums text-gray-500">-</td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
+                @if ((float) $reversed['total'] > 0)
+                    <div class="px-5 py-3 border-t border-gray-200 text-sm text-gray-700">
+                        ₹{{ inr($reversed['total']) }} of credit is reversed on {{ $itc_rule37_bills ?? 0 }} {{ \Illuminate\Support\Str::plural('purchase invoice', $itc_rule37_bills ?? 0) }} not paid within 180 days.
+                        It is claimed again in the month you pay the supplier. If you have already paid, record the payment on the purchase invoice and this figure updates.
+                        @if ($itc['igst'] < 0 || $itc['cgst'] < 0 || $itc['sgst'] < 0)
+                            Where it is more than this month's credit, the rest is added to the tax payable below.
+                        @endif
+                    </div>
+                @endif
                 @if (($itc_no_gstin ?? 0) > 0)
                     <div class="px-5 py-3 bg-accent-50 border-t border-accent-200 text-sm text-accent-900" role="alert">
                         <strong>Check ₹{{ rupees($itc_no_gstin) }} of this credit.</strong>
@@ -204,6 +233,18 @@
                                 <dt class="text-gray-700">In your books, not in 2B yet <span class="text-xs text-gray-500">(hold until the supplier files)</span></dt>
                                 <dd class="font-mono tabular-nums {{ $g2b['not_in_2b']['total'] > 0 ? 'text-accent-800 font-semibold' : '' }}">₹{{ inr($g2b['not_in_2b']['total']) }}</dd>
                             </div>
+                            @if (($g2b['not_available']['total'] ?? 0) > 0)
+                                <div class="flex items-baseline justify-between gap-3">
+                                    <dt class="text-gray-700">In 2B, ITC not available <span class="text-xs text-gray-500">(2B says this credit cannot be claimed)</span></dt>
+                                    <dd class="font-mono tabular-nums text-danger-700 font-semibold">₹{{ inr($g2b['not_available']['total']) }}</dd>
+                                </div>
+                            @endif
+                            @if (($g2b['held_earlier']['total'] ?? 0) > 0)
+                                <div class="flex items-baseline justify-between gap-3">
+                                    <dt class="text-gray-700">Held in an earlier return, now in 2B <span class="text-xs text-gray-500">(included above, claim it in this return)</span></dt>
+                                    <dd class="font-mono tabular-nums">₹{{ inr($g2b['held_earlier']['total']) }}</dd>
+                                </div>
+                            @endif
                             <div class="flex items-baseline justify-between gap-3">
                                 <dt class="text-gray-700">Expenses and cash memos <span class="text-xs text-gray-500">(check on the GST portal)</span></dt>
                                 <dd class="font-mono tabular-nums">₹{{ inr($g2b['unchecked']['total']) }}</dd>
@@ -242,7 +283,9 @@
             @php
                 // Which credit paid which tax. Shown only while it adds up to
                 // the "paid through ITC" row above it.
-                $matrix = $setOffMatrix ?? null;
+                // The builder's own set-off first: it includes net credit below
+                // nil (Rule 37 reversals), which a set-off on 4(C) alone misses.
+                $matrix = $set_off_matrix ?? $setOffMatrix ?? null;
                 $matrixOk = is_array($matrix) && collect(['igst', 'cgst', 'sgst'])->every(fn ($h) =>
                     abs(($matrix['igst'][$h] ?? 0) + ($matrix['cgst'][$h] ?? 0) + ($matrix['sgst'][$h] ?? 0) - (float) $itc_used[$h]) < 0.01);
                 $paise = fn ($v) => \App\Support\IndianNumber::format((float) $v, 2);
@@ -276,6 +319,14 @@
                                     <td class="{{ $cellLabel }} text-gray-700">Less: negative liability from earlier periods <span class="text-xs text-gray-500">(credit notes that exceeded that period's sales)</span></td>
                                     @foreach (['igst', 'cgst', 'sgst'] as $head)
                                         <td class="{{ $cellNum }} text-gray-900">{{ $negative_carry_in[$head] < 0 ? '−' . rupees(-$negative_carry_in[$head]) : rupees(0) }}</td>
+                                    @endforeach
+                                </tr>
+                            @endif
+                            @if ($itc['igst'] < 0 || $itc['cgst'] < 0 || $itc['sgst'] < 0)
+                                <tr>
+                                    <td class="{{ $cellLabel }} text-gray-700">Add: net ITC below nil <span class="text-xs text-gray-500">(4(C), credit reversed beyond this month's credit)</span></td>
+                                    @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                        <td class="{{ $cellNum }}">+{{ rupees(max(0, -(float) $itc[$head])) }}</td>
                                     @endforeach
                                 </tr>
                             @endif

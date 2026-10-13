@@ -78,6 +78,13 @@ class ProfitAndLoss
         $rcm = $company->purchaseBills()->where('reverse_charge', true)->whereBetween(\Illuminate\Support\Facades\DB::raw('COALESCE(booked_on, bill_date)'), [$from, $to]);
         $rcmTax = (float) (clone $rcm)->sum('total_igst') + (float) (clone $rcm)->sum('total_cgst') + (float) (clone $rcm)->sum('total_sgst');
 
+        // Rule 37, as GSTR-3B applies it: credit on suppliers not paid within
+        // 180 days is reversed in the period day 181 falls in, and taken again
+        // when they are paid. Without it the year's GST payable here was less
+        // than the twelve returns'.
+        $rule37 = app(Gstr3bBuilder::class)->rule37($company, $from, $to);
+        $rule37Net = array_sum($rule37['reversed']) - array_sum($rule37['reclaimed']);
+
         $netProfit = $revenue['taxable'] - $expense['taxable'];
 
         return [
@@ -86,7 +93,8 @@ class ProfitAndLoss
             'netProfit' => round($netProfit, 2),
             'margin' => $revenue['taxable'] > 0 ? round(($netProfit / $revenue['taxable']) * 100, 2) : 0,
             'cashInHand' => round($receivedInBank - $expense['cash_out'], 2),
-            'gstPayable' => round($revenue['gst_collected'] + $rcmTax - $expense['gst_itc'], 2),
+            'gstPayable' => round($revenue['gst_collected'] + $rcmTax - $expense['gst_itc'] + $rule37Net, 2),
+            'itcReversedRule37' => round($rule37Net, 2),
             'rcmTax' => round($rcmTax, 2),
         ];
     }

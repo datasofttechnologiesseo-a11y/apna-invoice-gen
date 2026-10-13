@@ -66,9 +66,16 @@ class BankStatementReader
             $debit = $credit = 0.0;
             if (isset($map['amount'])) {
                 $amount = $this->money($get($map['amount']));
-                $type = strtoupper($get($map['type'] ?? null));
+                // The Dr/Cr column as letters only: "C", "CR", "Cr.", "Credit",
+                // "Deposit" mark money in; "D", "DR", "Dr.", "Debit",
+                // "Withdrawal" money out. Reading only "CR" as a credit turned
+                // every "C" deposit into a withdrawal.
+                $type = strtoupper(preg_replace('/[^A-Za-z]/', '', $get($map['type'] ?? null)));
                 $raw = strtoupper($get($map['amount']));
-                $isCredit = str_contains($type, 'CR') || str_contains($raw, 'CR') || (! $type && $amount > 0 && ! str_contains($raw, 'DR'));
+                $typeCredit = $type !== '' && ($type === 'C' || str_contains($type, 'CR') || str_starts_with($type, 'DEP'));
+                $typeDebit = $type !== '' && ! $typeCredit && ($type === 'D' || str_contains($type, 'DR') || str_starts_with($type, 'DEB') || str_starts_with($type, 'WITH'));
+                $isCredit = $typeCredit
+                    || (! $typeDebit && (str_contains($raw, 'CR') || (! $type && $amount > 0 && ! str_contains($raw, 'DR'))));
                 $isCredit ? $credit = abs($amount) : $debit = abs($amount);
             } else {
                 $debit = abs($this->money($get($map['debit'] ?? null)));
@@ -114,7 +121,9 @@ class BankStatementReader
                     (bool) preg_match('/^(txn |tran |transaction |post(ing)? )?date|^date$|value d(a)?t(e)?/', $t) && ! str_contains($t, 'value') => $set('date'),
                     (bool) preg_match('/value d(a)?t(e)?/', $t) => $set('value_date'),
                     (bool) preg_match('/withdrawal|debit|^dr\.?$|paid out|amount out/', $t) && ! str_contains($t, 'credit') => $set('debit'),
-                    (bool) preg_match('/deposit|credit|^cr\.?$|paid in|amount in/', $t) => $set('credit'),
+                    // "Amount in" is money in; "Amount in INR" / "Amount in Rs" is the
+                    // one amount column, signed by the Dr/Cr column.
+                    (bool) preg_match('/deposit|credit|^cr\.?$|paid in|amount in(?!\s*(inr|rs\b|rupees|₹))/u', $t) => $set('credit'),
                     (bool) preg_match('/balance/', $t) => $set('balance'),
                     (bool) preg_match('/narration|description|particulars|remarks|details|transaction remarks/', $t) => $set('description'),
                     (bool) preg_match('/chq|cheque|ref|utr|instrument/', $t) => $set('reference'),

@@ -79,38 +79,59 @@ class Gstr3bBuilder
             ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get(['gst_amount', 'is_interstate']);
 
-        $intraExpenseGst = (float) $expensesInPeriod->where('is_interstate', false)->sum('gst_amount');
-        $interExpenseGst = (float) $expensesInPeriod->where('is_interstate', true)->sum('gst_amount');
+        $intraExpenseGst = round((float) $expensesInPeriod->where('is_interstate', false)->sum('gst_amount'), 2);
+        $interExpenseGst = round((float) $expensesInPeriod->where('is_interstate', true)->sum('gst_amount'), 2);
+        // Intra-state GST paid is split so CGST + SGST add back to exactly what
+        // was paid: rounding each half claimed 4.51 + 4.51 on ₹9.01.
+        $expenseCgst = round($intraExpenseGst / 2, 2);
+        $expenseSgst = round($intraExpenseGst - $expenseCgst, 2);
 
         $cashMemos = $company->cashMemos()
             ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->get();
         // Only ITC-eligible memos feed the claim; all memos still count for the
-        // memo tally below.
+        // memo tally below. A memo or expense is booked on its own date, so its
+        // credit is never past the s.16(4) limit below.
         $eligibleMemos = $cashMemos->where('itc_eligible', true);
 
         // Purchase bills: GST charged by the vendor, and GST you paid yourself
         // under reverse charge, are both creditable when the bill is eligible.
-        $eligibleBills = $billsInPeriod->where('itc_eligible', true);
+        // Except s.16(4): credit on an invoice can be taken only in a return
+        // for a period ending by 31 October after the invoice's financial
+        // year. A bill booked later (found in a drawer, entered after its
+        // month was locked) stays in the books but out of the claim.
+        [$timeBarredBills, $eligibleBills] = $billsInPeriod->where('itc_eligible', true)
+            ->partition(fn ($bill) => $bill->isItcTimeBarred($to));
+        $itcTimeBarred = $this->heads($timeBarredBills) + ['count' => $timeBarredBills->count()];
+        $itcTimeBarred['total'] = round($itcTimeBarred['igst'] + $itcTimeBarred['cgst'] + $itcTimeBarred['sgst'], 2);
 
-        $itc = [
-            'igst' => round((float) $eligibleMemos->sum('total_igst') + (float) $eligibleBills->sum('total_igst') + $interExpenseGst, 2),
-            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + (float) $eligibleBills->sum('total_cgst') + ($intraExpenseGst / 2), 2),
-            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + (float) $eligibleBills->sum('total_sgst') + ($intraExpenseGst / 2), 2),
+        // Rule 37: credit on supplier invoices not paid within 180 days is
+        // reversed (4(B)(2)) and re-claimed once paid (part of 4(A)(5)).
+        $rule37 = $this->rule37($company, $from, $to);
+        $itcReversed = $rule37['reversed'];
+        $itcReclaimed = $rule37['reclaimed'];
+
+        $billHeads = $this->heads($eligibleBills);
+        // Table 4(A): all credit available this period.
+        $itcAvailable = [
+            'igst' => round((float) $eligibleMemos->sum('total_igst') + $billHeads['igst'] + $interExpenseGst + $itcReclaimed['igst'], 2),
+            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + $billHeads['cgst'] + $expenseCgst + $itcReclaimed['cgst'], 2),
+            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + $billHeads['sgst'] + $expenseSgst + $itcReclaimed['sgst'], 2),
         ];
+        // Table 4(C): net credit, 4(A) less 4(B). It can go below nil in a
+        // head when a reversal is larger than the month's credit.
+        $itc = [];
+        foreach (['igst', 'cgst', 'sgst'] as $head) {
+            $itc[$head] = round($itcAvailable[$head] - $itcReversed[$head], 2);
+        }
         $itc['total'] = round($itc['igst'] + $itc['cgst'] + $itc['sgst'], 2);
         // Of which: credit of the tax paid under reverse charge - GSTR-3B
         // reports it on its own row, 4(A)(3); the rest is 4(A)(5).
-        $eligibleRcm = $eligibleBills->where('reverse_charge', true);
-        $itcRcm = [
-            'igst' => round((float) $eligibleRcm->sum('total_igst'), 2),
-            'cgst' => round((float) $eligibleRcm->sum('total_cgst'), 2),
-            'sgst' => round((float) $eligibleRcm->sum('total_sgst'), 2),
-        ];
+        $itcRcm = $this->heads($eligibleBills->where('reverse_charge', true));
         $itcOther = [
-            'igst' => round($itc['igst'] - $itcRcm['igst'], 2),
-            'cgst' => round($itc['cgst'] - $itcRcm['cgst'], 2),
-            'sgst' => round($itc['sgst'] - $itcRcm['sgst'], 2),
+            'igst' => round($itcAvailable['igst'] - $itcRcm['igst'], 2),
+            'cgst' => round($itcAvailable['cgst'] - $itcRcm['cgst'], 2),
+            'sgst' => round($itcAvailable['sgst'] - $itcRcm['sgst'], 2),
         ];
 
         // Credit taken on purchases from suppliers with no GSTIN: they can never
@@ -145,7 +166,7 @@ class Gstr3bBuilder
             $payable[$head] = round($v + $carryIn[$head], 2);
             $carryOut[$head] = min(0.0, $payable[$head]);
         }
-        $setOff = app(GstSetOff::class)->settle($payable, $itc);
+        $setOff = $this->settleNet($payable, $itc);
         $netCash = $setOff['cash'];
         $itcCarried = $setOff['carried'];
         // Reverse-charge tax on inward supplies (3.1(d)) must be paid in cash -
@@ -161,7 +182,7 @@ class Gstr3bBuilder
         // books; when the 2B for the period has been uploaded, say how much of
         // that credit 2B confirms, so nobody copies a books figure the portal
         // will not accept. The books figures themselves are not changed.
-        $itc2b = $this->checkAgainst2b($company, $from, $to, $eligibleBills, $itcRcm, $intraExpenseGst, $interExpenseGst, $eligibleMemos, $payable, $rcm_inward);
+        $itc2b = $this->checkAgainst2b($company, $from, $to, $eligibleBills, $itcRcm, $expenseCgst, $expenseSgst, $interExpenseGst, $eligibleMemos, $payable, $rcm_inward, $itcReversed, $itcReclaimed);
 
         return [
             'negative_carry_in' => $carryIn,
@@ -170,8 +191,19 @@ class Gstr3bBuilder
             'itc_2b' => $itc2b,
             'itc_carried' => $itcCarried,
             'itc_used' => $setOff['used'],
+            // Which credit paid which tax, from the same set-off as the cash
+            // above (it includes a net credit below nil, see settleNet()).
+            'set_off_matrix' => $setOff['matrix'],
             'itc_rcm' => $itcRcm,
             'itc_other' => $itcOther,
+            // 4(B)(2): Rule 37 reversal; and the credit re-claimed under Rule 37
+            // on bills paid late, already part of 4(A)(5) above.
+            'itc_reversed' => $itcReversed + ['total' => round($itcReversed['igst'] + $itcReversed['cgst'] + $itcReversed['sgst'], 2)],
+            'itc_reclaimed' => $itcReclaimed + ['total' => round($itcReclaimed['igst'] + $itcReclaimed['cgst'] + $itcReclaimed['sgst'], 2)],
+            'itc_rule37_bills' => $rule37['bills'],
+            // Credit on bills booked in the period but past the s.16(4) limit:
+            // not part of 4(A), shown so it is not claimed by hand.
+            'itc_time_barred' => $itcTimeBarred,
             'itc_no_gstin' => $itcNoGstin,
             'outward' => $outward,
             'outward_nil' => $outwardNil,
@@ -245,24 +277,37 @@ class Gstr3bBuilder
     }
 
     /**
-     * The books' input credit checked against the GSTR-2B uploaded for the
+     * The books' input credit checked against the GSTR-2B uploaded up to the
      * period. Null when no 2B has been uploaded for any month of the period.
      *
-     * - in_2b:      supplier invoices (not reverse charge) found in 2B. For a
-     *               document whose 2B amounts differ, the lower of the two per
-     *               tax head, since the portal allows no more than 2B shows.
-     * - not_in_2b:  supplier invoices in the books that 2B does not show yet
-     *               (supplier has not filed): hold until it appears.
+     * A supplier invoice is confirmed in the return for the later of the
+     * month it is booked in and the first uploaded 2B that shows it. So a
+     * bill booked late is confirmed by the 2B of its own month, and a bill
+     * held because the supplier filed late is confirmed in the return of the
+     * month it reaches 2B. Each bill is confirmed in one return only.
+     *
+     * - in_2b:      supplier invoices (not reverse charge) confirmed in this
+     *               return. For a document whose 2B amounts differ, the lower
+     *               of the two per tax head, since the portal allows no more
+     *               than 2B shows. Of which held_earlier: bills booked in an
+     *               earlier return, held there, that reached this period's 2B.
+     * - not_available: in 2B, but 2B marks the credit not available (itcavl
+     *               N, s.16(2)(aa) / Rule 36(4)): it cannot be claimed.
+     * - not_in_2b:  supplier invoices in the books that no 2B up to this
+     *               period shows yet (supplier has not filed): hold until it
+     *               appears.
      * - rcm:        tax you paid under reverse charge; not in 2B, claimable.
      * - unchecked:  GST on expenses and cash memos, which carry no supplier
      *               invoice number to look up; check them on the portal.
      * - missing:    in 2B but not recorded in the books (credit not taken).
-     * - cash_if_2b_only: cash payable if only in_2b + rcm credit is claimed.
+     * - cash_if_2b_only: cash payable if only in_2b + rcm credit is claimed,
+     *               with this period's Rule 37 reversal and re-claim.
      *
      * @return array<string, mixed>|null
      */
     private function checkAgainst2b(Company $company, Carbon $from, Carbon $to, $eligibleBills, array $itcRcm,
-        float $intraExpenseGst, float $interExpenseGst, $eligibleMemos, array $liability, array $rcmInward): ?array
+        float $expenseCgst, float $expenseSgst, float $interExpenseGst, $eligibleMemos, array $liability, array $rcmInward,
+        array $reversed, array $reclaimed): ?array
     {
         $months = [];
         for ($m = $from->copy()->startOfMonth(); $m->lte($to); $m->addMonth()) {
@@ -270,7 +315,6 @@ class Gstr3bBuilder
         }
         $matcher = app(Gstr2bMatcher::class);
         $uploaded = [];
-        $found = [];      // bill id => 2B entry
         $missing = ['count' => 0, 'tax' => 0.0];
         foreach ($months as $period) {
             $match = $matcher->match($company, $period);
@@ -278,9 +322,6 @@ class Gstr3bBuilder
                 continue;
             }
             $uploaded[] = $period;
-            foreach (array_merge($match['matched'], $match['mismatch']) as $row) {
-                $found[$row['bill']->id] = $row['entry'];
-            }
             $missing['count'] += count($match['missing']);
             $missing['tax'] = round($missing['tax'] + $match['summary']['tax']['missing'], 2);
         }
@@ -288,32 +329,92 @@ class Gstr3bBuilder
             return null;
         }
 
-        $zero = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
-        $in2b = $zero;
-        $notIn2b = $zero;
-        foreach ($eligibleBills->where('reverse_charge', false) as $bill) {
-            $entry = $found[$bill->id] ?? null;
-            foreach (['igst', 'cgst', 'sgst'] as $head) {
-                $books = (float) $bill->{'total_' . $head};
-                if ($entry) {
-                    $in2b[$head] = round($in2b[$head] + min($books, (float) $entry->{$head}), 2);
-                } else {
-                    $notIn2b[$head] = round($notIn2b[$head] + $books, 2);
+        // Every invoice in the 2Bs uploaded up to the end of this period, by
+        // the matcher's key, earliest 2B first. A bill can be up to two years
+        // old when it turns up (the matcher's own window).
+        $since = $from->copy()->startOfMonth()->subMonths(24);
+        $index = [];
+        \App\Models\Gstr2bEntry::where('company_id', $company->id)->where('kind', 'invoice')
+            ->whereBetween('period', [$since->format('Y-m'), end($months)])
+            ->orderBy('period')->orderBy('id')
+            ->get()
+            ->each(function ($entry) use (&$index, $matcher) {
+                $index[$matcher->key((string) $entry->supplier_gstin, (string) $entry->document_number)][] = $entry;
+            });
+        // The first 2B showing this bill: none before the bill's own month,
+        // since suppliers reuse invoice numbers from one year to the next.
+        $first2b = function ($bill) use ($index, $matcher) {
+            if (! $bill->vendor?->gstin) {
+                return null;
+            }
+            foreach ($index[$matcher->key($bill->vendor->gstin, $bill->bill_number)] ?? [] as $entry) {
+                if ($entry->period >= $bill->bill_date->format('Y-m')) {
+                    return $entry;
                 }
             }
+
+            return null;
+        };
+
+        $zero = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        $in2b = $zero;
+        $heldEarlier = $zero;
+        $notAvailable = $zero;
+        $notIn2b = $zero;
+        $add = function (array &$sum, $bill, $entry = null): void {
+            foreach (['igst', 'cgst', 'sgst'] as $head) {
+                $books = (float) $bill->{'total_' . $head};
+                $sum[$head] = round($sum[$head] + ($entry ? min($books, (float) $entry->{$head}) : $books), 2);
+            }
+        };
+
+        // Bills booked in this period: confirmed by any 2B up to it.
+        foreach ($eligibleBills->where('reverse_charge', false) as $bill) {
+            $entry = $first2b($bill);
+            if (! $entry) {
+                $add($notIn2b, $bill);
+            } elseif (! $entry->itc_available) {
+                $add($notAvailable, $bill);
+            } else {
+                $add($in2b, $bill, $entry);
+            }
         }
+
+        // Bills booked in an earlier return and held there, which first show
+        // up in this period's 2B: their credit is confirmed now. Only while
+        // within the s.16(4) limit for this return; after it, never.
+        $earlier = $company->purchaseBills()->with('vendor:id,gstin')
+            ->where('itc_eligible', true)->where('reverse_charge', false)
+            ->whereDate('bill_date', '>=', $since->toDateString())
+            ->where(\Illuminate\Support\Facades\DB::raw('COALESCE(booked_on, bill_date)'), '<', $from->copy()->startOfDay())
+            ->get();
+        foreach ($earlier as $bill) {
+            $entry = $first2b($bill);
+            if (! $entry || ! in_array($entry->period, $months, true) || $bill->isItcTimeBarred($to)) {
+                continue;
+            }
+            if (! $entry->itc_available) {
+                $add($notAvailable, $bill);
+            } else {
+                $add($in2b, $bill, $entry);
+                $add($heldEarlier, $bill, $entry);
+            }
+        }
+
         $unchecked = [
             'igst' => round((float) $eligibleMemos->sum('total_igst') + $interExpenseGst, 2),
-            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + $intraExpenseGst / 2, 2),
-            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + $intraExpenseGst / 2, 2),
+            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + $expenseCgst, 2),
+            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + $expenseSgst, 2),
         ];
         $sum = fn (array $a) => round($a['igst'] + $a['cgst'] + $a['sgst'], 2);
 
         $confirmed = [];
+        $confirmedNet = [];
         foreach (['igst', 'cgst', 'sgst'] as $head) {
             $confirmed[$head] = round($in2b[$head] + (float) $itcRcm[$head], 2);
+            $confirmedNet[$head] = round($confirmed[$head] + $reclaimed[$head] - $reversed[$head], 2);
         }
-        $settled = app(GstSetOff::class)->settle($liability, $confirmed);
+        $settled = $this->settleNet($liability, $confirmedNet);
         $cash = $settled['cash'];
         foreach (['igst', 'cgst', 'sgst'] as $head) {
             $cash[$head] = round($cash[$head] + (float) $rcmInward[$head], 2);
@@ -325,6 +426,8 @@ class Gstr3bBuilder
             'uploaded' => $uploaded,
             'not_uploaded' => array_values(array_diff($months, $uploaded)),
             'in_2b' => $in2b + ['total' => $sum($in2b)],
+            'held_earlier' => $heldEarlier + ['total' => $sum($heldEarlier)],
+            'not_available' => $notAvailable + ['total' => $sum($notAvailable)],
             'not_in_2b' => $notIn2b + ['total' => $sum($notIn2b)],
             'rcm' => $itcRcm + ['total' => $sum($itcRcm)],
             'unchecked' => $unchecked + ['total' => $sum($unchecked)],
@@ -332,5 +435,119 @@ class Gstr3bBuilder
             'confirmed' => $confirmed + ['total' => $sum($confirmed)],
             'cash_if_2b_only' => $cash,
         ];
+    }
+
+    /** IGST, CGST and SGST summed over purchase bills, to the paisa. */
+    private function heads($bills): array
+    {
+        return [
+            'igst' => round((float) $bills->sum('total_igst'), 2),
+            'cgst' => round((float) $bills->sum('total_cgst'), 2),
+            'sgst' => round((float) $bills->sum('total_sgst'), 2),
+        ];
+    }
+
+    /**
+     * Rule 37 read with the second proviso to s.16(2): credit taken on a
+     * supplier's invoice that is not paid within 180 days of its date is
+     * reversed, in proportion to the part unpaid (credit x unpaid / bill
+     * total), in the return for the period the 181st day falls in (Table
+     * 4(B)(2)). When the supplier is paid later, the credit on what is paid
+     * is taken again in the return for the period of payment (4(A)(5)); the
+     * s.16(4) time limit does not apply to that. Reverse-charge bills,
+     * blocked credit and time-barred bills carry no credit to reverse.
+     *
+     * Re-claims are worked on the running total paid after the 180 days, so
+     * once the bill is fully paid they add up to the reversal to the paisa.
+     *
+     * @return array{reversed: array{igst: float, cgst: float, sgst: float},
+     *               reclaimed: array{igst: float, cgst: float, sgst: float}, bills: int}
+     */
+    public function rule37(Company $company, Carbon $from, Carbon $to): array
+    {
+        $start = $from->copy()->startOfDay();
+        $end = $to->copy()->endOfDay();
+        $zero = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        $reversed = $zero;
+        $reclaimed = $zero;
+        $count = 0;
+
+        // Bills whose 181st day (or later booking) falls in the period, or
+        // paid in the period. A bill dated within 181 days of the period's
+        // end cannot have reached the limit.
+        $bills = $company->purchaseBills()
+            ->where('itc_eligible', true)->where('reverse_charge', false)
+            ->whereDate('bill_date', '<=', $end->copy()->subDays(181)->toDateString())
+            ->where(fn ($q) => $q
+                ->whereDate('bill_date', '>=', $start->copy()->subDays(181)->toDateString())
+                ->orWhere(fn ($b) => $b->whereDate('booked_on', '>=', $start->toDateString())->whereDate('booked_on', '<=', $end->toDateString()))
+                ->orWhereHas('payments', fn ($p) => $p->whereDate('paid_on', '>=', $start->toDateString())->whereDate('paid_on', '<=', $end->toDateString())))
+            ->with('payments')
+            ->get();
+
+        foreach ($bills as $bill) {
+            if (! $bill->rule37Applies()) {
+                continue;
+            }
+            $total = (float) $bill->grand_total;
+            $payBy = $bill->rule37PayBy()->toDateString();
+            $reverseOn = $bill->rule37ReversalOn();
+            $paidInTime = (float) $bill->payments->filter(fn ($p) => $p->paid_on->toDateString() <= $payBy)->sum('amount');
+            $unpaid = round($total - $paidInTime, 2);
+            if ($unpaid <= 0) {
+                continue;
+            }
+            // Credit on a part of the bill, per head.
+            $share = fn (float $amount) => [
+                'igst' => round((float) $bill->total_igst * $amount / $total, 2),
+                'cgst' => round((float) $bill->total_cgst * $amount / $total, 2),
+                'sgst' => round((float) $bill->total_sgst * $amount / $total, 2),
+            ];
+
+            if ($reverseOn->between($start, $end)) {
+                foreach ($share($unpaid) as $head => $v) {
+                    $reversed[$head] = round($reversed[$head] + $v, 2);
+                }
+                $count++;
+            }
+
+            // Paid after the 180 days: taken again when paid, never before the
+            // reversal itself.
+            $paidLate = 0.0;
+            foreach ($bill->payments as $payment) {
+                if ($payment->paid_on->toDateString() <= $payBy) {
+                    continue;
+                }
+                $before = $share($paidLate);
+                $paidLate = round(min($unpaid, $paidLate + (float) $payment->amount), 2);
+                $on = $payment->paid_on->gt($reverseOn) ? $payment->paid_on : $reverseOn;
+                if ($on->between($start, $end)) {
+                    foreach ($share($paidLate) as $head => $v) {
+                        $reclaimed[$head] = round($reclaimed[$head] + $v - $before[$head], 2);
+                    }
+                }
+            }
+        }
+
+        return ['reversed' => $reversed, 'reclaimed' => $reclaimed, 'bills' => $count];
+    }
+
+    /**
+     * Rule 88A set-off on the net credit of Table 4(C). Where reversals take
+     * a head's net credit below nil, the shortfall is tax to pay on that head
+     * (the portal adds a negative 4(C) to the liability in Table 6.1). A
+     * negative liability carried from earlier periods keeps its own carry
+     * and does not absorb it.
+     */
+    private function settleNet(array $payable, array $netItc): array
+    {
+        $due = [];
+        $credit = [];
+        foreach (['igst', 'cgst', 'sgst'] as $head) {
+            $credit[$head] = max(0.0, (float) $netItc[$head]);
+            $due[$head] = round(max(0.0, (float) $payable[$head]) + max(0.0, -(float) $netItc[$head]), 2);
+        }
+
+        return app(GstSetOff::class)->settle($due, $credit);
     }
 }

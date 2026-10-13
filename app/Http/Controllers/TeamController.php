@@ -148,6 +148,12 @@ class TeamController extends Controller
         if (mb_strtolower($user->email) !== mb_strtolower($member->email)) {
             return back()->with('error', "This invitation is for {$member->email}. Sign in with that account to accept it.");
         }
+        // The email on an account can be changed on the profile page without
+        // proof, so a matching address alone does not show the invitation
+        // reached its owner. Only a confirmed address accepts it.
+        if (! $user->hasVerifiedEmail()) {
+            return $this->confirmEmailFirst($request, $user, $member);
+        }
         if ((int) $member->company->user_id === (int) $user->id) {
             return redirect()->route('dashboard');
         }
@@ -156,6 +162,26 @@ class TeamController extends Controller
 
         // The first page their role opens (billing staff have no dashboard).
         return redirect()->route(Team::homeRoute($member))->with('status', "Invitation accepted. You now have access to {$member->company->name} as {$member->roleLabel()}.");
+    }
+
+    /**
+     * Mail a confirmation link (at most once every five minutes) and bring the
+     * person back to this invitation once they have opened it.
+     */
+    private function confirmEmailFirst(Request $request, \App\Models\User $user, CompanyMember $member): RedirectResponse
+    {
+        $key = 'team-accept-verify:' . $user->id;
+        if (! RateLimiter::tooManyAttempts($key, 1)) {
+            RateLimiter::hit($key, 300);
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+        $request->session()->put('url.intended', route('team.join', $member->token));
+
+        return back()->with('error', "Confirm your email address first. Open the link we sent to {$member->email}, then accept the invitation again.");
     }
 
     /** A member leaves a business they were invited into. */

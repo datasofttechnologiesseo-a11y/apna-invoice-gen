@@ -279,6 +279,13 @@
                                     amt: {{ (float) old('tds_amount', 0) }},
                                     rate: {{ (float) old('tds_rate', 0) }},
                                     section: @js((string) old('tds_section', '')),
+                                    // TDS is on the value before GST when the invoice shows GST
+                                    // separately (CBDT Circular 23/2017; GST TDS by s.51's own
+                                    // Explanation). The payment carries GST in the invoice's own
+                                    // proportion, so the base is amount x taxable value / total.
+                                    // No GST charged (bill of supply, reverse charge): the amount.
+                                    taxable: {{ (float) $invoice->total_tax > 0 ? (float) $invoice->subtotal : (float) $invoice->grand_total }},
+                                    grand: {{ (float) $invoice->grand_total }},
                                     // Section → standard rate (Income Tax Act, AY 2024-25 onwards).
                                     sectionRates: {
                                         '194A': 10, '194B': 30, '194C_indiv': 1, '194C_other': 2,
@@ -305,7 +312,8 @@
                                     },
                                     recalcFromRate() {
                                         const grossAmt = parseFloat(document.querySelector('input[name=amount]')?.value || 0);
-                                        this.amt = +(grossAmt * (parseFloat(this.rate) || 0) / 100).toFixed(2);
+                                        const base = this.grand > 0 ? grossAmt * this.taxable / this.grand : grossAmt;
+                                        this.amt = +(base * (parseFloat(this.rate) || 0) / 100).toFixed(2);
                                     },
                                     applySection() {
                                         if (this.sectionRates[this.section] !== undefined) {
@@ -359,7 +367,7 @@
                                         </div>
                                     </div>
                                     <x-input-error :messages="$errors->get('tds_amount')" for="tds_amount" />
-                                    <p class="text-xs text-gray-500">Section 206AA: 20% if no PAN is furnished. The invoice balance reduces by the gross amount; TDS is kept for Form 26AS.</p>
+                                    <p class="text-xs text-gray-500">@if ((float) $invoice->total_tax > 0)Suggested on the value before GST. @endif Section 206AA: 20% if no PAN is furnished. The invoice balance reduces by the gross amount; TDS is kept for Form 26AS.</p>
                                 </div>
                             </details>
 

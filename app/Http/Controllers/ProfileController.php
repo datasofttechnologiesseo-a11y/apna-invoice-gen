@@ -50,7 +50,11 @@ class ProfileController extends Controller
 
         $request->user()->fill($data);
 
-        if ($request->user()->isDirty('email')) {
+        // A new email is unproven until its owner opens the link we mail to
+        // it. Anything bound to an address (a team invitation, Google
+        // sign-in) relies on email_verified_at, so it must not carry over.
+        $emailChanged = $request->user()->isDirty('email');
+        if ($emailChanged) {
             $request->user()->email_verified_at = null;
         }
         if ($request->user()->isDirty('phone')) {
@@ -59,7 +63,21 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        if ($emailChanged) {
+            $this->sendVerificationLink($request->user());
+        }
+
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /** Mail the confirmation link for a new email. A mail failure never undoes the save. */
+    private function sendVerificationLink(\App\Models\User $user): void
+    {
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

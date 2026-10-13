@@ -32,6 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
             prepend: \Illuminate\Routing\Middleware\ValidateSignature::class,
         );
 
+        // A filter sent as a list (?search[]=x) is dropped before anything
+        // reads it, instead of reaching string-typed code and answering 500.
+        // First in both groups, so even the signature check sees clean input.
+        $middleware->web(prepend: [\App\Http\Middleware\DropListQueryParameters::class]);
+        $middleware->api(prepend: [\App\Http\Middleware\DropListQueryParameters::class]);
+
         // Security response headers on every HTML document.
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,

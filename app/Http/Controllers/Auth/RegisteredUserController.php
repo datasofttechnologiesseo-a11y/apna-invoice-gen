@@ -120,6 +120,9 @@ class RegisteredUserController extends Controller
             return redirect()->route('register')
                 ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
         }
+        if (! $this->cameFromGoogle($reg)) {
+            return $this->toCodeStep($reg);
+        }
 
         return view('auth.register-mobile', ['name' => $reg['name'] ?? null]);
     }
@@ -130,6 +133,13 @@ class RegisteredUserController extends Controller
         if (! $reg) {
             return redirect()->route('register')
                 ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
+        }
+        // The email sign-up form stashes its details under the same session
+        // key. Without this check, posting here straight after that form
+        // created a verified account for an email whose code was never
+        // entered, i.e. anyone's email.
+        if (! $this->cameFromGoogle($reg)) {
+            return $this->toCodeStep($reg);
         }
 
         $request->validate([
@@ -148,6 +158,26 @@ class RegisteredUserController extends Controller
             ->create($reg, $request, ['email' => true]);
 
         return redirect()->route('onboarding.index');
+    }
+
+    /**
+     * A pending registration may skip the emailed code only when Google has
+     * proven the email, which SocialAuthController marks with 'via' => 'google'.
+     */
+    private function cameFromGoogle(array $reg): bool
+    {
+        return ($reg['via'] ?? null) === 'google';
+    }
+
+    /** Back to the code screen of an email sign-up, or to the start if there is none. */
+    private function toCodeStep(array $reg): RedirectResponse
+    {
+        if (isset($reg['otp_hash'])) {
+            return redirect()->route('register.verify');
+        }
+
+        return redirect()->route('register')
+            ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
     }
 
     /** Step 2 — show the OTP entry screen. */

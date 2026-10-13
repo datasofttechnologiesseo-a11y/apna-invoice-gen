@@ -40,7 +40,7 @@ class QuotationFactory extends Factory
     {
         return $this->state(fn () => [
             'status' => 'sent',
-            'quote_number' => 'QT-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT),
+            'quote_number' => 'QT-' . str_pad((string) fake()->unique()->numberBetween(1, 999999), 4, '0', STR_PAD_LEFT),
             'sent_at' => now(),
         ]);
     }
@@ -49,7 +49,7 @@ class QuotationFactory extends Factory
     {
         return $this->state(fn () => [
             'status' => 'accepted',
-            'quote_number' => 'QT-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT),
+            'quote_number' => 'QT-' . str_pad((string) fake()->unique()->numberBetween(1, 999999), 4, '0', STR_PAD_LEFT),
             'sent_at' => now()->subDay(),
             'accepted_at' => now(),
         ]);

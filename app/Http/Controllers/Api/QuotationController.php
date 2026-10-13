@@ -58,7 +58,8 @@ class QuotationController extends Controller
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $result = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate);
+        // Composition dealers quote without GST, as they bill (s.10(4)).
+        $result = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, (bool) $company->composition_dealer);
 
         $quote = DB::transaction(function () use ($user, $company, $customer, $data, $result, $isInterstate) {
             $quote = Quotation::create([
@@ -132,7 +133,8 @@ class QuotationController extends Controller
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $result = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate);
+        // Composition dealers quote without GST, as they bill (s.10(4)).
+        $result = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, (bool) $company->composition_dealer);
 
         DB::transaction(function () use ($quotation, $customer, $data, $result, $isInterstate) {
             $quotation->update([

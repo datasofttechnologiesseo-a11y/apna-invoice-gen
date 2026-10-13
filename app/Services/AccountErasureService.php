@@ -6,14 +6,21 @@ use App\Models\AuditLog;
 use App\Models\CashMemo;
 use App\Models\Company;
 use App\Models\CompanyMember;
+use App\Models\CreditNote;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\Product;
+use App\Models\PurchaseBill;
+use App\Models\PurchasePayment;
 use App\Models\Quotation;
 use App\Models\Referral;
 use App\Models\User;
 use App\Models\UserConsent;
+use App\Models\Vendor;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +40,12 @@ use Illuminate\Support\Str;
  *    never be used or re-identified, and retain only the GST books for the
  *    retention window. The scrubbed shell is purged later by PurgeErasedAccounts
  *    once the books age out.
+ *
+ * The statutory records are the books CGST s.35 and Rule 56 require, not
+ * sales alone: issued invoices with their credit notes and receipts, purchase
+ * invoices and their payments, cash memos, and expenses on which GST was paid
+ * (statutoryRecords()). Input tax credit rests on the purchase side, so a
+ * business that only buys is kept exactly like one that sells.
  *
  * A "GST invoice" is one that has been finalised (finalized_at set). It cannot
  * be deleted — only cancelled — so a cancelled invoice keeps finalized_at and
@@ -55,9 +68,7 @@ class AccountErasureService
             // before the erasure and would otherwise keep working.
             $user->tokens()->delete();
 
-            $hasStatutoryRecords = $user->invoices()->whereNotNull('finalized_at')->exists();
-
-            if ($hasStatutoryRecords) {
+            if ($this->hasStatutoryRecords($user)) {
                 $retained = $this->depersonalise($user);
 
                 Log::info('DPDP erasure (depersonalise + retain)', [
@@ -74,6 +85,47 @@ class AccountErasureService
 
             return ['mode' => 'deleted', 'retained_invoices' => 0];
         });
+    }
+
+    /**
+     * Does $user have any record the GST law makes the business keep? With
+     * $since, only records dated on or after that day count: that is how
+     * PurgeErasedAccounts asks whether the latest of them, of whatever kind,
+     * is still inside the retention window.
+     */
+    public function hasStatutoryRecords(User $user, ?CarbonInterface $since = null): bool
+    {
+        foreach ($this->statutoryRecords($user->id) as [$query, $dateColumn]) {
+            if ($since) {
+                $query->whereDate($dateColumn, '>=', $since);
+            }
+            if ($query->exists()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Every kind of record kept for 72 months (CGST s.35/36, Rule 56), with
+     * the column that dates it. Purchase invoices and cash memos record an
+     * inward supply whatever their GST; a bare expense line counts only when
+     * GST was paid on it. Receipts against a draft are erased with the draft.
+     *
+     * @return list<array{0: Builder, 1: string}>
+     */
+    private function statutoryRecords(int $userId): array
+    {
+        return [
+            [Invoice::where('user_id', $userId)->whereNotNull('finalized_at'), 'invoice_date'],
+            [CreditNote::where('user_id', $userId), 'credit_note_date'],
+            [Payment::where('user_id', $userId)->whereDoesntHave('invoice', fn ($q) => $q->whereNull('finalized_at')), 'received_at'],
+            [PurchaseBill::where('user_id', $userId), 'bill_date'],
+            [PurchasePayment::where('user_id', $userId), 'paid_on'],
+            [CashMemo::where('user_id', $userId), 'memo_date'],
+            [Expense::where('user_id', $userId)->where('gst_amount', '>', 0), 'entry_date'],
+        ];
     }
 
     /**
@@ -98,6 +150,8 @@ class AccountErasureService
         Quotation::where('user_id', $user->id)->delete();    // → quotation items
         CashMemo::where('user_id', $user->id)->delete();     // → memo items
         Expense::where('user_id', $user->id)->delete();
+        PurchaseBill::where('user_id', $user->id)->delete(); // → items, payments
+        Vendor::where('user_id', $user->id)->delete();       // bills restrict their vendor
         Product::where('user_id', $user->id)->delete();
         Customer::where('user_id', $user->id)->delete();     // now unreferenced
         Referral::where('referrer_user_id', $user->id)

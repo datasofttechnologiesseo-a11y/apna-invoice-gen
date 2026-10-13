@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\CreditNote;
 use App\Models\Invoice;
@@ -175,9 +176,14 @@ class Gstr1Builder
             $this->addCreditToSummary($summary, $cn, $inv, $share);
             $tab = in_array($kind, ['b2b', 'sez'], true) ? 'B2B' : 'B2C';
             if ($lines->isEmpty()) {
+                // Spread over the invoice lines like the rate rows above, then
+                // settled to them, so Table 12 takes off exactly what Tables
+                // 9B and 8 take off for this note.
+                $noteHsn = [];
                 foreach ($inv->items as $item) {
-                    $this->addHsn($hsn, $tab, $item, -($share[$item->id] ?? 0.0), $rcm);
+                    $this->addHsn($noteHsn, $tab, $item, -($share[$item->id] ?? 0.0), $rcm);
                 }
+                $this->mergeHsn($hsn, $this->settleHsnToRates($noteHsn, $rates));
             } else {
                 foreach ($lines as $line) {
                     $this->addHsnCreditLine($hsn, $tab, $line, $cn->isSalesReturn(), $rcm);
@@ -202,7 +208,7 @@ class Gstr1Builder
             'exp' => $exp,
             'exemp' => array_values($exemp),
             'hsn' => $this->finishHsn($hsn),
-            'docs' => $this->docs($issued, $notes),
+            'docs' => $this->docs($company, $issued, $notes, $from, $to),
             'summary' => $summary,
         ];
         $out['tables'] = $this->tables($out);
@@ -313,6 +319,11 @@ class Gstr1Builder
      * taxable value is spread over the lines in proportion to their taxable
      * value (the same pro-rata the credit note itself uses for tax heads).
      *
+     * After a sales return the note was split over what each line still had
+     * left (CreditNoteSplit::leftByLine), so it is reported on that basis
+     * too: nothing on goods that came back, and rows that add up to the tax
+     * the note carries, as GSTR-3B takes it.
+     *
      * @return array<int, float>
      */
     private function creditShare(CreditNote $cn, Invoice $inv): array
@@ -321,6 +332,17 @@ class Gstr1Builder
         if ($subtotal <= 0) {
             return [];
         }
+
+        $left = app(CreditNoteSplit::class)->leftByLine($inv, $cn->id);
+        $pool = $left ? array_sum(array_column($left, 'taxable_value')) : 0.0;
+        if ($pool > 0) {
+            $ratio = min(1.0, (float) $cn->taxable_value / $pool);
+
+            return $inv->items->mapWithKeys(fn ($i) => [$i->id => (float) $i->amount > 0
+                ? min(1.0, ($left[$i->id]['taxable_value'] ?? 0.0) * $ratio / (float) $i->amount)
+                : 0.0])->all();
+        }
+
         $fraction = min(1.0, (float) $cn->taxable_value / $subtotal);
 
         return $inv->items->mapWithKeys(fn ($i) => [$i->id => $fraction])->all();
@@ -521,18 +543,39 @@ class Gstr1Builder
         $s['sgst'] -= (float) $cn->total_sgst;
     }
 
+    /**
+     * The unit as GSTR-1 Table 12 reports it: a code from the GSTN UQC list
+     * (config/uqc_units.php), with common spellings mapped ("kg" is KGS). A
+     * service (SAC 99...) always takes NA; a unit not on the list is OTH.
+     * Table 12 is one row per HSN + UQC + rate, so its rows are keyed by this
+     * code, not by the unit as typed ("NOS" and "HRS" on one SAC are one row).
+     */
+    public static function uqc(?string $unit, ?string $hsn = null): string
+    {
+        if (str_starts_with(trim((string) $hsn), '99')) {
+            return 'NA';
+        }
+        $code = strtoupper(trim((string) $unit));
+        $code = config('uqc_units.aliases')[$code] ?? $code;
+
+        return in_array($code, array_column(config('uqc_units.codes'), 'code'), true) ? $code : 'OTH';
+    }
+
     private function addHsn(array &$hsn, string $tab, $item, float $sign, ?bool $rcmInterstate = null): void
     {
         if ($sign == 0.0) {
             return;
         }
         $rate = (float) $item->gst_rate;
-        $key = $tab . '|' . trim((string) $item->hsn_sac) . '|' . strtoupper((string) ($item->unit ?: 'OTH')) . '|' . $rate;
-        $hsn[$key] ??= ['tab' => $tab, 'hsn' => trim((string) $item->hsn_sac), 'description' => $item->description,
-            'uqc' => strtoupper((string) ($item->unit ?: 'OTH')), 'qty' => 0.0, 'value' => 0.0, 'rate' => $rate,
+        $code = trim((string) $item->hsn_sac);
+        $uqc = self::uqc($item->unit, $code);
+        $key = $tab . '|' . $code . '|' . $uqc . '|' . $rate;
+        $hsn[$key] ??= ['tab' => $tab, 'hsn' => $code, 'description' => $item->description,
+            'uqc' => $uqc, 'qty' => 0.0, 'value' => 0.0, 'rate' => $rate,
             'taxable' => 0.0, 'igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0, 'cess' => 0.0];
-        // Credit notes reduce value but not quantity (a price correction moves no goods).
-        if ($sign > 0) {
+        // Credit notes reduce value but not quantity (a price correction moves
+        // no goods). A service is reported with no quantity at all.
+        if ($sign > 0 && $uqc !== 'NA') {
             $hsn[$key]['qty'] += (float) $item->quantity;
         }
         $tax = $this->lineTax((string) (0 + $rate), (float) $item->amount, $item->igst_amount, $item->cgst_amount, $item->sgst_amount, $rcmInterstate);
@@ -551,13 +594,13 @@ class Gstr1Builder
     private function addHsnCreditLine(array &$hsn, string $tab, $line, bool $goodsReturned, ?bool $rcmInterstate = null): void
     {
         $rate = (float) $line->gst_rate;
-        $uqc = strtoupper((string) ($line->unit ?: 'OTH'));
         $code = trim((string) $line->hsn_sac);
+        $uqc = self::uqc($line->unit, $code);
         $key = $tab . '|' . $code . '|' . $uqc . '|' . $rate;
         $hsn[$key] ??= ['tab' => $tab, 'hsn' => $code, 'description' => $line->description,
             'uqc' => $uqc, 'qty' => 0.0, 'value' => 0.0, 'rate' => $rate,
             'taxable' => 0.0, 'igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0, 'cess' => 0.0];
-        if ($goodsReturned) {
+        if ($goodsReturned && $uqc !== 'NA') {
             $hsn[$key]['qty'] -= (float) $line->quantity;
         }
         // Value is what the note credits (tax charged); tax columns are as reported.
@@ -568,6 +611,63 @@ class Gstr1Builder
         $hsn[$key]['igst'] -= $t['igst'];
         $hsn[$key]['cgst'] -= $t['cgst'];
         $hsn[$key]['sgst'] -= $t['sgst'];
+    }
+
+    /**
+     * A note without lines, spread over the invoice lines, rounds each HSN
+     * row on its own and can total a paisa away from the rate rows that
+     * settleToNote() made add up to the note (660.80 + 220.27 off Table 12
+     * against 660.79 + 220.27 off 9B and 8, for a note of 881.06). Round each
+     * row, then put the difference at each rate on that rate's largest row,
+     * so the HSN rows at a rate take off exactly what the rate row does.
+     *
+     * @param  array<string, array>  $rows  the note's HSN rows (negative)
+     * @param  array<string, array{taxable: float, igst: float, cgst: float, sgst: float}>  $rates  the note's settled rate rows
+     */
+    private function settleHsnToRates(array $rows, array $rates): array
+    {
+        foreach ($rows as $key => $r) {
+            foreach (['value', 'taxable', 'igst', 'cgst', 'sgst'] as $head) {
+                $rows[$key][$head] = round($r[$head], 2);
+            }
+        }
+        foreach ($rates as $rate => $g) {
+            $keys = array_keys(array_filter($rows, fn ($r) => (string) (0 + $r['rate']) === (string) $rate));
+            if (! $keys) {
+                continue;
+            }
+            foreach (['taxable', 'igst', 'cgst', 'sgst'] as $head) {
+                $diff = round(-$g[$head] - array_sum(array_map(fn ($k) => $rows[$k][$head], $keys)), 2);
+                if ($diff == 0.0 || abs($diff) >= 1) {
+                    continue; // nothing to settle, or not a rounding difference
+                }
+                $largest = $keys[0];
+                foreach ($keys as $k) {
+                    if (abs($rows[$k][$head]) > abs($rows[$largest][$head])) {
+                        $largest = $k;
+                    }
+                }
+                $rows[$largest][$head] = round($rows[$largest][$head] + $diff, 2);
+                $rows[$largest]['value'] = round($rows[$largest]['value'] + $diff, 2);
+            }
+        }
+
+        return $rows;
+    }
+
+    /** Add one document's HSN rows to Table 12. */
+    private function mergeHsn(array &$hsn, array $rows): void
+    {
+        foreach ($rows as $key => $r) {
+            if (! isset($hsn[$key])) {
+                $hsn[$key] = $r;
+
+                continue;
+            }
+            foreach (['qty', 'value', 'taxable', 'igst', 'cgst', 'sgst'] as $k) {
+                $hsn[$key][$k] += $r[$k];
+            }
+        }
     }
 
     private function finishHsn(array $hsn): array
@@ -581,26 +681,131 @@ class Gstr1Builder
                 $r[$k] = round($r[$k], 2);
             }
         }
-        usort($rows, fn ($a, $b) => [$a['tab'], $a['hsn'], $a['rate']] <=> [$b['tab'], $b['hsn'], $b['rate']]);
+        usort($rows, fn ($a, $b) => [$a['tab'], $a['hsn'], $a['rate'], $a['uqc']] <=> [$b['tab'], $b['hsn'], $b['rate'], $b['uqc']]);
 
         return $rows;
     }
 
-    /** Table 13: serial ranges issued, with cancelled invoices counted. */
-    private function docs(Collection $issued, Collection $notes): array
+    /**
+     * Table 13: documents issued, one row per numbering series, each from its
+     * lowest number to its highest (a document dated back before an earlier
+     * one does not turn the range round). A business that changes its
+     * invoice format mid-month has two series, reported on two rows.
+     * Cancelled invoices stay in the count, as cancelled.
+     */
+    private function docs(Company $company, Collection $issued, Collection $notes, Carbon $from, Carbon $to): array
     {
         $rows = [];
-        if ($issued->isNotEmpty()) {
-            $sorted = $issued->sortBy(fn ($i) => [$i->finalized_at?->timestamp ?? 0, $i->id])->values();
+        foreach ($issued->groupBy(fn ($i) => $this->serial((string) $i->invoice_number)[0]) as $series) {
+            $sorted = $series->sortBy(fn ($i) => [...$this->serial((string) $i->invoice_number)[1], $i->id])->values();
             $rows[] = ['nature' => 'Invoices for outward supply', 'from' => $sorted->first()->invoice_number,
-                'to' => $sorted->last()->invoice_number, 'total' => $issued->count(),
-                'cancelled' => $issued->where('status', 'cancelled')->count()];
+                'to' => $sorted->last()->invoice_number, 'total' => $series->count(),
+                'cancelled' => $series->where('status', 'cancelled')->count()];
         }
-        if ($notes->isNotEmpty()) {
-            $rows[] = ['nature' => 'Credit Note', 'from' => $notes->first()->credit_note_number,
-                'to' => $notes->last()->credit_note_number, 'total' => $notes->count(), 'cancelled' => 0];
+
+        return array_merge($rows, $this->creditNoteDocs($company, $notes, $from, $to));
+    }
+
+    /**
+     * An invoice number's series and its place in it. The series is the
+     * number with its digits masked, so "AUD/26-27/0001" and "SHP/26-27/0003"
+     * are two series; the place is its groups of digits as numbers, so 0010
+     * comes after 0009 wherever the running number sits in the format.
+     *
+     * @return array{0: string, 1: int[]}
+     */
+    private function serial(string $number): array
+    {
+        preg_match_all('/\d+/', $number, $m);
+
+        return [preg_replace('/\d+/', '#', $number), array_map('intval', $m[0])];
+    }
+
+    /**
+     * Table 13 for credit notes, series by series. Reversing a note deletes
+     * it, but its number stays used (the counter never gives it out again),
+     * so it is reported as issued and cancelled and the range agrees with
+     * the count: every number between the lowest and highest of the series
+     * that no note holds any more is cancelled, as is a note dated in the
+     * period whose reversal the activity log recorded (a reversed last note
+     * leaves no gap to see).
+     */
+    private function creditNoteDocs(Company $company, Collection $notes, Carbon $from, Carbon $to): array
+    {
+        // Numbers still held, whatever their date: one used by a note of
+        // another period is not a gap.
+        $held = [];
+        foreach (CreditNote::where('company_id', $company->id)->pluck('credit_note_number') as $number) {
+            [$series, $n] = $this->counter((string) $number);
+            $held[$series][$n] = true;
+        }
+
+        $live = $gone = [];
+        foreach ($notes as $cn) {
+            [$series, $n] = $this->counter((string) $cn->credit_note_number);
+            $live[$series][$n] = $cn->credit_note_number;
+        }
+        foreach ($this->reversedNotes($company, $from, $to) as $number) {
+            [$series, $n] = $this->counter($number);
+            if (! isset($held[$series][$n])) {
+                $gone[$series][$n] = $number;
+            }
+        }
+
+        $rows = [];
+        foreach (array_keys($live + $gone) as $series) {
+            $numbers = ($live[$series] ?? []) + ($gone[$series] ?? []);
+            ksort($numbers);
+            $low = array_key_first($numbers);
+            $high = array_key_last($numbers);
+            // Numbers in the range held by notes dated in other periods.
+            $elsewhere = count(array_filter(array_keys($held[$series] ?? []),
+                fn ($n) => $n >= $low && $n <= $high && ! isset($live[$series][$n])));
+            $total = $high - $low + 1 - $elsewhere;
+            $rows[] = ['nature' => 'Credit Note', 'from' => $numbers[$low], 'to' => $numbers[$high],
+                'total' => $total, 'cancelled' => $total - count($live[$series] ?? [])];
         }
 
         return $rows;
+    }
+
+    /**
+     * A credit note number's series and running number: "CRN-0007" is series
+     * "CRN-", number 7 (notes are always numbered prefix and counter). A
+     * number with no digits at the end is a series of its own.
+     *
+     * @return array{0: string, 1: int}
+     */
+    private function counter(string $number): array
+    {
+        return preg_match('/^(.*?)(\d+)$/', $number, $m) ? [$m[1], (int) $m[2]] : [$number, 0];
+    }
+
+    /**
+     * Numbers of the credit notes dated in the period that were reversed
+     * since, from the activity log (CreditNoteController::destroy records
+     * the note's number and date there before the row is deleted).
+     *
+     * @return string[]
+     */
+    private function reversedNotes(Company $company, Carbon $from, Carbon $to): array
+    {
+        return AuditLog::where('company_id', $company->id)
+            ->where('action', 'credit_note.deleted')
+            // A note is reversed on or after its date: skip older entries.
+            ->where('created_at', '>=', $from->copy()->subDay())
+            ->pluck('changes')
+            ->filter(function ($c) use ($from, $to) {
+                if (! is_array($c) || empty($c['credit_note_number']) || empty($c['credit_note_date'])) {
+                    return false;
+                }
+                // The date was saved as JSON (midnight IST written in UTC).
+                $date = rescue(fn () => Carbon::parse($c['credit_note_date'])->setTimezone(config('app.timezone'))->toDateString(), null, false);
+
+                return $date !== null && $date >= $from->toDateString() && $date <= $to->toDateString();
+            })
+            ->map(fn ($c) => (string) $c['credit_note_number'])
+            ->values()
+            ->all();
     }
 }

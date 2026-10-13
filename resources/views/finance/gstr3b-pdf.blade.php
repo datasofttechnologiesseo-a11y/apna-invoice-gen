@@ -158,27 +158,41 @@
                     <td class="r">{{ inr($itc_rcm['sgst']) }}</td>
                     <td class="r muted">0</td>
                 </tr>
+                @php
+                    $reversed = $itc_reversed ?? ['igst' => 0, 'cgst' => 0, 'sgst' => 0, 'total' => 0];
+                    $barred = $itc_time_barred ?? ['total' => 0, 'count' => 0];
+                    $signed = fn ($v) => (float) $v < 0 ? '−' . inr(-(float) $v) : inr($v);
+                @endphp
                 <tr class="highlight">
-                    <td><strong>(A)(5)</strong> All other ITC <span class="label-sub">(purchase invoices, expenses + cash memos)</span></td>
+                    <td><strong>(A)(5)</strong> All other ITC <span class="label-sub">(purchase invoices, expenses + cash memos{{ ($itc_reclaimed['total'] ?? 0) > 0 ? '; includes ' . inr($itc_reclaimed['total']) . ' re-claimed under Rule 37' : '' }})</span></td>
                     <td class="r">{{ inr($itc_other['igst']) }}</td>
                     <td class="r">{{ inr($itc_other['cgst']) }}</td>
                     <td class="r">{{ inr($itc_other['sgst']) }}</td>
                     <td class="r muted">0</td>
                 </tr>
                 <tr>
-                    <td><strong>(B)</strong> ITC reversed</td>
-                    <td class="r muted">0</td>
-                    <td class="r muted">0</td>
-                    <td class="r muted">0</td>
+                    <td><strong>(B)(2)</strong> ITC reversed <span class="label-sub">(Rule 37: supplier not paid within 180 days)</span></td>
+                    @foreach (['igst', 'cgst', 'sgst'] as $head)
+                        <td class="r {{ (float) $reversed[$head] > 0 ? '' : 'muted' }}">{{ inr($reversed[$head]) }}</td>
+                    @endforeach
                     <td class="r muted">-</td>
                 </tr>
                 <tr class="total">
                     <td>(C) Net ITC available <span class="label-sub">(A − B)</span></td>
-                    <td class="r">{{ inr($itc['igst']) }}</td>
-                    <td class="r">{{ inr($itc['cgst']) }}</td>
-                    <td class="r">{{ inr($itc['sgst']) }}</td>
+                    <td class="r">{{ $signed($itc['igst']) }}</td>
+                    <td class="r">{{ $signed($itc['cgst']) }}</td>
+                    <td class="r">{{ $signed($itc['sgst']) }}</td>
                     <td class="r muted">0</td>
                 </tr>
+                @if ((float) $barred['total'] > 0)
+                    <tr>
+                        <td>Time-barred, not claimed <span class="label-sub">(Section 16(4): {{ $barred['count'] }} purchase {{ \Illuminate\Support\Str::plural('invoice', $barred['count']) }} booked after the time limit)</span></td>
+                        <td class="r muted">{{ inr($barred['igst']) }}</td>
+                        <td class="r muted">{{ inr($barred['cgst']) }}</td>
+                        <td class="r muted">{{ inr($barred['sgst']) }}</td>
+                        <td class="r muted">-</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>
@@ -210,6 +224,14 @@
                         <td>Less: negative liability from earlier periods</td>
                         @foreach (['igst', 'cgst', 'sgst'] as $head)
                             <td class="r">{{ $negative_carry_in[$head] < 0 ? '−' . inr(-$negative_carry_in[$head]) : inr(0) }}</td>
+                        @endforeach
+                    </tr>
+                @endif
+                @if ($itc['igst'] < 0 || $itc['cgst'] < 0 || $itc['sgst'] < 0)
+                    <tr>
+                        <td>Add: net ITC below nil <span class="label-sub">(4(C), credit reversed beyond this month's credit)</span></td>
+                        @foreach (['igst', 'cgst', 'sgst'] as $head)
+                            <td class="r">+{{ inr(max(0, -(float) $itc[$head])) }}</td>
                         @endforeach
                     </tr>
                 @endif

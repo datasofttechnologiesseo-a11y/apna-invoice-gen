@@ -55,6 +55,38 @@ class CreditNoteLines
     }
 
     /**
+     * The quantities a note is built from: rounded to 3 decimals as stored,
+     * blanks and zeros dropped. The controllers decide "this note has lines"
+     * from these same figures, so a quantity that rounds away (0.0004) can
+     * never switch off the amount checks and leave a typed amount unchecked.
+     *
+     * @param  array<int|string, mixed>  $input
+     * @return array<int|string, float>
+     */
+    public static function picked(array $input): array
+    {
+        return array_filter(
+            array_map(fn ($q) => is_numeric($q) ? round((float) $q, 3) : 0.0, $input),
+            fn ($q) => $q > 0,
+        );
+    }
+
+    /**
+     * Validation for one picked quantity (lines.*): blank, 0, or at least
+     * 0.001, the smallest quantity a note line can hold.
+     *
+     * @return array<int, mixed>
+     */
+    public static function quantityRules(): array
+    {
+        return ['nullable', 'numeric', 'min:0', function (string $attribute, mixed $value, \Closure $fail) {
+            if (is_numeric($value) && (float) $value > 0 && round((float) $value, 3) <= 0) {
+                $fail('Enter a quantity of 0.001 or more, or leave it blank.');
+            }
+        }];
+    }
+
+    /**
      * Turn picked quantities (invoice item id => quantity) into note lines.
      * Quantities of 0 or blank are ignored. Returns null when nothing was
      * picked, so the caller falls back to the amount-only note.
@@ -66,16 +98,20 @@ class CreditNoteLines
      */
     public function build(Invoice $invoice, array $picked): ?array
     {
-        $picked = array_filter(
-            array_map(fn ($q) => is_numeric($q) ? round((float) $q, 3) : 0.0, $picked),
-            fn ($q) => $q > 0,
-        );
+        $picked = self::picked($picked);
         if (! $picked || ! \App\Models\CreditNote::linesAvailable()) {
             return null;
         }
 
         $items = $invoice->items()->get()->keyBy('id');
         $prior = $this->creditedSoFar($invoice);
+        // After an amount-only note (a price reduction spread over every line)
+        // goods that come back are worth what is left on their line, not the
+        // original price: valued at the original price, a return on a
+        // mixed-rate invoice gave back more tax at one rate than it charged.
+        $leftNow = $invoice->creditNotes()->reorder()->whereDoesntHave('items')->exists()
+            ? app(CreditNoteSplit::class)->leftByLine($invoice, null, true)
+            : null;
 
         $lines = [];
         foreach ($picked as $itemId => $qty) {
@@ -95,7 +131,18 @@ class CreditNoteLines
                 throw ValidationException::withMessages(["lines.{$item->id}" => "Only {$leftStr} of {$name} can still be credited."]);
             }
 
-            if ($qty >= $left - 0.0005) {
+            if ($leftNow !== null && isset($leftNow[$item->id])) {
+                // A share of what is left on the line, all of it for the last.
+                $qty = $qty >= $left - 0.0005 ? $left : $qty;
+                $f = min(1.0, $qty / $left);
+                $l = $leftNow[$item->id];
+                $fig = [
+                    'taxable_value' => round($l['taxable_value'] * $f, 2),
+                    'cgst' => round($l['total_cgst'] * $f, 2),
+                    'sgst' => round($l['total_sgst'] * $f, 2),
+                    'igst' => round($l['total_igst'] * $f, 2),
+                ];
+            } elseif ($qty >= $left - 0.0005) {
                 // The last of this line: the exact remainder, to the paisa.
                 $qty = $left;
                 $fig = [

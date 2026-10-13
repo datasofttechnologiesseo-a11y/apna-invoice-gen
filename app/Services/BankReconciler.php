@@ -40,21 +40,32 @@ class BankReconciler
 
         $found = collect();
         if ($line->isCredit()) {
+            // A receipt reaches the bank net of any TDS the customer kept back
+            // (Payment::netReceived()); one without TDS, in full. A credit
+            // equal to a TDS receipt's gross is some other money.
             $payments = Payment::where('company_id', $company->id)->whereBetween('received_at', [$from, $to])
-                ->whereRaw('ABS(amount - ?) < 0.005', [round($amount, 2)])->with('invoice.customer')->get();
+                ->whereRaw('ABS((amount - COALESCE(tds_amount, 0)) - ?) < 0.005', [round($amount, 2)])
+                ->with('invoice.customer')->get();
             foreach ($payments as $p) {
                 $found->push(['model' => $p, 'date' => $p->received_at, 'ref' => $p->reference_number, 'label' => self::label($p)]);
             }
         } else {
+            // A vendor paid in cash never passes through the bank.
             $vendorPayments = PurchasePayment::where('company_id', $company->id)->whereBetween('paid_on', [$from, $to])
+                ->where(fn ($q) => $q->whereNull('method')->orWhere('method', '!=', 'cash'))
                 ->whereRaw('ABS(amount - ?) < 0.005', [round($amount, 2)])->with('purchaseBill.vendor')->get();
             foreach ($vendorPayments as $p) {
                 $found->push(['model' => $p, 'date' => $p->paid_on, 'ref' => $p->reference_number, 'label' => self::label($p)]);
             }
-            $expenses = Expense::where('company_id', $company->id)->whereNull('purchase_bill_id')
-                ->where(fn ($q) => $q->whereNull('payment_method')->orWhere('payment_method', '!=', 'cash'))
-                ->whereBetween('entry_date', [$from, $to])
-                ->whereRaw('ABS((amount + gst_amount) - ?) < 0.005', [round($amount, 2)])->get();
+            // An expense paid from the bank. A cash memo's row holds taxable +
+            // GST before the round-off, while the seller was paid the memo's
+            // grand total, so the memo is matched on that.
+            $expenses = Expense::where('expenses.company_id', $company->id)->whereNull('expenses.purchase_bill_id')
+                ->where(fn ($q) => $q->whereNull('expenses.payment_method')->orWhere('expenses.payment_method', '!=', 'cash'))
+                ->whereBetween('expenses.entry_date', [$from, $to])
+                ->leftJoin('cash_memos', 'cash_memos.id', '=', 'expenses.cash_memo_id')
+                ->whereRaw('ABS(COALESCE(cash_memos.grand_total, expenses.amount + expenses.gst_amount) - ?) < 0.005', [round($amount, 2)])
+                ->select('expenses.*')->get();
             foreach ($expenses as $e) {
                 $found->push(['model' => $e, 'date' => $e->entry_date, 'ref' => $e->reference_number, 'label' => self::label($e)]);
             }
@@ -108,7 +119,10 @@ class BankReconciler
                 'party' => $model->vendor_name ?: null,
                 'document' => $model->categoryLabel() . ($model->description ? ': ' . $model->description : ''),
                 'date' => $model->entry_date?->format('d M Y'),
-                'amount' => (float) $model->amount + (float) $model->gst_amount,
+                // A cash memo's seller was paid its grand total, round-off included.
+                'amount' => $model->cash_memo_id && $model->cashMemo
+                    ? (float) $model->cashMemo->grand_total
+                    : (float) $model->amount + (float) $model->gst_amount,
                 'ref' => $model->reference_number,
                 'url' => route('finance.expenses.edit', $model),
             ],

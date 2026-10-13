@@ -101,8 +101,13 @@ class ReportController extends Controller
     private function presets(): array
     {
         $today = now();
-        $fyStart = $today->month >= 4 ? $today->copy()->setDate($today->year, 4, 1) : $today->copy()->setDate($today->year - 1, 4, 1);
-        $qStart = $fyStart->copy()->addMonths(intdiv($fyStart->diffInMonths($today->copy()->startOfMonth()), 3) * 3);
+        $fyStart = $today->copy()->setDate($today->month >= 4 ? $today->year : $today->year - 1, 4, 1)->startOfDay();
+        // FY quarters run Apr-Jun, Jul-Sep, Oct-Dec, Jan-Mar: take the quarter
+        // from the calendar month. Counting months from 1 April came out a
+        // fraction short in a quarter's first month (5.98 months to 1 Oct)
+        // and gave the quarter before.
+        $monthsFromApr = ($today->month + 12 - 4) % 12;
+        $qStart = $fyStart->copy()->addMonths(intdiv($monthsFromApr, 3) * 3);
 
         return [
             'this_month' => ['label' => 'This month', 'from' => $today->copy()->startOfMonth(), 'to' => $today->copy()->endOfMonth()],

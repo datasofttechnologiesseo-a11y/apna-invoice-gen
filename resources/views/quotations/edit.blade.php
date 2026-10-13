@@ -34,7 +34,7 @@
         $utStateIds = \App\Models\State::where('is_union_territory', true)->pluck('id')->values();
     @endphp
 
-    <div class="py-6 sm:py-8" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, {{ ! empty($company->gstin) ? 'true' : 'false' }})'
+    <div class="py-6 sm:py-8" x-data='quotationForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, {{ ! empty($company->gstin) ? 'true' : 'false' }}, {{ $company->composition_dealer ? 'true' : 'false' }})'
          @customer-added.window="addCustomer($event.detail)">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
@@ -363,7 +363,7 @@
     @push('scripts')
     <script>
         const UT_STATE_IDS = @json($utStateIds);
-        function quotationForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, companyHasGstin) {
+        function quotationForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, companyHasGstin, compositionNoTax = false) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
             return {
@@ -377,6 +377,7 @@
                 totals: {gross: 0, discount: 0, subtotal: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0},
                 discountMode: 'amount',
                 discountInput: @json($initialDiscount) || '',
+                compositionNoTax: !! compositionNoTax,
                 /**
                  * HSN/SAC is required only when either party is GST-registered
                  * (Rule 46(g)). For two unregistered parties, HSN is purely optional.
@@ -437,62 +438,73 @@
                 },
                 recompute() {
                     const inter = this.isInterstate;
+                    // Composition dealers quote and bill with no GST.
+                    const noTax = this.compositionNoTax;
                     let sub = 0, cgst = 0, sgst = 0, igst = 0;
+                    // Round half up like PHP's round(): pre-round to 15 significant
+                    // digits first, so 105.50 x 9% (9.494999... in binary) is 9.50
+                    // here as on the server. Math.round alone gave 9.49 and a
+                    // grand total a rupee short of the saved one.
+                    const rnd = (v, d) => { const f = Math.pow(10, d); const x = parseFloat((Math.abs(v) * f).toPrecision(15)); return Math.sign(v) * Math.round(x) / f; };
+                    const r2 = v => rnd(v, 2);
 
-                    // Quote-level discount spread pro rata before tax
-                    // (InvoiceCalculator::apportionDiscount on the server).
-                    const grossOf = item => +((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toFixed(2);
+                    // Quote-level discount spread pro rata before tax, the
+                    // remainder paisa by paisa to the largest lines: the same
+                    // split as InvoiceCalculator::apportionDiscount on the server.
+                    const grossOf = item => r2(rnd(parseFloat(item.quantity) || 0, 3) * r2(parseFloat(item.rate) || 0));
                     const grossList = this.items.map(grossOf);
-                    const totalGross = +grossList.reduce((a, b) => a + b, 0).toFixed(2);
+                    const totalGross = r2(grossList.reduce((a, b) => a + b, 0));
                     const input = Math.max(0, parseFloat(this.discountInput) || 0);
                     let discount = this.discountMode === 'percent'
-                        ? +(totalGross * Math.min(input, 100) / 100).toFixed(2)
-                        : +input.toFixed(2);
+                        ? r2(totalGross * Math.min(input, 100) / 100)
+                        : r2(input);
                     discount = Math.min(discount, totalGross);
-                    let lastIdx = -1;
-                    grossList.forEach((g, i) => { if (g > 0) lastIdx = i; });
-                    let allocated = 0;
-                    this.items.forEach((item, i) => {
-                        if (discount <= 0 || grossList[i] <= 0) { item.discount = 0; return; }
-                        let share = i === lastIdx
-                            ? +(discount - allocated).toFixed(2)
-                            : +(discount * grossList[i] / totalGross).toFixed(2);
-                        share = Math.min(share, grossList[i]);
-                        item.discount = share;
-                        allocated = +(allocated + share).toFixed(2);
-                    });
+                    const shares = grossList.map(g => (discount > 0 && g > 0) ? Math.min(g, r2(discount * g / totalGross)) : 0);
+                    let left = Math.round((discount - shares.reduce((a, b) => a + b, 0)) * 100);
+                    const order = grossList.map((g, i) => i).sort((a, b) => grossList[b] - grossList[a]);
+                    for (let guard = 0; left !== 0 && guard < 10000; guard++) {
+                        let moved = false;
+                        for (const i of order) {
+                            if (left > 0 && shares[i] + 0.01 <= grossList[i] + 0.0001) { shares[i] = r2(shares[i] + 0.01); left--; moved = true; }
+                            else if (left < 0 && shares[i] >= 0.01) { shares[i] = r2(shares[i] - 0.01); left++; moved = true; }
+                            if (left === 0) break;
+                        }
+                        if (!moved) break;
+                    }
+                    this.items.forEach((item, i) => { item.discount = shares[i]; });
+                    const allocated = r2(shares.reduce((a, b) => a + b, 0));
 
                     this.items.forEach(item => {
                         const gst = parseFloat(item.gst_rate) || 0;
                         const gross = grossOf(item);
                         const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
-                        const amount = +(gross - disc).toFixed(2);
+                        const amount = r2(gross - disc);
                         let c = 0, s = 0, ig = 0;
-                        if (gst > 0) {
+                        if (gst > 0 && !noTax) {
                             if (inter) {
-                                ig = +(amount * gst / 100).toFixed(2);
+                                ig = r2(amount * gst / 100);
                             } else {
                                 // Each head at half the rate, rounded on its own
                                 // (mirrors InvoiceCalculator; keeps CGST = SGST).
-                                c = +(amount * gst / 200).toFixed(2);
+                                c = r2(amount * gst / 200);
                                 s = c;
                             }
                         }
                         item.amount = amount;
-                        item.tax = +(c + s + ig).toFixed(2);
-                        item.total = +(amount + item.tax).toFixed(2);
+                        item.tax = r2(c + s + ig);
+                        item.total = r2(amount + item.tax);
                         sub += amount; cgst += c; sgst += s; igst += ig;
                     });
-                    const totalTax = +(cgst + sgst + igst).toFixed(2);
+                    const totalTax = r2(r2(cgst) + r2(sgst) + r2(igst));
                     this.totals = {
                         gross: totalGross,
-                        discount: +allocated.toFixed(2),
-                        subtotal: +sub.toFixed(2),
-                        cgst: +cgst.toFixed(2),
-                        sgst: +sgst.toFixed(2),
-                        igst: +igst.toFixed(2),
+                        discount: allocated,
+                        subtotal: r2(sub),
+                        cgst: r2(cgst),
+                        sgst: r2(sgst),
+                        igst: r2(igst),
                         totalTax,
-                        grandTotal: Math.round(sub + totalTax),
+                        grandTotal: rnd(r2(sub) + totalTax, 0),
                     };
                 },
                 fmt(n) { const v = Math.round((parseFloat(n) || 0) * 100) / 100; return v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },

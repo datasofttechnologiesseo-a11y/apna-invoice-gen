@@ -80,6 +80,7 @@ class Gstr2bController extends Controller
         $labels = [
             'matched' => 'Matched', 'mismatch' => 'Amounts differ', 'missing' => 'In 2B, missing in books',
             'not_in_2b' => 'In books, not in 2B yet', 'no_gstin' => 'Supplier has no GSTIN', 'notes' => 'Supplier credit/debit note',
+            'no_itc' => 'In 2B, ITC not available',
         ];
 
         return response()->streamDownload(function () use ($r, $labels, $company, $period) {

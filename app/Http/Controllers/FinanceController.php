@@ -484,9 +484,9 @@ class FinanceController extends Controller
 
         $data = $this->buildGstr3b($company, $periodStart, $periodEnd);
 
-        // Which credit paid which tax (Table 6.1). Same inputs as the
-        // builder's own set-off, so the totals are the ones on screen.
-        $setOffMatrix = app(\App\Services\GstSetOff::class)->settle($data['payable'], $data['itc'])['matrix'];
+        // Which credit paid which tax (Table 6.1): the builder's own set-off,
+        // so the totals are the ones on screen (net ITC after Rule 37).
+        $setOffMatrix = $data['set_off_matrix'];
 
         return view('finance.gstr3b', array_merge($data, [
             'setOffMatrix' => $setOffMatrix,
@@ -556,7 +556,14 @@ class FinanceController extends Controller
             csv_put($out, ['Details', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'Cess (Rs.)']);
             csv_put($out, [...$heads('(A)(3) Inward supplies liable to reverse charge', $data['itc_rcm']), '0.00']);
             csv_put($out, [...$heads('(A)(5) All other ITC', $data['itc_other']), '0.00']);
+            if (($data['itc_reclaimed']['total'] ?? 0) > 0) {
+                csv_put($out, [...$heads('of which re-claimed under Rule 37 (supplier paid after 180 days)', $data['itc_reclaimed']), '0.00']);
+            }
+            csv_put($out, [...$heads('(B)(2) ITC reversed: Rule 37 (supplier not paid within 180 days)', $data['itc_reversed']), '0.00']);
             csv_put($out, [...$heads('(C) Net ITC available (A – B)', $data['itc']), '0.00']);
+            if (($data['itc_time_barred']['total'] ?? 0) > 0) {
+                csv_put($out, [...$heads('Time-barred (s.16(4)), not claimed', $data['itc_time_barred']), '0.00']);
+            }
             csv_put($out, []);
 
             // 6.1 — Payment of tax
@@ -565,6 +572,12 @@ class FinanceController extends Controller
             csv_put($out, $heads('Tax on outward supplies [3.1(a) + (b)]', $data['liability']));
             if (array_sum($data['negative_carry_in']) < 0) {
                 csv_put($out, $heads('Negative liability from earlier periods', $data['negative_carry_in']));
+            }
+            // A reversal larger than the credit leaves 4(C) below nil in a head:
+            // that part is tax to pay (the portal adds it in Table 6.1).
+            $itcBelowNil = array_map(fn ($v) => max(0.0, -(float) $v), array_intersect_key($data['itc'], array_flip(['igst', 'cgst', 'sgst'])));
+            if (array_sum($itcBelowNil) > 0) {
+                csv_put($out, $heads('Add: net ITC below nil [4(C)]', $itcBelowNil));
             }
             csv_put($out, $heads('Paid through ITC (s.49(5) / Rule 88A order)', $data['itc_used']));
             csv_put($out, $heads('Reverse charge on inward supplies [3.1(d)] - cash only', $d));
@@ -731,6 +744,10 @@ class FinanceController extends Controller
      *
      * - If the expense was created via a Cash Memo, redirect to the memo's PDF
      *   (the memo IS the canonical voucher).
+     * - If it mirrors a purchase invoice, redirect to that invoice: what was
+     *   paid, when and how is on its page. A voucher printed "Total Cash Out"
+     *   with a payment mode for a bill that may be unpaid, and for a
+     *   reverse-charge bill counted the tax as paid to the vendor.
      * - Otherwise generate an "Expense Voucher" PDF on the fly.
      * - ?inline=1 streams to browser (View). Otherwise forces download.
      */
@@ -740,6 +757,9 @@ class FinanceController extends Controller
 
         if ($expense->cash_memo_id) {
             return redirect()->route('finance.cash-memos.pdf', $expense->cash_memo_id);
+        }
+        if ($expense->purchase_bill_id) {
+            return redirect()->route('purchases.show', $expense->purchase_bill_id);
         }
 
         $expense->load('company.state');

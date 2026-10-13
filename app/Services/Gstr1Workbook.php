@@ -68,8 +68,8 @@ class Gstr1Workbook
                 'summary' => [['No. of HSN', '', '', '', '', 'Total Taxable Value', 'Total Integrated Tax', 'Total Central Tax', 'Total State/UT Tax', 'Total Cess'],
                     [$distinct($rows, 'hsn'), '', '', '', '', $sum($rows, 'taxable'), $sum($rows, 'igst'), $sum($rows, 'cgst'), $sum($rows, 'sgst'), 0.0]],
                 'headings' => ['HSN', 'Description', 'UQC', 'Total Quantity', 'Rate', 'Taxable Value', 'Integrated Tax Amount', 'Central Tax Amount', 'State/UT Tax Amount', 'Cess Amount'],
-                'rows' => array_map(fn ($r) => [$r['hsn'], $this->hsnDescription($r['description']), $this->uqc($r['uqc'], $r['hsn']),
-                    str_starts_with(trim($r['hsn']), '99') ? 0 : $r['qty'],
+                'rows' => array_map(fn ($r) => [$r['hsn'], $this->hsnDescription($r['description']), $this->uqc($r['uqc']),
+                    $r['uqc'] === 'NA' ? 0 : $r['qty'],
                     $rate($r['rate']), $r['taxable'], $r['igst'], $r['cgst'], $r['sgst'], 0.0], $rows),
                 'money' => [5, 6, 7, 8, 9],
             ];
@@ -225,27 +225,17 @@ class Gstr1Workbook
     }
 
     /**
-     * UQC as the offline tool lists it ("NOS-NUMBERS"). Services (SAC 99xxxx)
-     * take "NA" with no quantity; free-text units fall back to OTH-OTHERS.
+     * UQC as the offline tool lists it ("NOS-NUMBERS"). The build already
+     * carries the GSTN code (Gstr1Builder::uqc): services are "NA" with no
+     * quantity, and a unit not on the list is OTH.
      */
-    private function uqc(string $unit, string $hsn = ''): string
+    private function uqc(string $code): string
     {
-        if (str_starts_with(trim($hsn), '99')) {
+        if ($code === 'NA') {
             return 'NA';
         }
-        $names = [
-            'NOS' => 'NUMBERS', 'PCS' => 'PIECES', 'BOX' => 'BOX', 'BAG' => 'BAGS', 'BTL' => 'BOTTLES', 'BDL' => 'BUNDLES',
-            'CAN' => 'CANS', 'CBM' => 'CUBIC METERS', 'CCM' => 'CUBIC CENTIMETERS', 'DOZ' => 'DOZENS', 'DRM' => 'DRUMS',
-            'GMS' => 'GRAMMES', 'GGK' => 'GREAT GROSS', 'GRS' => 'GROSS', 'KGS' => 'KILOGRAMS', 'KLR' => 'KILOLITRE',
-            'KME' => 'KILOMETRE', 'LTR' => 'LITRES', 'MLT' => 'MILILITRE', 'MTR' => 'METERS', 'MTS' => 'METRIC TON',
-            'PAC' => 'PACKS', 'PRS' => 'PAIRS', 'QTL' => 'QUINTAL', 'ROL' => 'ROLLS', 'SET' => 'SETS', 'SQF' => 'SQUARE FEET',
-            'SQM' => 'SQUARE METERS', 'TBS' => 'TABLETS', 'TON' => 'TONNES', 'TUB' => 'TUBES', 'UNT' => 'UNITS', 'YDS' => 'YARDS',
-        ];
-        $alias = ['NO' => 'NOS', 'PC' => 'PCS', 'KG' => 'KGS', 'G' => 'GMS', 'GM' => 'GMS', 'L' => 'LTR', 'ML' => 'MLT',
-            'M' => 'MTR', 'UNIT' => 'UNT', 'DOZEN' => 'DOZ', 'PAIR' => 'PRS'];
-        $code = strtoupper(trim($unit));
-        $code = $alias[$code] ?? $code;
+        $name = collect(config('uqc_units.codes'))->firstWhere('code', $code)['portal'] ?? null;
 
-        return isset($names[$code]) ? $code . '-' . $names[$code] : 'OTH-OTHERS';
+        return $name ? $code . '-' . $name : 'OTH-OTHERS';
     }
 }

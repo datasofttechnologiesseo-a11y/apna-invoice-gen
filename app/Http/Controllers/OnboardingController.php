@@ -109,9 +109,16 @@ class OnboardingController extends Controller
         // Company settings if they want a different layout. We only set this
         // when format is empty so we never trample a returning user.
         if (empty($company->invoice_number_format)) {
-            $company->update([
-                'invoice_number_format' => trim($data['invoice_prefix']) . '/{FY}/{N}',
-            ]);
+            // Rule 46(b): at most 16 characters. "INV/2026-27/0001" is exactly
+            // 16, so a longer prefix takes the short year ("ACME/26-27/0001"),
+            // and one longer still a plain running number ("SHARMATRAD/0001").
+            $prefix = trim($data['invoice_prefix']);
+            $format = match (true) {
+                mb_strlen($prefix) <= 3 => $prefix . '/{FY}/{N}',
+                mb_strlen($prefix) <= 5 => $prefix . '/{FY_SHORT}/{N}',
+                default => $prefix . '/{N}',
+            };
+            $company->update(['invoice_number_format' => $format]);
         }
 
         return redirect()->route('onboarding.customer')->with('status', 'Business details saved.');

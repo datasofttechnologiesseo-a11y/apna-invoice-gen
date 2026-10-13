@@ -232,4 +232,22 @@ class User extends Authenticatable
 
         throw new \RuntimeException('Could not allocate a unique referral code after 10 attempts.');
     }
+
+    /**
+     * Sign this user out of every other browser: their rows in the database
+     * session table go, except the one making the request (if given). Used
+     * after a password reset or change, so a browser signed in with the old
+     * password does not stay in.
+     */
+    public function endOtherBrowserSessions(?string $keepSessionId = null): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+        \Illuminate\Support\Facades\DB::connection(config('session.connection'))
+            ->table(config('session.table', 'sessions'))
+            ->where('user_id', $this->getKey())
+            ->when($keepSessionId, fn ($q) => $q->where('id', '!=', $keepSessionId))
+            ->delete();
+    }
 }

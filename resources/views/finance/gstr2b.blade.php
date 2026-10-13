@@ -112,9 +112,16 @@
                         · {{ $s['counts']['no_gstin'] }} purchase {{ \Illuminate\Support\Str::plural('invoice', $s['counts']['no_gstin']) }} from suppliers without a GSTIN (GST ₹{{ $paise($s['tax']['no_gstin']) }}) cannot appear in 2B.
                     @endif
                 </div>
+                @if (($s['no_itc']['count'] ?? 0) > 0)
+                    <a href="#g2b-no_itc" class="block p-3 rounded-lg ring-1 ring-danger-200 bg-danger-50 text-sm text-danger-800">
+                        <strong>{{ $s['no_itc']['count'] }} {{ \Illuminate\Support\Str::plural('invoice', $s['no_itc']['count']) }} in 2B with ITC not available</strong>
+                        (GST ₹{{ $paise($s['no_itc']['tax']) }}). 2B says this credit cannot be claimed, for example because of the place of supply or the time limit. Leave it out of GSTR-3B.
+                    </a>
+                @endif
 
                 @php
                     $sections = [
+                        ['key' => 'no_itc', 'title' => 'In 2B, ITC not available', 'open' => true],
                         ['key' => 'mismatch', 'title' => 'Amounts differ', 'open' => true],
                         ['key' => 'missing', 'title' => 'Missing in your books', 'open' => true],
                         ['key' => 'not_in_2b', 'title' => 'Not in 2B yet', 'open' => true],
@@ -124,7 +131,7 @@
                     ];
                 @endphp
                 @foreach ($sections as $sec)
-                    @php $rows = $result[$sec['key']]; @endphp
+                    @php $rows = $result[$sec['key']] ?? []; @endphp
                     @continue(! count($rows))
                     <details id="g2b-{{ $sec['key'] }}" class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" @if ($sec['open']) open @endif>
                         <summary class="px-5 py-3 cursor-pointer select-none flex items-center justify-between gap-3 hover:bg-gray-50">

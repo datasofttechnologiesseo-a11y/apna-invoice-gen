@@ -56,6 +56,39 @@ class InvoiceController extends Controller
         return InvoiceListResource::collection($invoices);
     }
 
+    /**
+     * How the "Paid amount" was paid, for the receipt booked at issue. Nothing
+     * paid, nothing stored.
+     */
+    private function paidVia(array $data): array
+    {
+        $paid = (float) ($data['paid_amount'] ?? 0) > 0;
+
+        return [
+            'paid_method' => $paid ? ($data['paid_method'] ?? null) : null,
+            'paid_reference' => $paid ? (trim((string) ($data['paid_reference'] ?? '')) ?: null) : null,
+        ];
+    }
+
+    /**
+     * Rows (1-based) with no HSN/SAC code, when the code is required: Rule
+     * 46(g) once either party has a GSTIN, the same rule the invoice form
+     * applies on save. A draft made from a quotation, whose form does not
+     * ask for it, could otherwise be issued without one.
+     *
+     * @return list<int>
+     */
+    private function rowsMissingHsn(Invoice $invoice): array
+    {
+        if (! $invoice->company?->gstin && ! $invoice->billedCustomer()?->gstin) {
+            return [];
+        }
+
+        return $invoice->items()->orderBy('sort_order')->orderBy('id')->get()->values()
+            ->filter(fn ($item) => trim((string) $item->hsn_sac) === '')
+            ->keys()->map(fn ($k) => $k + 1)->all();
+    }
+
     /** Same rule as the web form: an advance cannot be more than the bill. */
     private function guardPaidAmount(array $data, array $calc): void
     {
@@ -86,6 +119,9 @@ class InvoiceController extends Controller
         $supplyType = $data['supply_type'] ?? 'regular';
         \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
         [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        // A composition dealer issues a bill of supply and cannot collect tax
+        // on it (s.10(4), s.31(3)(c)): the rate stays on the line, the tax is nil.
+        $noTax = $noTax || (bool) $company->composition_dealer;
         $calc = $this->calculator->recalculate(new Invoice(), $data['items'], $isInterstate, $noTax);
         $this->guardPaidAmount($data, $calc);
 
@@ -123,6 +159,7 @@ class InvoiceController extends Controller
                 // negative balance (matches the web InvoiceController invariant).
                 'balance' => max(0, round($calc['totals']['grand_total'] - (float) ($data['paid_amount'] ?? 0), 2)),
                 'paid_amount' => (float) ($data['paid_amount'] ?? 0),
+                ...$this->paidVia($data),
             ]);
 
             $invoice->items()->createMany($calc['items']);
@@ -182,6 +219,9 @@ class InvoiceController extends Controller
         $supplyType = $data['supply_type'] ?? ($invoice->supply_type ?: 'regular');
         \App\Support\ZeroRatedSupply::guard($supplyType, $data, $customer);
         [$isInterstate, $noTax] = $this->calculator->taxBasis($company->state_id, $customer->state_id, $supplyType, (bool) ($data['reverse_charge'] ?? false));
+        // A composition dealer issues a bill of supply and cannot collect tax
+        // on it (s.10(4), s.31(3)(c)): the rate stays on the line, the tax is nil.
+        $noTax = $noTax || (bool) $company->composition_dealer;
         $calc = $this->calculator->recalculate($invoice, $data['items'], $isInterstate, $noTax);
         $this->guardPaidAmount($data, $calc);
 
@@ -214,6 +254,7 @@ class InvoiceController extends Controller
                 'terms' => $data['terms'] ?? null,
                 ...$calc['totals'],
                 'paid_amount' => $paid,
+                ...$this->paidVia($data),
                 'balance' => max(0, round($calc['totals']['grand_total'] - $paid, 2)),
             ]);
 
@@ -273,6 +314,9 @@ class InvoiceController extends Controller
         if ((float) $invoice->grand_total <= 0) {
             return response()->json(['message' => 'Cannot issue a zero-amount invoice.'], 422);
         }
+        if ($rows = $this->rowsMissingHsn($invoice)) {
+            return response()->json(['message' => 'Enter the HSN/SAC code on row ' . implode(', ', $rows) . ' before issuing. It is required when either party has a GSTIN.'], 422);
+        }
         // Same guard as the web path: without the business's own state the
         // calculator cannot tell CGST/SGST from IGST, so a taxed invoice could
         // go out with the wrong heads.
@@ -315,7 +359,7 @@ class InvoiceController extends Controller
             // which door it went out of.
             if (filled($invoice->invoice_number)) {
                 $number = $invoice->invoice_number;
-                $company->learnSeriesFrom($number);
+                $company->learnSeriesFrom($number, $invoice->invoice_date);
             } else {
                 // Skip past any number a custom-numbered invoice already claimed,
                 // or the unique (company_id, invoice_number) index rejects the
@@ -605,6 +649,12 @@ class InvoiceController extends Controller
         ]);
 
         DB::transaction(function () use ($payment, $invoice) {
+            // Same company lock as recording a payment or a credit note, then
+            // the invoice read again under it, so a payment or note saved
+            // meanwhile is not overwritten by figures loaded before the lock.
+            $invoice->company()->lockForUpdate()->first();
+            $invoice->refresh();
+
             $payment->delete();
 
             $paid = (float) $invoice->payments()->sum('amount');
@@ -694,6 +744,8 @@ class InvoiceController extends Controller
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'paid_method' => ['nullable', Rule::in(array_keys(config('payment_methods.methods', [])))],
+            'paid_reference' => ['nullable', 'string', 'max:80'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => [
                 'nullable',

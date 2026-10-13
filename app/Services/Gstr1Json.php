@@ -166,16 +166,18 @@ class Gstr1Json
             $out['nil'] = ['inv' => $nil];
         }
 
-        // 12 - HSN summary, B2B and B2C tabs.
+        // 12 - HSN summary, B2B and B2C tabs. The build already carries the
+        // GSTN UQC (Gstr1Builder::uqc) and keys its rows by it, so each HSN +
+        // UQC + rate is one row here too.
         $hsn = ['hsn_b2b' => [], 'hsn_b2c' => []];
         foreach ($d['hsn'] as $r) {
             $tab = $r['tab'] === 'B2B' ? 'hsn_b2b' : 'hsn_b2c';
-            $service = str_starts_with(trim((string) $r['hsn']), '99');
+            $service = $r['uqc'] === 'NA';
             $hsn[$tab][] = [
                 'num' => count($hsn[$tab]) + 1,
                 'hsn_sc' => (string) $r['hsn'],
                 'desc' => mb_substr(trim(preg_replace('/[^A-Za-z0-9 ,\-\/()&]/', ' ', (string) $r['description'])), 0, 30),
-                'uqc' => $service ? 'NA' : $this->uqcCode((string) $r['uqc']),
+                'uqc' => (string) $r['uqc'],
                 'qty' => $service ? 0 : round((float) $r['qty'], 2),
                 'rt' => $rate($r['rate']),
                 'txval' => $money($r['taxable']),
@@ -190,37 +192,22 @@ class Gstr1Json
             $out['hsn'] = $hsn;
         }
 
-        // 13 - documents issued.
+        // 13 - documents issued: one entry per document type, with a range
+        // for each numbering series under it.
         $docs = [];
         foreach ($d['docs'] as $r) {
             $code = $r['nature'] === 'Credit Note' ? self::DOC_CREDIT_NOTE : self::DOC_INVOICE;
-            $docs[] = [
-                'doc_num' => $code,
-                'doc_typ' => $r['nature'],
-                'docs' => [[
-                    'num' => 1, 'from' => (string) $r['from'], 'to' => (string) $r['to'],
-                    'totnum' => (int) $r['total'], 'cancel' => (int) $r['cancelled'],
-                    'net_issue' => (int) $r['total'] - (int) $r['cancelled'],
-                ]],
+            $docs[$code] ??= ['doc_num' => $code, 'doc_typ' => $r['nature'], 'docs' => []];
+            $docs[$code]['docs'][] = [
+                'num' => count($docs[$code]['docs']) + 1, 'from' => (string) $r['from'], 'to' => (string) $r['to'],
+                'totnum' => (int) $r['total'], 'cancel' => (int) $r['cancelled'],
+                'net_issue' => (int) $r['total'] - (int) $r['cancelled'],
             ];
         }
         if ($docs) {
-            $out['doc_issue'] = ['doc_det' => $docs];
+            $out['doc_issue'] = ['doc_det' => array_values($docs)];
         }
 
         return $out;
-    }
-
-    /** UQC code as the JSON carries it ("NOS"); anything unknown is OTH. */
-    private function uqcCode(string $unit): string
-    {
-        $known = ['NOS', 'PCS', 'BOX', 'BAG', 'BTL', 'BDL', 'CAN', 'CBM', 'CCM', 'DOZ', 'DRM', 'GMS', 'GGK', 'GRS', 'KGS', 'KLR',
-            'KME', 'LTR', 'MLT', 'MTR', 'MTS', 'PAC', 'PRS', 'QTL', 'ROL', 'SET', 'SQF', 'SQM', 'TBS', 'TON', 'TUB', 'UNT', 'YDS'];
-        $alias = ['NO' => 'NOS', 'PC' => 'PCS', 'KG' => 'KGS', 'G' => 'GMS', 'GM' => 'GMS', 'L' => 'LTR', 'ML' => 'MLT',
-            'M' => 'MTR', 'UNIT' => 'UNT', 'DOZEN' => 'DOZ', 'PAIR' => 'PRS'];
-        $code = strtoupper(trim($unit));
-        $code = $alias[$code] ?? $code;
-
-        return in_array($code, $known, true) ? $code : 'OTH';
     }
 }

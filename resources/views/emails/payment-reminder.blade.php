@@ -53,6 +53,10 @@
                                     <div style="font-size: 28px; font-weight: 700; color: {{ $accent }}; margin-top: 4px;">&#8377; {{ inr($balance) }}</div>
                                     <div style="font-size: 13px; color: #6b7280; margin-top: 8px;">
                                         Invoice total: ₹{{ inr($invoice->grand_total) }}
+                                        {{-- Credit notes reduce what is owed: shown so total, credits and payments add up to the balance. --}}
+                                        @if ((float) $invoice->credited_amount > 0)
+                                            · Credit notes: ₹{{ inr($invoice->credited_amount) }}
+                                        @endif
                                         @if ((float) $invoice->paid_amount > 0)
                                             · Paid: ₹{{ inr($invoice->paid_amount) }}
                                         @endif

@@ -8,6 +8,9 @@ class CustomerImporter extends Importer
 {
     private ?array $existing = null;
 
+    /** Customers already taken from earlier rows of this file, by GSTIN and by name and phone. */
+    private array $inFile = ['gstin' => [], 'namephone' => []];
+
     public function key(): string
     {
         return 'customers';
@@ -85,7 +88,18 @@ class CustomerImporter extends Importer
             'country' => 'India',
         ];
 
-        return ['data' => $data, 'errors' => [], 'duplicate' => $this->duplicateOf($data)];
+        $duplicate = $this->duplicateOf($data);
+        if ($duplicate === null) {
+            $this->inFile['file'][$this->fileKey($data)] = true;
+            // A later row for the same customer in this sheet is skipped, as
+            // it would be on any later import once this one is saved.
+            if ($data['gstin']) {
+                $this->inFile['gstin'][$data['gstin']] = $data['name'];
+            }
+            $this->inFile['namephone'][Str::lower($data['name']) . '|' . self::digits($data['phone'])] = $data['name'];
+        }
+
+        return ['data' => $data, 'errors' => [], 'duplicate' => $duplicate];
     }
 
     public function fileKey(array $data): string
@@ -111,6 +125,17 @@ class CustomerImporter extends Importer
         $k = Str::lower($data['name']) . '|' . self::digits($data['phone']);
         if (isset($this->existing['namephone'][$k])) {
             return 'Already a customer named ' . $this->existing['namephone'][$k];
+        }
+        // The same file key again is reported by the import itself, with
+        // its row number; this catches the same record under the other key.
+        if (isset($this->inFile['file'][$this->fileKey($data)])) {
+            return null;
+        }
+        if ($data['gstin'] && isset($this->inFile['gstin'][$data['gstin']])) {
+            return 'Same GSTIN as ' . $this->inFile['gstin'][$data['gstin']] . ' higher up in this file';
+        }
+        if (isset($this->inFile['namephone'][$k])) {
+            return 'Same customer as a row higher up in this file';
         }
 
         return null;

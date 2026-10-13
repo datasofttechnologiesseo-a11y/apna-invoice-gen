@@ -24,6 +24,12 @@ class PasswordController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        // Sign the mobile app out everywhere: its tokens never expire, so a
+        // device signed in with the old password would otherwise keep access.
+        $request->user()->tokens()->delete();
+        // And every other browser; this one stays signed in.
+        $request->user()->endOtherBrowserSessions($request->session()->getId());
+
         return back()->with('status', 'password-updated');
     }
 }

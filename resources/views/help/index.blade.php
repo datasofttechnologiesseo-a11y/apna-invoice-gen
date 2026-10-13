@@ -361,11 +361,11 @@
                                 <ul class="mt-4 space-y-3 text-sm text-accent-900">
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>E-invoicing (IRN and signed QR from the NIC IRP).</strong> Mandatory since August 2023 for businesses with aggregate turnover above <strong>₹5 crore</strong>. IRNs are not generated here; businesses above this limit also need a GSP/ASP integration.</span>
+                                        <span><strong>E-invoicing (IRN and signed QR from the NIC IRP).</strong> Mandatory since August 2023 for businesses with aggregate turnover above <strong>₹5 crore</strong>. IRNs are not generated here. If you are above this limit, generate them free on the government e-invoice portal (einvoice1.gst.gov.in).</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        <span><strong>Filing returns on the GST portal.</strong> Returns are not filed from the app. <strong>GSTR-1</strong> (portal JSON and offline-tool Excel) and <strong>GSTR-3B</strong> (tables 3.1, 4 and 6.1 as PDF and CSV) are prepared for you or your CA to file on the portal. There is no GSP/ASP integration.</span>
+                                        <span><strong>Filing returns on the GST portal.</strong> Returns are not filed from the app. <strong>GSTR-1</strong> (portal JSON and offline-tool Excel) and <strong>GSTR-3B</strong> (tables 3.1, 4 and 6.1 as PDF and CSV) are prepared for you or your CA to file free on the portal.</span>
                                     </li>
                                     <li class="flex gap-3">
                                         <svg class="w-5 h-5 shrink-0 text-accent-700 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

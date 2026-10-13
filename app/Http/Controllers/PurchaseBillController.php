@@ -54,10 +54,15 @@ class PurchaseBillController extends Controller
             'open_count' => (clone $open)->count(),
             'overdue' => (float) (clone $open)->whereDate('due_date', '<', today())->sum('balance'),
             'due_7_days' => (float) (clone $open)->whereDate('due_date', '>=', today())->whereDate('due_date', '<=', today()->addDays(7))->sum('balance'),
-            'itc_this_month' => (float) $company->purchaseBills()
+            // The credit this month's GSTR-3B takes on purchase invoices: by the
+            // month a bill is booked in (a late one counts when it is entered),
+            // leaving out credit past the s.16(4) time limit.
+            'itc_this_month' => round((float) $company->purchaseBills()
                 ->where('itc_eligible', true)
-                ->whereBetween('bill_date', [now()->startOfMonth(), now()->endOfMonth()])
-                ->sum('total_tax'),
+                ->whereBetween(DB::raw('COALESCE(booked_on, bill_date)'), [now()->startOfMonth(), now()->endOfMonth()])
+                ->get(['id', 'bill_date', 'booked_on', 'total_tax'])
+                ->reject(fn (PurchaseBill $b) => $b->isItcTimeBarred(now()->endOfMonth()))
+                ->sum('total_tax'), 2),
         ];
 
         return view('purchases.index', [
@@ -138,10 +143,17 @@ class PurchaseBillController extends Controller
             "Purchase invoice {$bill->bill_number} from {$bill->vendor->name} · ₹" . inr((float) $bill->grand_total),
             $bill);
 
-        return redirect()->route('purchases.show', $bill)
-            ->with('status', $lateBooking
-                ? "Purchase invoice {$bill->bill_number} recorded. Its date ({$bill->bill_date->format('d M Y')}) is in a locked period, so it is booked on {$bill->booked_on->format('d M Y')} and its input tax credit counts in " . $bill->booked_on->format('F Y') . "'s GSTR-3B."
-                : "Purchase invoice {$bill->bill_number} recorded and added to expenses.");
+        $status = $lateBooking
+            ? "Purchase invoice {$bill->bill_number} recorded. Its date ({$bill->bill_date->format('d M Y')}) is in a locked period, so it is booked on {$bill->booked_on->format('d M Y')} and its input tax credit counts in " . $bill->booked_on->format('F Y') . "'s GSTR-3B."
+            : "Purchase invoice {$bill->bill_number} recorded and added to expenses.";
+        // Recorded all the same (it is a real cost), but its credit is lost.
+        if ($bill->itc_eligible && $bill->isItcTimeBarred()) {
+            $status = "Purchase invoice {$bill->bill_number} recorded"
+                . ($lateBooking ? " and booked on {$bill->booked_on->format('d M Y')}, as its date is in a locked period. " : ' and added to expenses. ')
+                . $this->timeBarNote($bill);
+        }
+
+        return redirect()->route('purchases.show', $bill)->with('status', $status);
     }
 
     public function show(Request $request, PurchaseBill $purchaseBill): View
@@ -153,7 +165,47 @@ class PurchaseBillController extends Controller
             'bill' => $purchaseBill,
             'company' => $purchaseBill->company,
             'methods' => config('payment_methods.methods', []),
+            'creditNotes' => $this->creditNotes($purchaseBill),
         ]);
+    }
+
+    /**
+     * Soft warnings about the input credit on a bill, for its page and its
+     * edit form: past the s.16(4) time limit, or reversed under Rule 37
+     * because the supplier was not paid within 180 days. Nothing is blocked.
+     *
+     * @return array{time_bar?: string, rule37?: string}
+     */
+    private function creditNotes(PurchaseBill $bill): array
+    {
+        if (! $bill->exists || ! $bill->itc_eligible) {
+            return [];
+        }
+        if ($bill->isItcTimeBarred()) {
+            return ['time_bar' => $this->timeBarNote($bill)];
+        }
+        $notes = [];
+        if ($bill->rule37Applies() && (float) $bill->balance > 0 && now()->gt($bill->rule37PayBy()->endOfDay())) {
+            $payBy = $bill->rule37PayBy()->toDateString();
+            $paidInTime = (float) $bill->payments->filter(fn ($p) => $p->paid_on->toDateString() <= $payBy)->sum('amount');
+            $unpaid = max(0.0, round((float) $bill->grand_total - $paidInTime, 2));
+            $credit = round((float) $bill->total_tax * $unpaid / (float) $bill->grand_total, 2);
+            $notes['rule37'] = 'Not paid within 180 days of the invoice date (by ' . $bill->rule37PayBy()->format('d M Y') . '). Input credit of ₹' . inr($credit)
+                . ' on the unpaid part is reversed in the GSTR-3B for ' . $bill->rule37ReversalOn()->format('F Y')
+                . ' (Rule 37). It is claimed again in the month you pay.';
+        }
+
+        return $notes;
+    }
+
+    /** Why the credit on a time-barred bill is left out of GSTR-3B. */
+    private function timeBarNote(PurchaseBill $bill): string
+    {
+        $deadline = PurchaseBill::itcPeriodDeadline($bill->bill_date);
+
+        return 'Its input tax credit is time-barred: under Section 16(4) credit on an invoice dated '
+            . $bill->bill_date->format('d M Y') . ' can be claimed only up to the GSTR-3B for ' . $deadline->format('F Y')
+            . '. The GST is left out of GSTR-3B and stays a cost.';
     }
 
     public function edit(Request $request, PurchaseBill $purchaseBill): View
@@ -405,7 +457,9 @@ class PurchaseBillController extends Controller
             'amount' => $t['subtotal'],
             'gst_amount' => $t['total_tax'],
             'is_interstate' => $isInterstate,
-            'itc_eligible' => $bill->itc_eligible,
+            // Credit past the s.16(4) time limit is not claimable either: its
+            // GST is a cost, as GSTR-3B leaves it out.
+            'itc_eligible' => $bill->itc_eligible && ! $bill->isItcTimeBarred(),
             // The expense ledger has its own, shorter list of payment methods.
             'payment_method' => match ($data['payment_method'] ?? 'neft') {
                 'neft', 'rtgs', 'imps' => 'bank',
@@ -476,6 +530,8 @@ class PurchaseBillController extends Controller
                 ])->values(),
             'categories' => config('expense_categories', []),
             'methods' => config('payment_methods.methods', []),
+            // The form checks the s.16(4) time limit itself as the date is typed.
+            'creditNotes' => $bill->exists ? array_diff_key($this->creditNotes($bill->loadMissing('payments')), ['time_bar' => true]) : [],
         ];
     }
 
@@ -527,6 +583,40 @@ class PurchaseBillController extends Controller
     private function authorizeBill(Request $request, PurchaseBill $bill): void
     {
         abort_unless($bill->user_id === $request->user()->id, 403);
+    }
+
+    /**
+     * One supplier invoice is booked once. The supplier is its GSTIN, which
+     * can sit on two vendor records, and the number is compared the way
+     * GSTR-2B matching compares it ("DC/2026/0117" is "DC-2026-117"), within
+     * the financial year of the bill date (suppliers restart numbering each
+     * year). Booking it twice claimed its input credit twice.
+     */
+    private function refuseSameSupplierInvoice($company, array $data, ?int $ignoreId): void
+    {
+        $gstin = $company->vendors()->whereKey((int) $data['vendor_id'])->value('gstin');
+        if (! $gstin) {
+            return;
+        }
+        $date = \Illuminate\Support\Carbon::parse($data['bill_date']);
+        $fyStart = \Illuminate\Support\Carbon::create($date->month >= 4 ? $date->year : $date->year - 1, 4, 1);
+        $matcher = app(\App\Services\Gstr2bMatcher::class);
+        $key = $matcher->key($gstin, (string) $data['bill_number']);
+
+        $same = $company->purchaseBills()
+            ->with('vendor:id,name')
+            ->whereHas('vendor', fn ($v) => $v->where('gstin', strtoupper($gstin)))
+            ->whereBetween('bill_date', [$fyStart->copy()->startOfDay(), $fyStart->copy()->addYear()->subDay()->endOfDay()])
+            ->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))
+            ->get(['id', 'vendor_id', 'bill_number', 'bill_date'])
+            ->first(fn (PurchaseBill $b) => $matcher->key($gstin, $b->bill_number) === $key);
+
+        if ($same) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'bill_number' => "This invoice is already recorded as purchase invoice {$same->bill_number} dated {$same->bill_date->format('d M Y')}"
+                    . " from {$same->vendor->name} (GSTIN {$gstin}). A supplier invoice can be recorded only once.",
+            ]);
+        }
     }
 
     private function validated(Request $request, $company, ?int $ignoreId = null): array
@@ -594,6 +684,8 @@ class PurchaseBillController extends Controller
             }
             $data['items'] = $this->calculator->apportionDiscount($data['items'], (float) ($data['bill_discount'] ?? 0));
         }
+
+        $this->refuseSameSupplierInvoice($company, $data, $ignoreId);
 
         // Checkboxes: absent means unticked. ITC defaults to ticked in the form.
         $data['itc_eligible'] = $request->boolean('itc_eligible');

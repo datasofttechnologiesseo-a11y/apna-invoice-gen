@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
  *  - not_in_2b     in the books for this month, not in this 2B - the supplier
  *                  hasn't filed it yet; hold the credit (s.16(2)(aa))
  *  - no_gstin      purchases from suppliers without a GSTIN - never in 2B
+ *  - no_itc        found, but 2B marks its credit not available (itcavl N,
+ *                  s.16(2)(aa) / Rule 36(4)): in 2B, yet not claimable
  *
  * Supplier credit / debit notes from 2B are listed on their own.
  */
@@ -45,7 +47,7 @@ class Gstr2bMatcher
             }
         }
 
-        $out = ['matched' => [], 'mismatch' => [], 'missing' => [], 'not_in_2b' => [], 'no_gstin' => [], 'notes' => []];
+        $out = ['matched' => [], 'mismatch' => [], 'missing' => [], 'not_in_2b' => [], 'no_gstin' => [], 'notes' => [], 'no_itc' => []];
         $seen = [];
         foreach ($entries as $e) {
             if ($e->kind !== 'invoice') {
@@ -63,7 +65,11 @@ class Gstr2bMatcher
             $taxDiff = round($e->tax() - (float) $bill->total_tax, 2);
             $valueDiff = round((float) $e->taxable_value - (float) $bill->subtotal, 2);
             $row = ['entry' => $e, 'bill' => $bill, 'taxable_diff' => $valueDiff, 'tax_diff' => $taxDiff];
-            if (abs($taxDiff) <= self::TOLERANCE && abs($valueDiff) <= self::TOLERANCE) {
+            if (! $e->itc_available) {
+                // The document is in 2B, but its credit is not available to
+                // you: not "matched", however well the amounts agree.
+                $out['no_itc'][] = $row;
+            } elseif (abs($taxDiff) <= self::TOLERANCE && abs($valueDiff) <= self::TOLERANCE) {
                 $out['matched'][] = $row;
             } else {
                 $out['mismatch'][] = $row;
@@ -98,6 +104,8 @@ class Gstr2bMatcher
                 'not_in_2b' => $tax($out['not_in_2b'], 'bill'),
                 'no_gstin' => $tax($out['no_gstin'], 'bill'),
             ],
+            // Kept out of 'counts' and 'tax', whose keys callers read as they are.
+            'no_itc' => ['count' => count($out['no_itc']), 'tax' => $tax($out['no_itc'], 'entry')],
         ];
 
         return $out;

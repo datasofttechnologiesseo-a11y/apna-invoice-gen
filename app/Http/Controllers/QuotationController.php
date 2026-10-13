@@ -110,7 +110,8 @@ class QuotationController extends Controller
         $data = $this->applyQuoteDiscount($data);
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $result = $this->calculator->recalculate(new \App\Models\Invoice(), $data['items'], $isInterstate);
+        // Composition dealers quote without GST, as they bill (s.10(4)).
+        $result = $this->calculator->recalculate(new \App\Models\Invoice(), $data['items'], $isInterstate, (bool) $company->composition_dealer);
 
         $quotation = DB::transaction(function () use ($user, $company, $customer, $data, $result, $isInterstate) {
             $quote = Quotation::create([
@@ -192,7 +193,8 @@ class QuotationController extends Controller
         $data = $this->applyQuoteDiscount($data);
         $customer = $company->customers()->findOrFail($data['customer_id']);
         $isInterstate = $this->calculator->isInterstate($company->state_id, $customer->state_id);
-        $result = $this->calculator->recalculate(new \App\Models\Invoice(), $data['items'], $isInterstate);
+        // Composition dealers quote without GST, as they bill (s.10(4)).
+        $result = $this->calculator->recalculate(new \App\Models\Invoice(), $data['items'], $isInterstate, (bool) $company->composition_dealer);
 
         DB::transaction(function () use ($quotation, $customer, $data, $result, $isInterstate) {
             $quotation->update([
@@ -336,7 +338,7 @@ class QuotationController extends Controller
                 'rate' => $qi->rate,
                 'discount' => $qi->discount,
                 'gst_rate' => $qi->gst_rate,
-            ])->all(), $isInterstate, false);
+            ])->all(), $isInterstate, (bool) $quotation->company?->composition_dealer);
             $t = $calc['totals'];
 
             $invoice = Invoice::create([

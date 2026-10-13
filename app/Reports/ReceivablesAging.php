@@ -41,46 +41,63 @@ class ReceivablesAging extends Report
         ]);
     }
 
+    /**
+     * One row per customer, by customer id: two customers with the same name
+     * (two "Sharma Traders", or one business registered in two states) are
+     * two rows. Keyed by name, the second overwrote the first and its
+     * balance fell out of the total.
+     */
     public function rows(): iterable
     {
+        $customers = [];
         $invoices = $this->company->invoices()
             ->whereIn('status', ['final', 'partially_paid'])
             ->where('balance', '>', 0)
-            ->with('customer')
+            ->with('customer.state')
             ->get()
-            ->map(fn ($inv) => [
-                'party_id' => $inv->customer_id,
-                'party' => $inv->customer?->name ?? '-',
-                'gstin' => $inv->customer?->gstin,
-                'due' => $inv->due_date ?? $inv->invoice_date,
-                'balance' => (float) $inv->balance,
-            ]);
-        $rows = collect(Aging::byParty($invoices))->keyBy('party');
+            ->map(function ($inv) use (&$customers) {
+                $customers[$inv->customer_id] = $inv->customer;
+
+                return [
+                    'party_id' => $inv->customer_id,
+                    'party' => $inv->customer?->name ?? '-',
+                    'gstin' => $inv->customer?->gstin,
+                    'due' => $inv->due_date ?? $inv->invoice_date,
+                    'balance' => (float) $inv->balance,
+                ];
+            });
+        $rows = $invoices->groupBy('party_id')->map(fn ($docs) => Aging::byParty($docs)[0]);
 
         // Refunds owed: issued invoices whose credit notes exceed what was
         // left to pay (a negative balance).
         $refunds = $this->company->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
             ->where('balance', '<', 0)
-            ->with('customer')
+            ->with('customer.state')
             ->get()
             ->groupBy('customer_id');
-        foreach ($refunds as $group) {
-            $customer = $group->first()->customer;
-            $name = $customer?->name ?? '-';
-            $row = $rows->get($name) ?? array_merge(
-                ['party' => $name, 'gstin' => $customer?->gstin, 'count' => 0, 'oldest' => 0, 'total' => 0.0],
+        foreach ($refunds as $customerId => $group) {
+            $customer = $customers[$customerId] ??= $group->first()->customer;
+            $row = $rows->get($customerId) ?? array_merge(
+                ['party' => $customer?->name ?? '-', 'gstin' => $customer?->gstin, 'count' => 0, 'oldest' => 0, 'total' => 0.0],
                 array_fill_keys(array_keys(Aging::BUCKETS), 0.0),
             );
             $row['refund_due'] = round((float) $group->sum('balance'), 2);
-            $rows->put($name, $row);
+            $rows->put($customerId, $row);
         }
 
-        return $rows->map(function (array $row) {
+        // Same-named customers carry their city (or state) to tell them apart.
+        $shared = $rows->countBy('party')->filter(fn ($n) => $n > 1);
+
+        return $rows->map(function (array $row, $customerId) use ($customers, $shared) {
+            $where = $customers[$customerId]?->city ?: $customers[$customerId]?->state?->name;
+            if ($shared->has($row['party']) && $where) {
+                $row['party'] .= ' (' . $where . ')';
+            }
             $row['refund_due'] = $row['refund_due'] ?? 0.0;
             $row['net'] = round($row['total'] + $row['refund_due'], 2);
 
             return $row;
-        })->values()->all();
+        })->sortByDesc('total')->values()->all();
     }
 }

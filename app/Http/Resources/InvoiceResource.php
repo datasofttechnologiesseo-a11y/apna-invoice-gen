@@ -59,6 +59,8 @@ class InvoiceResource extends JsonResource
             'round_off' => (float) $this->round_off,
             'grand_total' => (float) $this->grand_total,
             'paid_amount' => (float) $this->paid_amount,
+            'paid_method' => $this->paid_method,
+            'paid_reference' => $this->paid_reference,
             'credited_amount' => (float) $this->credited_amount,
             'balance' => (float) $this->balance,
             'effective_balance' => (float) $this->effectiveBalance(),

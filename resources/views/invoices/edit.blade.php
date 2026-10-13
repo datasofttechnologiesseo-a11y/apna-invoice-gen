@@ -53,6 +53,18 @@
         // Invoice-level discount box: a re-shown form keeps what was typed; an
         // existing draft opens with the sum of its saved line discounts.
         $initialDiscount = (float) old('invoice_discount', collect($oldItems)->sum(fn ($i) => (float) ($i['discount'] ?? 0)));
+        // A draft whose lines carry their own discounts (made through the API,
+        // or saved before the single discount box) keeps them until the box is
+        // changed. Spreading their sum again by value moves discount between
+        // GST rates and changes the bill on a save that changed nothing.
+        $keepLineDiscounts = false;
+        if ((float) old('invoice_discount', 0) == 0 && $initialDiscount > 0) {
+            $asTyped = collect($oldItems)->map(fn ($i) => round((float) ($i['discount'] ?? 0), 2))->values();
+            $spread = collect(app(\App\Services\InvoiceCalculator::class)->apportionDiscount(
+                collect($oldItems)->map(fn ($i) => ['discount' => 0] + $i)->values()->all(), $initialDiscount
+            ))->map(fn ($i) => round((float) $i['discount'], 2))->values();
+            $keepLineDiscounts = $asTyped->zip($spread)->contains(fn ($p) => abs($p[0] - $p[1]) > 0.004);
+        }
         $customerStateMap = $customers->mapWithKeys(fn ($c) => [$c->id => $c->state_id])->toJson();
         // Map customer id → bool "has GSTIN", used for the B2C > ₹2.5L warning.
         $customerHasGstinMap = $customers->mapWithKeys(fn ($c) => [$c->id => ! empty($c->gstin)])->toJson();
@@ -131,7 +143,7 @@
         $cell = 'border-gray-300 rounded-md text-sm focus:border-brand-600 focus:ring-brand-600';
     @endphp
 
-    <div class="py-6 sm:py-8" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }}, @json((object) $itemErrors))'
+    <div class="py-6 sm:py-8" x-data='invoiceForm(@json($oldItems), {{ $customerStateMap }}, {{ $companyStateId ?? 'null' }}, @json($productIndex), {{ $customerHasGstinMap }}, @json($customerIndex), {{ ! empty($company->gstin) ? 'true' : 'false' }}, @json((object) $itemErrors), {{ $keepLineDiscounts ? 'true' : 'false' }}, {{ $company->composition_dealer ? 'true' : 'false' }})'
          data-restricted="{{ $restricted ? '1' : '0' }}"
          @customer-added.window="addCustomer($event.detail)"
          {{-- power-user keyboard shortcuts. Listen at window level so they
@@ -569,20 +581,30 @@
                                 <label for="invoice_discount_input" class="flex items-center gap-1.5">
                                     Discount
                                     <span class="inline-flex rounded-md border border-gray-300 overflow-hidden text-xs font-semibold">
-                                        <button type="button" @click="discountMode = 'amount'; recompute()" :class="discountMode === 'amount' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700'" :aria-pressed="(discountMode === 'amount').toString()" aria-label="Discount in rupees" class="px-3 py-2">₹</button>
-                                        <button type="button" @click="discountMode = 'percent'; recompute()" :class="discountMode === 'percent' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700'" :aria-pressed="(discountMode === 'percent').toString()" aria-label="Discount in percent" class="px-3 py-2">%</button>
+                                        <button type="button" @click="discountMode = 'amount'; keepLines = false; recompute()" :class="discountMode === 'amount' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700'" :aria-pressed="(discountMode === 'amount').toString()" aria-label="Discount in rupees" class="px-3 py-2">₹</button>
+                                        <button type="button" @click="discountMode = 'percent'; keepLines = false; recompute()" :class="discountMode === 'percent' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700'" :aria-pressed="(discountMode === 'percent').toString()" aria-label="Discount in percent" class="px-3 py-2">%</button>
                                     </span>
                                 </label>
                                 <input id="invoice_discount_input" type="number" step="any" min="0" inputmode="decimal"
-                                       x-model.number="discountInput" @input="recompute()"
+                                       x-model.number="discountInput" @input="keepLines = false; recompute()"
                                        :max="discountMode === 'percent' ? 100 : null"
                                        aria-describedby="invoice_discount-error"
                                        class="w-32 h-10 {{ $cell }} text-right" placeholder="0">
-                                <input type="hidden" name="invoice_discount" :value="totals.discount">
+                                <input type="hidden" name="invoice_discount" :value="keepLines ? 0 : totals.discount">
+                                <template x-for="(item, idx) in items" :key="'disc-' + item._uid">
+                                    <input type="hidden" :name="`items[${idx}][discount]`" :value="keepLines ? item.discount : 0">
+                                </template>
                             </div>
+                            <p x-show="keepLines" x-cloak class="text-xs text-gray-600 text-right -mt-1">Each line keeps its own discount. Change the discount here to spread one amount over all lines.</p>
                             <p x-show="discountMode === 'percent' && totals.discount > 0" x-cloak class="text-xs text-gray-600 text-right -mt-1">= ₹<span x-text="fmt(totals.discount)"></span></p>
                             <x-input-error :messages="$errors->get('invoice_discount')" for="invoice_discount" class="text-right" />
                             <div class="flex justify-between border-t pt-2"><span>Taxable value</span><span class="font-mono tabular-nums" x-text="fmt(totals.subtotal)"></span></div>
+                            <div x-show="compositionNoTax" x-cloak class="p-2 rounded-md bg-accent-50 border border-accent-200 text-xs text-accent-900">
+                                <strong>Composition scheme:</strong> a bill of supply carries no GST (Section 10(4)), so CGST, SGST and IGST are ₹0.
+                            </div>
+                            <div x-show="!companyHasGstin && !compositionNoTax && totals.totalTax > 0" x-cloak class="p-2 rounded-md bg-accent-50 border border-accent-200 text-xs text-accent-900">
+                                Your business has no GSTIN in settings. Only a GST-registered business can charge GST. Add your GSTIN in <a href="{{ route('company.edit') }}" class="underline">Company settings</a>, or set the GST rate to 0%.
+                            </div>
                             <div x-show="reverseCharge" class="p-2 rounded-md bg-accent-50 border border-accent-200 text-xs text-accent-900">
                                 <strong>Reverse charge:</strong> CGST/SGST/IGST are ₹0 on this invoice. The recipient pays the GST (Section 9(3)/9(4)).
                             </div>
@@ -595,6 +617,21 @@
                                 <input inputmode="decimal" id="paid_amount" name="paid_amount" type="number" step="any" min="0" value="{{ plain_amount(old('paid_amount', $invoice->paid_amount ?? 0)) }}" x-ref="paidInput" @input="recompute()" @disabled($restricted) aria-describedby="paid_amount-error" class="w-32 h-10 {{ $cell }} text-right">
                             </div>
                             <x-input-error :messages="$errors->get('paid_amount')" for="paid_amount" class="text-right" />
+                            <div x-show="paidNow > 0" x-cloak class="flex justify-between items-center gap-2">
+                                <label for="paid_method">Paid by</label>
+                                <select id="paid_method" name="paid_method" @disabled($restricted) class="w-32 h-10 {{ $cell }}">
+                                    @foreach (config('payment_methods.methods') as $code => $m)
+                                        <option value="{{ $code }}" @selected(old('paid_method', $invoice->paid_method ?: 'cash') === $code)>{{ $m['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div x-show="paidNow > 0" x-cloak class="flex justify-between items-center gap-2">
+                                <label for="paid_reference">Reference</label>
+                                <input id="paid_reference" name="paid_reference" type="text" maxlength="80" value="{{ old('paid_reference', $invoice->paid_reference) }}" placeholder="Optional" @disabled($restricted) class="w-32 h-10 {{ $cell }} font-mono">
+                            </div>
+                            <x-input-error :messages="$errors->get('paid_method')" for="paid_method" class="text-right" />
+                            <x-input-error :messages="$errors->get('paid_reference')" for="paid_reference" class="text-right" />
+                            <p x-show="paidNow > 0" x-cloak class="text-xs text-gray-600 text-right">A receipt for this amount is issued with the invoice.</p>
                             <p x-show="paidExceedsTotal" x-cloak class="text-xs text-danger-700 text-right">Paid amount is more than the grand total.</p>
                             <div class="flex justify-between border-t pt-2"><span>Balance</span><span class="font-mono tabular-nums" x-text="fmt(balance)"></span></div>
                         </div>
@@ -886,7 +923,7 @@
         const UT_STATE_IDS = @json($utStateIds);
         const FOREIGN_STATE_ID = @json($foreignStateId);
         const HAS_LUT = @json((bool) $company->lut_number);
-        function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, customerIndex, companyHasGstin, itemErrors) {
+        function invoiceForm(initialItems, customerStates, companyStateId, productIndex, customerHasGstin, customerIndex, companyHasGstin, itemErrors, keepLineDiscounts = false, compositionNoTax = false) {
             const productMap = {};
             (productIndex || []).forEach(p => { productMap[p.id] = p; });
             // Coerce ids to strings for consistent comparison (HTML inputs are strings).
@@ -900,6 +937,7 @@
             return {
                 items: initialItems.map(i => ({product_id: null, _uid: newUid(), _prevProductName: null, ...i,
                     _stock: (i.product_id && productMap[i.product_id]) ? (productMap[i.product_id].stock ?? null) : null,
+                    _lineDisc: parseFloat(i.discount) || 0,
                     amount: 0, tax: 0, total: 0})),
                 // More on the line than is on the shelf: warn, never block - the
                 // purchase may simply not be entered yet.
@@ -948,6 +986,11 @@
                 discountMode: 'amount',
                 discountInput: @json($initialDiscount) || '',
                 paidExceedsTotal: false,
+                paidNow: 0,
+                // Lines keep their own saved discounts until the box is changed.
+                keepLines: !! keepLineDiscounts,
+                // Composition dealers issue a bill of supply with no GST.
+                compositionNoTax: !! compositionNoTax,
                 balance: 0,
                 get isInterstate() {
                     // Exports and SEZ supplies are inter-state by law (s.7(5) IGST Act).
@@ -1231,30 +1274,38 @@
                 recompute() {
                     const inter = this.isInterstate;
                     // Reverse charge, or zero-rated under a LUT: no tax collected.
-                    const rcm = this.reverseCharge || this.supplyType.endsWith('_lut');
+                    const rcm = this.reverseCharge || this.supplyType.endsWith('_lut') || this.compositionNoTax;
                     let sub = 0, cgst = 0, sgst = 0, igst = 0;
 
                     // Invoice-level discount, spread across the lines pro rata to
                     // their value before tax - the same split as
                     // InvoiceCalculator::apportionDiscount on the server.
-                    // Round half up to the paisa like PHP's round(); toFixed(2)
-                    // rounds 1.005 down, so the preview could differ by a paisa.
-                    const r2 = v => Math.round((v + Number.EPSILON) * 100) / 100;
+                    // Round half up like PHP's round(): pre-round to 15 significant
+                    // digits first, so 105.50 x 9% (9.494999... in binary) is 9.50
+                    // here as on the server. Math.round alone gave 9.49 and a
+                    // grand total a rupee short of the saved one.
+                    const rnd = (v, d) => { const f = Math.pow(10, d); const x = parseFloat((Math.abs(v) * f).toPrecision(15)); return Math.sign(v) * Math.round(x) / f; };
+                    const r2 = v => rnd(v, 2);
                     // Quantity and rate as they are stored (3 and 2 decimals).
-                    const grossOf = item => r2(
-                        (Math.round(((parseFloat(item.quantity) || 0) + Number.EPSILON) * 1000) / 1000)
-                        * r2(parseFloat(item.rate) || 0)
-                    );
+                    const grossOf = item => r2(rnd(parseFloat(item.quantity) || 0, 3) * r2(parseFloat(item.rate) || 0));
                     const grossList = this.items.map(grossOf);
                     const totalGross = r2(grossList.reduce((a, b) => a + b, 0));
+                    let discount, shares;
+                    if (this.keepLines) {
+                        // Each line's own saved discount, as the server keeps it.
+                        shares = grossList.map((g, i) => Math.min(g, r2(this.items[i]._lineDisc || 0)));
+                        discount = r2(shares.reduce((a, b) => a + b, 0));
+                        this.discountMode = 'amount';
+                        this.discountInput = discount || '';
+                    } else {
                     const input = Math.max(0, parseFloat(this.discountInput) || 0);
-                    let discount = this.discountMode === 'percent'
+                    discount = this.discountMode === 'percent'
                         ? r2(totalGross * Math.min(input, 100) / 100)
                         : r2(input);
                     discount = Math.min(discount, totalGross);
                     // Pro rata, then the rounding remainder paisa by paisa to the
                     // lines with room, largest first: the same as the server.
-                    const shares = grossList.map(g => (discount > 0 && g > 0) ? Math.min(g, r2(discount * g / totalGross)) : 0);
+                    shares = grossList.map(g => (discount > 0 && g > 0) ? Math.min(g, r2(discount * g / totalGross)) : 0);
                     let left = Math.round((discount - shares.reduce((a, b) => a + b, 0)) * 100);
                     const order = grossList.map((g, i) => i).sort((a, b) => grossList[b] - grossList[a]);
                     for (let guard = 0; left !== 0 && guard < 10000; guard++) {
@@ -1265,6 +1316,7 @@
                             if (left === 0) break;
                         }
                         if (!moved) break;
+                    }
                     }
                     this.items.forEach((item, i) => { item.discount = shares[i]; });
                     const allocated = r2(shares.reduce((a, b) => a + b, 0));
@@ -1287,20 +1339,22 @@
                             }
                         }
                         item.amount = amount;
-                        item.tax = +(c + s + ig).toFixed(2);
-                        item.total = +(amount + item.tax).toFixed(2);
+                        item.tax = r2(c + s + ig);
+                        item.total = r2(amount + item.tax);
                         sub += amount; cgst += c; sgst += s; igst += ig;
                     });
-                    const totalTax = +(cgst + sgst + igst).toFixed(2);
-                    const raw = sub + totalTax;
-                    const grand = Math.round(raw);
+                    // Totals the way InvoiceCalculator stores them: each head
+                    // rounded, then the grand total to the rupee.
+                    const totalTax = r2(r2(cgst) + r2(sgst) + r2(igst));
+                    const raw = r2(sub) + totalTax;
+                    const grand = rnd(raw, 0);
                     this.totals = {
                         gross: totalGross,
-                        discount: +allocated.toFixed(2),
-                        subtotal: +sub.toFixed(2),
-                        cgst: +cgst.toFixed(2),
-                        sgst: +sgst.toFixed(2),
-                        igst: +igst.toFixed(2),
+                        discount: r2(allocated),
+                        subtotal: r2(sub),
+                        cgst: r2(cgst),
+                        sgst: r2(sgst),
+                        igst: r2(igst),
                         totalTax,
                         grandTotal: grand,
                     };
@@ -1309,6 +1363,7 @@
                     // than the bill is flagged separately (paidExceedsTotal).
                     this.balance = +(grand - paid).toFixed(2);
                     this.paidExceedsTotal = paid > grand + 0.001;
+                    this.paidNow = paid;
                 },
                 fmt(n) { const v = Math.round((parseFloat(n) || 0) * 100) / 100; return v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
             };

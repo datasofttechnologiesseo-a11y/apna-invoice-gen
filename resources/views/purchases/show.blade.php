@@ -29,6 +29,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
+            {{-- Input credit warnings (s.16(4) time limit, Rule 37). Advice only:
+                 the bill stays as it is. --}}
+            @foreach ($creditNotes ?? [] as $note)
+                <div class="p-3 rounded-lg bg-accent-50 border border-accent-200 text-sm text-accent-900" role="status">{{ $note }}</div>
+            @endforeach
+
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {{-- Bill --}}
                 <div class="xl:col-span-2 space-y-6">
@@ -65,7 +71,7 @@
                             </div>
                             <div>
                                 <div class="{{ $meta }}">Input credit</div>
-                                <div class="text-gray-900">{{ $bill->itc_eligible ? 'Claimable' : 'Blocked (Section 17(5))' }}</div>
+                                <div class="text-gray-900">{{ ! $bill->itc_eligible ? 'Blocked (Section 17(5))' : ($bill->isItcTimeBarred() ? 'Time-barred (Section 16(4))' : 'Claimable') }}</div>
                             </div>
                             <div>
                                 <div class="{{ $meta }}">Category</div>

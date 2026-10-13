@@ -36,7 +36,7 @@ class Invoice extends Model
         'ship_to_city', 'ship_to_state_id', 'ship_to_postal_code', 'ship_to_gstin',
         'currency', 'exchange_rate', 'status', 'style',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
-        'round_off', 'grand_total', 'paid_amount', 'credited_amount', 'balance',
+        'round_off', 'grand_total', 'paid_amount', 'paid_method', 'paid_reference', 'credited_amount', 'balance',
         'customer_snapshot',
         'notes', 'terms', 'finalized_at',
         'cancelled_at', 'cancellation_reason',
@@ -779,7 +779,12 @@ class Invoice extends Model
         $receiptNumber = $company->receipt_prefix . '-' .
             str_pad((string) $company->receipt_counter, $company->receipt_number_padding, '0', STR_PAD_LEFT);
 
+        // As chosen next to "Paid amount" on the form; invoices from before
+        // that choice existed (and API clients that do not send it) book cash.
         $methods = array_keys(config('payment_methods.methods', []));
+        $method = in_array($this->paid_method, $methods, true)
+            ? $this->paid_method
+            : (in_array('cash', $methods, true) ? 'cash' : ($methods[0] ?? 'cash'));
 
         return Payment::create([
             'user_id' => $this->user_id,
@@ -789,7 +794,8 @@ class Invoice extends Model
             'received_at' => ($this->invoice_date ?? now())->toDateString(),
             'amount' => $advance,
             'tds_amount' => 0,
-            'method' => in_array('cash', $methods, true) ? 'cash' : ($methods[0] ?? 'cash'),
+            'method' => $method,
+            'reference_number' => $this->paid_reference ?: null,
             'notes' => 'Advance recorded on the invoice',
         ]);
     }
@@ -817,8 +823,11 @@ class Invoice extends Model
         $number = $this->invoice_number ?: ('#' . $this->id);
         // Indian grouping (₹1,17,000.00) - the message goes to an Indian customer.
         $grand = inr((float) $this->grand_total);
+        // What is owed is the total less payments AND credit notes (the
+        // balance column), so a credited bill is never chased for its total.
         $balance = (float) $this->balance;
         $paid = (float) $this->paid_amount;
+        $credited = (float) $this->credited_amount;
         $upi = trim((string) ($company?->upi_id ?? ''));
 
         // Build a public link only if the invoice is finalized — drafts have no
@@ -841,8 +850,9 @@ class Invoice extends Model
 
         // PAID IN FULL — explicit thank-you message. Prevents the Vyapar
         // trust-killer where users get "Balance Due" reminders after paying.
+        // It quotes what was actually paid, as the rest may have been credited.
         if ($balance <= 0 && $paid > 0) {
-            $lines[] = "Thank you for the payment of ₹{$grand} for {$docTitle} {$number}.";
+            $lines[] = 'Thank you for the payment of ₹' . inr($paid) . " for {$docTitle} {$number}.";
             if ($url) {
                 $lines[] = '';
                 $lines[] = "Receipt: {$url}";
@@ -853,12 +863,30 @@ class Invoice extends Model
             return implode("\n", $lines);
         }
 
-        // PARTIALLY PAID
-        if ($paid > 0 && $balance > 0) {
-            $paidStr = inr($paid);
+        // Nothing paid and nothing owed: credit notes cover the whole bill.
+        // No due date, no overdue days, no "pay" prompt.
+        if ($balance <= 0 && $credited > 0) {
+            $lines[] = "{$docTitle} {$number} for ₹{$grand} is fully credited. Nothing is due.";
+            if ($url) {
+                $lines[] = '';
+                $lines[] = "View & download: {$url}";
+            }
+            $lines[] = '';
+            $lines[] = 'Regards,';
+            $lines[] = $business;
+            return implode("\n", $lines);
+        }
+
+        // PART PAID OR PART CREDITED: quote what is still owed.
+        if (($paid > 0 || $credited > 0) && $balance > 0) {
             $balStr = inr($balance);
             $lines[] = "Sharing {$docTitle} {$number} for ₹{$grand}.";
-            $lines[] = "Already received: ₹{$paidStr}.";
+            if ($paid > 0) {
+                $lines[] = 'Already received: ₹' . inr($paid) . '.';
+            }
+            if ($credited > 0) {
+                $lines[] = 'Credit notes: ₹' . inr($credited) . '.';
+            }
             $dueClause = $this->due_date
                 ? " (due by " . $this->due_date->format('d M Y') . ")"
                 : '';

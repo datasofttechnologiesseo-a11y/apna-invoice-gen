@@ -48,7 +48,7 @@ class ProfitAndLossTest extends TestCase
     {
         // Amounts before GST: bills 5,53,233.33 + expenses 1,48,000 + cash memos 1,499.99 = 7,02,733.32.
         // Blocked GST (cost): B4 500 + B12 3,600 + B18 9,000 + E4 150 + CM2 25 = 13,275.
-        // Expenses 7,16,008.32; claimable GST 82,730 (= GSTR-3B ITC for the year).
+        // Expenses 7,16,008.32; claimable GST 82,730 (= GSTR-3B 4(A) for the year, before Rule 37).
         // Net profit (12,42,365.66 - cnF1) - 7,16,008.32 = 5,26,266.62 at 90.72; margin 42.36%.
         $e = $this->pnl['expense'];
         $this->assertEqualsWithDelta(716008.32, (float) $e['taxable'], 0.001);
@@ -91,9 +91,10 @@ class ProfitAndLossTest extends TestCase
 
     public function test_gst_payable_is_what_gstr3b_works_out_for_the_year(): void
     {
-        // Output tax 1,35,372.77 + reverse charge on purchases 8,400 - ITC 82,730 = 61,042.77,
-        // the year's 3B (four quarters): liability less credit plus reverse charge in cash.
-        $this->assertEqualsWithDelta(61042.77, (float) $this->pnl['gstPayable'], 0.001);
+        // Output tax 1,35,372.77 + reverse charge on purchases 8,400 - ITC 82,730 + Rule 37 reversals
+        // 5,349.16 (B2, B8 and B9 unpaid after 180 days) = 66,391.93, the year's 3B (four quarters):
+        // liability less net credit plus reverse charge in cash.
+        $this->assertEqualsWithDelta(66391.93, (float) $this->pnl['gstPayable'], 0.001);
         $y = ['liability' => 0.0, 'rcm' => 0.0, 'itc' => 0.0];
         foreach ($this->quarters() as $first) {
             $d = $this->gstr3bPage($first, true);

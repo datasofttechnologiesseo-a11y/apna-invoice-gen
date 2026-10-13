@@ -1,6 +1,9 @@
 @php
     $c = $payment->invoice->company;
-    $cust = $payment->invoice->customer;
+    // The party as billed on the invoice this receipt settles (the snapshot
+    // frozen at issue), like the invoice and credit note PDFs, so a later
+    // edit to the customer record never changes a receipt already given.
+    $cust = $payment->invoice->billedCustomer() ?? $payment->invoice->customer;
     $inv = $payment->invoice;
     $methodLabel = config('payment_methods.methods.' . $payment->method . '.label', ucfirst($payment->method));
     $amountInWords = \App\Support\NumberToWords::indianRupees((float) $payment->amount, 'INR');
@@ -110,7 +113,11 @@
                     ->takeWhile(fn ($p) => $p->id !== $payment->id)
                     ->sum('amount');
                 $creditedBefore = (float) $inv->creditNotes
-                    ->filter(fn ($cn) => $cn->credit_note_date && $cn->credit_note_date->lte($payment->received_at))
+                    ->filter(fn ($cn) => $cn->credit_note_date && (
+                        $cn->credit_note_date->lt($payment->received_at->copy()->startOfDay())
+                        || ($cn->credit_note_date->isSameDay($payment->received_at)
+                            && (! $cn->created_at || ! $payment->created_at || $cn->created_at->lte($payment->created_at)))
+                    ))
                     ->sum('amount');
                 $balanceAfter = round((float) $inv->grand_total - $creditedBefore - $paidBefore - (float) $payment->amount, 2);
             @endphp

@@ -23,6 +23,11 @@
             'autoCategory' => ! $isEdit && array_key_exists('purchases', $categories),
             // Errors on a line ("items.2.rate") are shown under that line's field.
             'lineErrors' => collect($errors->getMessages())->filter(fn ($m, $k) => str_starts_with($k, 'items.'))->map(fn ($m) => $m[0]),
+            // For the s.16(4) hint: a bill dated in a locked month is booked today.
+            'billDate' => (string) old('bill_date', optional($bill->bill_date)->toDateString() ?? now()->toDateString()),
+            'bookedOn' => $bill->booked_on?->toDateString(),
+            'lockedUntil' => $company->books_locked_until?->toDateString(),
+            'today' => now()->toDateString(),
         ];
         $commonRates = [0, 5, 18, 40];
         $rareRates = collect(config('gst.rates'))->whereNotIn('value', $commonRates)->values();
@@ -60,6 +65,9 @@
                 @if (session('error'))
                     <div class="p-3 bg-danger-50 border border-danger-200 text-danger-800 rounded-lg text-sm" role="alert">{{ session('error') }}</div>
                 @endif
+                @foreach ($creditNotes ?? [] as $note)
+                    <div class="p-3 rounded-lg bg-accent-50 border border-accent-200 text-accent-900 text-sm" role="status">{{ $note }}</div>
+                @endforeach
 
                 {{-- 1. Vendor + bill identity --}}
                 <div class="bg-white p-4 sm:p-6 rounded-xl ring-1 ring-gray-200 shadow-sm">
@@ -110,7 +118,8 @@
                         </div>
                         <div class="col-span-1 sm:col-span-2 xl:col-span-2">
                             <x-input-label for="bill_date" value="Invoice date *" />
-                            <x-text-input id="bill_date" name="bill_date" type="date" class="mt-1 block w-full min-w-0" :value="old('bill_date', optional($bill->bill_date)->toDateString() ?? now()->toDateString())" required />
+                            <x-text-input id="bill_date" name="bill_date" type="date" class="mt-1 block w-full min-w-0" :value="old('bill_date', optional($bill->bill_date)->toDateString() ?? now()->toDateString())" required
+                                          x-on:input="billDate = $event.target.value" x-on:change="billDate = $event.target.value" />
                             <x-input-error :messages="$errors->get('bill_date')" for="bill_date" class="mt-1" />
                         </div>
                         <div class="col-span-1 sm:col-span-2 xl:col-span-2">
@@ -119,6 +128,9 @@
                             <x-input-error :messages="$errors->get('due_date')" for="due_date" class="mt-1" />
                         </div>
                     </div>
+                    {{-- Advice only: the invoice is still recorded. --}}
+                    <p x-show="timeBarYear" x-cloak role="status" class="mt-4 text-sm text-accent-900 bg-accent-50 border border-accent-200 rounded-md px-3 py-2"
+                       x-text="`Input tax credit on this invoice is time-barred. Under Section 16(4) it can be claimed only up to the GSTR-3B for October ${timeBarYear}. You can still record it; its GST is then a cost.`"></p>
                 </div>
 
                 {{-- 2. Lines --}}
@@ -511,41 +523,68 @@
                     // each head at half the rate rounded on its own.
                     const inter = this.isInterstate;
                     let sub = 0, cgst = 0, sgst = 0, igst = 0;
-                    // Bill-level discount spread pro rata before tax
-                    // (InvoiceCalculator::apportionDiscount on the server).
-                    const grossOf = item => +((parseFloat(item.quantity) || 0) * (parseFloat(item.rate) || 0)).toFixed(2);
+                    // Round half up like PHP's round(): pre-round to 15 significant
+                    // digits first, so 105.50 x 9% (9.494999... in binary) is 9.50
+                    // here as on the server. toFixed gave 9.49, and Math.round a
+                    // grand total a rupee off the saved one.
+                    const rnd = (v, d) => { const f = Math.pow(10, d); const x = parseFloat((Math.abs(v) * f).toPrecision(15)); return Math.sign(v) * Math.round(x) / f; };
+                    const r2 = v => rnd(v, 2);
+                    // Quantity and rate as they are stored (3 and 2 decimals).
+                    const grossOf = item => r2(rnd(parseFloat(item.quantity) || 0, 3) * r2(parseFloat(item.rate) || 0));
                     const grossList = this.items.map(grossOf);
-                    const totalGross = +grossList.reduce((a, b) => a + b, 0).toFixed(2);
+                    const totalGross = r2(grossList.reduce((a, b) => a + b, 0));
                     const input = Math.max(0, parseFloat(this.discountInput) || 0);
-                    let discount = this.discountMode === 'percent' ? +(totalGross * Math.min(input, 100) / 100).toFixed(2) : +input.toFixed(2);
+                    let discount = this.discountMode === 'percent' ? r2(totalGross * Math.min(input, 100) / 100) : r2(input);
                     discount = Math.min(discount, totalGross);
-                    let lastIdx = -1;
-                    grossList.forEach((g, i) => { if (g > 0) lastIdx = i; });
-                    let allocated = 0;
-                    this.items.forEach((item, i) => {
-                        if (discount <= 0 || grossList[i] <= 0) { item.discount = 0; return; }
-                        let share = i === lastIdx ? +(discount - allocated).toFixed(2) : +(discount * grossList[i] / totalGross).toFixed(2);
-                        share = Math.min(share, grossList[i]);
-                        item.discount = share;
-                        allocated = +(allocated + share).toFixed(2);
-                    });
+                    // Bill-level discount spread before tax: pro rata, then the
+                    // rounding remainder paisa by paisa to the lines with room,
+                    // largest first (InvoiceCalculator::apportionDiscount).
+                    const shares = grossList.map(g => (discount > 0 && g > 0) ? Math.min(g, r2(discount * g / totalGross)) : 0);
+                    let left = Math.round((discount - shares.reduce((a, b) => a + b, 0)) * 100);
+                    const order = grossList.map((g, i) => i).sort((a, b) => grossList[b] - grossList[a]);
+                    for (let guard = 0; left !== 0 && guard < 10000; guard++) {
+                        let moved = false;
+                        for (const i of order) {
+                            if (left > 0 && shares[i] + 0.01 <= grossList[i] + 0.0001) { shares[i] = r2(shares[i] + 0.01); left--; moved = true; }
+                            else if (left < 0 && shares[i] >= 0.01) { shares[i] = r2(shares[i] - 0.01); left++; moved = true; }
+                            if (left === 0) break;
+                        }
+                        if (!moved) break;
+                    }
+                    this.items.forEach((item, i) => { item.discount = shares[i]; });
+                    const allocated = r2(shares.reduce((a, b) => a + b, 0));
                     this.items.forEach(item => {
                         const gross = grossOf(item);
                         const disc = Math.max(0, Math.min(parseFloat(item.discount) || 0, gross));
-                        const amount = +(gross - disc).toFixed(2);
+                        const amount = r2(gross - disc);
                         const gst = parseFloat(item.gst_rate) || 0;
                         let c = 0, s = 0, ig = 0;
                         if (gst > 0) {
-                            if (inter) ig = +(amount * gst / 100).toFixed(2);
-                            else { c = +(amount * gst / 200).toFixed(2); s = c; }
+                            if (inter) ig = r2(amount * gst / 100);
+                            else { c = r2(amount * gst / 200); s = c; }
                         }
-                        item.amount = amount; item.tax = +(c + s + ig).toFixed(2); item.total = +(amount + item.tax).toFixed(2);
+                        item.amount = amount; item.tax = r2(c + s + ig); item.total = r2(amount + item.tax);
                         sub += amount; cgst += c; sgst += s; igst += ig;
                     });
-                    const tax = +(cgst + sgst + igst).toFixed(2);
-                    const owed = this.reverseCharge ? sub : sub + tax;
-                    const grand = Math.round(owed);
-                    this.totals = { gross: totalGross, discount: +allocated.toFixed(2), subtotal: +sub.toFixed(2), cgst: +cgst.toFixed(2), sgst: +sgst.toFixed(2), igst: +igst.toFixed(2), tax, roundOff: +(grand - owed).toFixed(2), grandTotal: grand };
+                    // Totals the way the server stores them: each head rounded,
+                    // then what is owed to the vendor to the rupee.
+                    const tax = r2(r2(cgst) + r2(sgst) + r2(igst));
+                    const owed = this.reverseCharge ? r2(sub) : r2(sub) + tax;
+                    const grand = rnd(owed, 0);
+                    this.totals = { gross: totalGross, discount: allocated, subtotal: r2(sub), cgst: r2(cgst), sgst: r2(sgst), igst: r2(igst), tax, roundOff: r2(grand - owed), grandTotal: grand };
+                },
+                // s.16(4): credit on an invoice can be claimed only in returns up
+                // to October after its financial year. A bill dated in a locked
+                // month is booked today, so an old one can be past that. The
+                // year of that October, when it is past; null otherwise.
+                billDate: initial.billDate || '',
+                get timeBarYear() {
+                    const d = this.billDate || '';
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+                    const booked = initial.bookedOn || (initial.lockedUntil && d <= initial.lockedUntil ? initial.today : d);
+                    const year = +d.slice(0, 4);
+                    const fyEnd = +d.slice(5, 7) >= 4 ? year + 1 : year;
+                    return booked.slice(0, 7) > `${fyEnd}-10` ? fyEnd : null;
                 },
                 async saveVendor() {
                     this.quickAdd.error = '';
