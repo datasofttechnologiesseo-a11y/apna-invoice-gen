@@ -125,6 +125,66 @@ class ReviewInviteTest extends TestCase
             ->assertSee("I've already reviewed", false);
     }
 
+    public function test_the_poster_carries_a_qr_code_made_for_this_account(): void
+    {
+        $this->actingAs($this->user)->get(route('dashboard'))
+            ->assertSee(self::POSTER, false)
+            ->assertSee('left: 12.5%; top: 41.5%', false)   // laid over the printed code
+            ->assertSee('<svg', false);
+    }
+
+    public function test_scanning_the_qr_records_the_review_and_opens_google(): void
+    {
+        // Scanned on a phone that is not signed in.
+        $url = \Illuminate\Support\Facades\URL::signedRoute('review-invite.scan', ['user' => $this->user->id]);
+        $this->get($url)->assertRedirect('https://g.page/r/CTvUSP6MtrMaEBM/review');
+        $this->assertNotNull($this->user->fresh()->review_given_at);
+
+        // Never asked again: not on the dashboard, not after any invoice.
+        // (Signed back in on the computer: a fresh request reads the account anew.)
+        $this->user = $this->user->fresh();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+        foreach (range(1, 4) as $n) {
+            $this->issueInvoice();
+            $this->assertFalse((bool) session('review_invite'), "asked again after invoice {$n}");
+        }
+    }
+
+    public function test_scanning_twice_keeps_the_first_date_and_still_opens_google(): void
+    {
+        $this->user->forceFill(['review_given_at' => now()->subDays(3)])->save();
+        $first = $this->user->fresh()->review_given_at->toDateTimeString();
+
+        $url = \Illuminate\Support\Facades\URL::signedRoute('review-invite.scan', ['user' => $this->user->id]);
+        $this->get($url)->assertRedirect('https://g.page/r/CTvUSP6MtrMaEBM/review');
+        $this->assertSame($first, $this->user->fresh()->review_given_at->toDateTimeString());
+    }
+
+    public function test_a_scan_link_that_was_not_signed_by_the_app_records_nothing(): void
+    {
+        $other = User::factory()->create();
+
+        // Someone edits the account number in a real link, or makes one up.
+        $url = \Illuminate\Support\Facades\URL::signedRoute('review-invite.scan', ['user' => $this->user->id]);
+        $this->get(str_replace('/review/scan/' . $this->user->id, '/review/scan/' . $other->id, $url))->assertForbidden();
+        $this->get('/review/scan/' . $other->id)->assertForbidden();
+
+        $this->assertNull($other->fresh()->review_given_at);
+        $this->assertNull($this->user->fresh()->review_given_at);
+    }
+
+    public function test_without_a_review_the_invite_returns_on_every_alternate_invoice(): void
+    {
+        $this->actingAs($this->user)->get(route('dashboard'));   // the first-dashboard invite, closed with "Not now"
+
+        $asked = [];
+        foreach (range(1, 6) as $n) {
+            $this->issueInvoice();
+            $asked[$n] = (bool) session('review_invite');
+        }
+        $this->assertSame([1 => false, 2 => true, 3 => false, 4 => true, 5 => false, 6 => true], $asked);
+    }
+
     public function test_the_button_is_hidden_when_no_review_url_is_configured(): void
     {
         config(['seo.contact.google_review_url' => null]);

@@ -26,6 +26,9 @@ return new class extends Migration
         $rows = DB::table('invoices as i')
             ->leftJoin('payments as p', 'p.invoice_id', '=', 'i.id')
             ->whereNotNull('i.finalized_at')
+            // A cancelled bill gets no new receipt: whatever was taken on it
+            // is settled outside the books, not booked against a void invoice.
+            ->where('i.status', '!=', 'cancelled')
             ->where('i.paid_amount', '>', 0)
             ->groupBy('i.id', 'i.user_id', 'i.company_id', 'i.invoice_date', 'i.paid_amount')
             ->havingRaw('i.paid_amount - COALESCE(SUM(p.amount), 0) > 0.009')
@@ -62,6 +65,9 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::table('payments')->where('notes', 'Advance recorded on the invoice')->delete();
+        // Deliberately nothing. The app books receipts with this same note
+        // when an invoice with an advance is issued, so deleting by the note
+        // would also remove receipts made after this ran, and a receipt may
+        // already have been sent to the customer. Reverse one from its invoice.
     }
 };

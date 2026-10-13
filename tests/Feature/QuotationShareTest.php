@@ -115,6 +115,9 @@ class QuotationShareTest extends TestCase
         $this->assertNull($q->sent_at);
         $this->assertSame('QT-0001', $q->quote_number);
 
+        // A real mailer back in place of the mock before faking: since
+        // Laravel 12 the fake asks the current mailer for its default driver.
+        Mail::swap(new \Illuminate\Mail\MailManager($this->app));
         Mail::fake();
         $this->actingAs($user)->post(route('quotations.share.email', $q), $payload)->assertSessionHasNoErrors();
         $q->refresh();

@@ -159,6 +159,14 @@ Route::get('i/{invoice}/pdf', [InvoiceShareController::class, 'publicPdf'])
     ->middleware(['signed', 'throttle:30,1,web-i-invoice-pdf'])
     ->name('invoices.public.pdf');
 
+// The QR code on the review invite. It is scanned on a phone that is not
+// signed in, so the signature (not a login) says whose invite it is: the
+// review is recorded for that account and the phone goes on to Google.
+Route::get('review/scan/{user}', [\App\Http\Controllers\ReviewInviteController::class, 'scanned'])
+    ->middleware(['signed', 'throttle:30,1,web-review-scan'])
+    ->whereNumber('user')
+    ->name('review-invite.scan');
+
 // Public signed quotation link — same threat model as the invoice version.
 Route::get('q/{quotation}', [QuotationShareController::class, 'publicView'])
     ->middleware(['signed', 'throttle:30,1,web-q-quotation'])

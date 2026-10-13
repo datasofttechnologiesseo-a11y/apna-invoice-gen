@@ -62,7 +62,7 @@ class CrossBusinessRouteSweepTest extends TestCase
                 // Signed links and the super-admin panel are refused to any
                 // plain signed-in owner by design.
                 if ($url === null || $this->verb($route) !== 'GET'
-                    || preg_match('/^(invoices\.public|quotations\.public|verification\.verify|admin\.)/', $name)) {
+                    || preg_match('/^(invoices\.public|quotations\.public|review-invite\.scan|verification\.verify|admin\.)/', $name)) {
                     continue;
                 }
                 app('cache')->store()->flush();

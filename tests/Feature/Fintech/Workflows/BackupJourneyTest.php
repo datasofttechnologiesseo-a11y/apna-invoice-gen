@@ -156,8 +156,8 @@ class BackupJourneyTest extends TestCase
         // Nothing of the other user's business, anywhere in the file.
         foreach ($files as $name => $contents) {
             $this->assertStringNotContainsString('Rival', $name . $contents, "{$name} must not hold another user's data");
-            $this->assertStringNotContainsString('7777', $contents);
-            $this->assertStringNotContainsString('55555', $contents);
+            $this->assertStringNotContainsString('7777.00', $contents);   // the rival's line, not a random postcode
+            $this->assertStringNotContainsString('55555.00', $contents);
         }
         $this->assertEmpty(array_filter(array_keys($files), fn ($n) => str_ends_with(strtok($n, '/'), '-' . $this->rival->id)),
             'no folder for the other business');

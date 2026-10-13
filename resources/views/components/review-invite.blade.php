@@ -10,12 +10,22 @@
     after a short delay so the issued bill is seen first, and closes with
     one click.
 
-    The poster carries its own QR code, which is what a phone user will scan.
-    A clickable button is added on top only when GOOGLE_REVIEW_URL is set,
-    since a desktop user cannot scan their own screen.
+    The poster's printed QR code is covered by one made for this account: a
+    signed link that records the review the moment it is scanned, then goes
+    on to Google. A review left by scanning therefore retires the invite as
+    well; the printed code could not tell anyone it had been used.
+    A clickable button is added for the desktop user, who cannot scan their
+    own screen.
 --}}
 @if ($show ?? false)
-    @php $reviewUrl = config('seo.contact.google_review_url'); @endphp
+    @php
+        $reviewUrl = config('seo.contact.google_review_url');
+        $scanQr = null;
+        if (auth()->check()) {
+            $scanQr = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(240)->margin(0)->format('svg')
+                ->generate(\Illuminate\Support\Facades\URL::signedRoute('review-invite.scan', ['user' => auth()->id()]));
+        }
+    @endphp
 
     {{-- given(): tell the server the review is done so the invite retires.
          Fire-and-forget; the modal closes either way. --}}
@@ -63,14 +73,25 @@
             {{-- 800px wide covers 2x retina in a modal this size. WebP first:
                  the source PNG was 1.5 MB, which is several seconds on the
                  mobile data this audience actually uses. --}}
-            <picture>
-                <source srcset="{{ asset('brand/review-invite.webp') }}" type="image/webp">
-                <img src="{{ asset('brand/review-invite.png') }}"
-                     alt="Love our service? Leave us a review. Scan the QR code to share your experience on Google."
-                     class="w-full h-auto rounded-t-2xl"
-                     loading="lazy" decoding="async"
-                     width="800" height="1200">
-            </picture>
+            <div class="relative">
+                <picture>
+                    <source srcset="{{ asset('brand/review-invite.webp') }}" type="image/webp">
+                    <img src="{{ asset('brand/review-invite.png') }}"
+                         alt="Love our service? Leave us a review. Scan the QR code to share your experience on Google."
+                         class="w-full h-auto rounded-t-2xl"
+                         loading="lazy" decoding="async"
+                         width="800" height="1200">
+                </picture>
+                @if ($scanQr)
+                    {{-- Laid exactly over the printed code (x 100-368, y 498-766
+                         of the 800 x 1200 poster), so it scales with the image. --}}
+                    <div class="absolute bg-white flex items-center justify-center [&>svg]:w-full [&>svg]:h-full p-[1.5%]"
+                         style="left: 12.5%; top: 41.5%; width: 33.5%; height: 22.33%;"
+                         aria-hidden="true">
+                        {!! $scanQr !!}
+                    </div>
+                @endif
+            </div>
 
             <div class="p-5 flex flex-col sm:flex-row items-center gap-3">
                 @if ($reviewUrl)

@@ -259,7 +259,10 @@ trait BuildsBusinesses
     {
         $skip = ['sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs', 'migrations', 'password_reset_tokens'];
         $out = [];
-        foreach (Schema::getTables() as $t) {
+        // This database only: since Laravel 12, getTables() without a schema
+        // lists every database on a MySQL server.
+        $schema = DB::connection()->getDriverName() === 'sqlite' ? null : DB::connection()->getDatabaseName();
+        foreach (Schema::getTables($schema) as $t) {
             $name = is_array($t) ? $t['name'] : $t->name;
             if (in_array($name, $skip, true) || str_starts_with($name, 'sqlite_')) {
                 continue;
