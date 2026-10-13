@@ -50,8 +50,8 @@ class SalesRegister extends Report
                 return $q->where('status', $s);
             }, fn ($q) => $q->where('status', '!=', 'draft'))
             ->when($this->request->query('search'), fn ($q, $s) => $q->search($s))
-            ->when($from, fn ($q, $d) => $q->where('invoice_date', '>=', $d->toDateString()))
-            ->when($to, fn ($q, $d) => $q->where('invoice_date', '<=', $d->toDateString()))
+            ->when($from, fn ($q, $d) => $q->whereDate('invoice_date', '>=', $d->toDateString()))
+            ->when($to, fn ($q, $d) => $q->whereDate('invoice_date', '<=', $d->toDateString()))
             ->orderBy('invoice_date')
             ->orderBy('id');
 

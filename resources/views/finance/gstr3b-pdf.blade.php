@@ -205,6 +205,14 @@
                     <td class="r">{{ inr($liability['cgst']) }}</td>
                     <td class="r">{{ inr($liability['sgst']) }}</td>
                 </tr>
+                @if (array_sum($negative_carry_in ?? []) < 0)
+                    <tr>
+                        <td>Less: negative liability from earlier periods</td>
+                        @foreach (['igst', 'cgst', 'sgst'] as $head)
+                            <td class="r">{{ $negative_carry_in[$head] < 0 ? '−' . inr(-$negative_carry_in[$head]) : inr(0) }}</td>
+                        @endforeach
+                    </tr>
+                @endif
                 <tr>
                     <td>Less: paid through ITC <span class="label-sub">(s.49(5) order)</span></td>
                     <td class="r">−{{ inr($itc_used['igst']) }}</td>
@@ -229,6 +237,14 @@
                         <td class="r">{{ inr($itc_carried['igst']) }}</td>
                         <td class="r">{{ inr($itc_carried['cgst']) }}</td>
                         <td class="r">{{ inr($itc_carried['sgst']) }}</td>
+                    </tr>
+                @endif
+                @if (array_sum($negative_carry_out ?? []) < 0)
+                    <tr>
+                        <td>Negative liability carried forward <span class="label-sub">(comes off next period's tax)</span></td>
+                        @foreach (['igst', 'cgst', 'sgst'] as $head)
+                            <td class="r">{{ inr(-$negative_carry_out[$head]) }}</td>
+                        @endforeach
                     </tr>
                 @endif
             </tbody>

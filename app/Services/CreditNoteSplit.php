@@ -55,6 +55,16 @@ class CreditNoteSplit
             $out[$k] = min($left[$k], round($v * $ratio, 2));
         }
 
+        // Each head rounded on its own can leave the note a paisa off its
+        // amount (90.73 + 4.64 + 4.64 = 100.01 on a ₹100 note). The tax heads
+        // stay as worked out; the taxable value takes the difference, so a
+        // note always reads taxable + tax = amount.
+        $tax = $out['total_cgst'] + $out['total_sgst'] + $out['total_igst'];
+        $taxable = round($amount - $tax, 2);
+        if ($taxable >= 0 && $taxable <= $left['taxable_value'] && abs($taxable - $out['taxable_value']) < 1) {
+            $out['taxable_value'] = $taxable;
+        }
+
         return $out;
     }
 }

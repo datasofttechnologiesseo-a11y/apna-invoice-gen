@@ -74,7 +74,7 @@ class Gstr1Builder
         foreach ($live as $inv) {
             $kind = $this->kind($inv);
             $pos = $this->pos($inv);
-            foreach ($this->byRate($inv->items) as $rate => $g) {
+            foreach ($this->byRate($inv->items, null, $this->rcmFlag($inv, $kind)) as $rate => $g) {
                 if ($kind === 'exp') {
                     // Table 6A - every line of an export, whatever its rate.
                     $exp[] = [
@@ -126,7 +126,7 @@ class Gstr1Builder
                 $this->addSummary($summary, $inv, $rate, $g, 1);
             }
             foreach ($inv->items as $item) {
-                $this->addHsn($hsn, in_array($kind, ['b2b', 'sez'], true) ? 'B2B' : 'B2C', $item, 1.0);
+                $this->addHsn($hsn, in_array($kind, ['b2b', 'sez'], true) ? 'B2B' : 'B2C', $item, 1.0, $this->rcmFlag($inv, $kind));
             }
         }
 
@@ -137,7 +137,10 @@ class Gstr1Builder
             $lines = $cn->lines();
             // No lines: today's pro-rata over the invoice, unchanged.
             $share = $lines->isEmpty() ? $this->creditShare($cn, $inv) : [];
-            $rates = $lines->isEmpty() ? $this->byRate($inv->items, $share) : $this->linesByRate($lines);
+            $rcm = $this->rcmFlag($inv, $kind);
+            $rates = $lines->isEmpty()
+                ? $this->settleToNote($this->byRate($inv->items, $share, $rcm), $cn, $rcm !== null)
+                : $this->linesByRate($lines, $rcm);
             foreach ($rates as $rate => $g) {
                 $row = [
                     'number' => $cn->credit_note_number, 'date' => $cn->credit_note_date, 'type' => 'C',
@@ -173,11 +176,11 @@ class Gstr1Builder
             $tab = in_array($kind, ['b2b', 'sez'], true) ? 'B2B' : 'B2C';
             if ($lines->isEmpty()) {
                 foreach ($inv->items as $item) {
-                    $this->addHsn($hsn, $tab, $item, -($share[$item->id] ?? 0.0));
+                    $this->addHsn($hsn, $tab, $item, -($share[$item->id] ?? 0.0), $rcm);
                 }
             } else {
                 foreach ($lines as $line) {
-                    $this->addHsnCreditLine($hsn, $tab, $line, $cn->isSalesReturn());
+                    $this->addHsnCreditLine($hsn, $tab, $line, $cn->isSalesReturn(), $rcm);
                 }
             }
         }
@@ -282,7 +285,7 @@ class Gstr1Builder
      *
      * @return array<string, array{taxable: float, igst: float, cgst: float, sgst: float}>
      */
-    private function byRate(Collection $items, ?array $share = null): array
+    private function byRate(Collection $items, ?array $share = null, ?bool $rcmInterstate = null): array
     {
         $out = [];
         foreach ($items as $item) {
@@ -291,11 +294,12 @@ class Gstr1Builder
                 continue;
             }
             $rate = (string) (0 + (float) $item->gst_rate);
+            $tax = $this->lineTax($rate, (float) $item->amount, $item->igst_amount, $item->cgst_amount, $item->sgst_amount, $rcmInterstate);
             $out[$rate] ??= ['taxable' => 0.0, 'igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
             $out[$rate]['taxable'] += (float) $item->amount * $f;
-            $out[$rate]['igst'] += (float) $item->igst_amount * $f;
-            $out[$rate]['cgst'] += (float) $item->cgst_amount * $f;
-            $out[$rate]['sgst'] += (float) $item->sgst_amount * $f;
+            $out[$rate]['igst'] += $tax['igst'] * $f;
+            $out[$rate]['cgst'] += $tax['cgst'] * $f;
+            $out[$rate]['sgst'] += $tax['sgst'] * $f;
         }
         foreach ($out as $r => $g) {
             $out[$r] = array_map(fn ($v) => round($v, 2), $g);
@@ -323,20 +327,99 @@ class Gstr1Builder
     }
 
     /**
+     * The tax on a reverse-charge supply as the recipient pays it: rate x
+     * taxable value, IGST across states, CGST and SGST at half the rate each
+     * within one. Reported in Table 4B (and 9B for its notes); never part of
+     * the supplier's own GSTR-3B liability.
+     *
+     * @return array{igst: float, cgst: float, sgst: float}
+     */
+    private function recipientTax(string $rate, float $taxable, bool $interstate): array
+    {
+        $r = (float) $rate;
+        if ($interstate) {
+            return ['igst' => round($taxable * $r / 100, 2), 'cgst' => 0.0, 'sgst' => 0.0];
+        }
+        $half = round($taxable * $r / 200, 2);
+
+        return ['igst' => 0.0, 'cgst' => $half, 'sgst' => $half];
+    }
+
+    /**
+     * A line's tax as reported: as charged, or for a reverse-charge supply
+     * (rcmInterstate not null) the tax the recipient pays, worked out per line
+     * like every other line so Tables 4B, 9B and 12 agree to the paisa.
+     *
+     * @return array{igst: float, cgst: float, sgst: float}
+     */
+    private function lineTax(string $rate, float $taxable, $igst, $cgst, $sgst, ?bool $rcmInterstate): array
+    {
+        return $rcmInterstate === null
+            ? ['igst' => (float) $igst, 'cgst' => (float) $cgst, 'sgst' => (float) $sgst]
+            : $this->recipientTax($rate, $taxable, $rcmInterstate);
+    }
+
+    /** For a reverse-charge B2B supply: is it inter-state? Null for every other supply. */
+    private function rcmFlag(Invoice $inv, string $kind): ?bool
+    {
+        return $inv->reverse_charge && $kind === 'b2b' ? (bool) $inv->is_interstate : null;
+    }
+
+    /**
+     * A note spread over several GST rates, each rate rounded on its own, can
+     * total a paisa away from the note (10.08 + 40.32 + 40.32 = 90.72 against
+     * a note of 90.73). Put the difference on the largest rate of that head,
+     * so the rows add up to the note exactly and GSTR-1 agrees with the
+     * registers and GSTR-3B.
+     *
+     * @param  array<string, array{taxable: float, igst: float, cgst: float, sgst: float}>  $rates
+     * @return array<string, array{taxable: float, igst: float, cgst: float, sgst: float}>
+     */
+    private function settleToNote(array $rates, CreditNote $cn, bool $reverseCharge = false): array
+    {
+        if (! $rates) {
+            return $rates;
+        }
+        // A reverse-charge note stores no tax (the supplier collected none);
+        // its reported tax is the recipient's, so only the taxable is settled.
+        $note = ['taxable' => (float) $cn->taxable_value] + ($reverseCharge ? [] : [
+            'igst' => (float) $cn->total_igst,
+            'cgst' => (float) $cn->total_cgst,
+            'sgst' => (float) $cn->total_sgst,
+        ]);
+        foreach ($note as $head => $total) {
+            $diff = round($total - array_sum(array_column($rates, $head)), 2);
+            if ($diff == 0.0 || abs($diff) >= 1) {
+                continue; // nothing to settle, or not a rounding difference
+            }
+            $largest = array_key_first($rates);
+            foreach ($rates as $rate => $g) {
+                if (abs($g[$head]) > abs($rates[$largest][$head])) {
+                    $largest = $rate;
+                }
+            }
+            $rates[$largest][$head] = round($rates[$largest][$head] + $diff, 2);
+        }
+
+        return $rates;
+    }
+
+    /**
      * A lined credit note grouped by GST rate, from its own figures.
      *
      * @return array<string, array{taxable: float, igst: float, cgst: float, sgst: float}>
      */
-    private function linesByRate(Collection $lines): array
+    private function linesByRate(Collection $lines, ?bool $rcmInterstate = null): array
     {
         $out = [];
         foreach ($lines as $line) {
             $rate = (string) (0 + (float) $line->gst_rate);
+            $tax = $this->lineTax($rate, (float) $line->taxable_value, $line->igst, $line->cgst, $line->sgst, $rcmInterstate);
             $out[$rate] ??= ['taxable' => 0.0, 'igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
             $out[$rate]['taxable'] += (float) $line->taxable_value;
-            $out[$rate]['igst'] += (float) $line->igst;
-            $out[$rate]['cgst'] += (float) $line->cgst;
-            $out[$rate]['sgst'] += (float) $line->sgst;
+            $out[$rate]['igst'] += $tax['igst'];
+            $out[$rate]['cgst'] += $tax['cgst'];
+            $out[$rate]['sgst'] += $tax['sgst'];
         }
         foreach ($out as $r => $g) {
             $out[$r] = array_map(fn ($v) => round($v, 2), $g);
@@ -438,7 +521,7 @@ class Gstr1Builder
         $s['sgst'] -= (float) $cn->total_sgst;
     }
 
-    private function addHsn(array &$hsn, string $tab, $item, float $sign): void
+    private function addHsn(array &$hsn, string $tab, $item, float $sign, ?bool $rcmInterstate = null): void
     {
         if ($sign == 0.0) {
             return;
@@ -452,11 +535,12 @@ class Gstr1Builder
         if ($sign > 0) {
             $hsn[$key]['qty'] += (float) $item->quantity;
         }
+        $tax = $this->lineTax((string) (0 + $rate), (float) $item->amount, $item->igst_amount, $item->cgst_amount, $item->sgst_amount, $rcmInterstate);
         $hsn[$key]['value'] += $sign * (float) $item->total;
         $hsn[$key]['taxable'] += $sign * (float) $item->amount;
-        $hsn[$key]['igst'] += $sign * (float) $item->igst_amount;
-        $hsn[$key]['cgst'] += $sign * (float) $item->cgst_amount;
-        $hsn[$key]['sgst'] += $sign * (float) $item->sgst_amount;
+        $hsn[$key]['igst'] += $sign * $tax['igst'];
+        $hsn[$key]['cgst'] += $sign * $tax['cgst'];
+        $hsn[$key]['sgst'] += $sign * $tax['sgst'];
     }
 
     /**
@@ -464,7 +548,7 @@ class Gstr1Builder
      * The quantity comes off only for a sales return (goods came back); a
      * price correction on a line moves no goods.
      */
-    private function addHsnCreditLine(array &$hsn, string $tab, $line, bool $goodsReturned): void
+    private function addHsnCreditLine(array &$hsn, string $tab, $line, bool $goodsReturned, ?bool $rcmInterstate = null): void
     {
         $rate = (float) $line->gst_rate;
         $uqc = strtoupper((string) ($line->unit ?: 'OTH'));
@@ -476,12 +560,14 @@ class Gstr1Builder
         if ($goodsReturned) {
             $hsn[$key]['qty'] -= (float) $line->quantity;
         }
-        $tax = (float) $line->igst + (float) $line->cgst + (float) $line->sgst;
-        $hsn[$key]['value'] -= (float) $line->taxable_value + $tax;
+        // Value is what the note credits (tax charged); tax columns are as reported.
+        $charged = (float) $line->igst + (float) $line->cgst + (float) $line->sgst;
+        $t = $this->lineTax((string) (0 + $rate), (float) $line->taxable_value, $line->igst, $line->cgst, $line->sgst, $rcmInterstate);
+        $hsn[$key]['value'] -= (float) $line->taxable_value + $charged;
         $hsn[$key]['taxable'] -= (float) $line->taxable_value;
-        $hsn[$key]['igst'] -= (float) $line->igst;
-        $hsn[$key]['cgst'] -= (float) $line->cgst;
-        $hsn[$key]['sgst'] -= (float) $line->sgst;
+        $hsn[$key]['igst'] -= $t['igst'];
+        $hsn[$key]['cgst'] -= $t['cgst'];
+        $hsn[$key]['sgst'] -= $t['sgst'];
     }
 
     private function finishHsn(array $hsn): array

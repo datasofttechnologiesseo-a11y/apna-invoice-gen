@@ -271,6 +271,14 @@
                                 <td class="{{ $cellNum }}">{{ rupees($liability['cgst']) }}</td>
                                 <td class="{{ $cellNum }}">{{ rupees($liability['sgst']) }}</td>
                             </tr>
+                            @if (array_sum($negative_carry_in ?? []) < 0)
+                                <tr>
+                                    <td class="{{ $cellLabel }} text-gray-700">Less: negative liability from earlier periods <span class="text-xs text-gray-500">(credit notes that exceeded that period's sales)</span></td>
+                                    @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                        <td class="{{ $cellNum }} text-gray-900">{{ $negative_carry_in[$head] < 0 ? '−' . rupees(-$negative_carry_in[$head]) : rupees(0) }}</td>
+                                    @endforeach
+                                </tr>
+                            @endif
                             <tr>
                                 <td class="{{ $cellLabel }} text-gray-700">Less: paid through ITC <span class="text-xs text-gray-500">(Section 49(5): IGST credit first)</span></td>
                                 <td class="{{ $cellNum }} text-gray-900">−{{ rupees($itc_used['igst']) }}</td>
@@ -306,6 +314,14 @@
                                     <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carried['igst']) }}</td>
                                     <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carried['cgst']) }}</td>
                                     <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carried['sgst']) }}</td>
+                                </tr>
+                            @endif
+                            @if (array_sum($negative_carry_out ?? []) < 0)
+                                <tr>
+                                    <td class="{{ $cellLabel }} text-gray-600">Negative liability carried forward <span class="text-xs text-gray-500">(credit notes above this period's sales, comes off next period's tax)</span></td>
+                                    @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                        <td class="{{ $cellNum }} text-gray-700">{{ rupees(-$negative_carry_out[$head]) }}</td>
+                                    @endforeach
                                 </tr>
                             @endif
                         </tbody>

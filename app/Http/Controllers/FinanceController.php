@@ -486,7 +486,7 @@ class FinanceController extends Controller
 
         // Which credit paid which tax (Table 6.1). Same inputs as the
         // builder's own set-off, so the totals are the ones on screen.
-        $setOffMatrix = app(\App\Services\GstSetOff::class)->settle($data['liability'], $data['itc'])['matrix'];
+        $setOffMatrix = app(\App\Services\GstSetOff::class)->settle($data['payable'], $data['itc'])['matrix'];
 
         return view('finance.gstr3b', array_merge($data, [
             'setOffMatrix' => $setOffMatrix,
@@ -563,11 +563,17 @@ class FinanceController extends Controller
             csv_put($out, ['Section 6.1 — Payment of Tax']);
             csv_put($out, ['Description', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)']);
             csv_put($out, $heads('Tax on outward supplies [3.1(a) + (b)]', $data['liability']));
+            if (array_sum($data['negative_carry_in']) < 0) {
+                csv_put($out, $heads('Negative liability from earlier periods', $data['negative_carry_in']));
+            }
             csv_put($out, $heads('Paid through ITC (s.49(5) / Rule 88A order)', $data['itc_used']));
             csv_put($out, $heads('Reverse charge on inward supplies [3.1(d)] - cash only', $d));
             csv_put($out, $heads('Net cash payable', $data['netCash']));
             csv_put($out, ['Total cash to deposit', $n($data['netCash']['total'])]);
             csv_put($out, $heads('ITC carried forward to next period', $data['itc_carried']));
+            if (array_sum($data['negative_carry_out']) < 0) {
+                csv_put($out, $heads('Negative liability carried to next period', $data['negative_carry_out']));
+            }
             csv_put($out, []);
 
             csv_put($out, ['Note', 'Computed from your books. Verify against GSTR-1 + ITC ledgers before filing.']);

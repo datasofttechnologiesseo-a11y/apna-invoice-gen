@@ -132,7 +132,20 @@ class Gstr3bBuilder
             'cgst' => $outward['cgst'],
             'sgst' => $outward['sgst'],
         ];
-        $setOff = app(GstSetOff::class)->settle($liability, $itc);
+        // Negative liability: where a period's credit notes exceed its sales in
+        // a head, the excess is not lost; it comes off the next periods' tax,
+        // as the portal's negative liability statement does. Without it a year
+        // of returns paid more than the year's net output tax. 'liability'
+        // stays the period's own tax (3.1(a) + (b)); 'payable' is after the
+        // carry, and is what the set-off works on.
+        $carryIn = $this->negativeCarryIn($company, $from, $to);
+        $payable = [];
+        $carryOut = [];
+        foreach ($liability as $head => $v) {
+            $payable[$head] = round($v + $carryIn[$head], 2);
+            $carryOut[$head] = min(0.0, $payable[$head]);
+        }
+        $setOff = app(GstSetOff::class)->settle($payable, $itc);
         $netCash = $setOff['cash'];
         $itcCarried = $setOff['carried'];
         // Reverse-charge tax on inward supplies (3.1(d)) must be paid in cash -
@@ -148,9 +161,12 @@ class Gstr3bBuilder
         // books; when the 2B for the period has been uploaded, say how much of
         // that credit 2B confirms, so nobody copies a books figure the portal
         // will not accept. The books figures themselves are not changed.
-        $itc2b = $this->checkAgainst2b($company, $from, $to, $eligibleBills, $itcRcm, $intraExpenseGst, $interExpenseGst, $eligibleMemos, $liability, $rcm_inward);
+        $itc2b = $this->checkAgainst2b($company, $from, $to, $eligibleBills, $itcRcm, $intraExpenseGst, $interExpenseGst, $eligibleMemos, $payable, $rcm_inward);
 
         return [
+            'negative_carry_in' => $carryIn,
+            'negative_carry_out' => $carryOut,
+            'payable' => $payable,
             'itc_2b' => $itc2b,
             'itc_carried' => $itcCarried,
             'itc_used' => $setOff['used'],
@@ -172,6 +188,60 @@ class Gstr3bBuilder
             'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereNull('purchase_bill_id')->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
             'cashMemoCount' => $cashMemos->count(),
         ];
+    }
+
+    /**
+     * Negative output liability carried into the period from earlier ones,
+     * per head (zero or negative). Each period's net output tax is its issued
+     * (non reverse-charge) invoices' tax less the tax on credit notes dated in
+     * it - the same figures 3.1(a)/(b) use. Whatever a period leaves negative
+     * is set against the following periods until used up. Periods follow the
+     * return being prepared: months, or quarters for a QRMP return (a quarter
+     * nets its own months before anything carries).
+     *
+     * @return array{igst: float, cgst: float, sgst: float}
+     */
+    private function negativeCarryIn(Company $company, Carbon $from, Carbon $to): array
+    {
+        $quarterly = $to->gt($from->copy()->endOfMonth());
+        $key = fn ($date) => $quarterly
+            ? $date->format('Y') . '-Q' . (int) ceil($date->month / 3)
+            : $date->format('Y-m');
+        $byMonth = [];
+        $company->invoices()
+            ->whereIn('status', ['final', 'partially_paid', 'paid'])
+            ->where('reverse_charge', false)
+            ->whereDate('invoice_date', '<', $from->toDateString())
+            ->get(['invoice_date', 'total_igst', 'total_cgst', 'total_sgst'])
+            ->each(function ($inv) use (&$byMonth, $key) {
+                $m = $key($inv->invoice_date);
+                $byMonth[$m] ??= ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+                $byMonth[$m]['igst'] += (float) $inv->total_igst;
+                $byMonth[$m]['cgst'] += (float) $inv->total_cgst;
+                $byMonth[$m]['sgst'] += (float) $inv->total_sgst;
+            });
+        \App\Models\CreditNote::query()
+            ->where('credit_notes.company_id', $company->id)
+            ->whereDate('credit_note_date', '<', $from->toDateString())
+            ->whereHas('invoice', fn ($q) => $q->where('reverse_charge', false))
+            ->get(['credit_note_date', 'total_igst', 'total_cgst', 'total_sgst'])
+            ->each(function ($cn) use (&$byMonth, $key) {
+                $m = $key(\Illuminate\Support\Carbon::parse($cn->credit_note_date));
+                $byMonth[$m] ??= ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+                $byMonth[$m]['igst'] -= (float) $cn->total_igst;
+                $byMonth[$m]['cgst'] -= (float) $cn->total_cgst;
+                $byMonth[$m]['sgst'] -= (float) $cn->total_sgst;
+            });
+        ksort($byMonth);
+
+        $carry = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        foreach ($byMonth as $net) {
+            foreach ($carry as $head => $c) {
+                $carry[$head] = min(0.0, round($net[$head] + $c, 2));
+            }
+        }
+
+        return $carry;
     }
 
     /**

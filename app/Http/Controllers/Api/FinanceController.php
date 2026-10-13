@@ -258,6 +258,8 @@ class FinanceController extends Controller
             'itc_used' => $d['itc_used'],
             'net_cash' => $d['netCash'],
             'itc_carried' => $d['itc_carried'],
+            'negative_liability_in' => $d['negative_carry_in'],
+            'negative_liability_out' => $d['negative_carry_out'],
             'invoice_count' => $d['invoiceCount'],
             'credit_note_count' => $d['creditNoteCount'],
             'expense_count' => $d['expenseCount'],

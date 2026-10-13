@@ -232,7 +232,7 @@ class DashboardController extends Controller
         // colour here and another there.
         $spendWindowStart = now()->startOfMonth()->subMonths(11);
         $spendRows = $company->expenses()
-            ->where('entry_date', '>=', $spendWindowStart->toDateString())
+            ->whereDate('entry_date', '>=', $spendWindowStart->toDateString())
             ->selectRaw('category, SUM(amount + gst_amount) as total')
             ->groupBy('category')
             ->orderByDesc('total')

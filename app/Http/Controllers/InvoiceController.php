@@ -66,8 +66,8 @@ class InvoiceController extends Controller
             // "Invoiced this month" card links straight in with them. They
             // arrive from links and bookmarks rather than a validated form, so
             // unparseable input is ignored instead of thrown at the user.
-            ->when($this->parseFilterDate($request->query('from')), fn ($q, $d) => $q->where('invoice_date', '>=', $d->toDateString()))
-            ->when($this->parseFilterDate($request->query('to')), fn ($q, $d) => $q->where('invoice_date', '<=', $d->toDateString()))
+            ->when($this->parseFilterDate($request->query('from')), fn ($q, $d) => $q->whereDate('invoice_date', '>=', $d->toDateString()))
+            ->when($this->parseFilterDate($request->query('to')), fn ($q, $d) => $q->whereDate('invoice_date', '<=', $d->toDateString()))
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)
