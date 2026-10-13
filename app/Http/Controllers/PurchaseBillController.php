@@ -34,9 +34,9 @@ class PurchaseBillController extends Controller
             ->with('vendor:id,name,gstin')
             ->when($vendor, fn ($q) => $q->where('vendor_id', $vendor->id))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('bill_number', 'like', "%{$s}%")
-                    ->orWhereHas('vendor', fn ($v) => $v->where('name', 'like', "%{$s}%")
-                        ->orWhere('gstin', 'like', '%' . strtoupper($s) . '%'));
+                $w->whereLiteralLike('bill_number', $s)
+                    ->orWhereHas('vendor', fn ($v) => $v->whereLiteralLike('name', $s)
+                        ->orWhereLiteralLike('gstin', strtoupper($s)));
             }))
             ->when($request->status === 'unpaid', fn ($q) => $q->where('balance', '>', 0))
             ->when($request->status === 'paid', fn ($q) => $q->where('balance', '<=', 0))
@@ -98,11 +98,20 @@ class PurchaseBillController extends Controller
         $company = $user->ensureCompany();
         $data = $this->validated($request, $company);
 
+        // A supplier invoice that arrives after its month is locked keeps its
+        // own date but is booked today, so the locked month's figures (and
+        // the GSTR-3B already filed for it) do not change. Its input credit is
+        // claimed in this month's return (s.16(4) allows a later month).
+        $lateBooking = false;
         if ($company->isBooksLockedOn($data['bill_date'])) {
-            return back()->withInput()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Cannot add a purchase invoice dated on or before that.");
+            if ($company->isBooksLockedOn(now()->toDateString())) {
+                return back()->withInput()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Cannot add a purchase invoice dated on or before that.");
+            }
+            $data['booked_on'] = now()->toDateString();
+            $lateBooking = true;
         }
         // A payment made with the bill is checked like any other payment.
-        if ((float) ($data['paid_now'] ?? 0) > 0 && $company->isBooksLockedOn($data['paid_on'] ?? $data['bill_date'])) {
+        if ((float) ($data['paid_now'] ?? 0) > 0 && $company->isBooksLockedOn($data['paid_on'] ?? ($data['booked_on'] ?? $data['bill_date']))) {
             return back()->withInput()->withErrors(['paid_on' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the payment after that."]);
         }
 
@@ -114,7 +123,7 @@ class PurchaseBillController extends Controller
                 $bill->payments()->create([
                     'user_id' => $user->id,
                     'company_id' => $company->id,
-                    'paid_on' => $data['paid_on'] ?? $data['bill_date'],
+                    'paid_on' => $data['paid_on'] ?? ($data['booked_on'] ?? $data['bill_date']),
                     'amount' => min((float) $data['paid_now'], (float) $bill->grand_total),
                     'method' => $data['payment_method'] ?? 'neft',
                     'reference_number' => $data['reference_number'] ?? null,
@@ -130,7 +139,9 @@ class PurchaseBillController extends Controller
             $bill);
 
         return redirect()->route('purchases.show', $bill)
-            ->with('status', "Purchase invoice {$bill->bill_number} recorded and added to expenses.");
+            ->with('status', $lateBooking
+                ? "Purchase invoice {$bill->bill_number} recorded. Its date ({$bill->bill_date->format('d M Y')}) is in a locked period, so it is booked on {$bill->booked_on->format('d M Y')} and its input tax credit counts in " . $bill->booked_on->format('F Y') . "'s GSTR-3B."
+                : "Purchase invoice {$bill->bill_number} recorded and added to expenses.");
     }
 
     public function show(Request $request, PurchaseBill $purchaseBill): View
@@ -159,7 +170,13 @@ class PurchaseBillController extends Controller
         $company = $purchaseBill->company;
         $data = $this->validated($request, $company, $purchaseBill->id);
 
-        if ($company->isBooksLockedOn($purchaseBill->bill_date) || $company->isBooksLockedOn($data['bill_date'])) {
+        $lockedNow = $purchaseBill->booked_on
+            // Booked late: its booked date decides, and its own (locked) date
+            // may stay as it is, but cannot move to another locked date.
+            ? $company->isBooksLockedOn($purchaseBill->booked_on)
+                || ($data['bill_date'] !== $purchaseBill->bill_date->toDateString() && $company->isBooksLockedOn($data['bill_date']))
+            : $company->isBooksLockedOn($purchaseBill->bill_date) || $company->isBooksLockedOn($data['bill_date']);
+        if ($lockedNow) {
             return back()->withInput()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This purchase invoice cannot be changed.");
         }
 
@@ -197,7 +214,7 @@ class PurchaseBillController extends Controller
         $this->authorizeBill($request, $purchaseBill);
         $company = $purchaseBill->company;
 
-        if ($company->isBooksLockedOn($purchaseBill->bill_date)) {
+        if ($company->isBooksLockedOn($purchaseBill->bookedDate())) {
             return back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This purchase invoice cannot be deleted.");
         }
         // Deleting the bill deletes its payments too - not if one sits in the closed period.
@@ -341,6 +358,7 @@ class PurchaseBillController extends Controller
             'vendor_id' => $vendor->id,
             'bill_number' => trim($data['bill_number']),
             'bill_date' => $data['bill_date'],
+            'booked_on' => $data['booked_on'] ?? $bill->booked_on,
             'due_date' => $data['due_date'] ?? null,
             'is_interstate' => $isInterstate,
             'reverse_charge' => $reverseCharge,
@@ -380,7 +398,7 @@ class PurchaseBillController extends Controller
         $expenseAttrs = [
             'user_id' => $bill->user_id,
             'purchase_bill_id' => $bill->id,
-            'entry_date' => $bill->bill_date,
+            'entry_date' => $bill->bookedDate(),
             'category' => $bill->expense_category ?: 'misc',
             'vendor_name' => $vendor->name,
             'description' => "Purchase invoice {$bill->bill_number} from {$vendor->name}",

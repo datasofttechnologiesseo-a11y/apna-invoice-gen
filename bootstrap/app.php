@@ -23,6 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // In a fully locked-down deployment, swap '*' for an explicit allowlist.
         $middleware->trustProxies(at: '*');
 
+        // Check a public link's signature before looking up the invoice or
+        // quotation it names: otherwise an unsigned request for a number that
+        // does not exist got a 404 and one that does a 403, which let anyone
+        // probe which ids exist.
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: \Illuminate\Routing\Middleware\ValidateSignature::class,
+        );
+
         // Security response headers on every HTML document.
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,

@@ -39,8 +39,8 @@ class QuotationController extends Controller
                 return $q->where('status', $s);
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('quote_number', 'like', "%{$s}%")
-                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%"));
+                $w->whereLiteralLike('quote_number', $s)
+                    ->orWhereHas('customer', fn ($c) => $c->whereLiteralLike('name', $s));
             }))
             ->orderByDesc('quote_date')
             ->orderByDesc('id')
@@ -182,7 +182,11 @@ class QuotationController extends Controller
 
         DB::transaction(function () use ($quotation) {
             $company = $quotation->company()->lockForUpdate()->first();
-            $number = $company->bumpQuoteCounter($quotation->quote_date);
+            // A number the user chose (typed on the website) is kept, as on
+            // the web; only a draft without one takes the next in the series.
+            $number = filled($quotation->quote_number)
+                ? $quotation->quote_number
+                : $company->bumpQuoteCounter($quotation->quote_date);
             $quotation->update(['quote_number' => $number, 'status' => 'sent', 'sent_at' => now()]);
         });
 
@@ -232,6 +236,11 @@ class QuotationController extends Controller
         $quotation->loadMissing('items', 'customer');
 
         $invoice = DB::transaction(function () use ($quotation) {
+            // A second tab or a double click sends "convert" again. Re-read the
+            // quotation under a lock and check again, or both requests pass the
+            // check above and the quotation becomes two invoices.
+            $locked = \App\Models\Quotation::whereKey($quotation->id)->lockForUpdate()->first();
+            abort_unless($locked && $locked->canBeConverted(), 422, 'This quotation has just been converted to an invoice.');
             // Same as the web path: taxes are recomputed at conversion from the
             // customer's state as it stands today, not copied from the quote.
             $calculator = app(\App\Services\InvoiceCalculator::class);
@@ -332,6 +341,8 @@ class QuotationController extends Controller
     private function validateQuotation(Request $request, int $companyId): array
     {
         return $request->validate([
+            // (The customer is looked up within this business below: another
+            // business's customer is a 404, as before.)
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'quote_date' => ['required', 'date'],
             'valid_until' => ['nullable', 'date', 'after_or_equal:quote_date'],
@@ -345,12 +356,13 @@ class QuotationController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['nullable', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
-            'items.*.product_id' => ['nullable', 'integer'],
+            // An item from another business would print its name on this quotation.
+            'items.*.product_id' => ['nullable', 'integer', "exists:products,id,company_id,{$companyId}"],
         ]);
     }
 }

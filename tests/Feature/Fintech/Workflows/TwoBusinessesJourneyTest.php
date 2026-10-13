@@ -371,7 +371,7 @@ class TwoBusinessesJourneyTest extends TestCase
         // Traders has an issued invoice: refused, everything kept.
         $this->actingAs($this->owner())->from(route('companies.index'))->delete(route('companies.destroy', $this->traders))
             ->assertRedirect(route('companies.index'))
-            ->assertSessionHasErrors(['company' => 'This company has invoices and cannot be deleted.']);
+            ->assertSessionHasErrors(['company' => 'Sharma Traders has invoices, purchases, expenses or other entries in its books, so it cannot be deleted.']);
         $this->assertNotNull(Company::find($this->traders->id));
         $this->assertNotNull(Invoice::find($inv->id));
         $this->assertSame($exports->id, $this->activeId());

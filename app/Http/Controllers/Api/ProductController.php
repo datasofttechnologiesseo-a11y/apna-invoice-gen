@@ -18,9 +18,9 @@ class ProductController extends Controller
 
         $products = $company->products()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")
-                  ->orWhere('sku', 'like', "%{$s}%")
-                  ->orWhere('hsn_sac', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)
+                  ->orWhereLiteralLike('sku', $s)
+                  ->orWhereLiteralLike('hsn_sac', $s);
             }))
             ->when($request->kind, fn ($q, $k) => $q->where('kind', $k))
             ->when($request->boolean('only_inactive'), fn ($q) => $q->where('is_active', false))
@@ -40,15 +40,28 @@ class ProductController extends Controller
         $products = $company->products()
             ->where('is_active', true)
             ->when($q !== '', fn ($qb) => $qb->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('sku', 'like', "%{$q}%")
-                  ->orWhere('hsn_sac', 'like', "%{$q}%");
+                $w->whereLiteralLike('name', $q)
+                  ->orWhereLiteralLike('sku', $q)
+                  ->orWhereLiteralLike('hsn_sac', $q);
             }))
             ->orderBy('name')
             ->limit(50)
-            ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
+            ->withSum('stockMovements', 'quantity')
+            ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate', 'track_stock', 'opening_stock']);
 
-        return response()->json($products);
+        // Same fields as the website's item search, including stock on hand
+        // (null for items that do not track stock), so the app can warn
+        // before a line sells more than is on the shelf.
+        return response()->json($products->map(fn ($p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'sku' => $p->sku,
+            'hsn_sac' => $p->hsn_sac,
+            'unit' => $p->unit,
+            'rate' => $p->rate,
+            'gst_rate' => $p->gst_rate,
+            'stock' => $p->track_stock ? $p->stockOnHand() : null,
+        ])->values());
     }
 
     public function store(Request $request): JsonResponse

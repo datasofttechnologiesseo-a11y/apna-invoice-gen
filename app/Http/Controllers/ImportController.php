@@ -74,9 +74,12 @@ class ImportController extends Controller
     {
         $importer = $this->importer($request, $type);
         $request->validate([
-            'file' => ['required', 'file', 'max:5120', 'mimes:xlsx,csv,txt,ods'],
+            // By extension, as the reader picks its parser: content sniffing called a
+            // CSV with "<" in a cell an HTML file and refused it. Everything read
+            // is shown as text, and an unreadable file gets the message below.
+            'file' => ['required', 'file', 'max:5120', 'extensions:xlsx,csv,txt,ods'],
         ], [
-            'file.mimes' => 'Upload an Excel (.xlsx), OpenDocument (.ods) or CSV file. Older .xls files: open in Excel and "Save As" .xlsx.',
+            'file.extensions' => 'Upload an Excel (.xlsx), OpenDocument (.ods) or CSV file. Older .xls files: open in Excel and "Save As" .xlsx.',
             'file.max' => 'The file is larger than 5 MB. Split it into smaller files.',
         ]);
 

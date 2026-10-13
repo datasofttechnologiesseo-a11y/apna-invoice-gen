@@ -57,7 +57,7 @@ class ProfitAndLoss
         ];
 
         // Tax you pay yourself under reverse charge on purchases (3.1(d)).
-        $rcm = $company->purchaseBills()->where('reverse_charge', true)->whereBetween('bill_date', [$from, $to]);
+        $rcm = $company->purchaseBills()->where('reverse_charge', true)->whereBetween(\Illuminate\Support\Facades\DB::raw('COALESCE(booked_on, bill_date)'), [$from, $to]);
         $rcmTax = (float) (clone $rcm)->sum('total_igst') + (float) (clone $rcm)->sum('total_cgst') + (float) (clone $rcm)->sum('total_sgst');
 
         $netProfit = $revenue['taxable'] - $expense['taxable'];

@@ -48,7 +48,9 @@ class TeamMembersTest extends TestCase
         $token = CompanyMember::where('email', $email)->value('token');
 
         $this->actingAs($member)->get(route('team.join', $token))->assertOk()->assertSee('Accept and open Arbaz Traders');
-        $this->actingAs($member)->post(route('team.accept', $token))->assertRedirect(route('dashboard'));
+        // Each role lands on a page it can open: billing staff have no dashboard.
+        $this->actingAs($member)->post(route('team.accept', $token))
+            ->assertRedirect(route(CompanyMember::allows($role, 'dashboard') ? 'dashboard' : 'invoices.index'));
 
         return $member->fresh();
     }

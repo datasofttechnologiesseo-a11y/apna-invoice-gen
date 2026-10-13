@@ -23,8 +23,8 @@ class CashMemoController extends Controller
 
         $memos = $company->cashMemos()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('memo_number', 'like', "%{$s}%")
-                    ->orWhere('seller_name', 'like', "%{$s}%");
+                $w->whereLiteralLike('memo_number', $s)
+                    ->orWhereLiteralLike('seller_name', $s);
             }))
             ->when($request->from, fn ($q, $d) => $q->where('memo_date', '>=', $d))
             ->when($request->to, fn ($q, $d) => $q->where('memo_date', '<=', $d))
@@ -162,8 +162,8 @@ class CashMemoController extends Controller
     {
         return $company->cashMemos()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('memo_number', 'like', "%{$s}%")
-                    ->orWhere('seller_name', 'like', "%{$s}%");
+                $w->whereLiteralLike('memo_number', $s)
+                    ->orWhereLiteralLike('seller_name', $s);
             }))
             ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
     }
@@ -343,7 +343,7 @@ class CashMemoController extends Controller
     {
         abort_unless($cashMemo->user_id === $request->user()->id, 403);
         $company = $cashMemo->company;
-        $data = $this->validated($request, $cashMemo->id);
+        $data = $this->validated($request, $cashMemo->id, $cashMemo->company_id);
 
         // Books-lock guards BOTH the existing date and the new date.
         if ($company->isBooksLockedOn($cashMemo->memo_date) || $company->isBooksLockedOn($data['memo_date'])) {
@@ -458,9 +458,10 @@ class CashMemoController extends Controller
         return redirect()->route('finance.cash-memos.index')->with('status', 'Cash memo deleted.');
     }
 
-    private function validated(Request $request, ?int $ignoreId = null): array
+    private function validated(Request $request, ?int $ignoreId = null, ?int $companyId = null): array
     {
-        $companyId = $request->user()->ensureCompany()->id;
+        // The memo's own business when editing (it need not be the open one).
+        $companyId ??= $request->user()->ensureCompany()->id;
 
         $data = $request->validate([
             'memo_date' => ['required', 'date'],

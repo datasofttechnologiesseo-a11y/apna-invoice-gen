@@ -2,7 +2,7 @@
     <x-slot:action>
         @if (! $user->isSuperAdmin() && $user->id !== auth()->id())
             <form method="POST" action="{{ route('admin.users.impersonate', $user) }}"
-                  onsubmit="return confirm('Log in as {{ $user->name }}? You can return to your own account anytime.')">
+                  onsubmit="return confirm(@js('Log in as ' . $user->name . '? You can return to your own account anytime.'))">
                 @csrf
                 <button class="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white text-sm font-semibold rounded shadow-sm">Impersonate</button>
             </form>
@@ -85,7 +85,7 @@
                     <p class="text-xs text-gray-500 mt-0.5">Set a new password for this user. Share it securely - they should change it on next login.</p>
                 </div>
                 <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="p-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-start"
-                      onsubmit="return confirm('Reset password for {{ $user->name }}?')">
+                      onsubmit="return confirm(@js('Reset password for ' . $user->name . '?'))">
                     @csrf
                     <div>
                         <label for="admin-user-password" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">New password</label>

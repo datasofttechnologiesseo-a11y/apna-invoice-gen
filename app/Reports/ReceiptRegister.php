@@ -37,10 +37,10 @@ class ReceiptRegister extends Report
             ->with('invoice.customer')
             ->when($this->request->query('method'), fn ($q, $m) => $q->where('method', $m))
             ->when($s, fn ($q) => $q->where(function ($w) use ($s) {
-                $w->where('receipt_number', 'like', "%{$s}%")
-                    ->orWhere('reference_number', 'like', "%{$s}%")
-                    ->orWhereHas('invoice', fn ($i) => $i->where('invoice_number', 'like', "%{$s}%")
-                        ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%")));
+                $w->whereLiteralLike('receipt_number', $s)
+                    ->orWhereLiteralLike('reference_number', $s)
+                    ->orWhereHas('invoice', fn ($i) => $i->whereLiteralLike('invoice_number', $s)
+                        ->orWhereHas('customer', fn ($c) => $c->whereLiteralLike('name', $s)));
             }))
             ->when($from, fn ($q, $d) => $q->whereDate('received_at', '>=', $d))
             ->when($to, fn ($q, $d) => $q->whereDate('received_at', '<=', $d))

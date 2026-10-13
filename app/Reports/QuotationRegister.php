@@ -38,8 +38,8 @@ class QuotationRegister extends Report
                 return $q->where('status', $st);
             })
             ->when($s, fn ($q) => $q->where(function ($w) use ($s) {
-                $w->where('quote_number', 'like', "%{$s}%")
-                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%"));
+                $w->whereLiteralLike('quote_number', $s)
+                    ->orWhereHas('customer', fn ($c) => $c->whereLiteralLike('name', $s));
             }))
             ->when($from, fn ($q, $d) => $q->whereDate('quote_date', '>=', $d))
             ->when($to, fn ($q, $d) => $q->whereDate('quote_date', '<=', $d))

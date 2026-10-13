@@ -42,7 +42,9 @@ class Gstr3bBuilder
         // which YOU pay the tax (s.9(3)/(4)). Outward RCM sales ($rcm) belong in
         // GSTR-1 Table 4B, not here; they carry no 3B liability for the seller.
         $billsInPeriod = $company->purchaseBills()
-            ->whereBetween('bill_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            // The month a bill is booked in: its own date, or the later day it
+            // was recorded when it arrived after its month was locked.
+            ->whereBetween(\Illuminate\Support\Facades\DB::raw('COALESCE(booked_on, bill_date)'), [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->with('vendor:id,gstin')
             ->get();
         $rcmBills = $billsInPeriod->where('reverse_charge', true);

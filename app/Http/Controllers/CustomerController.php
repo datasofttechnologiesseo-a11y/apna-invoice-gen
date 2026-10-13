@@ -95,7 +95,15 @@ class CustomerController extends Controller
                 ]);
             }
         }
-        $entries = $entries->sortBy(['date', 'type'])->values();
+        // Same day: the invoice first, then what settles it (credit note,
+        // then payment). Sorting the type names alphabetically put a credit
+        // note before its own invoice and the running balance went negative.
+        $typeOrder = ['invoice' => 0, 'credit_note' => 1, 'payment' => 2];
+        $day = fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
+        $entries = $entries->sortBy([
+            fn ($a, $b) => strcmp($day($a['date']), $day($b['date'])),
+            fn ($a, $b) => ($typeOrder[$a['type']] ?? 9) <=> ($typeOrder[$b['type']] ?? 9),
+        ])->values();
 
         // Running balance
         $running = 0.0;
@@ -182,8 +190,8 @@ class CustomerController extends Controller
     {
         abort_unless($customer->user_id === $request->user()->id, 403);
 
-        if ($customer->invoices()->exists()) {
-            return back()->withErrors(['customer' => 'This customer has invoices and cannot be deleted.']);
+        if ($blocker = $customer->deletionBlocker()) {
+            return back()->withErrors(['customer' => $blocker]);
         }
 
         $customer->delete();

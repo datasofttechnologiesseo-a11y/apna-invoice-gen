@@ -269,7 +269,8 @@ class ReferralJourneyTest extends TestCase
             'company_id' => $aBiz->id, 'user_id' => $b->id, 'email' => self::FRIEND_EMAIL,
             'role' => 'staff', 'token' => CompanyMember::newToken(), 'invited_by' => $a->id, 'accepted_at' => now(),
         ]);
-        $this->actingAs($b)->post(route('companies.switch', $aBiz))->assertRedirect(route('dashboard'));
+        // Billing staff land on a page their role opens (they have no dashboard).
+        $this->actingAs($b)->post(route('companies.switch', $aBiz))->assertRedirect(route('invoices.index'));
         $this->assertSame((int) $aBiz->id, (int) $b->fresh()->active_company_id);
 
         $inA = $this->webIssued($b->fresh(), $aCustomer);

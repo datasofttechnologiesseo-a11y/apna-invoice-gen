@@ -71,11 +71,18 @@ class CreditNoteController extends Controller
         $creditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->credited_amount), 2);
         $reasons = array_keys(config('credit_note_reasons'));
 
+        // Same as the website: item lines (invoice item id => quantity
+        // returned) make the note the sum of those lines and put returned
+        // goods back in stock; without lines the amount is spread pro rata.
+        $hasLines = CreditNote::linesAvailable()
+            && collect((array) $request->input('lines', []))->contains(fn ($q) => is_numeric($q) && (float) $q > 0);
         $data = $request->validate([
             'credit_note_date' => ['required', 'date', 'after_or_equal:' . $invoice->invoice_date?->toDateString(), 'before_or_equal:today'],
-            'amount' => ['required', 'numeric', 'min:0.01', "max:{$creditable}"],
+            'amount' => $hasLines ? ['nullable', 'numeric'] : ['required', 'numeric', 'min:0.01', "max:{$creditable}"],
             'reason' => ['required', 'string', 'in:' . implode(',', $reasons)],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'lines' => ['nullable', 'array'],
+            'lines.*' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $company = $invoice->company;
@@ -85,13 +92,13 @@ class CreditNoteController extends Controller
             ], 422);
         }
 
-        $creditNote = DB::transaction(function () use ($invoice, $data) {
+        $creditNote = DB::transaction(function () use ($invoice, $data, $hasLines) {
             $company = $invoice->company()->lockForUpdate()->first();
 
             // Re-checked under the lock so a retried request cannot credit twice.
             $invoice->refresh();
-            $stillCreditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->creditNotes()->sum('amount')), 2);
-            if ($invoice->isCancelled() || (float) $data['amount'] > $stillCreditable + 0.001) {
+            $stillCreditable = round(max(0, (float) $invoice->grand_total - (float) $invoice->creditNotes()->reorder()->sum('amount')), 2);
+            if ($invoice->isCancelled() || (! $hasLines && (float) $data['amount'] > $stillCreditable + 0.001)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'amount' => 'Only ₹' . inr($stillCreditable) . ' of this invoice can still be credited.',
                 ]);
@@ -106,7 +113,14 @@ class CreditNoteController extends Controller
                 ->where('credit_note_number', $number)
                 ->exists());
 
-            $split = app(\App\Services\CreditNoteSplit::class)->for($invoice, (float) $data['amount']);
+            $built = app(\App\Services\CreditNoteLines::class)->build($invoice, (array) ($data['lines'] ?? []));
+            if ($built) {
+                $amount = $built['amount'];
+                $split = array_intersect_key($built, array_flip(['taxable_value', 'total_cgst', 'total_sgst', 'total_igst']));
+            } else {
+                $amount = (float) $data['amount'];
+                $split = app(\App\Services\CreditNoteSplit::class)->for($invoice, $amount);
+            }
 
             $cn = CreditNote::create([
                 'user_id' => $invoice->user_id,
@@ -114,11 +128,16 @@ class CreditNoteController extends Controller
                 'invoice_id' => $invoice->id,
                 'credit_note_number' => $number,
                 'credit_note_date' => $data['credit_note_date'],
-                'amount' => $data['amount'],
+                'amount' => $amount,
                 ...$split,
                 'reason' => $data['reason'],
                 'notes' => $data['notes'] ?? null,
             ]);
+            if ($built) {
+                $cn->items()->createMany($built['lines']);
+                // A sales return puts the goods back in stock.
+                app(\App\Services\StockLedger::class)->recordCreditNote($cn);
+            }
 
             $this->recomputeInvoice($invoice);
 
@@ -149,6 +168,9 @@ class CreditNoteController extends Controller
         $snapshot = $creditNote->only(['credit_note_number', 'credit_note_date', 'amount', 'reason']);
 
         DB::transaction(function () use ($creditNote, $invoice) {
+            // Goods that came back on a sales return go out of stock again,
+            // as on the website.
+            app(\App\Services\StockLedger::class)->reverseCreditNote($creditNote);
             $creditNote->delete();
             $this->recomputeInvoice($invoice);
         });

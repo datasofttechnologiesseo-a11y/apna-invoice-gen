@@ -192,9 +192,8 @@ class BooksLockEveryWritePathTest extends TestCase
 
     // ----------------------------------------------------------- purchases
 
-    public function test_purchase_invoices_inside_the_lock_cannot_be_added_edited_or_deleted(): void
+    public function test_purchase_invoices_inside_the_lock_cannot_be_edited_or_deleted(): void
     {
-        $this->assertRefused($this->actingAs($this->user)->post(route('purchases.store'), $this->billPayload('MM/3', '2026-03-20')));
         $this->assertRefused($this->actingAs($this->user)->put(route('purchases.update', $this->oldBill), $this->billPayload('MM/1', '2026-03-10', 2000)));
         $this->assertRefused($this->actingAs($this->user)->delete(route('purchases.destroy', $this->oldBill)));
 
@@ -203,6 +202,20 @@ class BooksLockEveryWritePathTest extends TestCase
         $this->assertMoney(1180.00, $bill->grand_total);
         $this->assertMoney(680.00, $bill->balance);
         $this->assertMoney(1000.00, Expense::where('purchase_bill_id', $bill->id)->value('amount'), 'the mirrored expense row is untouched');
+    }
+
+    public function test_a_late_supplier_invoice_dated_inside_the_lock_is_booked_in_the_open_month(): void
+    {
+        // A March bill that reached the office after the year was closed keeps
+        // its own date but is booked today, so the closed year does not change
+        // (its input credit is claimed in a later return, s.16(4)).
+        $this->actingAs($this->user)->post(route('purchases.store'), $this->billPayload('MM/3', '2026-03-20'))->assertSessionHasNoErrors();
+
+        $late = PurchaseBill::where('bill_number', 'MM/3')->firstOrFail();
+        $this->assertSame('2026-03-20', $late->bill_date->toDateString());
+        $this->assertNotNull($late->booked_on);
+        $this->assertFalse($this->company->fresh()->isBooksLockedOn($late->booked_on), 'booked in an open period');
+        $this->assertTrue(Expense::where('purchase_bill_id', $late->id)->whereDate('entry_date', $late->booked_on)->exists());
     }
 
     public function test_a_purchase_invoice_cannot_be_moved_into_the_lock(): void

@@ -22,7 +22,8 @@ class InvoiceResource extends JsonResource
             'invoice_date' => optional($this->invoice_date)->toDateString(),
             'due_date' => optional($this->due_date)->toDateString(),
             'customer_id' => $this->customer_id,
-            'customer' => new CustomerResource($this->whenLoaded('customer')),
+            // As issued (snapshot) on an issued invoice, like the PDF and the web.
+            'customer' => $this->whenLoaded('customer', fn () => new CustomerResource($this->billedCustomer())),
             'place_of_supply_state_id' => $this->place_of_supply_state_id,
             'is_interstate' => (bool) $this->is_interstate,
             'reverse_charge' => (bool) $this->reverse_charge,
@@ -73,7 +74,8 @@ class InvoiceResource extends JsonResource
                 'soft_edit' => $this->isSoftEditable(),
                 'finalize' => $this->isDraft(),
                 'cancel' => $this->canBeCancelled(),
-                'delete' => $this->isEditable() || $this->isCancelled(),
+                // Same rule as the website: an issued number is never deleted.
+                'delete' => $this->canBeDeleted(),
             ],
 
             'finalized_at' => optional($this->finalized_at)->toIso8601String(),

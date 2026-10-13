@@ -69,7 +69,9 @@ class TeamRolesTest extends TestCase
         $user = User::factory()->create(['name' => 'Team ' . ucfirst($role), 'email' => $email]);
         Company::factory()->create(['user_id' => $user->id, 'name' => "Own firm of {$role}", 'state_id' => $this->maharashtra()->id]);
         $token = CompanyMember::where('email', $email)->value('token');
-        $this->actingAs($user)->post(route('team.accept', $token))->assertRedirect(route('dashboard'));
+        // Each role lands on a page it can open: billing staff have no dashboard.
+        $this->actingAs($user)->post(route('team.accept', $token))
+            ->assertRedirect(route(CompanyMember::allows($role, 'dashboard') ? 'dashboard' : 'invoices.index'));
         $user = $user->fresh();
         $this->assertSame($this->p['company']->id, (int) $user->active_company_id);
 

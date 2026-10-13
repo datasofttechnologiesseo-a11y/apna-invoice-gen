@@ -37,10 +37,10 @@ class Vendor extends Model
         $term = trim($term);
 
         return $query->where(function (Builder $w) use ($term) {
-            $w->where('name', 'like', "%{$term}%")
-              ->orWhere('gstin', 'like', '%' . strtoupper($term) . '%')
-              ->orWhere('phone', 'like', "%{$term}%")
-              ->orWhere('email', 'like', "%{$term}%");
+            $w->whereLiteralLike('name', $term)
+              ->orWhereLiteralLike('gstin', strtoupper($term))
+              ->orWhereLiteralLike('phone', $term)
+              ->orWhereLiteralLike('email', $term);
         });
     }
 

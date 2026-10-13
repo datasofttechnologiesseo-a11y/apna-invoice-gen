@@ -141,6 +141,26 @@ class Invoice extends Model
     }
 
     /**
+     * A bank transfer has one reference (UTR / cheque no.): the same reference
+     * twice on one invoice is the same money booked twice, from a double
+     * submit, an app retry or a second tab. Null when the reference is free.
+     */
+    public function duplicatePaymentReference(?string $reference): ?string
+    {
+        $reference = trim((string) $reference);
+        if ($reference === '') {
+            return null;
+        }
+        $existing = $this->payments()->reorder()
+            ->whereRaw('UPPER(TRIM(reference_number)) = ?', [strtoupper($reference)])
+            ->first(['receipt_number']);
+
+        return $existing
+            ? "A payment with reference {$reference} is already recorded on this invoice (receipt {$existing->receipt_number})."
+            : null;
+    }
+
+    /**
      * The status as people read it, the same on every screen and document:
      * Draft, Issued, Partly paid, Paid, Cancelled. ("final" is the stored key
      * for an issued invoice; it was shown raw as "Final" on some lists.)
@@ -212,7 +232,7 @@ class Invoice extends Model
         $amount = str_replace([',', ' ', '₹'], '', $term);
 
         return $query->where(function (Builder $w) use ($term, $amount) {
-            $w->where('invoice_number', 'like', "%{$term}%")
+            $w->whereLiteralLike('invoice_number', $term)
               ->orWhereHas('customer', fn (Builder $c) => $c->search($term));
 
             if (is_numeric($amount)) {

@@ -51,7 +51,7 @@
                                 <a href="{{ route('admin.users.show', $u) }}" class="text-brand-600 hover:underline text-sm font-medium">View</a>
                                 @if (! $u->isSuperAdmin() && $u->id !== auth()->id())
                                     <form method="POST" action="{{ route('admin.users.impersonate', $u) }}" class="inline"
-                                          onsubmit="return confirm('Log in as {{ $u->name }}? You can return to your own account anytime using the banner at the top.')">
+                                          onsubmit="return confirm(@js('Log in as ' . $u->name . '? You can return to your own account anytime using the banner at the top.'))">
                                         @csrf
                                         <button class="px-2.5 py-1 bg-accent-100 hover:bg-accent-200 text-accent-800 text-xs font-semibold rounded transition" title="Log in as this user">Impersonate</button>
                                     </form>

@@ -43,7 +43,7 @@ class StockSummary extends Report
     {
         [$from, $to] = $this->dateRange();
         $products = $this->company->products()->where('track_stock', true)
-            ->when($this->request->query('search'), fn ($q, $s) => $q->where(fn ($w) => $w->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%")))
+            ->when($this->request->query('search'), fn ($q, $s) => $q->where(fn ($w) => $w->whereLiteralLike('name', $s)->orWhereLiteralLike('sku', $s)))
             ->orderBy('name')->get();
         if ($products->isEmpty()) {
             return [];

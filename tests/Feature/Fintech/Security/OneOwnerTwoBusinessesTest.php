@@ -126,6 +126,10 @@ class OneOwnerTwoBusinessesTest extends TestCase
         // The audit summaries read "Invoice PUN-0005 finalized ..." and
         // "... Receipt PRC-0002 · Invoice PUN-0001". (The notification bell is
         // a separate leak, covered in TeamRolesTest.)
+        // The member signs in on their own device: a fresh session, so the
+        // owner's own "Payment recorded. Receipt PRC-0002 issued." flash (one
+        // shared test session) is not mistaken for activity the member can read.
+        $this->flushSession();
         $html = $this->actingAs($qMember->fresh())->get(route('profile.activity'))->assertOk()->getContent();
         foreach (['Invoice PUN-0005 finalized', 'Receipt PRC-0002'] as $p) {
             $this->assertFalse(str_contains($html, $p), "Q's member reads P's activity: {$p}");

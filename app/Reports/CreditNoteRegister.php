@@ -39,9 +39,9 @@ class CreditNoteRegister extends Report
         $query = CreditNote::where('company_id', $this->company->id)
             ->with(['invoice.customer'])
             ->when($s, fn ($q) => $q->where(function ($w) use ($s) {
-                $w->where('credit_note_number', 'like', "%{$s}%")
-                    ->orWhereHas('invoice', fn ($i) => $i->where('invoice_number', 'like', "%{$s}%")
-                        ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%")));
+                $w->whereLiteralLike('credit_note_number', $s)
+                    ->orWhereHas('invoice', fn ($i) => $i->whereLiteralLike('invoice_number', $s)
+                        ->orWhereHas('customer', fn ($c) => $c->whereLiteralLike('name', $s)));
             }))
             ->when($from, fn ($q, $d) => $q->whereDate('credit_note_date', '>=', $d))
             ->when($to, fn ($q, $d) => $q->whereDate('credit_note_date', '<=', $d))

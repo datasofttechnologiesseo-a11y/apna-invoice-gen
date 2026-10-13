@@ -1,6 +1,8 @@
 @php
     $c = $invoice->company;
-    $cust = $invoice->customer;
+    // The customer as issued (snapshot), like the PDF: later edits to the
+    // customer must not rewrite an issued invoice.
+    $cust = $invoice->billedCustomer();
     $number = $invoice->invoice_number ?: ('#' . $invoice->id);
     $docTitle = $invoice->documentTitle();
     $symbol = ($invoice->currency ?: 'INR') === 'INR' ? '₹' : e($invoice->currency) . ' ';

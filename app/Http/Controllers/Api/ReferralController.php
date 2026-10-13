@@ -18,7 +18,7 @@ class ReferralController extends Controller
         $code = $user->ensureReferralCode();
 
         $referrals = $user->referralsMade()
-            ->with('referee:id,name,email,created_at')
+            ->with('referee:id,name,created_at')
             ->latest('signed_up_at')
             ->get();
 
@@ -44,7 +44,6 @@ class ReferralController extends Controller
             'stats' => $stats,
             'referrals' => $referrals->map(fn ($r) => [
                 'name' => $r->referee?->name,
-                'email' => $r->referee?->email,
                 'signed_up_at' => optional($r->signed_up_at)->toDateString(),
                 'reward_status' => $r->reward_status,
             ])->values(),

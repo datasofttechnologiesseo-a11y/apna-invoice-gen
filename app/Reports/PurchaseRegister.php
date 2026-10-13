@@ -39,8 +39,8 @@ class PurchaseRegister extends Report
         $query = $this->company->purchaseBills()
             ->with('vendor')
             ->when($s, fn ($q) => $q->where(function ($w) use ($s) {
-                $w->where('bill_number', 'like', "%{$s}%")
-                    ->orWhereHas('vendor', fn ($v) => $v->where('name', 'like', "%{$s}%"));
+                $w->whereLiteralLike('bill_number', $s)
+                    ->orWhereHas('vendor', fn ($v) => $v->whereLiteralLike('name', $s));
             }))
             ->when($status === 'unpaid', fn ($q) => $q->where('balance', '>', 0))
             ->when($status === 'paid', fn ($q) => $q->where('balance', '<=', 0))

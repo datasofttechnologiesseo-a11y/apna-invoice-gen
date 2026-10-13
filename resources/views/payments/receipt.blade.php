@@ -140,7 +140,9 @@
                 <td style="font-family: DejaVu Sans Mono, monospace; text-align: right;">&#8377; {{ inr($payment->amount) }}</td>
             </tr>
             <tr>
-                <th>Less: TDS @if ($payment->tds_section) under Section {{ $payment->tds_section }}@endif @if ($payment->tds_rate) ({{ rtrim(rtrim(inr($payment->tds_rate), '0'), '.') }}%)@endif</th>
+                {{-- inr() already drops ".00"; trimming zeros again turned 10% into "1%".
+                     The stored section is an internal code (194J_prof); print the section. --}}
+                <th>Less: TDS @if ($payment->tds_section) under Section {{ preg_replace('/_.*$/', '', $payment->tds_section) }}@endif @if ($payment->tds_rate) ({{ inr($payment->tds_rate) }}%)@endif</th>
                 <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; color: #b45309;">- &#8377; {{ inr($payment->tds_amount) }}</td>
             </tr>
             <tr style="border-top: 1px solid #d97706;">

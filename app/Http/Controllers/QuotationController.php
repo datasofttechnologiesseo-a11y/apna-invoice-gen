@@ -48,9 +48,9 @@ class QuotationController extends Controller
                 return $q->where('status', $s);
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('quote_number', 'like', "%{$s}%")
-                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%")
-                        ->orWhere('gstin', 'like', '%' . strtoupper($s) . '%'));
+                $w->whereLiteralLike('quote_number', $s)
+                    ->orWhereHas('customer', fn ($c) => $c->whereLiteralLike('name', $s)
+                        ->orWhereLiteralLike('gstin', strtoupper($s)));
             }))
             ->orderByDesc('quote_date')
             ->orderByDesc('id')
@@ -317,6 +317,11 @@ class QuotationController extends Controller
         abort_unless($quotation->canBeConverted(), 422, 'This quotation is already converted or declined, so it cannot be converted.');
 
         $invoice = DB::transaction(function () use ($quotation) {
+            // A second tab or a double click sends "convert" again. Re-read the
+            // quotation under a lock and check again, or both requests pass the
+            // check above and the quotation becomes two invoices.
+            $locked = \App\Models\Quotation::whereKey($quotation->id)->lockForUpdate()->first();
+            abort_unless($locked && $locked->canBeConverted(), 422, 'This quotation has just been converted to an invoice.');
             // Taxes are recomputed at conversion, not copied: the quote may be
             // weeks old, and the customer's state - hence CGST/SGST vs IGST and
             // the place of supply - is read as it stands today, exactly as a

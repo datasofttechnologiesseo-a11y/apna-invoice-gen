@@ -46,6 +46,10 @@
                             <div>
                                 <div class="{{ $meta }}">Invoice date</div>
                                 <div class="text-gray-900">{{ $bill->bill_date->format('d M Y') }}</div>
+                                @if ($bill->booked_on)
+                                    {{-- Arrived after its month was locked: booked (and ITC claimed) later. --}}
+                                    <div class="text-xs text-gray-600 mt-0.5">Booked on {{ $bill->booked_on->format('d M Y') }} (its month was locked)</div>
+                                @endif
                             </div>
                             <div>
                                 <div class="{{ $meta }}">Due date</div>

@@ -42,7 +42,7 @@ class ProductList extends Report
 
         $query = $this->company->products()
             ->when($s, fn ($q) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%")->orWhere('hsn_sac', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)->orWhereLiteralLike('sku', $s)->orWhereLiteralLike('hsn_sac', $s);
             }))
             ->when($this->request->query('kind'), fn ($q, $k) => $q->where('kind', $k))
             ->when($status === 'active', fn ($q) => $q->where('is_active', true))

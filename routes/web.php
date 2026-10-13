@@ -145,7 +145,7 @@ Route::get('/robots.txt', function () {
 // used to fill the consent log. Anonymous choices stay in localStorage; this
 // endpoint is only useful once a user has an ID to attach the record to.
 Route::post('/cookie-consent', [CookieConsentController::class, 'store'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:10,1,web-cookie-consent')
     ->name('cookie-consent.store');
 
 // Public signed invoice link — recipient opens an HTML landing page (with a
@@ -153,18 +153,18 @@ Route::post('/cookie-consent', [CookieConsentController::class, 'store'])
 // middleware verifies the URL signature and expiry; `throttle` limits abuse if
 // a link gets shared in the wild. The PDF itself streams from the /pdf child.
 Route::get('i/{invoice}', [InvoiceShareController::class, 'publicView'])
-    ->middleware(['signed', 'throttle:30,1'])
+    ->middleware(['signed', 'throttle:30,1,web-i-invoice'])
     ->name('invoices.public');
 Route::get('i/{invoice}/pdf', [InvoiceShareController::class, 'publicPdf'])
-    ->middleware(['signed', 'throttle:30,1'])
+    ->middleware(['signed', 'throttle:30,1,web-i-invoice-pdf'])
     ->name('invoices.public.pdf');
 
 // Public signed quotation link — same threat model as the invoice version.
 Route::get('q/{quotation}', [QuotationShareController::class, 'publicView'])
-    ->middleware(['signed', 'throttle:30,1'])
+    ->middleware(['signed', 'throttle:30,1,web-q-quotation'])
     ->name('quotations.public');
 Route::get('q/{quotation}/pdf', [QuotationShareController::class, 'publicPdf'])
-    ->middleware(['signed', 'throttle:30,1'])
+    ->middleware(['signed', 'throttle:30,1,web-q-quotation-pdf'])
     ->name('quotations.public.pdf');
 
 // Public blog — drives SEO traffic. Open to everyone, no auth.
@@ -176,7 +176,7 @@ Route::get('/blog/feed.xml', [BlogController::class, 'feed'])->name('blog.feed')
 
 Route::get('/blog/{slug}', [BlogController::class, 'show'])
     ->where('slug', '[a-z0-9-]+')
-    ->middleware('throttle:60,1')
+    ->middleware('throttle:60,1,web-blog-slug')
     ->name('blog.show');
 
 Route::prefix('/')->name('pages.')->group(function () {
@@ -207,7 +207,7 @@ Route::prefix('/')->name('pages.')->group(function () {
     Route::view('/partners', 'pages.partners')->name('partners');
     Route::view('/contact', 'pages.contact')->name('contact');
     Route::post('/contact', [ContactController::class, 'send'])
-        ->middleware('throttle:5,10')
+        ->middleware('throttle:5,10,web-contact')
         ->name('contact.send');
     Route::view('/terms', 'pages.terms')->name('terms');
     Route::view('/privacy', 'pages.privacy')->name('privacy');
@@ -227,7 +227,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return response()->noContent();
     })->name('guide.complete');
-    Route::post('/team', [\App\Http\Controllers\TeamController::class, 'invite'])->middleware('throttle:20,1')->name('team.invite');
+    Route::post('/team', [\App\Http\Controllers\TeamController::class, 'invite'])->middleware('throttle:20,1,web-team')->name('team.invite');
     Route::patch('/team/{member}', [\App\Http\Controllers\TeamController::class, 'update'])->name('team.update');
     Route::delete('/team/{member}', [\App\Http\Controllers\TeamController::class, 'destroy'])->name('team.destroy');
     Route::post('/team/join/{token}', [\App\Http\Controllers\TeamController::class, 'accept'])->name('team.accept');
@@ -257,17 +257,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/review-invite/given', [\App\Http\Controllers\ReviewInviteController::class, 'given'])
         ->name('review-invite.given');
     Route::post('/notifications/seen', [NotificationController::class, 'seen'])
-        ->middleware('throttle:30,1')
+        ->middleware('throttle:30,1,web-notifications-seen')
         ->name('notifications.seen');
 
     // Backups (download + email + toggle). Building a backup ZIP is expensive
     // and sending email is rate-limited by every provider, so we cap both.
     Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
     Route::get('/backup/download', [BackupController::class, 'download'])
-        ->middleware('throttle:6,1')
+        ->middleware('throttle:6,1,web-backup-download')
         ->name('backup.download');
     Route::post('/backup/email', [BackupController::class, 'emailNow'])
-        ->middleware('throttle:3,1')
+        ->middleware('throttle:3,1,web-backup-email')
         ->name('backup.email');
     Route::post('/backup/toggle', [BackupController::class, 'toggle'])->name('backup.toggle');
 
@@ -331,14 +331,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Share + cancel. Outbound email endpoints are rate-limited to stop a
     // compromised account from blasting customers / burning SES quota.
     Route::post('invoices/{invoice}/share/email', [InvoiceShareController::class, 'email'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:10,1,web-invoices-invoice-share-email')
         ->name('invoices.share.email');
     Route::get('invoices/{invoice}/share/link', [InvoiceShareController::class, 'publicLink'])->name('invoices.share.link');
     Route::post('invoices/{invoice}/cancel', [InvoiceShareController::class, 'cancel'])->name('invoices.cancel');
 
     // Payment reminders — hard cap to prevent spam against a single customer.
     Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:5,1,web-invoices-invoice-remind')
         ->name('invoices.remind');
 
     // Quotations (Proforma) — pre-sale price proposals. Entirely separate from
@@ -350,7 +350,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('quotations/{quotation}/decline', [QuotationController::class, 'decline'])->name('quotations.decline');
     Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convertToInvoice'])->name('quotations.convert');
     Route::post('quotations/{quotation}/share/email', [QuotationShareController::class, 'email'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:10,1,web-quotations-quotation-share-email')
         ->name('quotations.share.email');
     Route::get('quotations/{quotation}/share/link', [QuotationShareController::class, 'publicLink'])->name('quotations.share.link');
     Route::resource('quotations', QuotationController::class);
@@ -370,14 +370,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/finance/gstr1/export/xlsx', [FinanceController::class, 'gstr1Xlsx'])->name('finance.gstr1.export.xlsx');
     Route::get('/finance/gstr1/export/json', [FinanceController::class, 'gstr1Json'])->name('finance.gstr1.export.json');
     Route::get('/bank', [\App\Http\Controllers\BankReconciliationController::class, 'index'])->name('bank.index');
-    Route::post('/bank', [\App\Http\Controllers\BankReconciliationController::class, 'upload'])->middleware('throttle:20,1')->name('bank.upload');
+    Route::post('/bank', [\App\Http\Controllers\BankReconciliationController::class, 'upload'])->middleware('throttle:20,1,web-bank')->name('bank.upload');
     Route::post('/bank/auto-match', [\App\Http\Controllers\BankReconciliationController::class, 'autoMatch'])->name('bank.auto-match');
     Route::post('/bank/lines/{line}/match', [\App\Http\Controllers\BankReconciliationController::class, 'match'])->name('bank.lines.match');
     Route::post('/bank/lines/{line}/unmatch', [\App\Http\Controllers\BankReconciliationController::class, 'unmatch'])->name('bank.lines.unmatch');
     Route::post('/bank/lines/{line}/ignore', [\App\Http\Controllers\BankReconciliationController::class, 'ignore'])->name('bank.lines.ignore');
     Route::delete('/bank/statements/{statement}', [\App\Http\Controllers\BankReconciliationController::class, 'destroy'])->name('bank.statements.destroy');
     Route::get('/finance/gstr2b', [\App\Http\Controllers\Gstr2bController::class, 'show'])->name('finance.gstr2b');
-    Route::post('/finance/gstr2b', [\App\Http\Controllers\Gstr2bController::class, 'upload'])->middleware('throttle:20,1')->name('finance.gstr2b.upload');
+    Route::post('/finance/gstr2b', [\App\Http\Controllers\Gstr2bController::class, 'upload'])->middleware('throttle:20,1,web-finance-gstr2b')->name('finance.gstr2b.upload');
     Route::get('/finance/gstr2b/export', [\App\Http\Controllers\Gstr2bController::class, 'export'])->name('finance.gstr2b.export');
     Route::get('/finance/gstr3b', [FinanceController::class, 'gstr3b'])->name('finance.gstr3b');
     Route::get('/finance/gstr3b/export/pdf', [FinanceController::class, 'gstr3bPdf'])->name('finance.gstr3b.export.pdf');
@@ -396,7 +396,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/import/{type}', [\App\Http\Controllers\ImportController::class, 'show'])->name('imports.show');
     Route::get('/import/{type}/template', [\App\Http\Controllers\ImportController::class, 'template'])->name('imports.template');
     Route::post('/import/{type}/preview', [\App\Http\Controllers\ImportController::class, 'preview'])
-        ->middleware('throttle:20,1')->name('imports.preview');
+        ->middleware('throttle:20,1,web-import-type-preview')->name('imports.preview');
     Route::post('/import/{type}/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('imports.confirm');
 
     // Reports hub, the on-screen viewer, and every list's Excel / CSV / PDF /

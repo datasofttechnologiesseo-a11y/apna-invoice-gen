@@ -36,6 +36,9 @@ class Gstr2bReader
         };
     }
 
+    /** The most a 2B JSON may unpack to (40 MB). */
+    private const MAX_JSON_BYTES = 40 * 1024 * 1024;
+
     private function fromZip(string $path): array
     {
         $zip = new \ZipArchive();
@@ -46,6 +49,13 @@ class Gstr2bReader
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $name = (string) $zip->getNameIndex($i);
                 if (str_ends_with(strtolower($name), '.json')) {
+                    // Check the size it unpacks to before reading it: a small
+                    // zip can inflate to gigabytes and take the server down.
+                    // A real month's 2B is a few MB even for a large business.
+                    $size = (int) ($zip->statIndex($i)['size'] ?? 0);
+                    if ($size > self::MAX_JSON_BYTES) {
+                        throw new \InvalidArgumentException('That GSTR-2B file is far larger than a real return (' . round($size / 1048576) . ' MB unpacked). Download it from the portal again.');
+                    }
                     return $this->fromJson((string) $zip->getFromIndex($i));
                 }
             }

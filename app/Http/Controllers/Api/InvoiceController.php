@@ -45,8 +45,8 @@ class InvoiceController extends Controller
             ->when($request->search, function ($q, $s) {
                 $term = trim($s);
                 $q->where(function ($w) use ($term) {
-                    $w->where('invoice_number', 'like', "%{$term}%")
-                      ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$term}%"));
+                    $w->whereLiteralLike('invoice_number', $term)
+                      ->orWhereHas('customer', fn ($c) => $c->whereLiteralLike('name', $term));
                 });
             })
             ->orderByDesc('invoice_date')
@@ -73,6 +73,13 @@ class InvoiceController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
         $data = $this->validateInvoice($request, $company);
+        // Same as the website: a closed year takes no new documents.
+        if ($company->isBooksLockedOn($data['invoice_date'])) {
+            return response()->json([
+                'message' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the invoice after that.",
+                'errors' => ['invoice_date' => ['Inside the locked period.']],
+            ], 422);
+        }
         $data = $this->hydrateProductDescriptions($data, $company->id);
 
         $customer = $company->customers()->findOrFail($data['customer_id']);
@@ -142,11 +149,17 @@ class InvoiceController extends Controller
         if (! $invoice->isSoftEditable()) {
             return response()->json(['message' => 'This invoice cannot be edited.'], 422);
         }
+        if (! $invoice->isEditable() && $invoice->company->isBooksLockedOn($invoice->invoice_date)) {
+            return response()->json([
+                'message' => "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This invoice can no longer be changed.",
+            ], 422);
+        }
 
         // Finalized invoices: only soft fields may change.
         if (! $invoice->isEditable()) {
             $soft = $request->validate([
-                'due_date' => ['nullable', 'date'],
+                // An issued invoice's due date can move, but never before the invoice date.
+                'due_date' => ['nullable', 'date', 'after_or_equal:' . $invoice->invoice_date->toDateString()],
                 'notes' => ['nullable', 'string'],
                 'terms' => ['nullable', 'string'],
                 'transporter_name' => ['nullable', 'string', 'max:120'],
@@ -274,6 +287,11 @@ class InvoiceController extends Controller
             ], 422);
         }
 
+        // Same rule as the website: an invoice dated after today cannot be issued yet.
+        if ($invoice->invoice_date && $invoice->invoice_date->isAfter(now()->endOfDay())) {
+            return response()->json(['message' => 'This invoice is dated ' . $invoice->invoice_date->format('d M Y') . '. Issue it on that day, or change its date to today.'], 422);
+        }
+
         if ($invoice->taxBasisIsStale()) {
             return response()->json([
                 'message' => "The customer's state or your business state has changed since this draft was saved. Save the draft again to update the GST split, then issue it.",
@@ -392,7 +410,7 @@ class InvoiceController extends Controller
      * what the mobile "Download PDF" button fetches (the public share link is a
      * single recipient copy instead).
      */
-    public function pdf(Request $request, Invoice $invoice): Response
+    public function pdf(Request $request, Invoice $invoice): Response|JsonResponse
     {
         $this->authorizeInvoice($request, $invoice);
 
@@ -497,7 +515,8 @@ class InvoiceController extends Controller
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01', "max:{$remaining}"],
             'method' => ['required', 'string', 'in:' . implode(',', $methods)],
-            'received_at' => ['required', 'date', 'before_or_equal:today'],
+            // Money cannot be received for a bill before the bill exists.
+            'received_at' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:' . $invoice->invoice_date->toDateString()],
             'reference_number' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string', 'max:500'],
             'tds_amount' => ['nullable', 'numeric', 'min:0', 'lt:amount'],
@@ -522,6 +541,11 @@ class InvoiceController extends Controller
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'amount' => 'Only ₹' . inr(max(0, $owed)) . ' is still owed on this invoice.',
                 ]);
+            }
+            // An app retry of a part payment passes the amount check; its bank
+            // reference does not (same rule as the website).
+            if ($duplicate = $invoice->duplicatePaymentReference($data['reference_number'] ?? null)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['reference_number' => $duplicate]);
             }
 
             $company->increment('receipt_counter');
@@ -569,7 +593,7 @@ class InvoiceController extends Controller
         $invoice = $payment->invoice;
 
         $company = $invoice->company;
-        if ($company->isBooksLockedOn($payment->received_at) || $company->isBooksLockedOn($invoice->invoice_date)) {
+        if ($company->isBooksLockedOn($payment->received_at)) {
             return response()->json([
                 'message' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. This payment cannot be reversed.",
             ], 422);
@@ -677,9 +701,9 @@ class InvoiceController extends Controller
             ],
             'items.*.description' => ['nullable', 'string', 'max:150'],
             'items.*.hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
             'items.*.discount' => ['nullable', 'numeric', 'min:0'],
             'items.*.gst_rate' => ['required', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
         ]);

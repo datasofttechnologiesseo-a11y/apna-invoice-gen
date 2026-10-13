@@ -6,10 +6,14 @@
     // Compute everything from existing tables - no schema change, no
     // background workers. Caller is responsible for gating with @auth.
     $user = auth()->user();
+    // Only the business that is open: a team member invited to one of the
+    // owner's businesses must not see the other's customers here, and an
+    // owner with two businesses sees each one's alerts in its own place.
+    $bellCompanyId = $user->ensureCompany()->id;
 
     // 1. ACTION NEEDED - overdue, unpaid invoices.
     $overdue = Invoice::query()
-        ->where('user_id', $user->id)
+        ->where('user_id', $user->id)->where('company_id', $bellCompanyId)
         ->whereNotIn('status', ['cancelled', 'draft'])
         ->whereNotNull('due_date')
         ->whereDate('due_date', '<', now())
@@ -21,7 +25,7 @@
 
     // 2. RECENT - payments received in the last 7 days.
     $recentPayments = Payment::query()
-        ->where('user_id', $user->id)
+        ->where('user_id', $user->id)->where('company_id', $bellCompanyId)
         ->where('created_at', '>=', now()->subDays(7))
         ->with(['invoice:id,invoice_number'])
         ->latest('created_at')
@@ -31,7 +35,7 @@
     // 3. RECENT - invoices finalized in the last 24 h. Useful "what did I do
     // this morning" peek when a user opens the app on their phone.
     $recentFinalized = Invoice::query()
-        ->where('user_id', $user->id)
+        ->where('user_id', $user->id)->where('company_id', $bellCompanyId)
         ->where('finalized_at', '>=', now()->subDay())
         ->with('customer:id,name')
         ->latest('finalized_at')

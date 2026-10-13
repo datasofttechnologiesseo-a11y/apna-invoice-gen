@@ -29,8 +29,8 @@ class CashMemoController extends Controller
 
         $memos = $company->cashMemos()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('memo_number', 'like', "%{$s}%")
-                    ->orWhere('seller_name', 'like', "%{$s}%");
+                $w->whereLiteralLike('memo_number', $s)
+                    ->orWhereLiteralLike('seller_name', $s);
             }))
             ->when($request->from, fn ($q, $d) => $q->where('memo_date', '>=', $d))
             ->when($request->to, fn ($q, $d) => $q->where('memo_date', '<=', $d))
@@ -201,9 +201,9 @@ class CashMemoController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
         ]);
     }
 

@@ -27,7 +27,7 @@ class PurchaseBill extends Model
 
     protected $fillable = [
         'user_id', 'company_id', 'vendor_id',
-        'bill_number', 'bill_date', 'due_date',
+        'bill_number', 'bill_date', 'booked_on', 'due_date',
         'is_interstate', 'reverse_charge', 'itc_eligible',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
         'round_off', 'grand_total', 'paid_amount', 'balance', 'status',
@@ -36,6 +36,7 @@ class PurchaseBill extends Model
 
     protected $casts = [
         'bill_date' => 'date',
+        'booked_on' => 'date',
         'due_date' => 'date',
         'is_interstate' => 'boolean',
         'reverse_charge' => 'boolean',
@@ -127,5 +128,14 @@ class PurchaseBill extends Model
             self::STATUS_PARTIAL => 'Partly paid',
             default => $this->isOverdue() ? 'Overdue' : 'Unpaid',
         };
+    }
+
+    /**
+     * The date this bill counts in the books, GSTR-3B and the P&L: the day it
+     * was booked when its own date fell in a locked period, else its date.
+     */
+    public function bookedDate(): ?\Illuminate\Support\Carbon
+    {
+        return $this->booked_on ?? $this->bill_date;
     }
 }

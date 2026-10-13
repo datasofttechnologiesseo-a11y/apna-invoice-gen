@@ -45,9 +45,9 @@ class ProductController extends Controller
                     : $q->whereNotNull('low_stock_level')->whereRaw("{$onHand} > 0")->whereRaw("{$onHand} <= products.low_stock_level");
             })
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")
-                  ->orWhere('sku', 'like', "%{$s}%")
-                  ->orWhere('hsn_sac', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)
+                  ->orWhereLiteralLike('sku', $s)
+                  ->orWhereLiteralLike('hsn_sac', $s);
             }))
             ->when($request->kind, fn ($q, $k) => $q->where('kind', $k))
             ->when($status === 'active', fn ($q) => $q->where('is_active', true))
@@ -225,9 +225,9 @@ class ProductController extends Controller
         $products = $company->products()
             ->where('is_active', true)
             ->when($q !== '', fn ($qb) => $qb->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('sku', 'like', "%{$q}%")
-                  ->orWhere('hsn_sac', 'like', "%{$q}%");
+                $w->whereLiteralLike('name', $q)
+                  ->orWhereLiteralLike('sku', $q)
+                  ->orWhereLiteralLike('hsn_sac', $q);
             }))
             ->orderBy('name')
             ->limit(50)

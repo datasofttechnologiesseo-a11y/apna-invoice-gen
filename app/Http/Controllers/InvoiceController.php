@@ -254,6 +254,11 @@ class InvoiceController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
         $data = $this->validateInvoice($request, $company);
+        // A closed year takes no new documents, drafts included: a draft dated
+        // there could never be issued.
+        if ($company->isBooksLockedOn($data['invoice_date'])) {
+            return back()->withInput()->withErrors(['invoice_date' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the invoice after that."]);
+        }
         // Safety net: backfill blank/"0" descriptions from the product name.
         $data = $this->hydrateProductDescriptions($data, $company->id);
 
@@ -434,11 +439,17 @@ class InvoiceController extends Controller
         $this->authorizeInvoice($request, $invoice);
         abort_unless($invoice->isSoftEditable(), 403, 'This invoice cannot be edited.');
 
+        // An issued invoice in a closed year is final, notes and due date included.
+        if (! $invoice->isEditable() && $invoice->company->isBooksLockedOn($invoice->invoice_date)) {
+            return back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. This invoice can no longer be changed.");
+        }
+
         // Finalized invoices: only notes, terms, due_date, and transporter fields
         // may change. Amounts, items, customer, and invoice number are immutable.
         if (! $invoice->isEditable()) {
             $soft = $request->validate([
-                'due_date' => ['nullable', 'date'],
+                // An issued invoice's due date can move, but never before the invoice date.
+                'due_date' => ['nullable', 'date', 'after_or_equal:' . $invoice->invoice_date->toDateString()],
                 'notes' => ['nullable', 'string'],
                 'terms' => ['nullable', 'string'],
                 'transporter_name' => ['nullable', 'string', 'max:120'],
@@ -597,6 +608,12 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', "Books are locked up to {$invoice->company->books_locked_until->format('d M Y')}. Cannot issue an invoice dated on or before that.");
         }
 
+        // A tax invoice is issued on its date (s.31): one dated after today
+        // cannot be issued yet, and the e-invoice portal refuses future dates.
+        if ($invoice->invoice_date && $invoice->invoice_date->isAfter(now()->endOfDay())) {
+            return back()->withErrors(['finalize' => 'This invoice is dated ' . $invoice->invoice_date->format('d M Y') . '. Issue it on that day, or change its date to today.']);
+        }
+
         // The tax split was worked out when the draft was saved. If the
         // customer's state (or yours) has changed since, issuing now would print
         // CGST+SGST on what is now an inter-state sale, or the other way round.
@@ -708,7 +725,8 @@ class InvoiceController extends Controller
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01', "max:{$remaining}"],
             'method' => ['required', 'string', 'in:' . implode(',', $methods)],
-            'received_at' => ['required', 'date', 'before_or_equal:today'],
+            // Money cannot be received for a bill before the bill exists.
+            'received_at' => ['required', 'date', 'before_or_equal:today', 'after_or_equal:' . $invoice->invoice_date->toDateString()],
             'reference_number' => ['nullable', 'string', 'max:80'],
             'notes' => ['nullable', 'string', 'max:500'],
             // Section 51 / 194-x of Income Tax Act: TDS deducted at source by the
@@ -742,6 +760,11 @@ class InvoiceController extends Controller
                         ? 'A payment was just recorded. Only ₹' . inr(max(0, $owed)) . ' is still owed on this invoice.'
                         : 'A payment was just recorded. Nothing more is owed on this invoice.',
                 ]);
+            }
+            // A part payment passes the amount check twice; its bank reference
+            // does not. Checked under the lock so two tabs cannot both pass.
+            if ($duplicate = $invoice->duplicatePaymentReference($data['reference_number'] ?? null)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['reference_number' => $duplicate]);
             }
 
             $company->increment('receipt_counter');
@@ -812,7 +835,7 @@ class InvoiceController extends Controller
         // Books-lock: cannot reverse a payment whose date or whose underlying
         // invoice is in a closed FY — would silently re-open a settled balance.
         $company = $invoice->company;
-        if ($company->isBooksLockedOn($payment->received_at) || $company->isBooksLockedOn($invoice->invoice_date)) {
+        if ($company->isBooksLockedOn($payment->received_at)) {
             return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This payment cannot be reversed.");
         }
 

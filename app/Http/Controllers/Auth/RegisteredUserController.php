@@ -78,13 +78,13 @@ class RegisteredUserController extends Controller
         // team to reach out. When an SMS gateway is wired up, pass $phone here.
         $result = $otp->send(null, $code, $request->email);
 
-        // Stash the pending registration. Password is kept only for the life of
-        // this server-side session and is hashed the moment the account is made.
+        // Stash the pending registration. The password is hashed before it goes
+        // into the session, so a session store never holds it in plain text.
         $request->session()->put(self::SESSION_KEY, [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $phone,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
             'marketing_opt_in' => $request->boolean('marketing_opt_in'),
             'referral_code' => $referralCode,
             'otp_hash' => Hash::make($code),

@@ -50,10 +50,10 @@ class Customer extends Model
         $digits = preg_replace('/\D/', '', $term);
 
         return $query->where(function (Builder $w) use ($term, $digits) {
-            $w->where('name', 'like', "%{$term}%")
-              ->orWhere('email', 'like', "%{$term}%")
-              ->orWhere('gstin', 'like', '%' . strtoupper($term) . '%')
-              ->orWhere('phone', 'like', "%{$term}%");
+            $w->whereLiteralLike('name', $term)
+              ->orWhereLiteralLike('email', $term)
+              ->orWhereLiteralLike('gstin', strtoupper($term))
+              ->orWhereLiteralLike('phone', $term);
 
             // Four digits is the shortest fragment worth matching; below that
             // every customer with a phone number comes back.
@@ -84,5 +84,19 @@ class Customer extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Why this customer cannot be deleted, or null if it can. Invoices and
+     * quotations keep the customer they were made for; deleting one with a
+     * quotation hit the database's foreign key and showed a server error.
+     */
+    public function deletionBlocker(): ?string
+    {
+        return match (true) {
+            $this->invoices()->exists() => 'This customer has invoices and cannot be deleted.',
+            \App\Models\Quotation::where('customer_id', $this->id)->exists() => 'This customer has quotations and cannot be deleted. Delete the quotations first.',
+            default => null,
+        };
     }
 }

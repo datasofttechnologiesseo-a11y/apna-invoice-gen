@@ -80,7 +80,9 @@ class TeamJourneyTest extends TestCase
         ]);
         $member->forceFill(['active_company_id' => $own->id])->save();
 
-        $this->actingAs($member)->post(route('team.accept', $invite->token))->assertRedirect(route('dashboard'));
+        // Each role lands on a page it can open: billing staff have no dashboard.
+        $this->actingAs($member)->post(route('team.accept', $invite->token))
+            ->assertRedirect(route(CompanyMember::allows($role, 'dashboard') ? 'dashboard' : 'invoices.index'));
 
         return $member->fresh();
     }
@@ -174,7 +176,7 @@ class TeamJourneyTest extends TestCase
             ->assertSee('You are invited as <strong>Billing staff</strong>', false)
             ->assertSee('Accept and open Sharma Traders');
         $this->actingAs($ravi)->post(route('team.accept', $invite->token))
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect(route('invoices.index')) // billing staff have no dashboard
             ->assertSessionHas('status', 'Invitation accepted. You now have access to Sharma Traders as Billing staff.');
 
         $invite->refresh();

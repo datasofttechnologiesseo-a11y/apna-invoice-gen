@@ -603,9 +603,9 @@ class FinanceController extends Controller
             ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->when($request->category, fn ($q, $c) => $q->where('category', $c))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('description', 'like', "%{$s}%")
-                    ->orWhere('vendor_name', 'like', "%{$s}%")
-                    ->orWhere('reference_number', 'like', "%{$s}%");
+                $w->whereLiteralLike('description', $s)
+                    ->orWhereLiteralLike('vendor_name', $s)
+                    ->orWhereLiteralLike('reference_number', $s);
             }));
     }
 

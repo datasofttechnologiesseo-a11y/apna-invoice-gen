@@ -123,6 +123,8 @@ class InvoiceShareController extends Controller
         // otherwise a customer could still open an old WhatsApp link and treat
         // the cancelled bill as payable.
         abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
+        // A draft is not a bill yet: its number, amounts and customer can still change.
+        abort_if($invoice->isDraft(), 404);
 
         $invoice->load(['customer:id,name', 'company:id,name,upi_id']);
 
@@ -146,6 +148,8 @@ class InvoiceShareController extends Controller
     public function publicPdf(Request $request, Invoice $invoice): Response
     {
         abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
+        // A draft is not a bill yet: its number, amounts and customer can still change.
+        abort_if($invoice->isDraft(), 404);
 
         $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
@@ -171,6 +175,10 @@ class InvoiceShareController extends Controller
     public function publicLink(Request $request, Invoice $invoice): \Illuminate\Http\JsonResponse
     {
         $this->authorizeOwner($request, $invoice);
+        // Same rule as email and the app: issue the invoice before sharing it.
+        if ($invoice->isDraft()) {
+            return response()->json(['message' => 'Issue the invoice before sharing it.'], 422);
+        }
 
         return response()->json([
             'url' => $this->publicUrl($invoice),

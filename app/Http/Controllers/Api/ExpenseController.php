@@ -25,8 +25,8 @@ class ExpenseController extends Controller
             ->when($request->from, fn ($q, $d) => $q->where('entry_date', '>=', $d))
             ->when($request->to, fn ($q, $d) => $q->where('entry_date', '<=', $d))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('vendor_name', 'like', "%{$s}%")
-                    ->orWhere('description', 'like', "%{$s}%");
+                $w->whereLiteralLike('vendor_name', $s)
+                    ->orWhereLiteralLike('description', $s);
             }));
 
         // Totals over the full filtered set (not just the current page).
