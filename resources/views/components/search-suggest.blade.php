@@ -59,8 +59,8 @@
 
         <template x-if="!loading && items.length === 0 && q.trim() !== ''">
             <div class="px-3 py-3 text-sm text-gray-500">
-                Nothing matches "<span class="font-medium text-gray-700" x-text="q.trim()"></span>".
-                <span class="block text-xs mt-0.5">Try part of a customer name, a mobile number, a GSTIN or an amount.</span>
+                No matches for "<span class="font-medium text-gray-700" x-text="q.trim()"></span>".
+                <span class="block text-xs mt-0.5">Search by customer name, mobile number, GSTIN or amount.</span>
             </div>
         </template>
 
@@ -68,7 +68,7 @@
             <div>
                 {{-- Group heading, printed once when the group changes. --}}
                 <template x-if="isGroupStart(i)">
-                    <div class="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider font-bold text-gray-400 bg-gray-50 border-y border-gray-100"
+                    <div class="px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 bg-gray-50 border-y border-gray-100"
                          x-text="item._group"></div>
                 </template>
 
@@ -83,7 +83,7 @@
                         <span class="text-xs text-gray-500 truncate block" x-text="item.subtitle"></span>
                     </span>
                     <template x-if="item.badge">
-                        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0"
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
                               :class="toneClass(item.tone)" x-text="item.badge"></span>
                     </template>
                     <span class="text-xs font-semibold text-gray-700 tabular-nums whitespace-nowrap shrink-0" x-text="item.meta"></span>

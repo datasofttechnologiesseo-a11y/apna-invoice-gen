@@ -7,8 +7,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow">
-    <title>GST Calculator - Apna Invoice</title>
+    {{-- noindex keeps the widget out of results; follow lets crawlers pass
+         through its "Powered by" link to the full /gst-calculator page, which
+         is the point of handing the embed out. --}}
+    <meta name="robots" content="noindex, follow">
+    <title>GST Calculator · Apna Invoice</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>body { background: transparent; }</style>
 </head>
@@ -21,47 +24,56 @@
     <div class="rounded-xl ring-1 ring-gray-200 bg-white shadow-sm overflow-hidden">
         <div class="p-4 space-y-3">
             <div>
-                <label class="block text-xs font-semibold text-gray-500 mb-1">Amount (₹)</label>
-                <input type="number" min="0" x-model="amount" @input="recompute()" aria-label="Amount in rupees" inputmode="decimal"
-                       class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600 text-lg font-semibold">
+                <label for="embed-amount" class="block text-xs font-semibold text-gray-600 mb-1">Amount (₹)</label>
+                <input id="embed-amount" type="number" min="0" x-model="amount" @input="recompute()" inputmode="decimal"
+                       class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600 text-lg font-semibold tabular-nums">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">GST rate</label>
-                    <select x-model="rate" @change="recompute()" aria-label="GST rate" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
-                        @foreach ([0, 5, 12, 18, 28] as $r)
-                            <option value="{{ $r }}">{{ $r }}%</option>
-                        @endforeach
+                    <label for="embed-rate" class="block text-xs font-semibold text-gray-600 mb-1">GST rate</label>
+                    {{-- GST 2.0 slabs first; 12% and 28% stay for supplies made
+                         before 22 September 2025 and for tobacco. --}}
+                    <select id="embed-rate" x-model="rate" @change="recompute()" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
+                        <optgroup label="Current slabs">
+                            @foreach ([0, 5, 18, 40] as $r)
+                                <option value="{{ $r }}">{{ $r }}%</option>
+                            @endforeach
+                        </optgroup>
+                        <optgroup label="Earlier slabs">
+                            @foreach ([12, 28] as $r)
+                                <option value="{{ $r }}">{{ $r }}%</option>
+                            @endforeach
+                        </optgroup>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Supply</label>
-                    <select x-model="supply" @change="recompute()" aria-label="Supply type, within state or between states" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
+                    <label for="embed-supply" class="block text-xs font-semibold text-gray-600 mb-1">Supply</label>
+                    <select id="embed-supply" x-model="supply" @change="recompute()" aria-label="Supply type, within state or between states" class="w-full rounded-lg border-gray-300 focus:border-brand-600 focus:ring-brand-600">
                         <option value="intra">Intra-state</option>
                         <option value="inter">Inter-state</option>
                     </select>
                 </div>
             </div>
-            <div class="flex rounded-lg ring-1 ring-gray-200 p-0.5 text-sm font-semibold">
+            <div class="flex rounded-lg ring-1 ring-[#878fa0] p-0.5 text-sm font-semibold">
                 <button type="button" @click="mode='exclusive'; recompute()"
                         :class="mode==='exclusive' ? 'bg-brand-700 text-white' : 'text-gray-600'"
-                        class="flex-1 py-1.5 rounded-md transition">Add GST</button>
+                        class="flex-1 py-2 rounded-md transition">Add GST</button>
                 <button type="button" @click="mode='inclusive'; recompute()"
                         :class="mode==='inclusive' ? 'bg-brand-700 text-white' : 'text-gray-600'"
-                        class="flex-1 py-1.5 rounded-md transition">Remove GST</button>
+                        class="flex-1 py-2 rounded-md transition">Remove GST</button>
             </div>
         </div>
 
-        <div class="bg-gray-50 border-t border-gray-100 p-4 space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-gray-500">Base amount</span><span class="font-semibold">₹<span x-text="fmt(out.base)"></span></span></div>
+        <div class="bg-gray-50 border-t border-gray-200 p-4 space-y-2 text-sm tabular-nums">
+            <div class="flex justify-between"><span class="text-gray-600">Base amount</span><span class="font-semibold">₹<span x-text="fmt(out.base)"></span></span></div>
             <template x-if="supply==='intra'">
                 <div class="space-y-2">
-                    <div class="flex justify-between"><span class="text-gray-500">CGST</span><span class="font-semibold">₹<span x-text="fmt(out.cgst)"></span></span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">SGST</span><span class="font-semibold">₹<span x-text="fmt(out.sgst)"></span></span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">CGST</span><span class="font-semibold">₹<span x-text="fmt(out.cgst)"></span></span></div>
+                    <div class="flex justify-between"><span class="text-gray-600">SGST</span><span class="font-semibold">₹<span x-text="fmt(out.sgst)"></span></span></div>
                 </div>
             </template>
             <template x-if="supply==='inter'">
-                <div class="flex justify-between"><span class="text-gray-500">IGST</span><span class="font-semibold">₹<span x-text="fmt(out.igst)"></span></span></div>
+                <div class="flex justify-between"><span class="text-gray-600">IGST</span><span class="font-semibold">₹<span x-text="fmt(out.igst)"></span></span></div>
             </template>
             <div class="flex justify-between pt-2 border-t border-gray-200 text-base"><span class="font-semibold text-gray-700">Total</span><span class="font-extrabold text-gray-900">₹<span x-text="fmt(out.total)"></span></span></div>
         </div>
@@ -70,7 +82,7 @@
     <div class="mt-2 text-center">
         <a href="{{ url('/gst-calculator') }}?utm_source=embed&utm_medium=widget&utm_campaign=powered_by"
            target="_blank" rel="noopener"
-           class="text-xs text-gray-500 hover:text-brand-700">Powered by <strong>Apna Invoice</strong> - free GST calculator &amp; invoicing</a>
+           class="text-xs text-gray-500 hover:text-brand-700">Powered by <strong>Apna Invoice</strong> · free GST calculator &amp; invoicing</a>
     </div>
 </div>
 
@@ -79,7 +91,7 @@
         return {
             amount: 1000, rate: 18, mode: 'exclusive', supply: 'intra',
             out: { base: 0, gst: 0, cgst: 0, sgst: 0, igst: 0, total: 0 },
-            fmt(n) { return (parseFloat(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+            fmt(n) { const v = Math.round((parseFloat(n) || 0) * 100) / 100; return v.toLocaleString('en-IN', Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
             recompute() {
                 const amt = parseFloat(this.amount) || 0;
                 const rate = parseFloat(this.rate) || 0;

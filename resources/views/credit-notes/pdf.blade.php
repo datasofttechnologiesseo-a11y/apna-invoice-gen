@@ -1,8 +1,17 @@
 @php
     $invoice = $creditNote->invoice;
     $c = $invoice->company;
-    $cust = $invoice->customer;
+    // The recipient as printed on the invoice (snapshot), not as edited since.
+    $cust = $invoice->billedCustomer() ?? $invoice->customer;
     $print = $print ?? true;
+    $lines = $creditNote->lines();
+    // Rule 53(1A): the rate of tax on what is credited. A note without lines
+    // is spread over the invoice pro rata (as GSTR-1 reports it), so its
+    // rates are the invoice's own, in proportion.
+    $fraction = (float) $invoice->subtotal > 0 ? min(1.0, (float) $creditNote->taxable_value / (float) $invoice->subtotal) : 0.0;
+    $rateRows = $lines->isNotEmpty()
+        ? $lines->groupBy(fn ($l) => (string) (0 + (float) $l->gst_rate))->map(fn ($g) => round($g->sum(fn ($l) => (float) $l->taxable_value), 2))
+        : collect($invoice->items ?? [])->groupBy(fn ($i) => (string) (0 + (float) $i->gst_rate))->map(fn ($g) => round($g->sum(fn ($i) => (float) $i->amount) * $fraction, 2));
     // Palette - black/white for print-friendly PDF.
     $accent = $print ? '#111111' : '#78350f';
     $divider = $print ? '#cccccc' : '#e5e7eb';
@@ -53,6 +62,10 @@
         .section { margin-top: 12px; padding-top: 8px; border-top: 1px solid {{ $divider }}; }
         table.kv { width: 100%; border-collapse: collapse; }
         table.kv td { padding: 3px 6px; font-size: 10px; vertical-align: top; }
+        table.lines { width: 100%; border-collapse: collapse; margin-top: 2px; }
+        table.lines th { padding: 5px; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; border-top: 1px solid {{ $divider }}; border-bottom: 1px solid {{ $divider }}; }
+        table.lines th.tr { text-align: right; }
+        table.lines td { padding: 5px; font-size: 9.5px; border-bottom: 1px solid {{ $divider }}; vertical-align: top; }
         .totals-box { padding: 10px 12px; border: 1px solid {{ $accent }}; border-radius: 3px; margin-top: 10px; }
         table.totals { width: 100%; border-collapse: collapse; }
         table.totals td { padding: 3px 0; font-size: 10px; }
@@ -100,9 +113,7 @@
     <table class="hero" style="width:100%;">
         <tr>
             <td style="vertical-align: top; width: 58%;">
-                @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
-                @endif
+                @include('partials.pdf-logo', ['c' => $c])
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted" style="margin-top: 3px; line-height: 1.45;">
                     {!! nl2br(e(trim($c->address_line1 . ($c->address_line2 ? ', ' . $c->address_line2 : '') . "\n" . trim(($c->city ?? '') . ($c->city && $c->state?->name ? ', ' : '') . ($c->state?->name ?? '') . ($c->state?->gst_code ? ' · State ' . $c->state->gst_code : '') . ' ' . ($c->postal_code ?? '')) . "\n" . $c->country))) !!}
@@ -141,6 +152,41 @@
         @endif
     </div>
 
+    @if ($lines->isNotEmpty())
+        {{-- GOODS / SERVICES CREDITED (Rule 53(1A): description, HSN, taxable value, rate and tax) --}}
+        <div class="section">
+            <div class="label">Goods or services credited</div>
+            <table class="lines">
+                <thead>
+                    <tr>
+                        <th style="width: 18px;">#</th>
+                        <th>Description</th>
+                        <th style="width: 56px;">HSN/SAC</th>
+                        <th class="tr" style="width: 52px;">Qty</th>
+                        <th class="tr" style="width: 70px;">Taxable ₹</th>
+                        <th class="tr" style="width: 40px;">GST %</th>
+                        <th class="tr" style="width: 62px;">Tax ₹</th>
+                        <th class="tr" style="width: 70px;">Amount ₹</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($lines as $n => $line)
+                        <tr>
+                            <td class="muted">{{ $n + 1 }}</td>
+                            <td>{{ $line->description }}</td>
+                            <td class="mono">{{ $line->hsn_sac }}</td>
+                            <td class="tr mono">{{ rtrim(rtrim(number_format((float) $line->quantity, 3), '0'), '.') }} {{ $line->unit }}</td>
+                            <td class="tr mono">{{ inr($line->taxable_value) }}</td>
+                            <td class="tr">{{ 0 + (float) $line->gst_rate }}%</td>
+                            <td class="tr mono">{{ inr($line->tax()) }}</td>
+                            <td class="tr mono bold">{{ inr($line->total()) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     {{-- BREAKDOWN --}}
     <div class="section">
         <div class="label">Credit details</div>
@@ -150,8 +196,20 @@
                 <td class="bold">{{ $creditNote->reasonLabel() }}</td>
             </tr>
             <tr>
-                <td class="x-small muted">Taxable value (pro-rated)</td>
+                <td class="x-small muted">{{ $lines->isNotEmpty() ? 'Taxable value' : 'Taxable value (pro-rated)' }}</td>
                 <td class="mono">₹ {{ inr($creditNote->taxable_value) }}</td>
+            </tr>
+            <tr>
+                <td class="x-small muted">Rate of tax</td>
+                <td>
+                    @if ($rateRows->count() <= 1)
+                        {{ $rateRows->keys()->first() ?? '0' }}%
+                    @else
+                        @foreach ($rateRows as $rate => $taxable)
+                            {{ $rate }}% on ₹ {{ inr($taxable) }}@if (! $loop->last)<br>@endif
+                        @endforeach
+                    @endif
+                </td>
             </tr>
             @if ($invoice->is_interstate)
                 <tr>
@@ -164,7 +222,7 @@
                     <td class="mono">₹ {{ inr($creditNote->total_cgst) }}</td>
                 </tr>
                 <tr>
-                    <td class="x-small muted">SGST reduced</td>
+                    <td class="x-small muted">{{ $invoice->stateTaxLabel() }} reduced</td>
                     <td class="mono">₹ {{ inr($creditNote->total_sgst) }}</td>
                 </tr>
             @endif
@@ -190,11 +248,8 @@
     @endif
 
     {{-- SIGNATORY --}}
-    <div class="section" style="text-align: right;">
-        @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-            <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="signature" style="max-height: 45px; max-width: 150px;"><br>
-        @endif
-        <div class="sig-box">for {{ $c->name }}<br><span class="muted">Authorised signatory</span></div>
+    <div class="section">
+        @include('partials.pdf-signatory', ['c' => $c])
     </div>
 
     <div class="foot">

@@ -49,7 +49,7 @@ class InvoiceShareController extends Controller
             // Log the real exception (with stack) for debugging, but surface a
             // generic message — detailed SMTP/provider errors leak infra hints.
             Log::error('Invoice email failed', ['invoice_id' => $invoice->id, 'exception' => $e]);
-            return back()->withErrors(['email' => "We couldn't send the email right now. Please try again in a moment or contact support if the problem persists."]);
+            return back()->withErrors(['email' => "The email could not be sent. Try again in a few minutes, or contact support if it keeps failing."]);
         }
 
         return back()->with('status', "Invoice emailed to {$data['to']}.");
@@ -74,22 +74,37 @@ class InvoiceShareController extends Controller
             'cancellation_reason' => ['required', 'string', 'min:5', 'max:500'],
         ]);
 
-        DB::transaction(function () use ($invoice, $data) {
+        $cancelled = DB::transaction(function () use ($invoice, $data) {
+            // Re-checked under the company lock that payments and credit notes
+            // also take: a payment landing at the same moment must not end up
+            // on a cancelled invoice.
+            $invoice->company()->lockForUpdate()->first();
+            $invoice->refresh();
+            if (! $invoice->canBeCancelled()) {
+                return false;
+            }
             $invoice->update([
                 'status' => 'cancelled',
                 'cancelled_at' => now(),
                 'cancellation_reason' => $data['cancellation_reason'],
             ]);
+            app(\App\Services\StockLedger::class)->reverseInvoice($invoice);
+
+            return true;
         });
+        if (! $cancelled) {
+            return redirect()->route('invoices.show', $invoice)
+                ->with('error', 'This invoice can no longer be cancelled. A payment or credit note was just recorded against it.');
+        }
 
         \App\Models\AuditLog::record('invoice.cancelled',
-            "Invoice {$invoice->invoice_number} cancelled · ₹" . number_format($invoice->grand_total, 2) . " · Reason: " . $data['cancellation_reason'],
+            "Invoice {$invoice->invoice_number} cancelled · ₹" . inr($invoice->grand_total) . " · Reason: " . $data['cancellation_reason'],
             $invoice,
             ['reason' => $data['cancellation_reason'], 'grand_total' => $invoice->grand_total]
         );
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('status', 'Invoice cancelled. A record is kept for GST audit.');
+            ->with('status', 'Invoice cancelled. The record is kept for GST audit.');
     }
 
     /**
@@ -108,6 +123,8 @@ class InvoiceShareController extends Controller
         // otherwise a customer could still open an old WhatsApp link and treat
         // the cancelled bill as payable.
         abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
+        // A draft is not a bill yet: its number, amounts and customer can still change.
+        abort_if($invoice->isDraft(), 404);
 
         $invoice->load(['customer:id,name', 'company:id,name,upi_id']);
 
@@ -131,6 +148,8 @@ class InvoiceShareController extends Controller
     public function publicPdf(Request $request, Invoice $invoice): Response
     {
         abort_if($invoice->isCancelled(), 410, 'This invoice has been cancelled and is no longer available.');
+        // A draft is not a bill yet: its number, amounts and customer can still change.
+        abort_if($invoice->isDraft(), 404);
 
         $invoice->load(['items.product:id,name', 'customer.state', 'company.state', 'placeOfSupply', 'shipToState']);
         $amountInWords = NumberToWords::indianRupees((float) $invoice->grand_total, $invoice->currency);
@@ -156,6 +175,10 @@ class InvoiceShareController extends Controller
     public function publicLink(Request $request, Invoice $invoice): \Illuminate\Http\JsonResponse
     {
         $this->authorizeOwner($request, $invoice);
+        // Same rule as email and the app: issue the invoice before sharing it.
+        if ($invoice->isDraft()) {
+            return response()->json(['message' => 'Issue the invoice before sharing it.'], 422);
+        }
 
         return response()->json([
             'url' => $this->publicUrl($invoice),

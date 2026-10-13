@@ -3,7 +3,7 @@
     $brand = '#167c88';
 @endphp
 <!DOCTYPE html>
-<html>
+<html lang="en-IN">
 <head><meta charset="utf-8"><title>{{ $heading }}</title></head>
 <body style="margin: 0; padding: 0; background: #f4f4f5; font-family: Helvetica, Arial, sans-serif; color: #111;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f4f5; padding: 24px 12px;">
@@ -28,7 +28,7 @@
                         </div>
 
                         <p style="margin-top: 28px; color: #6b7280; font-size: 13px;">
-                            Need help? Just reply to this email and we will get back to you.
+                            Need help? Reply to this email.
                         </p>
                     </td>
                 </tr>

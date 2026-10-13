@@ -128,34 +128,27 @@ class InvoiceCancellationTest extends TestCase
             ->assertSee('Audit trail preserved');
     }
 
-    public function test_cancelled_invoice_can_be_deleted_and_counter_is_not_recycled(): void
+    public function test_a_cancelled_invoice_keeps_its_row_and_number(): void
     {
+        // An issued number is part of the series in GSTR-1 Table 13. Deleting
+        // the cancelled row would leave a gap nobody can explain, so the row
+        // stays and the owner is told why.
         $user = User::factory()->create();
         $invoice = $this->finalizedInvoice($user);
-        $company = $invoice->company;
-
-        // Cancel first
         $invoice->fill(['status' => 'cancelled', 'cancelled_at' => now(), 'cancellation_reason' => 'Test'])->save();
 
-        // Snapshot the counter — we want to confirm deletion does NOT recycle the number.
-        $counterBefore = $company->invoice_counter;
-        $invoiceId = $invoice->id;
-        $invoiceNumber = $invoice->invoice_number;
-
         $this->actingAs($user)->delete(route('invoices.destroy', $invoice))
-            ->assertRedirect(route('invoices.index'));
+            ->assertRedirect(route('invoices.show', $invoice))
+            ->assertSessionHas('error', fn ($e) => str_contains($e, 'cannot be deleted'));
 
-        // Row gone
-        $this->assertNull(Invoice::find($invoiceId));
+        $this->assertNotNull(Invoice::find($invoice->id));
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'invoice.deleted']);
 
-        // Counter unchanged — the number is "consumed", deleting doesn't free it
-        $this->assertSame($counterBefore, $company->fresh()->invoice_counter);
-
-        // AuditLog entry recorded with the cancelled-invoice number
-        $this->assertDatabaseHas('audit_logs', [
-            'action' => 'invoice.deleted',
-            'summary' => "Cancelled invoice {$invoiceNumber} deleted (number stays consumed; counter not recycled)",
-        ]);
+        // And the page offers no delete button for it.
+        $this->actingAs($user)->get(route('invoices.show', $invoice))
+            ->assertOk()
+            ->assertDontSee('Delete invoice')
+            ->assertDontSee('name="_method" value="DELETE"', false);
     }
 
     public function test_cannot_delete_an_uncancelled_finalized_invoice(): void

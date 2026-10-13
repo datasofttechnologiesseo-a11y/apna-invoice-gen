@@ -13,9 +13,9 @@
       - Auto-print on load        → kirana workflow: button → printer → done
       - No coloured fills         → thermal printers are monochrome anyway
 
-    GST detail is COMPACT: subtotal + CGST+SGST (or IGST) + grand total only.
-    Full HSN/SAC/rate breakdown stays on the A4 PDF for the customer/accountant
-    record - the receipt is for "here, sir, your bill" delivery.
+    GST detail is COMPACT: each line carries its HSN/SAC (Rule 46 asks for it
+    on a tax invoice) and rate; totals show subtotal + CGST+SGST (or IGST) +
+    grand total. The full breakdown stays on the A4 PDF.
 --}}
 <!DOCTYPE html>
 <html>
@@ -146,7 +146,7 @@
 
 <div class="no-print">
     <div style="font-size:11px; color:#4b5563; margin-bottom:6px;">
-        Preview shown enlarged - prints at true 80&nbsp;mm width.
+        Preview is enlarged. It prints at 80&nbsp;mm width.
     </div>
     <button onclick="window.print()">Print receipt</button>
     <a href="{{ route('invoices.show', $invoice) }}">Back</a>
@@ -155,8 +155,10 @@
 
 @php
     $c = $invoice->company;
-    $cust = $invoice->customer;
+    $cust = $invoice->billedCustomer(); // as issued (snapshot), or live on a draft
     $reverseCharge = (bool) $invoice->reverse_charge;
+    // Signed money as people write it: -₹0.14, not ₹-0.14.
+    $signedInr = fn (float $v) => ($v < 0 ? '-' : '') . '₹' . inr(abs($v));
 @endphp
 
 <div class="receipt">
@@ -179,6 +181,11 @@
     <hr class="dash">
 
     <div class="center docnum">{{ strtoupper($invoice->documentTitle()) }}</div>
+    @if ($invoice->isCancelled())
+        {{-- A cancelled bill must never pass for a live one at the counter. --}}
+        <div class="center bold" style="margin:3px 0; border:2px solid #000; padding:2px; font-size:14px; letter-spacing:2px;">CANCELLED</div>
+        <div class="center xs">on {{ $invoice->cancelled_at?->format('d/m/Y') }}</div>
+    @endif
     <div class="row small">
         <span>No: <span class="bold">{{ $invoice->invoice_number ?: 'DRAFT #' . $invoice->id }}</span></span>
         <span>{{ $invoice->invoice_date?->format('d/m/Y') }}</span>
@@ -213,7 +220,7 @@
             $rate = (float) $item->rate;
             $disc = (float) ($item->discount ?? 0);
             $gst = (float) ($item->gst_rate ?? 0);
-            $amt = (float) $item->amount;
+            $amt = (float) $item->total; // what the line costs, GST included (equals taxable under RCM)
             $qtyStr = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.');
         @endphp
         @php
@@ -224,14 +231,17 @@
             $shown = $looksLikeJunk && $item->product?->name ? $item->product->name : $item->description;
         @endphp
         <div class="item-name">{{ $shown }}</div>
+        @if (filled($item->hsn_sac))
+            <div class="xs">{{ str_starts_with(trim((string) $item->hsn_sac), '99') ? 'SAC' : 'HSN' }} {{ $item->hsn_sac }}</div>
+        @endif
         <div class="row xs">
             <span>
                 {{ $qtyStr }}{{ $item->unit ? ' ' . $item->unit : '' }}
-                &times; ₹{{ number_format($rate, 2) }}
-                @if ($disc > 0) − ₹{{ number_format($disc, 2) }} @endif
+                &times; ₹{{ inr($rate) }}
+                @if ($disc > 0) − ₹{{ inr($disc) }} @endif
                 @if (! $reverseCharge && $gst > 0) @ {{ (float) $gst }}% GST @endif
             </span>
-            <span class="bold" style="color:#000; font-size:12px;">₹{{ number_format($amt, 2) }}</span>
+            <span class="bold" style="color:#000; font-size:12px;">₹{{ inr($amt) }}</span>
         </div>
     @endforeach
 
@@ -240,7 +250,7 @@
     {{-- TOTALS - order matters: subtotal → tax breakdown → grand total --}}
     <div class="row">
         <span>Subtotal</span>
-        <span>₹{{ number_format((float) $invoice->subtotal, 2) }}</span>
+        <span>₹{{ inr((float) $invoice->subtotal) }}</span>
     </div>
 
     @if ($reverseCharge)
@@ -249,16 +259,16 @@
         @if ($invoice->is_interstate)
             <div class="row small">
                 <span>IGST</span>
-                <span>₹{{ number_format((float) $invoice->total_igst, 2) }}</span>
+                <span>₹{{ inr((float) $invoice->total_igst) }}</span>
             </div>
         @else
             <div class="row small">
                 <span>CGST</span>
-                <span>₹{{ number_format((float) $invoice->total_cgst, 2) }}</span>
+                <span>₹{{ inr((float) $invoice->total_cgst) }}</span>
             </div>
             <div class="row small">
-                <span>SGST</span>
-                <span>₹{{ number_format((float) $invoice->total_sgst, 2) }}</span>
+                <span>{{ $invoice->stateTaxLabel() }}</span>
+                <span>₹{{ inr((float) $invoice->total_sgst) }}</span>
             </div>
         @endif
     @endif
@@ -266,7 +276,7 @@
     @if ((float) ($invoice->round_off ?? 0) !== 0.0)
         <div class="row small">
             <span>Round-off</span>
-            <span>₹{{ number_format((float) $invoice->round_off, 2) }}</span>
+            <span>{{ $signedInr((float) $invoice->round_off) }}</span>
         </div>
     @endif
 
@@ -274,18 +284,26 @@
 
     <div class="row total">
         <span>TOTAL</span>
-        <span>₹{{ number_format((float) $invoice->grand_total, 2) }}</span>
+        <span>₹{{ inr((float) $invoice->grand_total) }}</span>
     </div>
 
-    @if ((float) $invoice->paid_amount > 0)
-        <div class="row small">
-            <span>Paid</span>
-            <span>₹{{ number_format((float) $invoice->paid_amount, 2) }}</span>
-        </div>
+    @if ((float) $invoice->paid_amount > 0 || (float) $invoice->credited_amount > 0)
+        @if ((float) $invoice->credited_amount > 0)
+            <div class="row small">
+                <span>Less credit notes</span>
+                <span>₹{{ inr((float) $invoice->credited_amount) }}</span>
+            </div>
+        @endif
+        @if ((float) $invoice->paid_amount > 0)
+            <div class="row small">
+                <span>Paid</span>
+                <span>₹{{ inr((float) $invoice->paid_amount) }}</span>
+            </div>
+        @endif
         @if ((float) $invoice->balance > 0)
             <div class="row bold">
                 <span>Balance</span>
-                <span>₹{{ number_format((float) $invoice->balance, 2) }}</span>
+                <span>₹{{ inr((float) $invoice->balance) }}</span>
             </div>
         @endif
     @endif
@@ -294,15 +312,16 @@
 
     <div class="xs center">{{ $amountInWords }}</div>
 
-    {{-- UPI quick-pay hint - kirana receipts often show this. --}}
-    @if ($c->upi_id)
+    {{-- UPI quick-pay hint - kirana receipts often show this. Only while
+         something is owed: not on a paid or cancelled bill. --}}
+    @if ($c->upi_id && $invoice->isPayable())
         <hr class="dash">
         <div class="center small">Pay via UPI: <span class="bold">{{ $c->upi_id }}</span></div>
     @endif
 
     <hr class="dash">
 
-    <div class="center xs">Thank you for your business!</div>
+    <div class="center xs">Thank you for your business.</div>
     @if ($c->website)
         <div class="center xs">{{ $c->website }}</div>
     @endif

@@ -1,7 +1,7 @@
 <x-app-layout title="Edit post">
     <x-slot name="header">
         <x-breadcrumbs :items="[
-            ['label' => 'Blogs · Admin', 'href' => route('admin.blog.index')],
+            ['label' => 'Blog posts', 'href' => route('admin.blog.index')],
             ['label' => $post->exists ? $post->title : 'New post'],
         ]" />
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -9,7 +9,7 @@
                 {{ $post->exists ? 'Edit post' : 'New post' }}
             </h1>
             @if ($post->exists && $post->isPublished())
-                <a href="{{ route('blog.show', $post->slug) }}" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800">
+                <a href="{{ route('blog.show', $post->slug) }}" target="_blank" class="self-start sm:self-auto inline-flex items-center gap-1.5 min-h-[40px] text-sm font-semibold text-brand-700 hover:text-brand-800">
                     Preview live
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                 </a>
@@ -55,7 +55,7 @@
                 @csrf
                 @if ($post->exists) @method('PATCH') @endif
 
-                {{-- ─── MAIN COLUMN - title, slug, body ──────────────────── --}}
+                {{-- ─── Main column: title, slug, body ──────────────────── --}}
                 <div class="space-y-6">
 
                     {{-- Title + auto-slug --}}
@@ -67,18 +67,18 @@
                                    placeholder="e.g. How to file GSTR-1 from your invoices in 5 minutes"
                                    class="mt-1 block w-full text-2xl font-display font-bold border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600"
                                    value="{{ $titleVal }}">
-                            <div class="mt-1 text-[10px] text-gray-500 flex items-center justify-between">
-                                <span>The H1 on the article + the default <code>&lt;title&gt;</code> tag.</span>
+                            <div class="mt-1 text-[10px] text-gray-500 flex items-center justify-between gap-3">
+                                <span>The article's main heading and its default page title.</span>
                                 <span x-text="title.length + ' / 200'"></span>
                             </div>
                         </div>
 
                         <div>
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between gap-3">
                                 <x-input-label for="slug" value="Slug" />
-                                <label class="flex items-center gap-1.5 text-[11px] text-gray-500 cursor-pointer">
+                                <label class="flex items-center gap-1.5 min-h-[40px] sm:min-h-0 text-[11px] text-gray-500 cursor-pointer">
                                     <input type="checkbox" x-model="slugLocked" class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
-                                    Lock slug (manual)
+                                    Edit by hand
                                 </label>
                             </div>
                             <div class="mt-1 flex items-center gap-1 font-mono text-sm">
@@ -89,13 +89,13 @@
                                        class="flex-1 block w-full border-gray-300 rounded-r-md shadow-sm focus:border-brand-600 focus:ring-brand-600"
                                        value="{{ $slugVal }}">
                             </div>
-                            <p class="mt-1 text-[10px] text-gray-500">Auto-generated from the title. Tick "Lock slug" to override. Lowercase letters, digits, dashes only.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Made from the title. Tick "Edit by hand" to change it. Use lowercase letters, numbers and hyphens.</p>
                         </div>
 
                         <div>
-                            <x-input-label for="excerpt" value="Excerpt (shown on the blog index card)" />
+                            <x-input-label for="excerpt" value="Excerpt (shown on the blog list)" />
                             <textarea id="excerpt" name="excerpt" rows="2" maxlength="500"
-                                      placeholder="One-two sentences summarising the post. Leave blank to auto-generate from the body."
+                                      placeholder="One or two sentences about the post. Leave blank to make one from the body."
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">{{ $excerptVal }}</textarea>
                         </div>
                     </div>
@@ -107,24 +107,24 @@
                         <div class="px-5 sm:px-6 py-3 border-b flex items-center justify-between gap-3 flex-wrap">
                             <div>
                                 <h2 class="font-medium text-gray-900">Body</h2>
-                                <p class="text-[11px] text-gray-500">Markdown - <code class="bg-gray-100 px-1 rounded">## Heading</code>, <code class="bg-gray-100 px-1 rounded">**bold**</code>, or use the toolbar. The post title is the page's H1; <code class="bg-gray-100 px-1 rounded">#</code> in the body renders as a section heading. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
+                                <p class="text-[11px] text-gray-500">Markdown: <code class="bg-gray-100 px-1 rounded">## Heading</code>, <code class="bg-gray-100 px-1 rounded">**bold**</code>, or use the toolbar. The title is the page heading, so <code class="bg-gray-100 px-1 rounded">#</code> in the body becomes a section heading. <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Cheat sheet</a></p>
                             </div>
                             <div class="flex items-center gap-3 text-xs text-gray-600">
                                 <span><strong x-text="wordCount"></strong> words</span>
                                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span><strong x-text="readingMinutes"></strong> min read</span>
-                                {{-- Autosave indicator - set to "Saving…" then "Saved {time}"
+                                {{-- Autosave indicator: set to "Saving…" then "Saved {time}"
                                      while autosaving to localStorage. Restored on page reload. --}}
                                 <span class="w-1 h-1 rounded-full bg-gray-300" x-show="autosaveLabel" x-cloak></span>
                                 <span x-show="autosaveLabel" x-cloak class="text-money-700" x-text="autosaveLabel"></span>
                             </div>
                         </div>
 
-                        {{-- Formatting toolbar - clicking a button wraps the textarea
+                        {{-- Formatting toolbar: clicking a button wraps the textarea
                              selection in the matching markdown. Keyboard friendly:
                              still works while the textarea is focused (mousedown is on
                              the button so the textarea selection is preserved). --}}
-                        <div class="px-3 py-2 border-b bg-gray-50 flex items-center gap-0.5 flex-wrap text-sm">
+                        <div class="px-3 py-2 border-b bg-gray-50 flex items-center gap-0.5 flex-wrap text-sm max-sm:[&>button]:min-h-[40px] max-sm:[&>button]:min-w-[40px]">
                             <button type="button" @mousedown.prevent="format('bold')" title="Bold (Ctrl+B)"
                                     class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900 font-bold">B</button>
                             <button type="button" @mousedown.prevent="format('italic')" title="Italic (Ctrl+I)"
@@ -139,10 +139,10 @@
                                     class="px-2.5 py-1.5 rounded hover:bg-white text-gray-700 hover:text-gray-900">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                             </button>
-                            {{-- Image - clicking opens a hidden file picker. On choose,
+                            {{-- Image: clicking opens a hidden file picker. On choose,
                                  we upload via AJAX and insert ![](url) at the caret.
-                                 No prompt, no placeholder URL nonsense - the writer
-                                 picks a file, sees their image inline. --}}
+                                 No prompt, no placeholder URL. The writer picks a
+                                 file and sees their image inline. --}}
                             <button type="button" @click.prevent="$refs.bodyImagePicker.click()"
                                     :disabled="imageUploading"
                                     title="Insert image (upload)"
@@ -171,7 +171,7 @@
 
                             <div class="flex-1"></div>
 
-                            {{-- Preview button - opens a modal rendering the markdown
+                            {{-- Preview button: opens a modal rendering the markdown
                                  via the same server-side renderer as production. --}}
                             <button type="button" @click="openPreview()"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded font-semibold text-xs transition">
@@ -184,7 +184,7 @@
                                   x-model="body" @input="updateBodyStats(); scheduleAutosave()"
                                   @keydown="onKeydown($event)"
                                   @paste="onPaste($event)"
-                                  placeholder="## Introduction&#10;&#10;Write your post here…&#10;&#10;Tip: Paste an image directly from your clipboard (Ctrl+V) - it'll auto-upload."
+                                  placeholder="## Introduction&#10;&#10;Write your post here…&#10;&#10;Tip: paste an image with Ctrl+V and it uploads on its own."
                                   class="block w-full border-0 focus:ring-0 font-mono text-sm leading-relaxed p-5 sm:p-6 resize-y">{{ $bodyVal }}</textarea>
                     </div>
 
@@ -194,37 +194,37 @@
                         <span x-text="pasteNotice"></span>
                     </div>
 
-                    {{-- Restore-from-localStorage banner - shown if a newer autosave
+                    {{-- Restore-from-localStorage banner: shown if a newer autosave
                          exists than what the server gave us. One-click to restore. --}}
                     <div x-show="autosaveAvailable" x-cloak
-                         class="bg-accent-50 border border-accent-200 text-accent-900 rounded-lg p-4 flex items-center justify-between gap-3">
+                         class="bg-accent-50 border border-accent-200 text-accent-900 rounded-lg p-4 flex flex-wrap items-center justify-between gap-3">
                         <div class="text-sm">
                             <strong>Unsaved draft from <span x-text="autosaveAge"></span></strong>
                             found on this browser. Restore it?
                         </div>
                         <div class="flex items-center gap-2">
-                            <button type="button" @click="discardAutosave()" class="text-xs text-accent-800 hover:underline px-2 py-1">Discard</button>
-                            <button type="button" @click="restoreAutosave()" class="px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white text-xs font-semibold rounded">Restore</button>
+                            <button type="button" @click="discardAutosave()" class="inline-flex items-center min-h-[40px] sm:min-h-0 text-xs text-accent-800 hover:underline px-2 py-1">Discard</button>
+                            <button type="button" @click="restoreAutosave()" class="inline-flex items-center min-h-[40px] sm:min-h-0 px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white text-xs font-semibold rounded">Restore</button>
                         </div>
                     </div>
 
-                    {{-- Preview modal - full-screen iframe-style overlay with the
+                    {{-- Preview modal: full-screen iframe-style overlay with the
                          rendered markdown styled the same way the public blog renders it. --}}
                     <div x-show="previewOpen" x-cloak
                          @keydown.escape.window="previewOpen = false"
                          class="fixed inset-0 z-50 bg-gray-900/70 flex items-center justify-center p-4">
                         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" @click.outside="previewOpen = false">
-                            <div class="px-5 py-3 border-b flex items-center justify-between bg-gray-50">
-                                <div>
+                            <div class="px-4 sm:px-5 py-3 border-b flex items-center justify-between gap-3 bg-gray-50">
+                                <div class="min-w-0">
                                     <h2 class="font-semibold text-gray-900">Live preview</h2>
-                                    <p class="text-xs text-gray-500">Same renderer as the public blog. Press Esc to close.</p>
+                                    <p class="text-xs text-gray-500">Shown the same way as on the public blog. Press Esc to close.</p>
                                 </div>
                                 <button type="button" @click="previewOpen = false"
-                                        class="text-gray-500 hover:text-gray-700 p-1" aria-label="Close preview">
+                                        class="shrink-0 text-gray-500 hover:text-gray-700 p-2.5 -mr-2" aria-label="Close preview">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                 </button>
                             </div>
-                            <div class="overflow-y-auto p-8">
+                            <div class="overflow-y-auto p-4 sm:p-8">
                                 <article class="prose prose-lg max-w-none
                                                 [&_h2]:font-bold [&_h2]:text-3xl [&_h2]:mt-10 [&_h2]:mb-4
                                                 [&_h3]:font-bold [&_h3]:text-2xl [&_h3]:mt-8 [&_h3]:mb-3
@@ -242,7 +242,7 @@
                     </div>
                 </div>
 
-                {{-- ─── SIDEBAR - publish, SEO, images ───────────────────── --}}
+                {{-- ─── Sidebar: publish, SEO, images ───────────────────── --}}
                 <aside class="space-y-6">
 
                     {{-- Publish controls --}}
@@ -259,7 +259,7 @@
                             <x-input-label for="published_at" value="Publish at" />
                             <input id="published_at" name="published_at" type="datetime-local" value="{{ $publishedAtVal }}"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">
-                            <p class="mt-1 text-[10px] text-gray-500">Leave blank to publish immediately. Set a future date to schedule.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Leave blank to publish now. Pick a future date to schedule it.</p>
                         </div>
                         <button type="submit" class="w-full inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-md font-semibold shadow-sm transition">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -282,11 +282,11 @@
                         @endif
                     </div>
 
-                    {{-- SEO panel - the heart of the "smart" editor --}}
+                    {{-- SEO panel: title, description, keywords and the live checklist --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-4">
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between gap-3">
                             <h2 class="font-display font-bold text-gray-900">SEO</h2>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
                                   :class="seoScore.tone === 'good' ? 'bg-money-100 text-money-800' :
                                           seoScore.tone === 'warn' ? 'bg-accent-100 text-accent-800' :
                                           'bg-danger-100 text-danger-800'">
@@ -303,7 +303,7 @@
                                    value="{{ $metaTitleVal }}">
                             <div class="mt-1 text-[10px] flex items-center justify-between"
                                  :class="metaTitleEffective.length > 60 ? 'text-accent-700' : 'text-gray-500'">
-                                <span>Google truncates around 60 chars.</span>
+                                <span>Google cuts it off after about 60 characters.</span>
                                 <span><span x-text="metaTitleEffective.length"></span> / 60</span>
                             </div>
                         </div>
@@ -316,7 +316,7 @@
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600">{{ $metaDescVal }}</textarea>
                             <div class="mt-1 text-[10px] flex items-center justify-between"
                                  :class="metaDescription.length > 160 ? 'text-accent-700' : metaDescription.length < 80 ? 'text-accent-700' : 'text-money-700'">
-                                <span x-text="metaDescription.length === 0 ? 'Recommended: 150-160 chars' : metaDescription.length > 160 ? 'Too long - Google will truncate' : metaDescription.length < 80 ? 'Too short - aim for 150-160' : 'Looks good'"></span>
+                                <span x-text="metaDescription.length === 0 ? 'Aim for 150 to 160 characters' : metaDescription.length > 160 ? 'Too long. Google will cut it off' : metaDescription.length < 80 ? 'Too short. Aim for 150 to 160' : 'Looks good'"></span>
                                 <span><span x-text="metaDescription.length"></span> / 160</span>
                             </div>
                         </div>
@@ -328,22 +328,22 @@
                                    placeholder="GST invoice, HSN SAC, GSTR-1"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600"
                                    value="{{ $metaKeywordsVal }}">
-                            <p class="mt-1 text-[10px] text-gray-500">Comma-separated. Render as topic tags below the article and feed Bing/Yandex search engines.</p>
+                            <p class="mt-1 text-[10px] text-gray-500">Separate with commas. Shown as topic tags under the article. Bing and Yandex also read them.</p>
                         </div>
 
                         <div class="pt-3 border-t border-gray-100 space-y-2 text-[11px]">
-                            <div class="font-bold uppercase tracking-wider text-gray-500">Search preview</div>
+                            <div class="font-semibold text-gray-600">Search preview</div>
                             <div class="rounded border border-gray-200 p-3 bg-gray-50">
                                 <div class="text-[12px] text-gray-600 truncate">{{ url('/blog/') }}/<span x-text="slug || 'your-post-slug'"></span></div>
                                 <div class="text-[14px] font-medium text-brand-700 leading-tight mt-0.5 line-clamp-1" x-text="metaTitleEffective || 'Your post title'"></div>
-                                <div class="text-[12px] text-gray-700 leading-snug mt-0.5 line-clamp-2" x-text="metaDescription || 'A 150-160 character description here helps your post stand out in Google.'"></div>
+                                <div class="text-[12px] text-gray-700 leading-snug mt-0.5 line-clamp-2" x-text="metaDescription || 'Your meta description shows here, as it will in Google.'"></div>
                             </div>
                         </div>
 
-                        {{-- Live SEO checklist - every check Google actually rewards,
-                             recomputed as you type. Green = done, hint tells you the fix. --}}
+                        {{-- Live SEO checklist, recomputed as you type.
+                             Green means done; the hint says what to fix. --}}
                         <div class="pt-3 border-t border-gray-100 space-y-1.5 text-[11px]">
-                            <div class="font-bold uppercase tracking-wider text-gray-500">SEO checklist</div>
+                            <div class="font-semibold text-gray-600">SEO checklist</div>
                             <template x-for="check in seoChecks" :key="check.label">
                                 <div class="flex items-start gap-2 py-0.5">
                                     <span class="mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full shrink-0"
@@ -360,7 +360,7 @@
                         </div>
                     </div>
 
-                    {{-- Featured image - with instant preview the moment a file is
+                    {{-- Featured image, with instant preview the moment a file is
                          picked (not waiting until form submit). URL.createObjectURL
                          is revoked on the next pick to avoid memory leaks. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
@@ -379,12 +379,12 @@
                             <x-input-label for="featured_image" value="Upload (max 4 MB)" />
                             <input id="featured_image" name="featured_image" type="file" accept="image/jpeg,image/png,image/webp"
                                    @change="onFilePick($event, 'featured')"
-                                   class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-brand-700 file:text-white file:font-semibold hover:file:bg-brand-800">
+                                   class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 max-sm:file:py-2.5 file:px-3 file:rounded-md file:border-0 file:bg-brand-700 file:text-white file:font-semibold hover:file:bg-brand-800">
                             <p class="mt-1 text-[10px] text-gray-500">Recommended: 1200×675 (16:9), JPEG or WebP.</p>
-                            <p x-show="featuredPreview" x-cloak class="mt-1 text-[10px] text-money-700 font-medium">✓ New image selected. Click Save to publish.</p>
+                            <p x-show="featuredPreview" x-cloak class="mt-1 text-[10px] text-money-700 font-medium">✓ New image picked. Save the post to keep it.</p>
                         </div>
                         <div>
-                            <x-input-label for="featured_image_alt" value="Alt text (for SEO + accessibility)" />
+                            <x-input-label for="featured_image_alt" value="Alt text (for search and screen readers)" />
                             <input id="featured_image_alt" name="featured_image_alt" type="text" maxlength="200"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-brand-600 focus:ring-brand-600"
                                    value="{{ $altVal }}"
@@ -392,24 +392,24 @@
                         </div>
                     </div>
 
-                    {{-- Social card override - same instant-preview pattern. --}}
+                    {{-- Social card override, same instant-preview pattern. --}}
                     <div class="bg-white shadow sm:rounded-lg p-5 space-y-3">
-                        <h2 class="font-display font-bold text-gray-900">Social-card image</h2>
+                        <h2 class="font-display font-bold text-gray-900">Social card image</h2>
                         <template x-if="ogPreview">
-                            <img :src="ogPreview" alt="New OG image preview"
+                            <img :src="ogPreview" alt="New social card image preview"
                                  class="w-full rounded-lg ring-1 ring-gray-200 aspect-[1200/630] object-cover">
                         </template>
                         @if ($post->og_image_path)
-                            <img x-show="!ogPreview" src="{{ asset('storage/' . $post->og_image_path) }}" alt="OG override"
+                            <img x-show="!ogPreview" src="{{ asset('storage/' . $post->og_image_path) }}" alt="Social card image"
                                  class="w-full rounded-lg ring-1 ring-gray-200 aspect-[1200/630] object-cover">
                         @endif
                         <div>
-                            <x-input-label for="og_image" value="Override (1200×630 ideal)" />
+                            <x-input-label for="og_image" value="Upload (1200×630 works best)" />
                             <input id="og_image" name="og_image" type="file" accept="image/jpeg,image/png,image/webp"
                                    @change="onFilePick($event, 'og')"
-                                   class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-700 file:text-white file:font-semibold hover:file:bg-gray-800">
+                                   class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 max-sm:file:py-2.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-700 file:text-white file:font-semibold hover:file:bg-gray-800">
                             <p class="mt-1 text-[10px] text-gray-500">Optional. Falls back to the featured image.</p>
-                            <p x-show="ogPreview" x-cloak class="mt-1 text-[10px] text-money-700 font-medium">✓ New image selected. Click Save to publish.</p>
+                            <p x-show="ogPreview" x-cloak class="mt-1 text-[10px] text-money-700 font-medium">✓ New image picked. Save the post to keep it.</p>
                         </div>
                     </div>
                 </aside>
@@ -517,15 +517,15 @@
 
                     return [
                         { ok: t.length >= 30 && t.length <= 60,
-                          label: 'Title 30–60 chars', hint: t.length < 30 ? 'Too short - add the benefit or year' : t.length > 60 ? 'Too long - Google truncates it' : '' },
+                          label: 'Title 30–60 chars', hint: t.length < 30 ? 'Too short. Add the benefit or the year' : t.length > 60 ? 'Too long. Google cuts it off' : '' },
                         { ok: d.length >= 120 && d.length <= 160,
-                          label: 'Meta description 120–160 chars', hint: d.length === 0 ? 'Write one - it is your ad in the results page' : '' },
+                          label: 'Meta description 120–160 chars', hint: d.length === 0 ? 'Write one. It is what people read in search results' : '' },
                         { ok: this.wordCount >= 600,
                           label: '600+ words (' + this.wordCount + ')', hint: 'Thin pages rarely rank; 900+ is even better' },
                         { ok: h2Count >= 2,
-                          label: '2+ section headings (## )', hint: 'Headings make posts scannable and win featured snippets' },
+                          label: '2+ section headings (## )', hint: 'Headings make the post easy to scan' },
                         { ok: kw !== '' && t.toLowerCase().includes(kw),
-                          label: 'Focus keyword in title', hint: kw === '' ? 'Add keywords below - the first one is your focus keyword' : 'Use "' + kw + '" in the title' },
+                          label: 'Focus keyword in title', hint: kw === '' ? 'Add keywords below. The first one is your focus keyword' : 'Use "' + kw + '" in the title' },
                         { ok: kw !== '' && first100.includes(kw),
                           label: 'Keyword in first 100 words', hint: 'Google weighs the opening heavily' },
                         { ok: hasInternalLink,
@@ -537,7 +537,7 @@
 
                 get seoScore() {
                     const failed = this.seoChecks.filter(c => !c.ok).length;
-                    if (failed === 0) return { tone: 'good', label: 'SEO ✓ ready' };
+                    if (failed === 0) return { tone: 'good', label: '✓ Ready' };
                     if (failed <= 2) return { tone: 'good', label: failed + ' to go' };
                     if (failed <= 4) return { tone: 'warn', label: failed + ' checks left' };
                     return { tone: 'bad', label: failed + ' checks left' };
@@ -763,7 +763,7 @@
                             this.insertAtCaret(md);
                             this.updateBodyStats();
                             this.scheduleAutosave();
-                            this.pasteNotice = 'Pasted with formatting kept - headings, lists and links converted to Markdown.';
+                            this.pasteNotice = 'Pasted with formatting kept. Headings, lists and links are now Markdown.';
                             setTimeout(() => { this.pasteNotice = ''; }, 6000);
                             return;
                         }

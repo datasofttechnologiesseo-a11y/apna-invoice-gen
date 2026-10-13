@@ -28,6 +28,10 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    // Local testing: sign every visitor in as the seeded test user. Only
+    // honoured when env is "local" - see App\Http\Middleware\LocalAutoLogin.
+    'local_auto_login' => (bool) env('LOCAL_AUTO_LOGIN', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
@@ -65,7 +69,10 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    // Indian business software: dates, the 1 April financial-year rollover and
+    // GST periods are in IST. Falling back to UTC when the variable is missing
+    // would move every rollover 5½ hours late.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
 
     /*
     |--------------------------------------------------------------------------

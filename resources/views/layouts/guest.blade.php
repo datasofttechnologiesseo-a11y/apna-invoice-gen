@@ -5,7 +5,7 @@
     'noindex' => false,
 ])
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en-IN">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,75 +25,88 @@
         @include('partials.google-analytics')
     </head>
     <body class="font-sans text-gray-900 antialiased bg-white">
-        <div class="min-h-screen lg:grid lg:grid-cols-2">
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+        <div class="min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 
-            {{-- Brand panel (lg+): premium first impression. Deep teal with soft
-                 blurred brand orbs for depth; logo, value proposition, trust cues. --}}
-            <aside class="hidden lg:flex lg:flex-col lg:justify-between relative overflow-hidden p-12 xl:p-16 text-white bg-gradient-to-br from-brand-800 via-brand-900 to-brand-950">
-                <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-500/25 blur-3xl pointer-events-none"></div>
-                <div class="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-accent-500/20 blur-3xl pointer-events-none"></div>
-                <div class="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-money-500/15 blur-3xl pointer-events-none"></div>
-
-                <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="relative inline-flex items-center self-start bg-white rounded-xl px-3 py-2 shadow-lg">
-                    <x-brand-logo class="h-10 w-auto block" />
+            {{-- Brand panel (lg+). Solid deep teal, no glows: the logo, one
+                 line on what the product is, and a faithful slice of what it
+                 makes (an issued invoice with its GST split), so the first
+                 thing a new user sees is the product, not adjectives. Not a
+                 heading: the page's h1 is the form title. --}}
+            @php
+                // Sample invoice number in the current financial year.
+                $fyStart = now()->month >= 4 ? now()->year : now()->year - 1;
+                $sampleNo = 'INV/' . $fyStart . '-' . substr((string) ($fyStart + 1), -2) . '/0042';
+            @endphp
+            <aside class="hidden lg:flex lg:flex-col lg:justify-between lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto gap-10 p-10 xl:p-14 bg-brand-900 text-white">
+                <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-flex self-start bg-white rounded-lg px-3 py-2">
+                    <x-brand-logo class="h-9 w-auto block" />
                 </a>
 
-                <div class="relative max-w-md">
-                    <h2 class="font-display font-extrabold text-3xl xl:text-4xl leading-tight tracking-tight">
-                        GST invoicing, done in <span class="text-accent-400">60 seconds</span>.
-                    </h2>
-                    <p class="mt-4 text-brand-100 text-base leading-relaxed">
-                        Create GST-compliant invoices, share them on WhatsApp, and get paid faster. Built for Indian businesses, free during beta.
+                <div class="max-w-md">
+                    <p class="font-display font-bold text-3xl xl:text-[2.1rem] leading-tight tracking-tight">
+                        GST billing and accounts for Indian businesses
                     </p>
-                    <ul class="mt-8 space-y-3.5">
+                    <p class="mt-3 text-brand-100 leading-relaxed">
+                        Create GST invoices, share them on WhatsApp and track every payment. Free during beta.
+                    </p>
+
+                    <div class="mt-8 rounded-xl bg-white text-gray-700 shadow-xl ring-1 ring-black/5 text-[13px] overflow-hidden" aria-hidden="true">
+                        <div class="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
+                            <div>
+                                <p class="font-semibold text-gray-900">Kulkarni Infotech Pvt Ltd</p>
+                                <p class="text-gray-500 tabular-nums">{{ $sampleNo }} · Place of supply: Maharashtra (27)</p>
+                            </div>
+                            <span class="shrink-0 rounded-md bg-money-50 px-2 py-0.5 text-xs font-semibold text-money-700 ring-1 ring-money-200">Paid</span>
+                        </div>
+                        <dl class="px-5 py-3 border-t border-gray-100 space-y-1 tabular-nums">
+                            <div class="flex justify-between"><dt>Taxable value</dt><dd class="text-gray-900">₹1,00,000</dd></div>
+                            <div class="flex justify-between"><dt>CGST 9%</dt><dd class="text-gray-900">₹9,000</dd></div>
+                            <div class="flex justify-between"><dt>SGST 9%</dt><dd class="text-gray-900">₹9,000</dd></div>
+                        </dl>
+                        <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-between items-baseline tabular-nums">
+                            <span class="text-gray-500">Received by UPI</span>
+                            <span class="font-display text-base font-bold text-gray-900">₹1,18,000</span>
+                        </div>
+                    </div>
+
+                    <ul class="mt-8 space-y-2.5 text-[15px] text-brand-50">
                         @foreach ([
-                            'Auto CGST, SGST &amp; IGST with HSN/SAC',
-                            'GSTR-1 &amp; GSTR-3B ready, audit-friendly',
+                            'CGST, SGST and IGST with HSN/SAC',
+                            'GSTR-1 and GSTR-3B from your own books',
                             'UPI QR on every invoice PDF',
-                            'Your data stays in India',
+                            'Your data is never sold or shared',
                         ] as $point)
-                            <li class="flex items-center gap-3 text-sm text-brand-50">
-                                <span class="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-400/20 text-accent-300">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                </span>
-                                {!! $point !!}
+                            <li class="flex items-start gap-3">
+                                <svg class="mt-0.5 w-5 h-5 shrink-0 text-accent-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <span>{{ $point }}</span>
                             </li>
                         @endforeach
                     </ul>
                 </div>
 
-                <div class="relative flex items-center gap-2 text-xs text-brand-200">
-                    <span class="inline-flex flex-col w-4 h-3 rounded-[1px] overflow-hidden ring-1 ring-white/30">
-                        <span class="block w-full h-1/3 bg-[#ff9933]"></span>
-                        <span class="block w-full h-1/3 bg-white"></span>
-                        <span class="block w-full h-1/3 bg-[#138808]"></span>
-                    </span>
-                    Made in India · by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-semibold text-white hover:text-accent-300 underline decoration-white/30 hover:decoration-accent-300 underline-offset-2 transition">Datasoft Technologies</a>
-                </div>
+                <p class="text-sm text-brand-200">
+                    Made in India by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-semibold text-white underline decoration-white/30 underline-offset-2 hover:decoration-white transition">Datasoft Technologies</a>
+                </p>
             </aside>
 
             {{-- Form panel --}}
-            <main class="flex flex-col min-h-screen overflow-y-auto">
-                <div class="px-6 sm:px-10 pt-6">
-                    <a href="{{ url('/') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-brand-700 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            <main id="main-content" tabindex="-1" class="flex flex-col min-h-screen focus:outline-none">
+                <div class="px-5 sm:px-10 pt-5 flex items-center justify-between gap-4">
+                    <a href="{{ url('/') }}" class="lg:hidden inline-flex" aria-label="Apna Invoice home">
+                        <x-brand-logo class="h-8 w-auto block" />
+                    </a>
+                    <a href="{{ url('/') }}" class="ml-auto inline-flex items-center gap-1.5 min-h-[44px] text-sm font-medium text-gray-600 hover:text-brand-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                         Back to home
                     </a>
                 </div>
-                <div class="w-full max-w-md mx-auto my-auto px-6 py-10 sm:px-10 animate-fade-up">
-                    {{-- Logo for mobile (brand panel is hidden below lg) --}}
-                    <div class="lg:hidden mb-8 flex justify-center">
-                        <a href="{{ url('/') }}" aria-label="Apna Invoice home" class="inline-block">
-                            <x-brand-logo class="h-10 w-auto block" />
-                        </a>
-                    </div>
-
+                <div class="w-full max-w-[26rem] mx-auto my-auto px-5 py-10 sm:px-0">
                     {{ $slot }}
-
-                    <p class="mt-8 text-center text-xs text-gray-500">
-                        Powered by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-semibold text-gray-500 hover:text-brand-700 transition">Datasoft Technologies</a>
-                    </p>
                 </div>
+                <p class="lg:hidden px-5 pb-6 text-center text-xs text-gray-500">
+                    Made in India by <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener" class="font-semibold text-gray-600 hover:text-brand-700 transition-colors">Datasoft Technologies</a>
+                </p>
             </main>
         </div>
         <x-whatsapp-float />

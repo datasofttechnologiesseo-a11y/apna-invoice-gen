@@ -5,7 +5,7 @@
     'centerLabel' => 'Total',
     'empty' => 'Nothing to show here yet.',
     'href' => null,            // optional "view more" link on the header
-    'hrefLabel' => 'View all →',
+    'hrefLabel' => 'View all',
 ])
 
 @php
@@ -42,16 +42,16 @@
     }
 @endphp
 
-<div class="bg-white rounded-2xl shadow-card ring-1 ring-gray-100 p-6">
+<div class="bg-white rounded-xl ring-1 ring-gray-200 p-5 sm:p-6">
     <div class="flex items-start justify-between gap-4">
         <div>
-            <div class="text-xs uppercase font-bold tracking-wider text-gray-500">{{ $title }}</div>
+            <div class="text-sm font-semibold text-gray-900">{{ $title }}</div>
             @if ($subtitle)
                 <div class="text-xs text-gray-500 mt-0.5">{{ $subtitle }}</div>
             @endif
         </div>
         @if ($href)
-            <a href="{{ $href }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800 whitespace-nowrap">{{ $hrefLabel }}</a>
+            <a href="{{ $href }}" class="text-sm font-semibold text-brand-700 hover:text-brand-800 whitespace-nowrap">{{ $hrefLabel }}</a>
         @endif
     </div>
 
@@ -71,7 +71,7 @@
                                 stroke-dasharray="{{ $arc['dash'] }}"
                                 stroke-dashoffset="{{ $arc['offset'] }}"
                                 stroke-linecap="butt">
-                            <title>{{ $arc['row']['label'] }} — {{ round($arc['pct']) }}%</title>
+                            <title>{{ $arc['row']['label'] }}: {{ round($arc['pct']) }}%</title>
                         </circle>
                     @endforeach
                 </svg>
@@ -79,10 +79,10 @@
                 {{-- Centre figure in HTML rather than <text>: it inherits the
                      page font and can use the shared compact-rupee component. --}}
                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <div class="font-display text-xl font-extrabold text-gray-900 tabular-nums leading-none">
-                        <x-inr-compact :amount="$total" />
+                    <div class="font-display text-base font-extrabold text-gray-900 tabular-nums leading-none whitespace-nowrap">
+                        ₹{{ rupees($total) }}
                     </div>
-                    <div class="text-[10px] uppercase tracking-wider font-bold text-gray-500 mt-1">{{ $centerLabel }}</div>
+                    <div class="text-xs font-medium text-gray-500 mt-1">{{ $centerLabel }}</div>
                 </div>
             </div>
 
@@ -100,7 +100,7 @@
                             @endif
                         </span>
                         <span class="text-sm font-semibold text-gray-900 tabular-nums whitespace-nowrap">
-                            <x-inr-compact :amount="$row['amount']" />
+                            ₹{{ rupees($row['amount']) }}
                         </span>
                         <span class="text-xs text-gray-500 tabular-nums w-9 text-right shrink-0">{{ round($arc['pct']) }}%</span>
                     </{{ $row['href'] ? 'a' : 'div' }}>
@@ -108,7 +108,9 @@
             </div>
         </div>
 
-        <table class="sr-only">
+        <div class="sr-only">
+
+        <table>
             <caption>{{ $title }}</caption>
             <thead><tr><th>Bucket</th><th>Amount (INR)</th><th>Share</th></tr></thead>
             <tbody>
@@ -116,6 +118,6 @@
                     <tr><td>{{ $arc['row']['label'] }}</td><td>{{ $arc['row']['amount'] }}</td><td>{{ round($arc['pct']) }}%</td></tr>
                 @endforeach
             </tbody>
-        </table>
+        </table></div>
     @endif
 </div>

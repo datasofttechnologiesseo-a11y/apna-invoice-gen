@@ -11,15 +11,15 @@
      journey carries a route to a human. --}}
 <div class="mt-6 pt-5 border-t border-gray-100">
     <div class="flex items-start gap-3">
-        <div class="flex-shrink-0 w-9 h-9 rounded-full bg-money-50 ring-1 ring-money-200 flex items-center justify-center">
+        <div class="flex-shrink-0 w-9 h-9 rounded-full bg-money-50 ring-1 ring-money-200 flex items-center justify-center" aria-hidden="true">
             <svg class="w-4.5 h-4.5 text-money-700" style="width:1.125rem;height:1.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.9 9.9 0 01-4.3-.96L3 20l1.4-3.7A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
         </div>
         <div class="min-w-0">
-            <div class="text-sm font-semibold text-gray-800">Stuck? Talk to a real person.</div>
+            <div class="text-sm font-semibold text-gray-800">Need help? Talk to our team.</div>
             <p class="mt-0.5 text-xs text-gray-500 leading-relaxed">
-                {{ $note ?? 'We help new businesses set up every day. Ask us anything, however small.' }}
+                {{ $note ?? 'We help new businesses with sign-up and setup every day.' }}
             </p>
             <div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
                 @if ($whatsapp)
@@ -31,7 +31,7 @@
                 @endif
                 @if ($email)
                     <a href="mailto:{{ $email }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 001.98 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 4.26a2 2 0 001.98 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         {{ $email }}
                     </a>
                 @endif

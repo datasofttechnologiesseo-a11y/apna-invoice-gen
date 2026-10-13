@@ -1,6 +1,7 @@
 @php
-    // Indian (lakh/crore) money formatter - $inr(1234567) → "12,34,567.00"
-    $inr = fn ($n, $d = 2) => \App\Support\IndianNumber::format($n, $d);
+    // Indian (lakh/crore) money formatter - $inr(1234567) → "12,34,567"
+    // (whole amounts without ".00", real paise kept; see inr()).
+    $inr = fn ($n, $d = 2) => inr($n, $d);
 
     $c = $quotation->company;
     $cust = $quotation->customer;
@@ -150,9 +151,7 @@
     <table class="header-table">
         <tr>
             <td style="width: 60%;">
-                @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-                    <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="{{ $c->name }} logo" style="max-height: 40px; max-width: 180px; margin-bottom: 4px;">
-                @endif
+                @include('partials.pdf-logo', ['c' => $c])
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted">
                     @if ($c->address_line1){{ $c->address_line1 }}@endif
@@ -183,7 +182,7 @@
             <td class="lbl">Valid until</td>
             <td>{{ $quotation->valid_until?->format('d M Y') ?? '-' }}</td>
             <td class="lbl">Tax mode</td>
-            <td>{{ $quotation->is_interstate ? 'Inter-state (IGST)' : 'Intra-state (CGST + SGST)' }}</td>
+            <td>{{ $quotation->is_interstate ? 'Inter-state (IGST)' : 'Intra-state (CGST + ' . $quotation->stateTaxLabel() . ')' }}</td>
         </tr>
         @if ($quotation->reference)
             <tr>
@@ -267,7 +266,7 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>
-                        <div style="font-weight: 600;">{{ $primary }}</div>
+                        <div style="font-weight: bold;">{{ $primary }}</div>
                         @if ($secondary)
                             <div style="font-size: 9px; color: #555; margin-top: 2px;">{{ $secondary }}</div>
                         @endif
@@ -295,7 +294,7 @@
                 <td class="tr mono">₹ {{ $inr($quotation->total_cgst) }}</td>
             </tr>
             <tr>
-                <td>SGST</td>
+                <td>{{ $quotation->stateTaxLabel() }}</td>
                 <td class="tr mono">₹ {{ $inr($quotation->total_sgst) }}</td>
             </tr>
         @else
@@ -366,7 +365,7 @@
     {{-- ─── Disclaimer ─────────────────────────────────────────────────── --}}
     <div class="disclaimer">
         <strong>This is a quotation, not a tax invoice.</strong>
-        No GST is collected at this stage. Prices and tax shown are indicative of what will appear on the tax invoice if you accept this quote. A formal GST tax invoice will be issued on confirmation of the order.
+        GST is shown at the rates that will apply. It is charged on the tax invoice issued when the order is confirmed.
     </div>
 
     {{-- ─── Closing & signatory ────────────────────────────────────────── --}}
@@ -376,8 +375,7 @@
             <tr>
                 <td style="width: 50%;"></td>
                 <td style="width: 50%;" class="tr">
-                    <div class="line">Authorized signatory</div>
-                    <div class="x-small muted" style="margin-top: 2px;">For {{ $c->name }}</div>
+                    @include('partials.pdf-signatory', ['c' => $c])
                 </td>
             </tr>
         </table>
@@ -385,7 +383,7 @@
 
     {{-- ─── Acceptance block (sign-back) ───────────────────────────────── --}}
     <div class="acceptance">
-        <div class="head">Acceptance - to confirm this order, please sign &amp; return</div>
+        <div class="head">Acceptance: to confirm this order, please sign &amp; return</div>
         <div class="body">
             <div>I/We accept this quotation and request you to proceed with the order on the terms set out above.</div>
             <table class="signrow">
@@ -404,7 +402,7 @@
     {{-- Viral loop: quotations reach prospects while they're comparing vendors -
          a high-attention reader. One tasteful, clickable byline (DomPDF renders
          <a href> as a real PDF link annotation). --}}
-    <div style="margin-top: 6mm; text-align: center; font-size: 8px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=quotation_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com - free GST invoicing for Indian businesses</a></div>
+    <div style="margin-top: 6mm; text-align: center; font-size: 8px; color: #9ca3af;"><a href="https://apnainvoice.com/?utm_source=quotation_pdf&utm_medium=pdf&utm_campaign=byline" style="color: #9ca3af; text-decoration: none;">Made free with Apna Invoice · apnainvoice.com · Free GST invoicing for Indian businesses</a></div>
 </div>
 </body>
 </html>

@@ -35,7 +35,7 @@ class QuotationShareController extends Controller
 
         // Don't allow sending an already-converted or declined quote.
         abort_if(in_array($quotation->status, ['converted', 'declined']), 422,
-            'This quotation has already been ' . $quotation->status . ' and cannot be re-shared.');
+            'This quotation has been ' . $quotation->status . ' and cannot be shared again.');
 
         $data = $request->validate([
             'to' => ['required', 'email', 'max:255'],
@@ -44,11 +44,15 @@ class QuotationShareController extends Controller
             'body' => ['required', 'string', 'max:5000'],
         ]);
 
-        // First-send: assign the quote number and flip to "sent".
-        if ($quotation->isDraft()) {
+        // First-send: assign the quote number and flip to "sent". A number the
+        // user typed on the draft is kept, as in "Mark as sent".
+        $firstSend = $quotation->isDraft();
+        if ($firstSend) {
             \Illuminate\Support\Facades\DB::transaction(function () use ($quotation) {
                 $company = $quotation->company()->lockForUpdate()->first();
-                $number = $company->bumpQuoteCounter($quotation->quote_date);
+                $number = filled($quotation->quote_number)
+                    ? $quotation->quote_number
+                    : $company->bumpQuoteCounter($quotation->quote_date);
                 $quotation->update([
                     'quote_number' => $number,
                     'status' => 'sent',
@@ -70,7 +74,13 @@ class QuotationShareController extends Controller
             $mail->send(new QuotationMail($quotation, $data['subject'], $data['body'], $publicUrl));
         } catch (\Throwable $e) {
             Log::error('Quotation email failed', ['quotation_id' => $quotation->id, 'exception' => $e]);
-            return back()->withErrors(['email' => "We couldn't send the email right now. Please try again in a moment or contact support if the problem persists."]);
+            if ($firstSend) {
+                // Not sent, so not "sent". The number stays on the draft and the
+                // retry uses it, so no number is skipped.
+                $quotation->update(['status' => 'draft', 'sent_at' => null]);
+            }
+
+            return back()->withErrors(['email' => "The email could not be sent. Try again in a few minutes, or contact support if it keeps failing."]);
         }
 
         AuditLog::record('quotation.emailed',

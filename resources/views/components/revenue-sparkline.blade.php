@@ -44,7 +44,7 @@
         $n = (float) $n;
         if ($n >= 10000000) return '₹' . number_format($n / 10000000, $n >= 100000000 ? 0 : 1) . ' Cr';
         if ($n >= 100000) return '₹' . number_format($n / 100000, 1) . ' L';
-        return '₹' . number_format($n, 0);
+        return '₹' . rupees($n);
     };
 @endphp
 
@@ -69,7 +69,7 @@
 
     @if ($total <= 0)
         <div class="mt-6 py-8 text-center text-sm text-gray-500">
-            No payments received in the last 30 days. Once receipts come in, you'll see the trend here.
+            No payments received in the last 30 days.
         </div>
     @else
         <div class="mt-5">
@@ -93,7 +93,7 @@
                      where a custom tooltip would not. --}}
                 <div class="absolute inset-0 flex" aria-hidden="true">
                     @foreach ($series as $row)
-                        <div class="flex-1 hover:bg-money-500/10 transition-colors" title="{{ $row['label'] }} — {{ $fmtInr($row['amount']) }}"></div>
+                        <div class="flex-1 hover:bg-money-500/10 transition-colors" title="{{ $row['label'] }}: {{ $fmtInr($row['amount']) }}"></div>
                     @endforeach
                 </div>
 
@@ -105,14 +105,15 @@
             </div>
 
             {{-- Axis labels: first / mid / last day --}}
-            <div class="mt-2 flex justify-between text-[10px] text-gray-500 font-mono">
+            <div class="mt-2 flex justify-between text-xs text-gray-500 font-mono">
                 <span>{{ $series->first()['label'] ?? '' }}</span>
                 <span>{{ $series->get((int) floor($count / 2))['label'] ?? '' }}</span>
                 <span>{{ $series->last()['label'] ?? '' }}</span>
             </div>
 
             {{-- Hidden screen-reader / SEO data table --}}
-            <table class="sr-only">
+            <div class="sr-only">
+            <table>
                 <caption>Payments received per day for the last 30 days</caption>
                 <thead><tr><th>Date</th><th>Amount (INR)</th></tr></thead>
                 <tbody>
@@ -120,7 +121,7 @@
                         <tr><td>{{ $row['date'] }}</td><td>{{ $row['amount'] }}</td></tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table></div>
         </div>
     @endif
 </div>

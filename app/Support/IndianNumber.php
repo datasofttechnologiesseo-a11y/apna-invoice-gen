@@ -23,17 +23,14 @@ class IndianNumber
 {
     public static function format(float|int|string $value, int $decimals = 2): string
     {
-        $n = (float) $value;
-        $negative = $n < 0;
-        $abs = abs($n);
+        // Round first, then split. Splitting first showed 99.999999 (a float
+        // sum of 33.33 + 33.33 + 33.34) as "99.00", and 1,180.99 at zero
+        // decimals as "1,180" instead of "1,181".
+        $fixed = number_format(abs((float) $value), max(0, $decimals), '.', '');
+        $negative = (float) $value < 0 && (float) $fixed > 0; // no "-0"
+        [$s, $fraction] = array_pad(explode('.', $fixed, 2), 2, null);
+        $fraction = $fraction !== null ? '.' . $fraction : '';
 
-        // Split whole and fractional parts so the grouping only touches the integer side.
-        $whole = (int) floor($abs);
-        $fraction = $decimals > 0
-            ? substr(number_format($abs - $whole, $decimals, '.', ''), 1) // ".XX"
-            : '';
-
-        $s = (string) $whole;
         if (strlen($s) <= 3) {
             $grouped = $s;
         } else {

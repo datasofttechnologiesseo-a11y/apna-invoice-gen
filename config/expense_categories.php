@@ -8,6 +8,10 @@
 
 return [
     'rent'              => ['label' => 'Rent',                    'color' => '#1e3a8a', 'desc' => 'Office, warehouse, shop rent'],
+    // Goods bought to sell or to make products from. The default on a
+    // purchase invoice whose lines are linked to goods items. Counted in the
+    // P&L like every other category.
+    'purchases'         => ['label' => 'Purchase of goods (stock)', 'color' => '#0e7490', 'desc' => 'Goods bought for resale or production'],
     'utilities'         => ['label' => 'Utilities',               'color' => '#0369a1', 'desc' => 'Electricity, water, internet, mobile'],
     'salaries'          => ['label' => 'Salaries & Wages',        'color' => '#065f46', 'desc' => 'Employee payroll'],
     'contractor'        => ['label' => 'Contractor fees',         'color' => '#047857', 'desc' => 'Freelancers, consultants, vendors'],

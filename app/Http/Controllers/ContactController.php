@@ -38,11 +38,11 @@ class ContactController extends Controller
         } catch (\Throwable $e) {
             Log::error('Contact form send failed: ' . $e->getMessage());
             return back()->withInput()->withErrors([
-                'contact' => 'We couldn\'t send your message right now. Please try again in a few minutes.',
+                'contact' => 'Your message could not be sent. Try again in a few minutes.',
             ]);
         }
 
         return redirect()->route('pages.contact')
-            ->with('status', 'Thanks — your message is on its way. We\'ll reply within one business day.');
+            ->with('status', 'Message sent. We reply within one business day.');
     }
 }

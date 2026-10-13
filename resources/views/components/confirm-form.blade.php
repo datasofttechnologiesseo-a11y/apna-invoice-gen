@@ -28,7 +28,7 @@
         <div x-show="open" x-cloak
              @keydown.escape.window="open = false"
              class="fixed inset-0 z-50 flex items-center justify-center p-4"
-             role="dialog" aria-modal="true" aria-labelledby="{{ $id }}-title">
+             role="dialog" aria-modal="true" aria-labelledby="{{ $id }}-title" @if ($message) aria-describedby="{{ $id }}-desc" @endif>
             <div class="absolute inset-0 bg-black/40" @click="open = false"
                  x-transition:enter="transition-opacity ease-out duration-200"
                  x-transition:enter-start="opacity-0"
@@ -41,21 +41,21 @@
                 <div class="p-6">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 {{ $toneIcon['bg'] }}">
-                            <svg class="w-5 h-5 {{ $toneIcon['color'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 {{ $toneIcon['color'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $toneIcon['path'] }}"/>
                             </svg>
                         </div>
                         <div class="flex-1">
                             <h2 id="{{ $id }}-title" class="font-display text-lg font-bold text-gray-900">{{ $title }}</h2>
                             @if ($message)
-                                <p class="mt-1 text-sm text-gray-600 leading-relaxed">{{ $message }}</p>
+                                <p id="{{ $id }}-desc" class="mt-1 text-sm text-gray-600 leading-relaxed">{{ $message }}</p>
                             @endif
                         </div>
                     </div>
                 </div>
                 <div class="px-4 sm:px-6 py-3 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                     <button type="button" @click="open = false"
-                            class="inline-flex items-center justify-center min-h-[40px] px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 rounded transition">
+                            class="inline-flex items-center justify-center h-10 px-4 text-sm font-semibold text-gray-800 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 rounded-md transition">
                         Cancel
                     </button>
                     <form method="POST" action="{{ $action }}" class="inline">
@@ -64,7 +64,7 @@
                             @method($method)
                         @endif
                         <button type="submit"
-                                class="w-full sm:w-auto inline-flex items-center justify-center min-h-[40px] px-4 py-2 text-sm font-semibold text-white rounded shadow-sm transition {{ $confirmClass }}">
+                                class="w-full sm:w-auto inline-flex items-center justify-center h-10 px-4 text-sm font-semibold text-white rounded-md shadow-sm transition {{ $confirmClass }}">
                             {{ $confirmLabel }}
                         </button>
                     </form>

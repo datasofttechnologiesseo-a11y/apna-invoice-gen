@@ -36,8 +36,9 @@ class AccountCreator
                 'email' => $reg['email'],
                 'phone' => $reg['phone'] ?? null,
                 // OAuth (Google) accounts have no password.
+                // The web sign-up stashes it already hashed; hash anything else.
                 'password' => isset($reg['password']) && $reg['password'] !== null
-                    ? Hash::make($reg['password'])
+                    ? (Hash::isHashed($reg['password']) ? $reg['password'] : Hash::make($reg['password']))
                     : null,
             ]);
 
@@ -62,15 +63,7 @@ class AccountCreator
             UserConsent::record($user->id, 'marketing', (bool) ($reg['marketing_opt_in'] ?? false), 'signup', $request);
 
             if ($referrer) {
-                $user->forceFill(['referred_by_user_id' => $referrer->id])->save();
-
-                Referral::create([
-                    'referrer_user_id' => $referrer->id,
-                    'referee_user_id' => $user->id,
-                    'referral_code' => $reg['referral_code'],
-                    'reward_status' => 'pending',
-                    'signed_up_at' => now(),
-                ]);
+                self::recordReferral($user, $referrer, $reg['referral_code']);
             }
 
             return $user;
@@ -87,5 +80,25 @@ class AccountCreator
         app(\App\Services\Onboarding\OnboardingMailer::class)->send($user, 'welcome');
 
         return $user;
+    }
+
+    /**
+     * Link a new account to the person who referred it (web, Google and app
+     * sign-ups). Nobody can refer themselves; the reward is decided later,
+     * when the friend issues their first invoice (ReferralRewards).
+     */
+    public static function recordReferral(User $user, ?User $referrer, ?string $code): void
+    {
+        if (! $referrer || $referrer->id === $user->id || $user->referred_by_user_id) {
+            return;
+        }
+        $user->forceFill(['referred_by_user_id' => $referrer->id])->save();
+        Referral::create([
+            'referrer_user_id' => $referrer->id,
+            'referee_user_id' => $user->id,
+            'referral_code' => $code,
+            'reward_status' => 'pending',
+            'signed_up_at' => now(),
+        ]);
     }
 }

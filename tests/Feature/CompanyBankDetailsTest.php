@@ -64,6 +64,30 @@ class CompanyBankDetailsTest extends TestCase
         $this->assertSame('Current', $company->bankAccountTypeLabel());
     }
 
+    public function test_a_gstin_saved_before_the_checksum_rule_does_not_lock_the_settings(): void
+    {
+        // Older accounts can hold a GSTIN whose check digit is wrong. Left
+        // as it is, it must not stop the owner saving bank details; a new
+        // or edited GSTIN is still checked in full.
+        $user = User::factory()->create();
+        $company = Company::factory()->recycle($user)->create([
+            'state_id' => $this->state()->id,
+            'gstin' => '27AAAAA0000A1Z0',
+            'onboarded_at' => now(),
+        ]);
+
+        $this->actingAs($user)->patch(route('companies.update', $company), $this->companyPayload([
+            'gstin' => '27AAAAA0000A1Z0',
+            'bank_account_type' => 'current',
+        ]))->assertSessionHasNoErrors();
+        $this->assertSame('current', $company->fresh()->bank_account_type);
+
+        $this->actingAs($user)->patch(route('companies.update', $company), $this->companyPayload([
+            'gstin' => '27BBBBB0000B1Z0',
+        ]))->assertSessionHasErrors('gstin');
+        $this->assertSame('27AAAAA0000A1Z0', $company->fresh()->gstin);
+    }
+
     public function test_account_type_is_restricted_to_savings_or_current(): void
     {
         // The value is printed verbatim on the invoice and read by an accounts
@@ -80,6 +104,36 @@ class CompanyBankDetailsTest extends TestCase
             ->assertSessionHasErrors('bank_account_type');
 
         $this->assertNull($company->fresh()->bank_account_type);
+    }
+
+    public function test_a_mistyped_ifsc_or_upi_id_is_caught_with_a_clear_message(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::factory()->recycle($user)->create(['state_id' => $this->state()->id, 'invoice_prefix' => 'INV/', 'invoice_number_padding' => 4]);
+
+        $this->actingAs($user)->patch(route('companies.update', $company),
+            $this->companyPayload(['bank_ifsc' => 'SBIN12', 'upi_id' => 'qaupi']))
+            ->assertSessionHasErrors(['bank_ifsc', 'upi_id']);
+
+        $this->actingAs($user)->patch(route('companies.update', $company),
+            $this->companyPayload(['bank_ifsc' => ' sbin0001234 ', 'upi_id' => 'sharmatraders@okicici']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('SBIN0001234', $company->fresh()->bank_ifsc);
+        $this->assertSame('sharmatraders@okicici', $company->fresh()->upi_id);
+    }
+
+    public function test_an_old_ifsc_saved_before_the_check_does_not_block_saving_other_settings(): void
+    {
+        $user = User::factory()->create();
+        $company = Company::factory()->recycle($user)->create([
+            'state_id' => $this->state()->id, 'invoice_prefix' => 'INV/', 'invoice_number_padding' => 4,
+            'bank_ifsc' => 'OLDVALUE', 'upi_id' => 'shop-upi',
+        ]);
+
+        $this->actingAs($user)->patch(route('companies.update', $company),
+            $this->companyPayload(['bank_ifsc' => 'OLDVALUE', 'upi_id' => 'shop-upi', 'phone' => '9876543210']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('9876543210', $company->fresh()->phone);
     }
 
     public function test_the_invoice_prints_the_payee_name_and_account_type(): void

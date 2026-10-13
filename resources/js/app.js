@@ -5,6 +5,29 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+/* Copy text for the "Copy link" buttons. The clipboard API is refused on
+ * plain http, in some in-app browsers and when the page is not focused, so
+ * fall back to the older copy command and, failing that, show the text to
+ * copy by hand. Resolves true only when the text really was copied, so a
+ * button never says "Copied" when nothing was. */
+window.copyText = async (text) => {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch (e) { /* fall through */ }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    if (!ok) window.prompt('Copy this:', text);
+    return ok;
+};
+
 /* ------------------------------------------------------------------
  * Modal focus management.
  *
@@ -120,7 +143,9 @@ document.addEventListener('submit', (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement)) return;
     if (form.hasAttribute('data-no-submit-state')) return;
-    if ((form.method || 'get').toLowerCase() === 'get') return;
+    // getAttribute, not form.method: a field named "method" (the payment
+    // forms have one) shadows the property with the element itself.
+    if ((form.getAttribute('method') || 'get').toLowerCase() === 'get') return;
 
     // HTML5 validation failed — do not lock the button.
     if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;

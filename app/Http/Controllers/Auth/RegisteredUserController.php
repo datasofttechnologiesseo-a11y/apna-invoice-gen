@@ -65,8 +65,8 @@ class RegisteredUserController extends Controller
             'marketing_opt_in' => ['nullable', 'boolean'],
             'cf-turnstile-response' => ['nullable', 'string', new TurnstileValid($request->ip())],
         ], [
-            'terms_accepted.accepted' => 'Please accept the Terms of Service and Privacy Policy to continue.',
-            'phone.required' => 'Please enter your mobile number so we can help you get started.',
+            'terms_accepted.accepted' => 'Accept the Terms of Service and Privacy Policy to continue.',
+            'phone.required' => 'Enter your mobile number.',
             'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
         ]);
 
@@ -78,13 +78,13 @@ class RegisteredUserController extends Controller
         // team to reach out. When an SMS gateway is wired up, pass $phone here.
         $result = $otp->send(null, $code, $request->email);
 
-        // Stash the pending registration. Password is kept only for the life of
-        // this server-side session and is hashed the moment the account is made.
+        // Stash the pending registration. The password is hashed before it goes
+        // into the session, so a session store never holds it in plain text.
         $request->session()->put(self::SESSION_KEY, [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $phone,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
             'marketing_opt_in' => $request->boolean('marketing_opt_in'),
             'referral_code' => $referralCode,
             'otp_hash' => Hash::make($code),
@@ -118,7 +118,10 @@ class RegisteredUserController extends Controller
         $reg = $request->session()->get(self::SESSION_KEY);
         if (! $reg) {
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Your sign-up session expired. Please start again.']);
+                ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
+        }
+        if (! $this->cameFromGoogle($reg)) {
+            return $this->toCodeStep($reg);
         }
 
         return view('auth.register-mobile', ['name' => $reg['name'] ?? null]);
@@ -129,13 +132,20 @@ class RegisteredUserController extends Controller
         $reg = $request->session()->get(self::SESSION_KEY);
         if (! $reg) {
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Your sign-up session expired. Please start again.']);
+                ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
+        }
+        // The email sign-up form stashes its details under the same session
+        // key. Without this check, posting here straight after that form
+        // created a verified account for an email whose code was never
+        // entered, i.e. anyone's email.
+        if (! $this->cameFromGoogle($reg)) {
+            return $this->toCodeStep($reg);
         }
 
         $request->validate([
             'phone' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
         ], [
-            'phone.required' => 'Please enter your mobile number so we can help you get started.',
+            'phone.required' => 'Enter your mobile number.',
             'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
         ]);
 
@@ -150,13 +160,33 @@ class RegisteredUserController extends Controller
         return redirect()->route('onboarding.index');
     }
 
+    /**
+     * A pending registration may skip the emailed code only when Google has
+     * proven the email, which SocialAuthController marks with 'via' => 'google'.
+     */
+    private function cameFromGoogle(array $reg): bool
+    {
+        return ($reg['via'] ?? null) === 'google';
+    }
+
+    /** Back to the code screen of an email sign-up, or to the start if there is none. */
+    private function toCodeStep(array $reg): RedirectResponse
+    {
+        if (isset($reg['otp_hash'])) {
+            return redirect()->route('register.verify');
+        }
+
+        return redirect()->route('register')
+            ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
+    }
+
     /** Step 2 — show the OTP entry screen. */
     public function showVerify(Request $request, OtpService $otp): RedirectResponse|View
     {
         $reg = $request->session()->get(self::SESSION_KEY);
         if (! $reg) {
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Your sign-up session expired. Please start again.']);
+                ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
         }
 
         // Where the code actually went — email (fallback) or the masked mobile.
@@ -183,7 +213,7 @@ class RegisteredUserController extends Controller
         $reg = $request->session()->get(self::SESSION_KEY);
         if (! $reg) {
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Your sign-up session expired. Please start again.']);
+                ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
         }
 
         if (now()->timestamp > $reg['expires_at']) {
@@ -191,7 +221,7 @@ class RegisteredUserController extends Controller
             // tap on "Resend code". Forcing a full re-registration here was a
             // major abandonment point.
             return back()->withErrors([
-                'code' => 'That code has expired. Tap "Resend code" below to get a fresh one.',
+                'code' => 'This code has expired. Use "Resend code" below to get a new one.',
             ]);
         }
 
@@ -201,7 +231,7 @@ class RegisteredUserController extends Controller
             // their password, not everything.
             return redirect()->route('register')
                 ->withInput(['name' => $reg['name'], 'email' => $reg['email'], 'phone' => ltrim(str_replace('+91', '', (string) ($reg['phone'] ?? '')), '0')])
-                ->withErrors(['email' => 'Too many incorrect attempts. Please re-submit the form to get a new code.']);
+                ->withErrors(['email' => 'Too many incorrect attempts. Submit the form again to get a new code.']);
         }
 
         if (! Hash::check($request->code, $reg['otp_hash'])) {
@@ -237,12 +267,12 @@ class RegisteredUserController extends Controller
         $reg = $request->session()->get(self::SESSION_KEY);
         if (! $reg) {
             return redirect()->route('register')
-                ->withErrors(['phone' => 'Your sign-up session expired. Please start again.']);
+                ->withErrors(['phone' => 'Your sign-up session has expired. Start again.']);
         }
 
         if (now()->timestamp < $reg['resend_at']) {
             $wait = $reg['resend_at'] - now()->timestamp;
-            return back()->withErrors(['code' => "Please wait {$wait}s before requesting a new code."]);
+            return back()->withErrors(['code' => "Wait {$wait} seconds before requesting a new code."]);
         }
 
         // Cap total resends so the per-code attempt limit can't be reset forever.
@@ -250,7 +280,7 @@ class RegisteredUserController extends Controller
             $request->session()->forget(self::SESSION_KEY);
             return redirect()->route('register')
                 ->withInput(['name' => $reg['name'], 'email' => $reg['email'], 'phone' => ltrim(str_replace('+91', '', (string) ($reg['phone'] ?? '')), '0')])
-                ->withErrors(['email' => 'Too many code requests. Please re-submit the form to start fresh.']);
+                ->withErrors(['email' => 'Too many code requests. Submit the form again to start over.']);
         }
 
         $code = $otp->generateCode();

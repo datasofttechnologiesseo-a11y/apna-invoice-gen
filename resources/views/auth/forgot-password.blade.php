@@ -1,6 +1,7 @@
 <x-guest-layout :title="'Reset your password'" :noindex="true">
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? Enter your registered email below and we will send you a secure reset link.') }}
+    <h1 class="font-display text-2xl sm:text-[1.75rem] font-bold text-gray-900 tracking-tight">Reset your password</h1>
+    <div class="mt-2 mb-6 text-[15px] text-gray-600">
+        {{ __('Enter your registered email address. We will send you a link to reset your password.') }}
     </div>
 
     <!-- Session Status -->
@@ -13,13 +14,13 @@
          actually went. Never shown in production - a signed-out visitor must
          not learn how the server is configured. --}}
     @if (session('status') && ! app()->isProduction() && in_array(config('mail.default'), ['log', 'array', 'null'], true))
-        <div class="mb-4 rounded-md bg-accent-50 border border-accent-200 p-3 text-xs text-accent-900">
+        <div class="mb-4 rounded-lg bg-accent-50 ring-1 ring-accent-200 px-4 py-3 text-xs text-accent-900">
             <strong>Development note:</strong> <code>MAIL_MAILER</code> is
             <code>{{ config('mail.default') }}</code>, so no email was actually sent.
             @if (config('mail.default') === 'log')
                 The message and its reset link are in <code>storage/logs/laravel.log</code>.
             @endif
-            Run <code>php artisan mail:check</code> for the full picture.
+            Run <code>php artisan mail:check</code> for details.
         </div>
     @endif
 
@@ -28,17 +29,19 @@
 
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email *')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-label for="email" :value="__('Email *')" class="font-semibold text-gray-800" />
+            <x-text-input id="email" class="block mt-1.5 w-full min-h-[44px] rounded-lg" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+            <x-input-error :messages="$errors->get('email')" for="email" class="mt-2" />
         </div>
 
         <x-turnstile />
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
+        <x-primary-button class="w-full mt-6 min-h-[48px] !rounded-lg !text-base">
+            {{ __('Send reset link') }}
+        </x-primary-button>
+
+        <p class="mt-4 text-center text-sm">
+            <a href="{{ route('login') }}" class="font-medium text-brand-700 hover:text-brand-800 hover:underline underline-offset-2">Back to log in</a>
+        </p>
     </form>
 </x-guest-layout>

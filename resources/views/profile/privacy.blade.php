@@ -7,15 +7,15 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <x-flash />
 
             {{-- Marketing consent --}}
-            <section class="bg-white shadow sm:rounded-lg p-6">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6">
                 <h2 class="font-semibold text-gray-900">Communication preferences</h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Account, security and billing emails are essential and are always sent. Marketing
-                    emails (product news and offers) are optional - you can withdraw consent any time.
+                    Account, security and billing emails are always sent. Marketing emails (product
+                    news and offers) are optional. You can withdraw consent at any time.
                 </p>
 
                 <form method="POST" action="{{ route('profile.privacy.marketing') }}" class="mt-4 flex items-center justify-between gap-4">
@@ -35,11 +35,11 @@
             </section>
 
             {{-- Right to access --}}
-            <section class="bg-white shadow sm:rounded-lg p-6">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6">
                 <h2 class="font-semibold text-gray-900">Access &amp; portability</h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Download a complete copy of your account, invoices, customers and products as a ZIP
-                    archive - yours to keep or move elsewhere.
+                    Download a complete copy of your account, invoices, customers and products as a
+                    ZIP file.
                 </p>
                 <a href="{{ route('backup.index') }}"
                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-800 hover:bg-gray-200 transition">
@@ -49,9 +49,9 @@
             </section>
 
             {{-- Consent history --}}
-            <section class="bg-white shadow sm:rounded-lg p-6">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6">
                 <h2 class="font-semibold text-gray-900">Consent history</h2>
-                <p class="text-sm text-gray-500 mt-1">Every consent decision, time-stamped with the policy version in force. This log is append-only.</p>
+                <p class="text-sm text-gray-500 mt-1">Each consent decision with its date and policy version. Entries cannot be edited.</p>
 
                 <div class="mt-4 overflow-x-auto">
                     <table class="min-w-full text-sm">
@@ -74,11 +74,11 @@
                                         </span>
                                     </td>
                                     <td class="py-2 pr-4 text-gray-500">{{ $c->policy_version }}</td>
-                                    <td class="py-2 pr-4 text-gray-500">{{ $c->created_at?->format('d M Y, H:i') }}</td>
+                                    <td class="py-2 pr-4 text-gray-500">{{ $c->created_at?->format('d M Y, h:i A') }}</td>
                                     <td class="py-2 text-gray-500">{{ str_replace('_', ' ', $c->context) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="py-4 text-center text-gray-500">No consent events recorded yet.</td></tr>
+                                <tr><td colspan="5" class="py-4 text-center text-gray-500">No consent records yet.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -86,13 +86,12 @@
             </section>
 
             {{-- Right to erasure --}}
-            <section class="bg-white shadow sm:rounded-lg p-6 border-l-4 border-danger-300">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 p-6 border-l-4 border-danger-300">
                 <h2 class="font-semibold text-gray-900">Delete my account</h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Permanently delete your account and personal data. Note: where Indian GST law requires
-                    invoice records to be kept (up to {{ intdiv(config('legal.gst_retention_months', 72), 12) }} years),
-                    those records are retained in de-identified form and automatically purged once the retention
-                    period ends - everything else is erased immediately.
+                    Permanently delete your account and personal data. Invoice records that GST law requires
+                    us to keep (up to {{ intdiv(config('legal.gst_retention_months', 72), 12) }} years) are retained
+                    in de-identified form and deleted when that period ends. Everything else is erased immediately.
                 </p>
                 <a href="{{ route('profile.edit') }}#delete-account"
                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-danger-600 text-white hover:bg-danger-700 transition">
@@ -104,8 +103,8 @@
             <section class="bg-gray-50 ring-1 ring-gray-200 sm:rounded-lg p-6">
                 <h2 class="font-semibold text-gray-900">Grievance Officer</h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Operated by {{ config('legal.operator') }}. For any data protection concern, contact our
-                    Grievance Officer - we respond within {{ config('legal.request_response_days', 30) }} days.
+                    Operated by {{ config('legal.operator') }}. For data protection concerns, contact our
+                    Grievance Officer. We respond within {{ config('legal.request_response_days', 30) }} days.
                 </p>
                 <dl class="mt-3 text-sm text-gray-700 space-y-1">
                     <div><dt class="inline font-medium">Name:</dt> <dd class="inline">{{ config('legal.grievance.name') }}</dd></div>
@@ -114,7 +113,7 @@
                     </div>
                 </dl>
                 <p class="text-xs text-gray-500 mt-3">
-                    See our full <a href="{{ route('pages.privacy') }}" class="underline">Privacy Policy</a> for details.
+                    Read the full <a href="{{ route('pages.privacy') }}" class="underline">Privacy Policy</a>.
                 </p>
             </section>
         </div>

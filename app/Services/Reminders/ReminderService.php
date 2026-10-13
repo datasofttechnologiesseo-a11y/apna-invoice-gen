@@ -62,7 +62,9 @@ class ReminderService
     {
         return InvoiceReminder::where('invoice_id', $invoice->id)
             ->where('channel', $channel)
-            ->where('days_past_due', $threshold)
+            // A reminder sent at a later stage covers the earlier ones: an
+            // invoice first seen 11 days late gets one mail, not three.
+            ->where('days_past_due', '>=', $threshold)
             ->where('trigger', 'auto')
             ->where('status', 'sent')
             ->exists();
@@ -85,29 +87,46 @@ class ReminderService
         // This is the explicit Vyapar-trust-killer guard.
         $invoice->refresh();
         if (! $this->isEligible($invoice)) {
-            return $this->log($invoice, $channel, '', 'skipped', 0, $trigger, 'Invoice no longer eligible (paid or cancelled in the meantime).');
+            return $this->log($invoice, $channel, '', 'skipped', 0, $trigger, 'No reminder sent. This invoice has been paid or cancelled.');
         }
 
         if (! $ch->isAvailable()) {
-            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "Channel {$channel} not configured.");
+            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "Reminders by {$channel} are not set up.");
         }
 
         $recipient = $ch->recipientFor($invoice);
         if (! $recipient) {
-            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "No {$channel} recipient on customer.");
+            return $this->log($invoice, $channel, '', 'failed', 0, $trigger, "No {$channel} contact saved for this customer.");
         }
 
-        $days = $thresholdOverride ?? $this->daysPastDue($invoice);
-        $ok = $ch->send($invoice, max(0, $days));
+        // A customer should not get more than a few reminders a day for one
+        // bill, however often the button is pressed (web or app).
+        if ($trigger === 'manual') {
+            $cap = (int) config('reminders.manual_daily_cap', 5);
+            $sentToday = InvoiceReminder::where('invoice_id', $invoice->id)
+                ->where('trigger', 'manual')->where('status', 'sent')
+                ->where('sent_at', '>=', now()->startOfDay())
+                ->count();
+            if ($cap > 0 && $sentToday >= $cap) {
+                return $this->log($invoice, $channel, $recipient, 'failed', $this->daysPastDue($invoice), $trigger,
+                    "{$cap} reminders have already been sent for this invoice today. Try again tomorrow.");
+            }
+        }
+
+        // The mail is worded by the real days (a reminder before the due date
+        // names the date, not "due today"); the log keeps the threshold the
+        // automatic run is tracking, if any.
+        $realDays = $this->daysPastDue($invoice);
+        $ok = $ch->send($invoice, $realDays);
 
         return $this->log(
             $invoice,
             $channel,
             $recipient,
             $ok ? 'sent' : 'failed',
-            $days,
+            $thresholdOverride ?? $realDays,
             $trigger,
-            $ok ? null : "Channel returned failure (see logs).",
+            $ok ? null : "Reminder could not be sent. Try again later.",
         );
     }
 
@@ -136,14 +155,19 @@ class ReminderService
             ->keys()
             ->filter(fn ($k) => isset($this->channels[$k]) && $this->channels[$k]->isAvailable());
 
+        // Only the latest stage reached: an invoice already 11 days late when
+        // first seen gets the 7-day reminder (worded "11 days overdue"), not
+        // the 0-, 3- and 7-day ones in one go.
+        $threshold = $thresholds->last();
+        if ($threshold === null) {
+            return [];
+        }
         $sent = [];
-        foreach ($thresholds as $threshold) {
-            foreach ($enabledChannels as $channel) {
-                if ($this->alreadySentAutomatic($invoice, $channel, (int) $threshold)) {
-                    continue;
-                }
-                $sent[] = $this->send($invoice, $channel, 'auto', (int) $threshold);
+        foreach ($enabledChannels as $channel) {
+            if ($this->alreadySentAutomatic($invoice, $channel, (int) $threshold)) {
+                continue;
             }
+            $sent[] = $this->send($invoice, $channel, 'auto', (int) $threshold);
         }
 
         return $sent;

@@ -48,6 +48,12 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // App tokens never expire, so whoever signed in to the app
+                // with the old password would keep access after the reset.
+                $user->tokens()->delete();
+                // And every browser still signed in with the old password.
+                $user->endOtherBrowserSessions();
+
                 event(new PasswordReset($user));
             }
         );

@@ -84,6 +84,21 @@ class ProductArchiveTest extends TestCase
         $this->assertStringContainsString('Restore', $flash);
     }
 
+    public function test_an_item_with_stock_history_is_archived_so_the_history_survives(): void
+    {
+        $user = $this->owner();
+        $product = $this->productFor($user, 'Steel rack');
+        $product->forceFill(['kind' => 'goods', 'hsn_sac' => '94032090', 'track_stock' => true, 'opening_stock' => 5])->save();
+        app(\App\Services\StockLedger::class)->adjust($product, now(), 3, 'Stock received', $user);
+
+        $this->actingAs($user)->get(route('products.index'))->assertOk()
+            ->assertSee('used on stock entries, so it will be archived', false);
+        $this->actingAs($user)->delete(route('products.destroy', $product))->assertRedirect();
+
+        $this->assertFalse($product->fresh()->is_active);
+        $this->assertSame(1, $product->stockMovements()->count(), 'stock history kept');
+    }
+
     public function test_deleting_a_product_that_was_never_invoiced_really_deletes_it(): void
     {
         $user = $this->owner();

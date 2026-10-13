@@ -25,6 +25,11 @@ class SendWeeklyBackups extends Command
 
         if ($ids = $this->option('user')) {
             $query->whereIn('id', $ids);
+        } else {
+            // Once a week: a second run (a retried cron, two servers) must not
+            // mail the same backup again. Naming users with --user overrides it.
+            $query->where(fn ($q) => $q->whereNull('last_backup_sent_at')
+                ->orWhere('last_backup_sent_at', '<', now()->subDays(6)));
         }
 
         $users = $query->get();

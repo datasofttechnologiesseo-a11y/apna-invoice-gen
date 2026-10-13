@@ -27,6 +27,7 @@ class Company extends Model
         'cash_memo_prefix', 'cash_memo_counter', 'cash_memo_number_padding', 'cash_memo_counter_fy',
         'quote_prefix', 'quote_counter', 'quote_number_format', 'quote_counter_fy',
         'books_locked_until',
+        'lut_number',
         'onboarded_at',
     ];
 
@@ -108,6 +109,12 @@ class Company extends Model
         return $this->belongsTo(State::class);
     }
 
+    /** People invited to work in this business (see CompanyMember). */
+    public function members(): HasMany
+    {
+        return $this->hasMany(CompanyMember::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
@@ -148,6 +155,16 @@ class Company extends Model
         return $this->hasMany(Quotation::class);
     }
 
+    public function vendors(): HasMany
+    {
+        return $this->hasMany(Vendor::class);
+    }
+
+    public function purchaseBills(): HasMany
+    {
+        return $this->hasMany(PurchaseBill::class);
+    }
+
     /**
      * Preview the NEXT quote number without mutating the counter.
      * Mirrors invoice numbering — supports {FY} / {N} placeholders, defaults
@@ -158,32 +175,26 @@ class Company extends Model
     public function nextQuoteNumber(?string $referenceDate = null): string
     {
         $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();
-        [$fyStartYear, $fyEndYear] = self::financialYearFor($ref);
+        [$fyStartYear] = self::financialYearFor($ref);
 
         $counter = ($this->quote_counter_fy && $this->quote_counter_fy < $fyStartYear)
             ? 0
             : ($this->quote_counter ?? 0);
 
-        $next = $counter + 1;
-        $padded = str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+        // Skip numbers already taken: a quote saved with the suggested number
+        // typed in, or entered by hand, does not move the counter.
+        do {
+            $number = $this->renderQuoteNumber(++$counter, $ref);
+        } while ($this->quoteNumberTaken($number));
 
-        $format = $this->quote_number_format;
-        if (! $format) {
-            return ($this->quote_prefix ?: 'QT') . '-' . $padded;
-        }
-
-        return strtr($format, [
-            '{FY}' => sprintf('%04d-%02d', $fyStartYear, $fyEndYear % 100),
-            '{FY_SHORT}' => sprintf('%02d-%02d', $fyStartYear % 100, $fyEndYear % 100),
-            '{YYYY}' => $ref->format('Y'),
-            '{N}' => $padded,
-        ]);
+        return $number;
     }
 
     /**
      * Atomically advance the quote counter when the user sends/accepts a
      * quote. Caller should hold a DB lock on this row. Mirrors the invoice
-     * pattern (FY rollover handled).
+     * pattern (FY rollover handled), and skips numbers already in use so
+     * sending never collides with a quote numbered by hand.
      */
     public function bumpQuoteCounter(?string $referenceDate = null): string
     {
@@ -193,23 +204,36 @@ class Company extends Model
         if ($this->quote_counter_fy !== null && $this->quote_counter_fy < $fyStartYear) {
             $this->quote_counter = 0;
         }
-        $this->quote_counter = ($this->quote_counter ?? 0) + 1;
+        do {
+            $this->quote_counter = ($this->quote_counter ?? 0) + 1;
+            $number = $this->renderQuoteNumber($this->quote_counter, $ref);
+        } while ($this->quoteNumberTaken($number));
         $this->quote_counter_fy = $fyStartYear;
         $this->save();
 
-        // Re-render the number using the now-incremented counter
-        $padded = str_pad((string) $this->quote_counter, 4, '0', STR_PAD_LEFT);
+        return $number;
+    }
+
+    private function renderQuoteNumber(int $counter, \Carbon\CarbonInterface $ref): string
+    {
+        $padded = str_pad((string) $counter, 4, '0', STR_PAD_LEFT);
         $format = $this->quote_number_format;
         if (! $format) {
             return ($this->quote_prefix ?: 'QT') . '-' . $padded;
         }
         [$fyS, $fyE] = self::financialYearFor($ref);
+
         return strtr($format, [
             '{FY}' => sprintf('%04d-%02d', $fyS, $fyE % 100),
             '{FY_SHORT}' => sprintf('%02d-%02d', $fyS % 100, $fyE % 100),
             '{YYYY}' => $ref->format('Y'),
             '{N}' => $padded,
         ]);
+    }
+
+    private function quoteNumberTaken(string $number): bool
+    {
+        return $this->exists && Quotation::where('company_id', $this->id)->where('quote_number', $number)->exists();
     }
 
     /**
@@ -283,12 +307,30 @@ class Company extends Model
             return ($this->invoice_prefix ?: 'INV') . '-' . $padded;
         }
 
-        return strtr($format, [
-            '{FY}' => sprintf('%04d-%02d', $fyStartYear, $fyEndYear % 100),
-            '{FY_SHORT}' => sprintf('%02d-%02d', $fyStartYear % 100, $fyEndYear % 100),
+        return $this->renderNumber($format, $fyStartYear, $fyEndYear, $ref, $padded);
+    }
+
+    /**
+     * An invoice number from the format. Rule 46(b) allows 16 characters: a
+     * format that fits at its normal length ("INV/2026-27/0001") but outgrows
+     * it once the count needs another digit (the 10,000th bill of the year)
+     * takes the short year instead ("INV/26-27/10000"). A format that is too
+     * long even at its normal length is left as chosen; settings warn about it.
+     */
+    private function renderNumber(string $format, int $fyS, int $fyE, \Illuminate\Support\Carbon $ref, string $padded): string
+    {
+        $tokens = [
+            '{FY}' => sprintf('%04d-%02d', $fyS, $fyE % 100),
+            '{FY_SHORT}' => sprintf('%02d-%02d', $fyS % 100, $fyE % 100),
             '{YYYY}' => $ref->format('Y'),
-            '{N}' => $padded,
-        ]);
+        ];
+        $number = strtr($format, $tokens + ['{N}' => $padded]);
+        $normal = strtr($format, $tokens + ['{N}' => str_repeat('0', $this->invoice_number_padding ?: 4)]);
+        if (mb_strlen($number) > 16 && mb_strlen($normal) <= 16 && str_contains($format, '{FY}')) {
+            $number = strtr(str_replace('{FY}', '{FY_SHORT}', $format), $tokens + ['{N}' => $padded]);
+        }
+
+        return $number;
     }
 
     /**
@@ -314,7 +356,7 @@ class Company extends Model
      *   - a format is only derived when none has been chosen, so a deliberate
      *     setting is never overwritten.
      */
-    public function learnSeriesFrom(string $number): void
+    public function learnSeriesFrom(string $number, $invoiceDate = null): void
     {
         if (! preg_match('/^(.*?)(\d+)$/', trim($number), $m)) {
             return;   // no trailing number to continue from
@@ -322,16 +364,30 @@ class Company extends Model
 
         [, $prefix, $digits] = $m;
         $value = (int) $digits;
+        $ref = $invoiceDate ? \Illuminate\Support\Carbon::parse($invoiceDate) : now();
+        [$fyS, $fyE] = self::financialYearFor($ref);
+        $currentFy = self::financialYearFor(now())[0];
 
         $changes = [];
 
-        if ($value > (int) ($this->invoice_counter ?? 0)) {
+        // Only a number from this financial year moves this year's counter.
+        // A late bill numbered in last year's book (INV/2025-26/0151) moved
+        // it to 151, so the next bill of this year was 0152 after 0010.
+        $counter = ($this->invoice_counter_fy !== null && $this->invoice_counter_fy < $currentFy) ? 0 : (int) ($this->invoice_counter ?? 0);
+        if ($fyS >= $currentFy && $value > $counter) {
             $changes['invoice_counter'] = $value;
-            $changes['invoice_counter_fy'] = self::financialYearFor(now())[0];
+            $changes['invoice_counter_fy'] = $currentFy;
         }
 
         if (blank($this->invoice_number_format)) {
-            $changes['invoice_number_format'] = $prefix . '{N}';
+            // A year written in the number becomes the year token, so the
+            // series follows the financial year instead of repeating this one.
+            $template = str_replace(
+                [sprintf('%04d-%02d', $fyS, $fyE % 100), sprintf('%02d-%02d', $fyS % 100, $fyE % 100)],
+                ['{FY}', '{FY_SHORT}'],
+                $prefix
+            );
+            $changes['invoice_number_format'] = $template . '{N}';
             $changes['invoice_number_padding'] = strlen($digits);
         }
 
@@ -344,6 +400,17 @@ class Company extends Model
     {
         $ref = $referenceDate ? \Illuminate\Support\Carbon::parse($referenceDate) : now();
         [$fyStartYear] = self::financialYearFor($ref);
+
+        // An invoice dated in an EARLIER financial year than the counter (a
+        // late bill for last March, books not yet locked) continues that
+        // year's own series. Using this year's counter gave it a number like
+        // INV/2025-26/0005 after 0002, a gap Rule 46(b) and GSTR-1 Table 13
+        // do not allow, and moved the counter's year back, so this year's
+        // series restarted at 0001 and had to skip the numbers already used.
+        if ($this->invoice_counter_fy !== null && $this->invoice_counter_fy > $fyStartYear
+            && $this->numberingRestartsEachYear()) {
+            return $this->nextNumberInEarlierYear($ref);
+        }
 
         if ($this->invoice_counter_fy !== null && $this->invoice_counter_fy < $fyStartYear) {
             $this->invoice_counter = 0;
@@ -361,12 +428,54 @@ class Company extends Model
         if (! $format) {
             return ($this->invoice_prefix ?: 'INV') . '-' . $padded;
         }
-        return strtr($format, [
+        return $this->renderNumber($format, $fyS, $fyE, $ref, $padded);
+    }
+
+    /** Does the invoice number carry the year, so each FY has its own series? */
+    public function numberingRestartsEachYear(): bool
+    {
+        $format = (string) $this->invoice_number_format;
+
+        return str_contains($format, '{FY}') || str_contains($format, '{FY_SHORT}') || str_contains($format, '{YYYY}');
+    }
+
+    /**
+     * The next number in an earlier financial year's own series: one more
+     * than the highest number already issued in that series, skipping any
+     * that are taken. The running counter (this year's) is not touched.
+     */
+    private function nextNumberInEarlierYear(\Illuminate\Support\Carbon $ref): string
+    {
+        [$fyS, $fyE] = self::financialYearFor($ref);
+        $tokens = [
             '{FY}' => sprintf('%04d-%02d', $fyS, $fyE % 100),
             '{FY_SHORT}' => sprintf('%02d-%02d', $fyS % 100, $fyE % 100),
             '{YYYY}' => $ref->format('Y'),
-            '{N}' => $padded,
+        ];
+        $format = (string) $this->invoice_number_format;
+        $patterns = array_unique([
+            '/^' . str_replace('\{N\}', '(\d+)', preg_quote(strtr($format, $tokens), '/')) . '$/',
+            '/^' . str_replace('\{N\}', '(\d+)', preg_quote(strtr(str_replace('{FY}', '{FY_SHORT}', $format), $tokens), '/')) . '$/',
         ]);
+
+        $highest = 0;
+        $numbers = Invoice::where('company_id', $this->id)->whereNotNull('invoice_number')
+            ->whereBetween('invoice_date', [sprintf('%04d-04-01', $fyS), sprintf('%04d-03-31', $fyE)])
+            ->pluck('invoice_number');
+        foreach ($numbers as $number) {
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, (string) $number, $m)) {
+                    $highest = max($highest, (int) $m[1]);
+                }
+            }
+        }
+
+        $padding = $this->invoice_number_padding ?: 4;
+        do {
+            $number = $this->renderNumber($format, $fyS, $fyE, $ref, str_pad((string) ++$highest, $padding, '0', STR_PAD_LEFT));
+        } while (Invoice::where('company_id', $this->id)->where('invoice_number', $number)->exists());
+
+        return $number;
     }
 
     /**

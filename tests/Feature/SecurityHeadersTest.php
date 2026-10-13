@@ -58,6 +58,10 @@ class SecurityHeadersTest extends TestCase
     {
         $this->get('/')->assertHeaderMissing('Strict-Transport-Security');
 
+        // a local or staging HTTPS server must not pin the browser either
+        $this->get('https://localhost/')->assertHeaderMissing('Strict-Transport-Security');
+
+        $this->app['env'] = 'production';
         $secure = $this->get('https://localhost/');
         $this->assertStringContainsString(
             'max-age=31536000',

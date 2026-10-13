@@ -4,7 +4,7 @@
     $docTitle = $invoice->documentTitle();
 @endphp
 <!DOCTYPE html>
-<html>
+<html lang="en-IN">
 <head>
 <meta charset="utf-8">
 <title>{{ $docTitle }} {{ $invoice->displayNumber() }}</title>
@@ -40,12 +40,12 @@
                                         @endif
                                         <tr><td style="padding: 4px 0; color: #6b7280;">Grand total</td><td style="padding: 4px 0; text-align: right; font-weight: 700;">&#8377; {{ inr($invoice->grand_total) }}</td></tr>
                                         @if ($balance > 0 && (float) $invoice->paid_amount > 0)
-                                            <tr><td style="padding: 4px 0; color: #6b7280;">Already paid</td><td style="padding: 4px 0; text-align: right; color: #15803d;">&#8377; {{ inr($invoice->paid_amount) }}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #6b7280;">Paid</td><td style="padding: 4px 0; text-align: right; color: #15803d;">&#8377; {{ inr($invoice->paid_amount) }}</td></tr>
                                         @endif
                                         @if ($balance > 0)
                                             <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #b91c1c; font-weight: 600;">Balance due</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #b91c1c; font-size: 16px;">&#8377; {{ inr($balance) }}</td></tr>
                                         @else
-                                            <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #15803d; font-weight: 600;">Status</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #15803d; font-size: 14px;">PAID IN FULL</td></tr>
+                                            <tr><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; color: #15803d; font-weight: 600;">Status</td><td style="padding: 6px 0; border-top: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #15803d; font-size: 14px;">Paid in full</td></tr>
                                         @endif
                                     </table>
                                 </td>
@@ -59,9 +59,9 @@
                         @endif
 
                         <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">
-                            The invoice PDF is attached for your records.
+                            The invoice PDF is attached.
                             @if ($c->upi_id)
-                                You can also pay via UPI at <strong style="color: #111;">{{ $c->upi_id }}</strong>.
+                                You can also pay by UPI to <strong style="color: #111;">{{ $c->upi_id }}</strong>.
                             @endif
                         </p>
                     </td>
@@ -69,7 +69,7 @@
                 <tr>
                     <td style="padding: 16px 32px; background: #f9fafb; color: #6b7280; font-size: 11px; text-align: center;">
                         Sent from {{ $c->name }} · Powered by <a href="{{ url('/') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #4b5563; font-weight: bold; text-decoration: underline;">{{ config('app.name') }}</a>
-                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses - <a href="{{ route('register') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
+                        <br><span style="color: #9ca3af;">GST billing software for Indian businesses · <a href="{{ route('register') }}?utm_source=invoice_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">Sign up free</a></span>
                     </td>
                 </tr>
             </table>

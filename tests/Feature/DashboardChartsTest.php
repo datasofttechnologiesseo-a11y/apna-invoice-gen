@@ -273,8 +273,8 @@ class DashboardChartsTest extends TestCase
         $page->assertSee("setSpan('yearly')", false);
 
         // Both rings.
-        $page->assertSee('Where your money stands');
-        $page->assertSee('Where your money went');
+        $page->assertSee('>Collection status</div>', false);
+        $page->assertSee('>Spend by category</div>', false);
         $page->assertSee('pathLength="100"', false);
 
         // All four bar combinations are in the DOM, so switching needs no request.

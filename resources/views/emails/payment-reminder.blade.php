@@ -2,14 +2,19 @@
     $c = $invoice->company;
     $cust = $invoice->customer;
     $balance = (float) $invoice->balance;
-    $overdueLabel = $daysPastDue <= 0
-        ? 'due today'
-        : ($daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue');
+    // A reminder can be sent by hand before the due date, so "due today" is
+    // only one of three cases.
+    $dueOn = ($invoice->due_date ?? $invoice->invoice_date)?->format('d M Y');
+    $overdueLabel = match (true) {
+        $daysPastDue < 0 => 'due on ' . $dueOn,
+        $daysPastDue === 0 => 'due today',
+        default => $daysPastDue . ' day' . ($daysPastDue > 1 ? 's' : '') . ' overdue',
+    };
     $accent = $daysPastDue >= 15 ? '#b91c1c' : ($daysPastDue >= 7 ? '#b45309' : '#167c88');
 @endphp
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Payment reminder - {{ $invoice->invoice_number }}</title></head>
+<html lang="en-IN">
+<head><meta charset="utf-8"><title>Payment reminder · {{ $invoice->invoice_number }}</title></head>
 <body style="margin: 0; padding: 0; background: #f4f4f5; font-family: Helvetica, Arial, sans-serif; color: #111;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f4f5; padding: 24px 12px;">
     <tr>
@@ -20,21 +25,25 @@
                         <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85;">{{ $c->name }}</div>
                         <div style="font-size: 20px; font-weight: 700; margin-top: 4px;">Payment reminder</div>
                         <div style="font-size: 13px; margin-top: 4px; opacity: 0.9;">
-                            Invoice {{ $invoice->invoice_number }} - <strong>{{ $overdueLabel }}</strong>
+                            Invoice {{ $invoice->invoice_number }} · <strong>{{ $overdueLabel }}</strong>
                         </div>
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 28px 32px; font-size: 14px; line-height: 1.6; color: #333;">
                         <p>Hi {{ $cust->name }},</p>
-                        @if ($daysPastDue <= 0)
+                        @if ($daysPastDue < 0)
                             <p>This is a friendly reminder that invoice <strong>{{ $invoice->invoice_number }}</strong>
-                                @if ($invoice->due_date) is due <strong>today ({{ $invoice->due_date->format('d M Y') }})</strong>@endif.
-                                Please arrange the payment at your earliest convenience.</p>
+                                is due on <strong>{{ $dueOn }}</strong>.
+                                If you have already paid, please ignore this reminder.</p>
+                        @elseif ($daysPastDue === 0)
+                            <p>This is a reminder that invoice <strong>{{ $invoice->invoice_number }}</strong>
+                                is due <strong>today ({{ $dueOn }})</strong>.
+                                Please arrange payment at the earliest.</p>
                         @else
                             <p>Our records show that invoice <strong>{{ $invoice->invoice_number }}</strong>
-                                @if ($invoice->due_date) was due on <strong>{{ $invoice->due_date->format('d M Y') }}</strong> - it's now <strong>{{ $daysPastDue }} day{{ $daysPastDue > 1 ? 's' : '' }} overdue</strong>@endif.
-                                If you've already paid, please ignore this note.</p>
+                                @if ($invoice->due_date) was due on <strong>{{ $invoice->due_date->format('d M Y') }}</strong> and is now <strong>{{ $daysPastDue }} day{{ $daysPastDue > 1 ? 's' : '' }} overdue</strong>@endif.
+                                If you have already paid, please ignore this reminder.</p>
                         @endif
 
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 1px solid #e5e7eb; border-radius: 6px;">
@@ -44,8 +53,12 @@
                                     <div style="font-size: 28px; font-weight: 700; color: {{ $accent }}; margin-top: 4px;">&#8377; {{ inr($balance) }}</div>
                                     <div style="font-size: 13px; color: #6b7280; margin-top: 8px;">
                                         Invoice total: ₹{{ inr($invoice->grand_total) }}
+                                        {{-- Credit notes reduce what is owed: shown so total, credits and payments add up to the balance. --}}
+                                        @if ((float) $invoice->credited_amount > 0)
+                                            · Credit notes: ₹{{ inr($invoice->credited_amount) }}
+                                        @endif
                                         @if ((float) $invoice->paid_amount > 0)
-                                            · Already paid: ₹{{ inr($invoice->paid_amount) }}
+                                            · Paid: ₹{{ inr($invoice->paid_amount) }}
                                         @endif
                                     </div>
                                 </td>
@@ -64,7 +77,7 @@
 
                         <p style="margin-top: 24px;">Thank you for your business.</p>
                         <p style="margin-top: 16px;">
-                            Warm regards,<br>
+                            Regards,<br>
                             <strong>{{ $c->name }}</strong>
                             @if ($c->phone)<br><span style="color: #6b7280;">{{ $c->phone }}</span>@endif
                         </p>
@@ -73,7 +86,7 @@
                 <tr>
                     <td style="padding: 16px 32px; background: #f9fafb; color: #6b7280; font-size: 11px; text-align: center;">
                         Sent from {{ $c->name }} · Powered by <a href="{{ url('/') }}?utm_source=reminder_email&utm_medium=email&utm_campaign=powered_by" style="color: #4b5563; font-weight: bold; text-decoration: underline;">{{ config('app.name') }}</a>
-                        <br><span style="color: #9ca3af;">Free GST invoicing for Indian businesses - <a href="{{ route('register') }}?utm_source=reminder_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">create yours free</a></span>
+                        <br><span style="color: #9ca3af;">GST billing software for Indian businesses · <a href="{{ route('register') }}?utm_source=reminder_email&utm_medium=email&utm_campaign=powered_by" style="color: #9ca3af; text-decoration: underline;">Sign up free</a></span>
                     </td>
                 </tr>
             </table>

@@ -22,10 +22,15 @@ class InvoiceResource extends JsonResource
             'invoice_date' => optional($this->invoice_date)->toDateString(),
             'due_date' => optional($this->due_date)->toDateString(),
             'customer_id' => $this->customer_id,
-            'customer' => new CustomerResource($this->whenLoaded('customer')),
+            // As issued (snapshot) on an issued invoice, like the PDF and the web.
+            'customer' => $this->whenLoaded('customer', fn () => new CustomerResource($this->billedCustomer())),
             'place_of_supply_state_id' => $this->place_of_supply_state_id,
             'is_interstate' => (bool) $this->is_interstate,
             'reverse_charge' => (bool) $this->reverse_charge,
+            'supply_type' => $this->supplyType(),
+            'export_port_code' => $this->export_port_code,
+            'shipping_bill_number' => $this->shipping_bill_number,
+            'shipping_bill_date' => $this->shipping_bill_date?->toDateString(),
 
             // Ship-to
             'has_separate_ship_to' => $this->hasSeparateShipTo(),
@@ -54,6 +59,8 @@ class InvoiceResource extends JsonResource
             'round_off' => (float) $this->round_off,
             'grand_total' => (float) $this->grand_total,
             'paid_amount' => (float) $this->paid_amount,
+            'paid_method' => $this->paid_method,
+            'paid_reference' => $this->paid_reference,
             'credited_amount' => (float) $this->credited_amount,
             'balance' => (float) $this->balance,
             'effective_balance' => (float) $this->effectiveBalance(),
@@ -69,7 +76,8 @@ class InvoiceResource extends JsonResource
                 'soft_edit' => $this->isSoftEditable(),
                 'finalize' => $this->isDraft(),
                 'cancel' => $this->canBeCancelled(),
-                'delete' => $this->isEditable() || $this->isCancelled(),
+                // Same rule as the website: an issued number is never deleted.
+                'delete' => $this->canBeDeleted(),
             ],
 
             'finalized_at' => optional($this->finalized_at)->toIso8601String(),

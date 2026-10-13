@@ -18,9 +18,9 @@ class BlogController extends Controller
     {
         $posts = Post::published()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('title', 'like', "%{$s}%")
-                    ->orWhere('excerpt', 'like', "%{$s}%")
-                    ->orWhere('meta_keywords', 'like', "%{$s}%");
+                $w->whereLiteralLike('title', $s)
+                    ->orWhereLiteralLike('excerpt', $s)
+                    ->orWhereLiteralLike('meta_keywords', $s);
             }))
             ->orderByDesc('published_at')
             ->paginate(min((int) $request->integer('per_page', 12), 50));

@@ -18,7 +18,7 @@ class CustomerController extends Controller
         $customers = $company->customers()
             ->with('state')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)->orWhereLiteralLike('email', $s);
             }))
             ->orderBy('name')
             ->paginate(min((int) $request->integer('per_page', 20), 100));
@@ -96,13 +96,21 @@ class CustomerController extends Controller
                     'date' => optional($cn->credit_note_date)->toDateString() ?? (string) $cn->credit_note_date,
                     'type' => 'credit_note',
                     'ref' => $cn->credit_note_number,
-                    'particulars' => 'Credit note · ' . ($cn->reason ?? ''),
+                    'particulars' => 'Credit note · ' . $cn->reasonLabel(),
                     'debit' => 0.0,
                     'credit' => (float) $cn->amount,
                 ]);
             }
         }
-        $entries = $entries->sortBy(['date', 'type'])->values();
+        // Same day: the invoice first, then what settles it (credit note,
+        // then payment). Sorting the type names alphabetically put a credit
+        // note before its own invoice and the running balance went negative.
+        $typeOrder = ['invoice' => 0, 'credit_note' => 1, 'payment' => 2];
+        $day = fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
+        $entries = $entries->sortBy([
+            fn ($a, $b) => strcmp($day($a['date']), $day($b['date'])),
+            fn ($a, $b) => ($typeOrder[$a['type']] ?? 9) <=> ($typeOrder[$b['type']] ?? 9),
+        ])->values();
 
         $running = 0.0;
         $entries = $entries->map(function ($e) use (&$running) {
@@ -132,10 +140,8 @@ class CustomerController extends Controller
     {
         $this->authorizeCustomer($request, $customer);
 
-        if ($customer->invoices()->exists()) {
-            return response()->json([
-                'message' => 'Cannot delete — customer has invoices.',
-            ], 422);
+        if ($blocker = $customer->deletionBlocker()) {
+            return response()->json(['message' => $blocker], 422);
         }
 
         $customer->delete();

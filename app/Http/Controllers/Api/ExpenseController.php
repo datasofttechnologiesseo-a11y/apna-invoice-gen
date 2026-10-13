@@ -25,8 +25,8 @@ class ExpenseController extends Controller
             ->when($request->from, fn ($q, $d) => $q->where('entry_date', '>=', $d))
             ->when($request->to, fn ($q, $d) => $q->where('entry_date', '<=', $d))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('vendor_name', 'like', "%{$s}%")
-                    ->orWhere('description', 'like', "%{$s}%");
+                $w->whereLiteralLike('vendor_name', $s)
+                    ->orWhereLiteralLike('description', $s);
             }));
 
         // Totals over the full filtered set (not just the current page).
@@ -57,14 +57,14 @@ class ExpenseController extends Controller
 
         if ($company->isBooksLockedOn($data['entry_date'])) {
             return response()->json([
-                'message' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Cannot add expense dated on or before that.",
+                'message' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the expense after that.",
             ], 422);
         }
 
         $expense = $company->expenses()->create(array_merge($data, ['user_id' => $user->id]));
 
         AuditLog::record('expense.created',
-            "Expense ₹" . number_format($expense->amount, 2) . " · " . ($expense->vendor_name ?: $expense->description),
+            "Expense ₹" . inr($expense->amount) . " · " . ($expense->vendor_name ?: $expense->description),
             $expense
         );
 
@@ -76,7 +76,10 @@ class ExpenseController extends Controller
         $this->authorize($request, $expense);
 
         if ($expense->cash_memo_id) {
-            return response()->json(['message' => 'This expense is part of a cash memo — edit the memo instead.'], 422);
+            return response()->json(['message' => 'This expense comes from a cash memo. Edit the cash memo instead.'], 422);
+        }
+        if ($expense->purchase_bill_id) {
+            return response()->json(['message' => 'This expense comes from a purchase invoice. Edit the purchase invoice instead.'], 422);
         }
 
         $company = $expense->company;
@@ -89,14 +92,14 @@ class ExpenseController extends Controller
         $data = $this->validated($request);
         if ($company->isBooksLockedOn($data['entry_date'])) {
             return response()->json([
-                'message' => "Cannot move this expense into the locked period (up to {$company->books_locked_until->format('d M Y')}).",
+                'message' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Choose a later date for this expense.",
             ], 422);
         }
 
         $expense->update($data);
 
         AuditLog::record('expense.updated',
-            "Expense #{$expense->id} updated · ₹" . number_format($expense->amount, 2),
+            "Expense #{$expense->id} updated · ₹" . inr($expense->amount),
             $expense
         );
 
@@ -108,7 +111,10 @@ class ExpenseController extends Controller
         $this->authorize($request, $expense);
 
         if ($expense->cash_memo_id) {
-            return response()->json(['message' => 'This expense is part of a cash memo — delete the memo instead.'], 422);
+            return response()->json(['message' => 'This expense comes from a cash memo. Delete the cash memo instead.'], 422);
+        }
+        if ($expense->purchase_bill_id) {
+            return response()->json(['message' => 'This expense comes from a purchase invoice. Delete the purchase invoice instead.'], 422);
         }
 
         $company = $expense->company;
@@ -119,7 +125,7 @@ class ExpenseController extends Controller
         }
 
         AuditLog::record('expense.deleted',
-            "Expense #{$expense->id} deleted · ₹" . number_format($expense->amount, 2) . " · " . ($expense->vendor_name ?: $expense->description),
+            "Expense #{$expense->id} deleted · ₹" . inr($expense->amount) . " · " . ($expense->vendor_name ?: $expense->description),
             $expense,
             $expense->toArray()
         );
@@ -153,6 +159,7 @@ class ExpenseController extends Controller
             'amount' => ['required', 'numeric', 'min:0'],
             'gst_amount' => ['nullable', 'numeric', 'min:0'],
             'is_interstate' => ['nullable', 'boolean'],
+            'itc_eligible' => ['nullable', 'boolean'],
             'payment_method' => ['nullable', 'string', 'in:cash,bank,upi,card,cheque,other'],
             'reference_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -160,6 +167,12 @@ class ExpenseController extends Controller
 
         $data['gst_amount'] = $data['gst_amount'] ?? 0;
         $data['is_interstate'] = $request->boolean('is_interstate');
+        // Blocked credit (s.17(5)) can be marked from the app too; left out,
+        // the row keeps its current setting (new rows default to eligible).
+        if ($request->has('itc_eligible')) {
+            $data['itc_eligible'] = $request->boolean('itc_eligible');
+        }
+        \App\Models\Expense::assertGstWithinSlab((float) $data['amount'], (float) $data['gst_amount']);
 
         return $data;
     }

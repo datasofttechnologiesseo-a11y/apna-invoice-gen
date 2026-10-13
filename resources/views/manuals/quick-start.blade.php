@@ -11,7 +11,7 @@
         .head { border-bottom: 3px solid #167c88; padding-bottom: 9px; margin-bottom: 14px; }
         .kicker { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: #b45309; font-weight: bold; }
         h1 { font-size: 24px; color: #114e55; margin: 6px 0 3px; letter-spacing: -0.4px; }
-        .sub { font-size: 11px; color: #6b7490; }
+        .sub { font-size: 11px; color: #6b7280; }
 
         table.steps { width: 100%; border-collapse: collapse; }
         table.steps td { vertical-align: top; padding: 0 0 13px; }
@@ -19,21 +19,21 @@
             width: 26px; font-size: 15px; font-weight: bold; color: #167c88;
         }
         .st { font-size: 12px; font-weight: bold; color: #114e55; margin-bottom: 2px; }
-        .sd { font-size: 10.5px; color: #383d4d; }
+        .sd { font-size: 10.5px; color: #374151; }
 
         table.split { width: 100%; border-collapse: collapse; margin: 4px 0 12px; }
         table.split thead th {
             background: #114e55; color: #fff; text-align: left;
             padding: 5px 7px; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        table.split tbody td { padding: 5px 7px; border-bottom: 1px solid #e3e7f0; font-size: 10px; }
+        table.split tbody td { padding: 5px 7px; border-bottom: 1px solid #e5e7eb; font-size: 10px; }
 
         table.help { width: 100%; border-collapse: collapse; margin-top: 4px; }
         table.help td {
             background: #e7f6ef; border-left: 3px solid #15803d;
             padding: 8px 10px; font-size: 10px;
         }
-        .foot { margin-top: 12px; font-size: 8.5px; color: #6b7490; text-align: center; }
+        .foot { margin-top: 12px; font-size: 8.5px; color: #6b7280; text-align: center; }
     </style>
 </head>
 <body>
@@ -41,7 +41,7 @@
     <div class="head">
         <div class="kicker">{{ $quick['title'] }}</div>
         <h1>{{ $quick['subtitle'] }}</h1>
-        <div class="sub">{{ $appName }} - free GST invoicing for Indian businesses</div>
+        <div class="sub">{{ $appName }} &middot; free GST invoicing for Indian businesses</div>
     </div>
 
     <table class="steps">

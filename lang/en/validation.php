@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'accepted' => 'Please tick the :attribute checkbox to continue.',
+    'accepted' => 'Tick the :attribute checkbox to continue.',
     'accepted_if' => 'The :attribute field must be accepted when :other is :value.',
     'active_url' => 'The :attribute field must be a valid URL.',
     'after' => 'The :attribute field must be a date after :date.',
@@ -33,7 +33,7 @@ return [
     ],
     'boolean' => 'The :attribute field must be true or false.',
     'can' => 'The :attribute field contains an unauthorized value.',
-    'confirmed' => 'The two :attribute entries don\'t match. Please type it the same way in both fields.',
+    'confirmed' => 'The two :attribute entries do not match.',
     'contains' => 'The :attribute field is missing a required value.',
     'current_password' => 'The password is incorrect.',
     'date' => 'The :attribute field must be a valid date.',
@@ -49,7 +49,7 @@ return [
     'distinct' => 'The :attribute field has a duplicate value.',
     'doesnt_end_with' => 'The :attribute field must not end with one of the following: :values.',
     'doesnt_start_with' => 'The :attribute field must not start with one of the following: :values.',
-    'email' => 'Please enter a valid email address (e.g. you@example.com).',
+    'email' => 'Enter a valid email address, e.g. you@example.com.',
     'ends_with' => 'The :attribute field must end with one of the following: :values.',
     'enum' => 'The selected :attribute is invalid.',
     'exists' => 'The selected :attribute is invalid.',
@@ -122,7 +122,7 @@ return [
         'mixed' => 'The :attribute field must contain at least one uppercase and one lowercase letter.',
         'numbers' => 'The :attribute field must contain at least one number.',
         'symbols' => 'The :attribute field must contain at least one symbol.',
-        'uncompromised' => 'The given :attribute has appeared in a data leak. Please choose a different :attribute.',
+        'uncompromised' => 'This :attribute has appeared in a data leak. Choose a different :attribute.',
     ],
     'present' => 'The :attribute field must be present.',
     'present_if' => 'The :attribute field must be present when :other is :value.',
@@ -139,7 +139,7 @@ return [
     // "a :attribute" produced "a Email", "a Invoice prefix", "a IFSC
     // code" and "a UPI ID". "the" agrees with every attribute name, so the
     // message stays friendly without needing per-field wording.
-    'required' => 'Please enter the :attribute to continue.',
+    'required' => 'Enter the :attribute.',
     'required_array_keys' => 'The :attribute field must contain entries for: :values.',
     'required_if' => 'The :attribute field is required when :other is :value.',
     'required_if_accepted' => 'The :attribute field is required when :other is accepted.',
@@ -159,7 +159,7 @@ return [
     'starts_with' => 'The :attribute field must start with one of the following: :values.',
     'string' => 'The :attribute field must be a string.',
     'timezone' => 'The :attribute field must be a valid timezone.',
-    'unique' => 'This :attribute is already in use. Please try a different one.',
+    'unique' => 'This :attribute is already in use. Enter a different one.',
     'uploaded' => 'The :attribute failed to upload.',
     'uppercase' => 'The :attribute field must be uppercase.',
     'url' => 'The :attribute field must be a valid URL.',
@@ -178,8 +178,16 @@ return [
     */
 
     'custom' => [
+        // Rates are stored to the paisa and quantities to 3 decimals; more
+        // would print a rate x quantity that does not give the line value.
+        'items.*.rate' => [
+            'decimal' => 'Rate can have at most 2 decimals (paise), e.g. 12.35. For smaller unit prices, bill per 10 or per 100 units.',
+        ],
+        'items.*.quantity' => [
+            'decimal' => 'Quantity can have at most 3 decimals, e.g. 1.235.',
+        ],
         'gstin' => [
-            'regex' => 'Please enter a valid 15-character GSTIN, e.g. 27AABCU9603R1ZM.',
+            'regex' => 'Enter a valid 15-character GSTIN, e.g. 27AABCU9603R1ZM.',
             'size' => 'GSTIN must be exactly 15 characters.',
         ],
         'pan' => [
@@ -195,11 +203,11 @@ return [
             'mimes' => 'Signature must be a PNG, JPG, JPEG, or WebP image.',
         ],
         'state_id' => [
-            'required' => 'Please select a state.',
+            'required' => 'Select a state.',
             'exists' => 'The selected state is not valid.',
         ],
         'customer_id' => [
-            'required' => 'Please select a customer.',
+            'required' => 'Select a customer.',
             'exists' => 'The selected customer does not belong to your account.',
         ],
         'items' => [
@@ -220,8 +228,8 @@ return [
             'required' => 'Rate is required on every line.',
         ],
         'items.*.gst_rate' => [
-            'required' => 'Pick a GST rate for every line.',
-            'in' => 'Please pick a valid Indian GST slab (0%, 5%, 12%, 18%, 28% etc.).',
+            'required' => 'Select a GST rate for every line.',
+            'in' => 'Select a valid GST rate (0%, 5%, 12%, 18%, 28% etc.).',
         ],
         'transport_mode' => [
             'in' => 'Transport mode must be Road, Rail, Air, or Ship.',

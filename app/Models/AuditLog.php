@@ -43,15 +43,17 @@ class AuditLog extends Model
     {
         try {
             $user = auth()->user();
-            $company = $user?->ensureCompany();
 
             self::create([
                 'user_id' => $user?->id,
-                'company_id' => $company?->id,
+                'company_id' => self::companyIdFor($subject, $user),
                 'subject_type' => $subject ? $subject::class : null,
                 'subject_id' => $subject?->getKey(),
                 'action' => $action,
-                'summary' => $summary,
+                // A team member's action is the owner's data, but says who did it.
+                'summary' => ($member = \App\Support\Team::member())
+                    ? trim(($summary ?? '') . ' · by ' . $member->name . ' (' . \App\Support\Team::membership()?->roleLabel() . ')')
+                    : $summary,
                 'changes' => $changes,
                 'ip_address' => request()->ip(),
                 'created_at' => now(),
@@ -61,5 +63,22 @@ class AuditLog extends Model
             // entry than to break an invoice creation because of a logging hiccup.
             \Log::warning('AuditLog::record failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * The business an entry belongs to: the subject's own business when it
+     * has one (an owner can act on business A's invoice while business B is
+     * the active one), else the active business.
+     */
+    private static function companyIdFor($subject, $user): ?int
+    {
+        if ($subject instanceof Company && $subject->getKey()) {
+            return (int) $subject->getKey();
+        }
+        if ($subject instanceof Model && array_key_exists('company_id', $subject->getAttributes()) && $subject->getAttribute('company_id')) {
+            return (int) $subject->getAttribute('company_id');
+        }
+
+        return $user?->ensureCompany()?->id;
     }
 }

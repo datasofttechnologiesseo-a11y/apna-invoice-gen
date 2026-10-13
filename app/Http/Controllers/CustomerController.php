@@ -17,6 +17,9 @@ class CustomerController extends Controller
 
         $customers = $company->customers()
             ->with('state')
+            // What each customer owes: the unpaid balance of their issued
+            // invoices, the same figure as the ledger and Receivables aging.
+            ->withSum(['invoices as outstanding' => fn ($q) => $q->whereIn('status', ['final', 'partially_paid'])], 'balance')
             // Customer::scopeSearch - name, mobile, email or GSTIN, and the
             // same definition the invoice list searches customers by.
             ->when($request->search, fn ($q, $s) => $q->search($s))
@@ -47,6 +50,7 @@ class CustomerController extends Controller
 
         $invoices = $customer->invoices()
             ->whereIn('status', ['final', 'partially_paid', 'paid'])
+            ->with(['payments', 'creditNotes']) // read per invoice below
             ->orderBy('invoice_date')
             ->orderBy('id')
             ->get();
@@ -85,13 +89,21 @@ class CustomerController extends Controller
                     'date' => $cn->credit_note_date,
                     'type' => 'credit_note',
                     'ref' => $cn->credit_note_number,
-                    'particulars' => 'Credit note · ' . ($cn->reason ?? ''),
+                    'particulars' => 'Credit note · ' . $cn->reasonLabel(),
                     'debit' => 0.0,
                     'credit' => (float) $cn->amount,
                 ]);
             }
         }
-        $entries = $entries->sortBy(['date', 'type'])->values();
+        // Same day: the invoice first, then what settles it (credit note,
+        // then payment). Sorting the type names alphabetically put a credit
+        // note before its own invoice and the running balance went negative.
+        $typeOrder = ['invoice' => 0, 'credit_note' => 1, 'payment' => 2];
+        $day = fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : substr((string) $d, 0, 10);
+        $entries = $entries->sortBy([
+            fn ($a, $b) => strcmp($day($a['date']), $day($b['date'])),
+            fn ($a, $b) => ($typeOrder[$a['type']] ?? 9) <=> ($typeOrder[$b['type']] ?? 9),
+        ])->values();
 
         // Running balance
         $running = 0.0;
@@ -138,7 +150,9 @@ class CustomerController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
         ]);
 
-        $data['country'] = 'India';
+        // Quick-add has no country box: a customer put in "Foreign Country"
+        // (GST code 96) is abroad, not in India - edit the country later.
+        $data['country'] = \App\Models\State::whereKey($data['state_id'])->value('gst_code') === '96' ? 'Outside India' : 'India';
         $data['company_id'] = $company->id;
         $customer = $user->customers()->create($data);
         $customer->load('state');
@@ -176,8 +190,8 @@ class CustomerController extends Controller
     {
         abort_unless($customer->user_id === $request->user()->id, 403);
 
-        if ($customer->invoices()->exists()) {
-            return back()->withErrors(['customer' => 'Cannot delete — customer has invoices.']);
+        if ($blocker = $customer->deletionBlocker()) {
+            return back()->withErrors(['customer' => $blocker]);
         }
 
         $customer->delete();

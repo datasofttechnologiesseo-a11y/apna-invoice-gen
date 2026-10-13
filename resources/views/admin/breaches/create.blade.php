@@ -1,6 +1,6 @@
 <x-layouts.admin title="Log a data breach" subtitle="Record the incident, then track notifications">
 
-    <form method="POST" action="{{ route('admin.breaches.store') }}" class="max-w-2xl bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+    <form method="POST" action="{{ route('admin.breaches.store') }}" class="max-w-2xl bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-5">
         @csrf
 
         @if ($errors->any())
@@ -12,29 +12,29 @@
         @endif
 
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Title</label>
-            <input name="title" value="{{ old('title') }}" required maxlength="255"
+            <label for="breach-title" class="block text-sm font-semibold text-gray-700 mb-1">Title</label>
+            <input id="breach-title" name="title" value="{{ old('title') }}" required maxlength="255"
                    class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm" placeholder="e.g. Unauthorised access to backup storage">
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">What happened</label>
-            <textarea name="description" required rows="4"
-                      class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm" placeholder="Nature of the breach, how it was discovered, systems involved.">{{ old('description') }}</textarea>
+            <label for="breach-description" class="block text-sm font-semibold text-gray-700 mb-1">What happened</label>
+            <textarea id="breach-description" name="description" required rows="4"
+                      class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm" placeholder="What kind of breach it was, how it was found and which systems were involved.">{{ old('description') }}</textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Severity</label>
-                <select name="severity" class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
+                <label for="breach-severity" class="block text-sm font-semibold text-gray-700 mb-1">Severity</label>
+                <select id="breach-severity" name="severity" class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
                     @foreach (\App\Models\DataBreach::SEVERITIES as $s)
                         <option value="{{ $s }}" @selected(old('severity', 'medium') === $s)>{{ ucfirst($s) }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                <select name="status" class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
+                <label for="breach-status" class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                <select id="breach-status" name="status" class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
                     @foreach (\App\Models\DataBreach::STATUSES as $s)
                         <option value="{{ $s }}" @selected(old('status', 'open') === $s)>{{ ucfirst($s) }}</option>
                     @endforeach
@@ -42,40 +42,40 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Discovered at</label>
-                <input type="datetime-local" name="discovered_at" value="{{ old('discovered_at', now()->format('Y-m-d\TH:i')) }}" required
+                <label for="breach-discovered-at" class="block text-sm font-semibold text-gray-700 mb-1">Discovered at</label>
+                <input id="breach-discovered-at" type="datetime-local" name="discovered_at" value="{{ old('discovered_at', now()->format('Y-m-d\TH:i')) }}" required
                        class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Occurred at <span class="text-gray-400 font-normal">(if known)</span></label>
-                <input type="datetime-local" name="occurred_at" value="{{ old('occurred_at') }}"
+                <label for="breach-occurred-at" class="block text-sm font-semibold text-gray-700 mb-1">Occurred at <span class="text-gray-500 font-normal">(if known)</span></label>
+                <input id="breach-occurred-at" type="datetime-local" name="occurred_at" value="{{ old('occurred_at') }}"
                        class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
             </div>
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Affected users (quotation)</label>
-            <input type="number" name="affected_users" value="{{ old('affected_users', 0) }}" min="0" required
+            <label for="breach-affected-users" class="block text-sm font-semibold text-gray-700 mb-1">Affected users (estimate)</label>
+            <input inputmode="numeric" id="breach-affected-users" type="number" name="affected_users" value="{{ old('affected_users', 0) }}" min="0" required
                    class="w-40 rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm">
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Data categories exposed</label>
-            <input name="data_categories" value="{{ old('data_categories') }}" maxlength="2000"
+            <label for="breach-data-categories" class="block text-sm font-semibold text-gray-700 mb-1">Data categories exposed</label>
+            <input id="breach-data-categories" name="data_categories" value="{{ old('data_categories') }}" maxlength="2000"
                    class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm" placeholder="e.g. names, emails, phone numbers, GSTINs">
         </div>
 
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Remediation steps</label>
-            <textarea name="remediation" rows="3" maxlength="5000"
+            <label for="breach-remediation" class="block text-sm font-semibold text-gray-700 mb-1">Remediation steps</label>
+            <textarea id="breach-remediation" name="remediation" rows="3" maxlength="5000"
                       class="w-full rounded-lg border-gray-300 focus:border-danger-500 focus:ring-danger-500 text-sm" placeholder="Containment and mitigation actions taken or planned.">{{ old('remediation') }}</textarea>
         </div>
 
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="px-5 py-2.5 bg-danger-600 text-white rounded-lg text-sm font-semibold hover:bg-danger-700 transition">Log breach</button>
-            <a href="{{ route('admin.breaches.index') }}" class="text-sm text-gray-500 hover:text-gray-800">Cancel</a>
+            <a href="{{ route('admin.breaches.index') }}" class="inline-flex items-center min-h-[40px] text-sm text-gray-500 hover:text-gray-800">Cancel</a>
         </div>
     </form>
 </x-layouts.admin>

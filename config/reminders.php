@@ -20,6 +20,9 @@ return [
     // Days-past-due thresholds at which a reminder is automatically triggered.
     // A reminder is only sent once per threshold, so 7-day and 15-day can both fire
     // on distinct days without duplicating.
+    // Most manual reminders one invoice can send in a day (web and app).
+    'manual_daily_cap' => (int) env('REMINDERS_MANUAL_DAILY_CAP', 5),
+
     'thresholds' => [
         0,    // Day the invoice is due
         3,    // 3 days late

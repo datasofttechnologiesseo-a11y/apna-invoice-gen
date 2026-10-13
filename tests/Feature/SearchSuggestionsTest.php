@@ -182,7 +182,7 @@ class SearchSuggestionsTest extends TestCase
         $this->assertSame('due', $item['tone']);
     }
 
-    public function test_the_customer_scope_points_at_the_ledger_instead_of_the_invoice_list(): void
+    public function test_a_customer_suggestion_always_opens_the_ledger(): void
     {
         [$user, , $customer] = $this->fixture();
 
@@ -193,13 +193,33 @@ class SearchSuggestionsTest extends TestCase
             ->getJson(route('search.suggest', ['q' => 'kirana', 'scope' => 'customers']))
             ->assertOk()->json('groups');
 
-        // Same person, different intent: from the invoice list you want their
-        // bills, from the customer list you want their account.
+        // The ledger is the customer's whole account: every bill, payment and
+        // credit note. It is where a customer result goes from either box.
         $fromInvoices = collect($onInvoices)->firstWhere('label', 'Customers')['items'][0]['url'];
         $fromCustomers = collect($onCustomers)->firstWhere('label', 'Customers')['items'][0]['url'];
 
-        $this->assertSame(route('invoices.index', ['search' => 'Kirana Traders']), $fromInvoices);
+        $this->assertSame(route('customers.ledger', $customer), $fromInvoices);
         $this->assertSame(route('customers.ledger', $customer), $fromCustomers);
+    }
+
+    public function test_an_invoice_number_does_not_match_a_customer_by_phone_digits(): void
+    {
+        [$user, $company] = $this->fixture();
+        Customer::factory()->recycle($user)->recycle($company)->create([
+            'name' => 'Sharma Stores', 'phone' => '98000 00027', 'email' => null, 'gstin' => null,
+        ]);
+
+        // "INV-0002" holds the digits 0002, which are in the phone number.
+        $groups = $this->actingAs($user)
+            ->getJson(route('search.suggest', ['q' => 'INV-0002', 'scope' => 'invoices']))
+            ->assertOk()->json('groups');
+        $this->assertArrayNotHasKey('Customers', $this->titles(['groups' => $groups]));
+
+        // A query that is a phone number still finds the customer.
+        $groups = $this->actingAs($user)
+            ->getJson(route('search.suggest', ['q' => '98000 00027', 'scope' => 'customers']))
+            ->assertOk()->json('groups');
+        $this->assertSame(['Sharma Stores'], $this->titles(['groups' => $groups])['Customers'] ?? []);
     }
 
     public function test_the_endpoint_is_behind_authentication(): void

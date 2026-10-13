@@ -12,6 +12,11 @@ export default {
 
     theme: {
         extend: {
+            // The smallest text anyone reads: 12px on a desktop (15px root),
+            // 12.8px on a phone (16px root). Tailwind's 0.75rem gave 11.25px.
+            fontSize: {
+                xs: ['0.8rem', { lineHeight: '1.15rem' }],
+            },
             fontFamily: {
                 // Inter for every interface surface — drawn for screen UI at
                 // small sizes, with tabular numerals so money columns align.

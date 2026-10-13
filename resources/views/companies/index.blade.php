@@ -1,7 +1,7 @@
-<x-app-layout title="Your firms">
+<x-app-layout title="Companies">
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Your firms</h1>
+            <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Companies</h1>
             <a href="{{ route('companies.create') }}" class="inline-flex items-center gap-1 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 Add company
@@ -10,7 +10,7 @@
     </x-slot>
 
     <div class="py-10">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <div class="p-4 bg-money-50 border border-money-200 text-money-800 rounded">{{ session('status') }}</div>
             @endif
@@ -19,19 +19,19 @@
             @endif
 
             <div class="p-4 rounded-lg bg-brand-50 border border-brand-100 text-sm text-brand-900">
-                <strong>Active firm:</strong> {{ $active->name }}
+                <strong>Active company:</strong> {{ $active->name }}
                 <span class="text-brand-700">· New invoices and customers are created under this company.</span>
             </div>
 
-            <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+            <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
                 @if ($companies->isEmpty())
                     <div class="p-8 text-center text-gray-500">
                         <x-empty-state
                             icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                            title="No businesses yet"
-                            description="Run more than one firm from a single login. Each keeps its own GSTIN, invoice numbering, logo and books, and you switch between them from the top bar."
+                            title="No companies yet"
+                            description="Each company has its own GSTIN, invoice series, logo and books."
                             :actionHref="route('companies.create')"
-                            actionLabel="Add your first business"
+                            actionLabel="Add company"
                         />
                     </div>
                 @else
@@ -49,7 +49,7 @@
                                         <div class="flex items-center gap-2">
                                             <span class="font-display font-bold text-gray-900 truncate">{{ $company->name }}</span>
                                             @if ($isActive)
-                                                <span class="px-2 py-0.5 rounded-full bg-brand-700 text-white text-[10px] font-bold uppercase tracking-wider">Active</span>
+                                                <span class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-800 ring-1 ring-brand-200 text-xs font-medium">Active</span>
                                             @endif
                                             @if ($company->gstin)
                                                 <span class="text-xs text-gray-500 font-mono">{{ $company->gstin }}</span>
@@ -69,7 +69,7 @@
                                     @if (! $isActive)
                                         <form method="POST" action="{{ route('companies.switch', $company) }}" class="inline">
                                             @csrf
-                                            <button class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold rounded">Switch to this</button>
+                                            <button class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold rounded">Switch company</button>
                                         </form>
                                     @endif
                                     <a href="{{ route('companies.edit', $company) }}" class="px-3 py-1.5 bg-white ring-1 ring-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded">Edit</a>
@@ -91,6 +91,34 @@
                     </ul>
                 @endif
             </div>
+
+            @if (($memberships ?? collect())->isNotEmpty())
+                {{-- Businesses this person works in as a team member. --}}
+                <div class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden">
+                    <div class="px-5 py-3 border-b border-gray-100 text-sm font-semibold text-gray-900">As a team member</div>
+                    <ul class="divide-y divide-gray-100">
+                        @foreach ($memberships as $m)
+                            <li class="px-5 py-3 flex flex-wrap items-center gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-gray-900 truncate">{{ $m->company->name }}</div>
+                                    <div class="text-xs text-gray-500">Your role: {{ $m->roleLabel() }}</div>
+                                </div>
+                                @if ($active->id === $m->company->id)
+                                    <span class="px-2 py-1 rounded bg-brand-50 text-brand-800 text-xs font-bold">Active</span>
+                                @else
+                                    <form method="POST" action="{{ route('companies.switch', $m->company) }}">@csrf
+                                        <button class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold rounded">Switch company</button>
+                                    </form>
+                                @endif
+                                <x-confirm-form :action="route('team.leave', $m)" method="POST" title="Leave {{ $m->company->name }}?"
+                                                message="You will lose access to this company. The owner can invite you again." confirmLabel="Leave" confirmClass="bg-danger-600 hover:bg-danger-700" tone="danger">
+                                    <button type="button" class="text-sm text-danger-600 hover:underline">Leave</button>
+                                </x-confirm-form>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

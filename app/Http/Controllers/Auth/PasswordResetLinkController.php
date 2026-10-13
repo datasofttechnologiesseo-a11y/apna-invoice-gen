@@ -38,7 +38,7 @@ class PasswordResetLinkController extends Controller
         $user = \App\Models\User::where('email', $request->email)->first();
         if ($user && $user->google_id && $user->password === null) {
             return back()->withInput($request->only('email'))
-                ->withErrors(['email' => 'This account uses Google sign-in. Please use "Sign in with Google".']);
+                ->withErrors(['email' => 'This account uses Google sign-in. Use "Sign in with Google" instead.']);
         }
 
         // We will send the password reset link to this user. Once we have attempted

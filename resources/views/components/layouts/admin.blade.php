@@ -4,19 +4,20 @@
     'action' => null,
 ])
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="en-IN">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-seo :title="'Admin · ' . $title" :noindex="true" />
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @include('partials.google-analytics')
 </head>
 <body class="font-sans antialiased bg-gray-50 text-gray-900">
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 @php
     $impersonatorId = session('impersonator_id');
@@ -32,14 +33,14 @@
 
 {{-- Impersonation banner --}}
 @if ($impersonatorId)
-    <div class="bg-accent-500 text-accent-950 px-4 py-2 flex items-center justify-between text-sm font-semibold">
-        <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
-            <span>You are impersonating <strong>{{ auth()->user()->name }}</strong></span>
+    <div class="bg-accent-500 text-accent-950 px-4 py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm font-semibold">
+        <div class="flex items-center gap-2 min-w-0">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+            <span class="min-w-0 break-words">You are impersonating <strong>{{ auth()->user()->name }}</strong></span>
         </div>
         <form method="POST" action="{{ route('admin.impersonation.stop') }}">
             @csrf
-            <button class="px-3 py-1 bg-accent-950 text-accent-100 rounded text-xs font-bold uppercase tracking-wider hover:bg-accent-900">Stop impersonating</button>
+            <button class="inline-flex items-center min-h-[40px] sm:min-h-0 px-3 py-1 bg-accent-950 text-accent-100 rounded text-xs font-semibold hover:bg-accent-900">Stop impersonating</button>
         </form>
     </div>
 @endif
@@ -62,10 +63,10 @@
                 </div>
                 <div class="min-w-0">
                     <div class="font-display font-extrabold text-white leading-tight truncate">Apna Invoice</div>
-                    <div class="text-[10px] uppercase tracking-widest text-gray-500 leading-tight">Admin Panel</div>
+                    <div class="text-xs text-gray-400 leading-tight">Admin panel</div>
                 </div>
             </a>
-            <button @click="sidebarOpen = false" class="lg:hidden p-1 text-gray-400 hover:text-white" aria-label="Close menu">
+            <button type="button" @click="sidebarOpen = false" class="lg:hidden p-2.5 -mr-2 text-gray-400 hover:text-white" aria-label="Close menu">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -107,13 +108,13 @@
         <header class="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 sticky top-0 z-10">
             <div class="flex items-center gap-3">
                 {{-- Hamburger (mobile only) --}}
-                <button @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900" aria-label="Open menu">
+                <button type="button" @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900" aria-label="Open menu" :aria-expanded="sidebarOpen.toString()">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
                 <div class="min-w-0 flex-1">
                     <h1 class="font-display font-extrabold text-lg sm:text-xl md:text-2xl text-gray-900 truncate">{{ $title }}</h1>
                     @if ($subtitle)
-                        <p class="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">{{ $subtitle }}</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">{{ $subtitle }}</p>
                     @endif
                 </div>
                 <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -124,16 +125,16 @@
                     @endif
                     <div class="flex items-center gap-2 sm:gap-3 sm:pl-3 sm:border-l sm:border-gray-200">
                         <div class="text-right hidden xl:block">
-                            <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Signed in</div>
+                            <div class="text-xs font-medium text-gray-500">Signed in</div>
                             <div class="text-sm font-semibold text-gray-900 leading-tight">{{ Str::limit(auth()->user()->name, 14) }}</div>
                         </div>
                         <div class="w-9 h-9 rounded-full bg-gradient-to-br from-danger-500 to-accent-500 text-white font-bold flex items-center justify-center text-sm flex-shrink-0">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     </div>
                 </div>
             </div>
-            {{-- Mobile: action row below the title --}}
+            {{-- Phones and tablets: the actions get their own row below the title and wrap --}}
             @if (isset($action))
-                <div class="mt-3 flex items-center gap-2 md:hidden">
+                <div class="mt-3 flex flex-wrap items-center gap-2 md:hidden">
                     {{ $action }}
                 </div>
             @endif
@@ -141,11 +142,11 @@
 
         {{-- Session status --}}
         @if (session('status'))
-            <div class="mx-4 sm:mx-6 lg:mx-8 mt-4 p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm">{{ session('status') }}</div>
+            <div class="mx-4 sm:mx-6 lg:mx-8 mt-4 p-3 bg-money-50 border border-money-200 text-money-800 rounded text-sm" role="status">{{ session('status') }}</div>
         @endif
 
         {{-- Page content --}}
-        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+        <main id="main-content" tabindex="-1" class="flex-1 p-4 sm:p-6 lg:p-8">
             {{ $slot }}
         </main>
     </div>

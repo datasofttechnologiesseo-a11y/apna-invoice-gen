@@ -188,7 +188,7 @@ class BooksLockedTest extends TestCase
                 'amount' => $expense->amount,
                 'gst_amount' => 0,
             ])
-            ->assertSessionHas('error', fn ($e) => str_contains($e, 'locked period'));
+            ->assertSessionHas('error', fn ($e) => str_contains($e, 'Choose a later date'));
 
         $this->assertSame('Original', $expense->fresh()->description);
     }

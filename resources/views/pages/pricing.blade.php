@@ -1,90 +1,119 @@
 @php
     $appName = config('seo.name', 'Apna Invoice');
 
+    // Everything here is in the product today, and nothing is held back
+    // for a paid tier during beta.
     $included = [
-        'Unlimited GST invoices (CGST/SGST/IGST)',
-        'Unlimited customers, products & HSN/SAC codes',
-        'Logo, signature & letterhead on every PDF',
-        'Ink-saver PDF export & print-ready view',
-        'Email, WhatsApp & 30-day public-link sharing',
-        'Payment reminders & automatic receipt numbering',
-        'Quotations, credit notes & cash memos',
-        'GSTR-1 CSV, GSTR-3B summary & receivables aging',
-        'All 36 Indian states & UTs pre-loaded',
-        'One-click ZIP backup of all your data',
-        'Priority email support',
+        'Unlimited GST invoices with CGST, SGST and IGST',
+        'Unlimited customers, items and HSN/SAC codes',
+        'Your logo, signature and letterhead on every PDF',
+        'Five PDF styles, in colour or ink-saving',
+        'Share by WhatsApp, email or a 30-day link',
+        'Payment reminders and numbered receipts',
+        'Quotations, credit notes and cash memos',
+        'Purchases, expenses, stock and bank matching',
+        'GSTR-1 JSON, GSTR-2B match and GSTR-3B',
+        'Team access for your accountant or CA',
+        'Backups to download, or by email every week',
+        'Support by WhatsApp, phone and email',
     ];
 
-    // Offer schema - declares the free plan for rich results.
+    // The free plan, declared on the software itself. This was a Product,
+    // which Google reads as a merchant listing and flags for the image,
+    // shipping and return-policy fields a web app cannot have. URLs are on
+    // APP_URL, like the canonical, never the request host.
     $offerSchema = [
         '@context' => 'https://schema.org',
-        '@type' => 'Product',
-        'name' => $appName . ' - GST Invoicing',
+        '@type' => 'SoftwareApplication',
+        // Same app as the home page's node.
+        '@id' => rtrim(config('app.url'), '/') . '#software',
+        'name' => $appName,
         'description' => 'Free GST invoice generator and billing software for Indian MSMEs, SMEs, startups, freelancers and CAs.',
-        'brand' => ['@type' => 'Brand', 'name' => $appName],
+        'applicationCategory' => 'BusinessApplication',
+        'operatingSystem' => 'Any (web-based)',
+        'url' => rtrim(config('app.url'), '/') . '/',
         'offers' => [
             '@type' => 'Offer',
             'price' => '0',
             'priceCurrency' => 'INR',
             'availability' => 'https://schema.org/InStock',
-            'url' => url('/pricing'),
+            'url' => rtrim(config('app.url'), '/') . '/pricing',
+        ],
+        'publisher' => [
+            '@type' => 'Organization',
+            '@id' => rtrim(config('app.url'), '/') . '#organization',
+            'name' => config('seo.organization.name'),
+            'url' => config('seo.organization.url'),
         ],
     ];
 @endphp
 
 <x-layouts.marketing
-    title="Pricing: Free GST Invoice Software for India"
+    title="Pricing: free GST invoice software for India"
     eyebrow="Beta pricing"
-    lead="Free for Indian MSMEs, SMEs, startups and freelancers - unlimited invoices, customers and PDF exports. No credit card, no feature locks, no hidden add-ons."
-    description="Apna Invoice pricing: free during beta - unlimited GST invoices, customers & PDF exports, no card, no feature locks. Beta users keep the free plan."
+    lead="Free for Indian MSMEs, SMEs, startups and freelancers, with unlimited invoices, customers and PDF exports. No credit card, no feature locks, no hidden add-ons."
+    description="Apna Invoice pricing: free during beta, with unlimited GST invoices, customers and PDF exports. No card, no feature locks. Beta users keep the free plan."
     keywords="free GST invoice software, free billing software India pricing, free invoice generator no card, GST invoicing free plan"
     type="website"
     :json-ld="[$offerSchema]">
 
     <p>
-        {{ $appName }} is <strong>free during beta</strong>. Sign up today and get unlimited invoices, customers and
-        PDF exports - no credit card, no feature locks, no hidden add-ons. When we launch paid tiers for larger
-        businesses, <strong>beta users keep the free plan</strong>.
+        {{ $appName }} is <strong>free during beta</strong>. When paid tiers launch for larger businesses,
+        <strong>beta users keep the free plan</strong>.
     </p>
 
-    <div class="not-prose my-8 rounded-2xl ring-1 ring-gray-200 shadow-sm overflow-hidden md:grid md:grid-cols-2">
-        <div class="p-8 bg-gradient-to-br from-brand-900 to-brand-800 text-white">
-            <div class="text-xs font-bold tracking-widest uppercase text-accent-300">Early-bird plan</div>
-            {{-- !text-white: the marketing layout sets [&_h2]:text-gray-900 on its content
-                 wrapper, and that descendant selector outranks a plain text-white utility,
-                 so this heading rendered near-black on the teal card. --}}
-            <h2 class="mt-2 font-display text-2xl font-extrabold !text-white">DST Invoice · Free</h2>
-            <div class="mt-6 flex items-baseline gap-2">
-                <span class="text-6xl font-black">₹0</span>
-                <span class="text-brand-200 text-sm">/ month, during beta</span>
+    <div class="mt-8 rounded-xl bg-white ring-1 ring-gray-200 shadow-sm overflow-hidden">
+        <div class="p-6 sm:p-8 sm:flex sm:items-end sm:justify-between sm:gap-8">
+            <div>
+                <p class="text-sm font-semibold text-brand-700">Beta plan</p>
+                <h2 data-toc="skip" class="mt-1 font-display text-2xl font-bold text-gray-900">{{ $appName }} Free</h2>
+                <p class="mt-5 flex items-baseline gap-2">
+                    <span class="font-display text-5xl font-extrabold tracking-tight text-gray-900">₹0</span>
+                    <span class="text-gray-500">per month, during beta</span>
+                </p>
+                <p class="mt-2 text-gray-600">For Indian freelancers, shops, MSMEs and startups.</p>
             </div>
-            <p class="mt-4 text-brand-100 text-sm">For Indian solo professionals, SMEs &amp; startups billing up to 500 invoices/month.</p>
-            <a href="{{ route('register') }}" class="mt-8 block text-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-accent-950 font-bold rounded-xl transition">Claim free account →</a>
+            <div class="mt-6 sm:mt-0 sm:w-60 shrink-0">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="flex items-center justify-center min-h-[48px] px-5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition-colors">Go to dashboard</a>
+                @else
+                    <a href="{{ route('register') }}" class="flex items-center justify-center min-h-[48px] px-5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition-colors">Create free account</a>
+                @endauth
+                <p class="mt-2.5 text-center text-sm text-gray-500">No card needed</p>
+            </div>
         </div>
-        <div class="p-8 bg-white">
-            <div class="text-xs font-bold tracking-widest uppercase text-brand-700">What's included</div>
-            <ul class="mt-4 space-y-2.5">
+        <div class="p-6 sm:p-8 bg-gray-50 border-t border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-900">Included in the free plan</h3>
+            <ul class="mt-4 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-[15px] text-gray-700">
                 @foreach ($included as $i)
-                    <li class="flex items-start gap-2.5">
-                        <svg class="w-4 h-4 mt-1 text-money-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                        <span class="text-gray-700 text-sm">{{ $i }}</span>
+                    <li class="flex items-start gap-2.5 leading-snug">
+                        <svg class="w-5 h-5 shrink-0 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        <span>{{ $i }}</span>
                     </li>
                 @endforeach
             </ul>
         </div>
     </div>
 
+    <div class="mt-6 rounded-lg border-l-[3px] border-accent-500 bg-accent-50/70 px-5 py-4 text-gray-700">
+        <p class="font-semibold text-gray-900">Refer a friend and get lifetime free access.</p>
+        <p class="mt-1">
+            Share your referral code from the app. When a friend signs up with it and issues their first invoice, your
+            account is free for life.
+        </p>
+    </div>
+
     <h2>Is it really free?</h2>
     <p>
-        Yes. There's no card required to sign up, no per-invoice charge, and no feature locked behind a paywall during
-        beta. We'll introduce paid tiers for larger businesses later, but everyone who joins during beta keeps the free
+        Yes. No card is required to sign up, there is no per-invoice charge, and no feature is locked behind a paywall
+        during beta. Paid tiers for larger businesses will come later, but everyone who joins during beta keeps the free
         plan for what it covers today.
     </p>
 
     <h2>Who is the free plan for?</h2>
     <p>
-        Indian freelancers, small shops, MSMEs, SMEs, startups and CAs billing within India in ₹. If you need export
-        billing under LUT/Bond, SEZ supplies or multi-currency, those are intentionally out of scope for now.
+        Indian freelancers, small shops, MSMEs, SMEs, startups and CAs. Export and SEZ invoices are supported, billed
+        in ₹. Billing in a foreign currency is not available yet.
     </p>
 
     <h2>What if I pay for something later and change my mind?</h2>

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
 
@@ -15,7 +18,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirect;
  * New Google users get their email verified by Google, then hand over a mobile
  * number (mandatory, so the team can reach every new user) — that step creates
  * the account immediately with no OTP, since the email is already proven.
- * Returning users (matched by google_id or email) log straight in.
+ * Returning users (matched by google_id or email) log straight in. An email
+ * account whose address was never proven is handed to the Google owner with
+ * everyone else signed out of it (see signOutEveryoneElse).
  */
 class SocialAuthController extends Controller
 {
@@ -38,13 +43,13 @@ class SocialAuthController extends Controller
             $googleUser = Socialite::driver('google')->user();
         } catch (\Throwable $e) {
             return redirect()->route('register')
-                ->withErrors(['email' => 'Google sign-in could not be completed. Please try again or use email.']);
+                ->withErrors(['email' => 'Google sign-in could not be completed. Try again or sign up with email.']);
         }
 
         $email = strtolower((string) $googleUser->getEmail());
         if ($email === '') {
             return redirect()->route('register')
-                ->withErrors(['email' => 'Google did not share an email address, so we can\'t create your account.']);
+                ->withErrors(['email' => 'Google did not share an email address, so the account cannot be created. Sign up with email instead.']);
         }
 
         // Returning user — match on google_id first, then on a pre-existing
@@ -54,6 +59,19 @@ class SocialAuthController extends Controller
             ?? User::where('email', $email)->whereNull('erased_at')->first();
 
         if ($existing) {
+            // Matched on the email alone, and nobody ever proved that email:
+            // the app sign-up asks for no code and a profile email change is
+            // unconfirmed, so the account may have been opened by someone else
+            // with this address. Google has now proven who owns it, so whoever
+            // made the account loses every way back in (their own Google link
+            // included) before the owner starts using it.
+            $tookOver = (string) $existing->google_id !== (string) $googleUser->getId()
+                && $existing->email_verified_at === null;
+            if ($tookOver) {
+                $this->signOutEveryoneElse($existing, $request);
+                $existing->forceFill(['google_id' => null]);
+            }
+
             if (! $existing->google_id) {
                 // Google has verified ownership of this email address, so it's
                 // safe to link it to the existing account and mark it verified.
@@ -66,7 +84,11 @@ class SocialAuthController extends Controller
 
             Auth::login($existing, remember: true);
 
-            return redirect()->intended(route('dashboard', absolute: false));
+            $response = redirect()->intended(route('dashboard', absolute: false));
+
+            return $tookOver
+                ? $response->with('info', 'Signed in with Google. The old password for this account no longer works. To set a new one, use Forgot password on the sign-in page.')
+                : $response;
         }
 
         // New user — stash the Google-verified profile and collect a mobile
@@ -75,6 +97,10 @@ class SocialAuthController extends Controller
         // mobile screen creates the account directly on submit (one field, no
         // "waiting for an SMS" gate).
         $request->session()->put(self::PENDING_KEY, [
+            // Only this callback sets 'via' => 'google'. The mobile step
+            // creates the account without a code, so it accepts nothing else:
+            // the email sign-up form fills the same session key.
+            'via' => 'google',
             'name' => $googleUser->getName() ?: 'New user',
             'email' => $email,
             'google_id' => $googleUser->getId(),
@@ -86,6 +112,32 @@ class SocialAuthController extends Controller
         ]);
 
         return redirect()->route('register.mobile');
+    }
+
+    /**
+     * End every way into $user that does not come from this Google sign-in:
+     * app tokens, the password, "remember me" cookies and other browser
+     * sessions. Auth::logoutOtherDevices() needs the current password, which
+     * the owner does not have here, so each one is closed directly.
+     */
+    private function signOutEveryoneElse(User $user, \Illuminate\Http\Request $request): void
+    {
+        $user->tokens()->delete();
+
+        // A random password nobody knows; the owner can set one with
+        // Forgot password, which mails the link to the proven address.
+        $user->forceFill([
+            'password' => Hash::make(Str::random(64)),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        if (config('session.driver') === 'database') {
+            DB::connection(config('session.connection'))
+                ->table(config('session.table', 'sessions'))
+                ->where('user_id', $user->getAuthIdentifier())
+                ->where('id', '!=', $request->session()->getId())
+                ->delete();
+        }
     }
 
     private function configured(): bool

@@ -25,43 +25,22 @@ class FinanceController extends Controller
             ? $request->query('view')
             : 'accrual';
 
-        // ── Revenue comes from finalized invoices ──
-        $invoicesInPeriod = $company->invoices()
-            ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$periodStart, $periodEnd]);
-
-        $revenue = [
-            'taxable' => (float) (clone $invoicesInPeriod)->sum('subtotal'),
-            'gst_collected' => (float) (clone $invoicesInPeriod)->sum('total_tax'),
-            'grand_total' => (float) (clone $invoicesInPeriod)->sum('grand_total'),
-            'received' => (float) (clone $invoicesInPeriod)->sum('paid_amount'),
-            'outstanding' => (float) $company->invoices()
-                ->whereIn('status', ['final', 'partially_paid'])
-                ->sum('balance'),
-        ];
-
-        // ── Expenses from the ledger ──
+        // ── Headline figures (shared with the mobile API) ──
+        $pnl = app(\App\Services\ProfitAndLoss::class)->summary($company, $periodStart, $periodEnd);
+        ['revenue' => $revenue, 'expense' => $expense, 'netProfit' => $netProfit, 'margin' => $margin,
+            'cashInHand' => $cashInHand, 'gstPayable' => $gstPayable] = $pnl;
         $expensesInPeriod = $company->expenses()
             ->whereBetween('entry_date', [$periodStart, $periodEnd]);
-
-        $expense = [
-            'taxable' => (float) (clone $expensesInPeriod)->sum('amount'),
-            'gst_itc' => (float) (clone $expensesInPeriod)->sum('gst_amount'),
-        ];
-        $expense['cash_out'] = $expense['taxable'] + $expense['gst_itc'];
-
-        // ── Core P&L numbers ──
-        $netProfit = $revenue['taxable'] - $expense['taxable'];
-        $margin = $revenue['taxable'] > 0 ? ($netProfit / $revenue['taxable']) * 100 : 0;
-        $cashInHand = $revenue['received'] - $expense['cash_out'];
-        $gstPayable = $revenue['gst_collected'] - $expense['gst_itc'];
 
         // ── 12-month trend ──
         $trend = $this->monthlyTrend($company, $periodEnd);
 
         // ── Expenses by category ──
+        // Each category includes the GST that cannot be claimed back (blocked
+        // credit, s.17(5)), as the headline expense figure does, so the
+        // categories add up to that figure to the rupee.
         $byCategory = (clone $expensesInPeriod)
-            ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->select('category', DB::raw('SUM(amount + CASE WHEN itc_eligible = 0 THEN COALESCE(gst_amount, 0) ELSE 0 END) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('category')
             ->orderByDesc('total')
             ->get()
@@ -105,7 +84,7 @@ class FinanceController extends Controller
 
         // Aggregates over the same filtered set (not paginated — full period totals)
         $totals = (clone $base)
-            ->selectRaw('SUM(amount) as taxable, SUM(gst_amount) as gst, COUNT(*) as cnt')
+            ->selectRaw('SUM(amount) as taxable, SUM(gst_amount) as gst, SUM(CASE WHEN itc_eligible = 1 THEN COALESCE(gst_amount, 0) ELSE 0 END) as itc, COUNT(*) as cnt')
             ->first();
 
         $byCategory = (clone $base)
@@ -128,6 +107,8 @@ class FinanceController extends Controller
         $summary = [
             'taxable' => (float) ($totals->taxable ?? 0),
             'gst' => (float) ($totals->gst ?? 0),
+            // GST on entries marked ITC eligible: what can be claimed back.
+            'itc_claimable' => round((float) ($totals->itc ?? 0), 2),
             'count' => (int) ($totals->cnt ?? 0),
         ];
         $summary['cash_out'] = $summary['taxable'] + $summary['gst'];
@@ -194,14 +175,14 @@ class FinanceController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
 
             // Header rows for CA — company + period context first
-            fputcsv($out, ["Expense Statement"]);
-            fputcsv($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
-            fputcsv($out, ["Period", $periodLabel . ' [' . $periodStart->format('d-M-Y') . ' to ' . $periodEnd->format('d-M-Y') . ']']);
-            fputcsv($out, ["Generated on", now()->format('d-M-Y H:i')]);
-            fputcsv($out, []);
+            csv_put($out, ["Expense Statement"]);
+            csv_put($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            csv_put($out, ["Period", $periodLabel . ' [' . $periodStart->format('d-M-Y') . ' to ' . $periodEnd->format('d-M-Y') . ']']);
+            csv_put($out, ["Generated on", now()->format('d-M-Y H:i')]);
+            csv_put($out, []);
 
             // Column headers
-            fputcsv($out, [
+            csv_put($out, [
                 'S.No.', 'Date', 'Category', 'Vendor / Paid To', 'Description',
                 'Taxable (Rs.)', 'GST/ITC (Rs.)', 'Total (Rs.)', 'Payment Mode', 'Reference', 'Notes',
             ]);
@@ -213,7 +194,7 @@ class FinanceController extends Controller
                 $gst = (float) $e->gst_amount;
                 $totalTaxable += $taxable;
                 $totalGst += $gst;
-                fputcsv($out, [
+                csv_put($out, [
                     $i,
                     $e->entry_date->format('d-M-Y'),
                     config('expense_categories.' . $e->category . '.label', ucfirst($e->category)),
@@ -229,8 +210,8 @@ class FinanceController extends Controller
             }
 
             // Totals row
-            fputcsv($out, []);
-            fputcsv($out, [
+            csv_put($out, []);
+            csv_put($out, [
                 '', '', '', '', 'TOTAL',
                 number_format($totalTaxable, 2, '.', ''),
                 number_format($totalGst, 2, '.', ''),
@@ -364,18 +345,18 @@ class FinanceController extends Controller
         return response()->streamDownload(function () use ($rows, $company, $today) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
-            fputcsv($out, ["Receivables Aging Report"]);
-            fputcsv($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
-            fputcsv($out, ["As on", $today->format('d-M-Y')]);
-            fputcsv($out, []);
-            fputcsv($out, [
+            csv_put($out, ["Receivables Aging Report"]);
+            csv_put($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            csv_put($out, ["As on", $today->format('d-M-Y')]);
+            csv_put($out, []);
+            csv_put($out, [
                 'S.No.', 'Customer', 'Customer GSTIN', 'Invoice No.', 'Invoice Date',
-                'Due Date', 'Days Overdue', 'Bucket', 'Grand Total (Rs.)', 'Paid (Rs.)', 'Balance (Rs.)',
+                'Due Date', 'Days Overdue', 'Bucket', 'Grand Total (Rs.)', 'Paid (Rs.)', 'Credit Notes (Rs.)', 'Balance (Rs.)',
             ]);
             $i = 0;
             foreach ($rows as $r) {
                 $i++;
-                fputcsv($out, [
+                csv_put($out, [
                     $i,
                     $r['customer_name'],
                     $r['customer_gstin'],
@@ -386,11 +367,13 @@ class FinanceController extends Controller
                     $r['bucket'],
                     number_format((float) $r['grand_total'], 2, '.', ''),
                     number_format((float) $r['paid_amount'], 2, '.', ''),
+                    // Grand total - paid - credit notes = balance, so the row adds up.
+                    number_format((float) $r['credited_amount'], 2, '.', ''),
                     number_format((float) $r['balance'], 2, '.', ''),
                 ]);
             }
-            fputcsv($out, []);
-            fputcsv($out, ['', '', '', '', '', '', '', 'TOTAL', '', '', number_format((float) $rows->sum('balance'), 2, '.', '')]);
+            csv_put($out, []);
+            csv_put($out, ['', '', '', '', '', '', '', 'TOTAL', '', '', '', number_format((float) $rows->sum('balance'), 2, '.', '')]);
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
@@ -425,6 +408,7 @@ class FinanceController extends Controller
                 'customer_gstin' => $inv->customer?->gstin,
                 'grand_total' => (float) $inv->grand_total,
                 'paid_amount' => (float) $inv->paid_amount,
+                'credited_amount' => (float) $inv->credited_amount,
                 'balance' => (float) $inv->balance,
                 'days_overdue' => $days,
                 'bucket' => $bucket,
@@ -449,25 +433,76 @@ class FinanceController extends Controller
     | the figures against GSTR-1 and ITC ledgers before filing.
     */
 
+    /**
+     * GSTR-1 for a month (or QRMP quarter): the table-wise summary on screen,
+     * and the offline-tool Excel workbook. Same build as GSTR-3B 3.1, so the
+     * two returns agree to the paisa.
+     */
+    public function gstr1(Request $request): View
+    {
+        $company = $request->user()->ensureCompany();
+        $period = \App\Support\ReturnPeriod::fromRequest($request);
+        $data = app(\App\Services\Gstr1Builder::class)->build($company, $period->start, $period->end);
+
+        return view('finance.gstr1', $data + [
+            'company' => $company,
+            'period' => $period,
+            'dueDate' => $period->gstr1Due(),
+        ]);
+    }
+
+    public function gstr1Xlsx(Request $request): StreamedResponse
+    {
+        $company = $request->user()->ensureCompany();
+        $period = \App\Support\ReturnPeriod::fromRequest($request);
+        $data = app(\App\Services\Gstr1Builder::class)->build($company, $period->start, $period->end);
+
+        return app(\App\Services\Gstr1Workbook::class)->download($company, $period, $data);
+    }
+
+    /** GSTR-1 as the JSON the GST portal takes under Prepare Offline > Upload. */
+    public function gstr1Json(Request $request)
+    {
+        $company = $request->user()->ensureCompany();
+        $period = \App\Support\ReturnPeriod::fromRequest($request);
+        if (! $company->gstin) {
+            return redirect()->route('finance.gstr1', $period->query())
+                ->with('error', 'GSTIN is not set. Add it in Company settings to download the GSTR-1 file.');
+        }
+        $data = app(\App\Services\Gstr1Builder::class)->build($company, $period->start, $period->end);
+        $json = app(\App\Services\Gstr1Json::class)->build($company, $period, $data);
+
+        return response()->streamDownload(function () use ($json) {
+            echo json_encode($json, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
+        }, 'GSTR1_' . strtoupper($company->gstin) . '_' . $period->end->format('mY') . '.json', ['Content-Type' => 'application/json']);
+    }
+
     public function gstr3b(Request $request): View
     {
         $company = $request->user()->ensureCompany();
-        [$periodStart, $periodEnd, $periodLabel] = $this->resolveGstr3bPeriod($request);
+        [$periodStart, $periodEnd, $periodLabel, $period] = $this->resolveGstr3bPeriod($request);
 
         $data = $this->buildGstr3b($company, $periodStart, $periodEnd);
 
+        // Which credit paid which tax (Table 6.1): the builder's own set-off,
+        // so the totals are the ones on screen (net ITC after Rule 37).
+        $setOffMatrix = $data['set_off_matrix'];
+
         return view('finance.gstr3b', array_merge($data, [
+            'setOffMatrix' => $setOffMatrix,
             'company' => $company,
             'periodStart' => $periodStart,
             'periodEnd' => $periodEnd,
             'periodLabel' => $periodLabel,
+            'period' => $period,
+            'dueDate' => $period->gstr3bDue($company->state?->gst_code),
         ]));
     }
 
     public function gstr3bPdf(Request $request): Response
     {
         $company = $request->user()->ensureCompany();
-        [$periodStart, $periodEnd, $periodLabel] = $this->resolveGstr3bPeriod($request);
+        [$periodStart, $periodEnd, $periodLabel, $period] = $this->resolveGstr3bPeriod($request);
 
         $data = $this->buildGstr3b($company, $periodStart, $periodEnd);
 
@@ -476,9 +511,10 @@ class FinanceController extends Controller
             'periodStart' => $periodStart,
             'periodEnd' => $periodEnd,
             'periodLabel' => $periodLabel,
+            'dueDate' => $period->gstr3bDue($company->state?->gst_code),
         ]))->setPaper('a4', 'portrait');
 
-        return $pdf->download('gstr3b-' . $periodStart->format('Ym') . '.pdf');
+        return $pdf->download('gstr3b-' . $periodStart->format('Ym') . ($period->quarterly ? '-q' : '') . '.pdf');
     }
 
     public function gstr3bCsv(Request $request): StreamedResponse
@@ -487,206 +523,93 @@ class FinanceController extends Controller
         [$periodStart, $periodEnd, $periodLabel] = $this->resolveGstr3bPeriod($request);
 
         $data = $this->buildGstr3b($company, $periodStart, $periodEnd);
-        $filename = 'gstr3b-' . $periodStart->format('Ym') . '.csv';
+        $filename = 'gstr3b-' . $periodStart->format('Ym') . (str_contains($periodLabel, '(Q') ? '-q' : '') . '.csv';
 
         return response()->streamDownload(function () use ($data, $company, $periodLabel, $periodStart, $periodEnd) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
-            fputcsv($out, ["GSTR-3B Summary (computed from books)"]);
-            fputcsv($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
-            fputcsv($out, ["Period", $periodLabel . ' [' . $periodStart->format('d-M-Y') . ' to ' . $periodEnd->format('d-M-Y') . ']']);
-            fputcsv($out, ["Generated on", now()->format('d-M-Y H:i')]);
-            fputcsv($out, []);
+            csv_put($out, ["GSTR-3B Summary (computed from books)"]);
+            csv_put($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            csv_put($out, ["Period", $periodLabel . ' [' . $periodStart->format('d-M-Y') . ' to ' . $periodEnd->format('d-M-Y') . ']']);
+            csv_put($out, ["Generated on", now()->format('d-M-Y H:i')]);
+            csv_put($out, []);
+
+            $n = fn ($v) => number_format((float) $v, 2, '.', '');
+            $heads = fn (string $label, array $h) => [$label, $n($h['igst']), $n($h['cgst']), $n($h['sgst'])];
 
             // 3.1 — Outward + reverse-charge supplies
-            fputcsv($out, ['Section 3.1 — Details of Outward Supplies & Inward Supplies Liable to Reverse Charge']);
-            fputcsv($out, ['Nature of supplies', 'Taxable value (Rs.)', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'Cess (Rs.)']);
+            csv_put($out, ['Section 3.1 — Details of Outward Supplies & Inward Supplies Liable to Reverse Charge']);
+            csv_put($out, ['Nature of supplies', 'Taxable value (Rs.)', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'Cess (Rs.)']);
             $a = $data['outward'];
-            $d = $data['rcm_outward'];
-            fputcsv($out, ['(a) Outward taxable supplies (other than zero rated, nil rated and exempted)',
-                number_format($a['taxable'], 2, '.', ''),
-                number_format($a['igst'], 2, '.', ''),
-                number_format($a['cgst'], 2, '.', ''),
-                number_format($a['sgst'], 2, '.', ''),
-                '0.00',
-            ]);
-            fputcsv($out, ['(b) Outward taxable supplies (zero rated)', '0.00', '0.00', '0.00', '0.00', '0.00']);
-            fputcsv($out, ['(c) Other outward supplies (Nil rated, exempted)', '0.00', '0.00', '0.00', '0.00', '0.00']);
-            fputcsv($out, ['(d) Inward supplies (liable to reverse charge)',
-                number_format($d['taxable'], 2, '.', ''),
-                number_format($d['igst'], 2, '.', ''),
-                number_format($d['cgst'], 2, '.', ''),
-                number_format($d['sgst'], 2, '.', ''),
-                '0.00',
-            ]);
-            fputcsv($out, ['(e) Non-GST outward supplies', '0.00', '0.00', '0.00', '0.00', '0.00']);
-            fputcsv($out, []);
+            $d = $data['rcm_inward'];
+            csv_put($out, ['(a) Outward taxable supplies (other than zero rated, nil rated and exempted)',
+                $n($a['taxable']), $n($a['igst']), $n($a['cgst']), $n($a['sgst']), '0.00']);
+            csv_put($out, ['(b) Outward taxable supplies (zero rated)', $n($data['outward_zero']['taxable']), $n($data['outward_zero']['igst']), '0.00', '0.00', '0.00']);
+            csv_put($out, ['(c) Other outward supplies (Nil rated, exempted)', $n($data['outward_nil']), '', '', '', '']);
+            csv_put($out, ['(d) Inward supplies (liable to reverse charge)',
+                $n($d['taxable']), $n($d['igst']), $n($d['cgst']), $n($d['sgst']), '0.00']);
+            csv_put($out, ['(e) Non-GST outward supplies', '0.00', '', '', '', '']);
+            csv_put($out, []);
 
             // 4 — ITC
-            fputcsv($out, ['Section 4 — Eligible ITC']);
-            fputcsv($out, ['Details', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'Cess (Rs.)']);
-            $itc = $data['itc'];
-            fputcsv($out, ['(A)(5) All other ITC',
-                number_format($itc['igst'], 2, '.', ''),
-                number_format($itc['cgst'], 2, '.', ''),
-                number_format($itc['sgst'], 2, '.', ''),
-                '0.00',
-            ]);
-            fputcsv($out, ['(C) Net ITC available (A – B)',
-                number_format($itc['igst'], 2, '.', ''),
-                number_format($itc['cgst'], 2, '.', ''),
-                number_format($itc['sgst'], 2, '.', ''),
-                '0.00',
-            ]);
-            fputcsv($out, []);
+            csv_put($out, ['Section 4 — Eligible ITC']);
+            csv_put($out, ['Details', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'Cess (Rs.)']);
+            csv_put($out, [...$heads('(A)(3) Inward supplies liable to reverse charge', $data['itc_rcm']), '0.00']);
+            csv_put($out, [...$heads('(A)(5) All other ITC', $data['itc_other']), '0.00']);
+            if (($data['itc_reclaimed']['total'] ?? 0) > 0) {
+                csv_put($out, [...$heads('of which re-claimed under Rule 37 (supplier paid after 180 days)', $data['itc_reclaimed']), '0.00']);
+            }
+            csv_put($out, [...$heads('(B)(2) ITC reversed: Rule 37 (supplier not paid within 180 days)', $data['itc_reversed']), '0.00']);
+            csv_put($out, [...$heads('(C) Net ITC available (A – B)', $data['itc']), '0.00']);
+            if (($data['itc_time_barred']['total'] ?? 0) > 0) {
+                csv_put($out, [...$heads('Time-barred (s.16(4)), not claimed', $data['itc_time_barred']), '0.00']);
+            }
+            csv_put($out, []);
 
-            // 6.1 — Net tax payable
-            fputcsv($out, ['Section 6.1 — Payment of Tax']);
-            fputcsv($out, ['Description', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)']);
-            fputcsv($out, ['Total tax payable (from outward supplies)',
-                number_format($a['igst'], 2, '.', ''),
-                number_format($a['cgst'], 2, '.', ''),
-                number_format($a['sgst'], 2, '.', ''),
-            ]);
-            fputcsv($out, ['ITC available (from inward supplies)',
-                number_format($itc['igst'], 2, '.', ''),
-                number_format($itc['cgst'], 2, '.', ''),
-                number_format($itc['sgst'], 2, '.', ''),
-            ]);
-            fputcsv($out, ['Net cash payable',
-                number_format(max(0, $a['igst'] - $itc['igst']), 2, '.', ''),
-                number_format(max(0, $a['cgst'] - $itc['cgst']), 2, '.', ''),
-                number_format(max(0, $a['sgst'] - $itc['sgst']), 2, '.', ''),
-            ]);
-            fputcsv($out, []);
+            // 6.1 — Payment of tax
+            csv_put($out, ['Section 6.1 — Payment of Tax']);
+            csv_put($out, ['Description', 'IGST (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)']);
+            csv_put($out, $heads('Tax on outward supplies [3.1(a) + (b)]', $data['liability']));
+            if (array_sum($data['negative_carry_in']) < 0) {
+                csv_put($out, $heads('Negative liability from earlier periods', $data['negative_carry_in']));
+            }
+            // A reversal larger than the credit leaves 4(C) below nil in a head:
+            // that part is tax to pay (the portal adds it in Table 6.1).
+            $itcBelowNil = array_map(fn ($v) => max(0.0, -(float) $v), array_intersect_key($data['itc'], array_flip(['igst', 'cgst', 'sgst'])));
+            if (array_sum($itcBelowNil) > 0) {
+                csv_put($out, $heads('Add: net ITC below nil [4(C)]', $itcBelowNil));
+            }
+            csv_put($out, $heads('Paid through ITC (s.49(5) / Rule 88A order)', $data['itc_used']));
+            csv_put($out, $heads('Reverse charge on inward supplies [3.1(d)] - cash only', $d));
+            csv_put($out, $heads('Net cash payable', $data['netCash']));
+            csv_put($out, ['Total cash to deposit', $n($data['netCash']['total'])]);
+            csv_put($out, $heads('ITC carried forward to next period', $data['itc_carried']));
+            if (array_sum($data['negative_carry_out']) < 0) {
+                csv_put($out, $heads('Negative liability carried to next period', $data['negative_carry_out']));
+            }
+            csv_put($out, []);
 
-            fputcsv($out, ['Note', 'Computed from your books. Verify against GSTR-1 + ITC ledgers before filing.']);
+            csv_put($out, ['Note', 'Computed from your books. Verify against GSTR-1 + ITC ledgers before filing.']);
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    /**
-     * Aggregate the GSTR-3B figures for a period from invoices + expenses + cash memos.
-     */
+    /** The GSTR-3B figures for a period - see App\Services\Gstr3bBuilder. */
     private function buildGstr3b($company, Carbon $from, Carbon $to): array
     {
-        // 3.1(a) — Outward taxable supplies (regular invoices, excludes RCM)
-        $invoices = $company->invoices()
-            ->whereIn('status', ['final', 'partially_paid', 'paid'])
-            ->whereBetween('invoice_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get();
-
-        $regular = $invoices->where('reverse_charge', false);
-        $rcm     = $invoices->where('reverse_charge', true);
-
-        $outward = [
-            'taxable' => round((float) $regular->sum('subtotal'), 2),
-            'igst'    => round((float) $regular->sum('total_igst'), 2),
-            'cgst'    => round((float) $regular->sum('total_cgst'), 2),
-            'sgst'    => round((float) $regular->sum('total_sgst'), 2),
-        ];
-
-        // GSTR-3B 3.1(a) is reported NET of credit notes. Subtract the taxable
-        // value + tax of credit notes issued in the period (netted by CN date —
-        // that's how the portal treats them, regardless of the original invoice's
-        // period). Credit notes against reverse-charge invoices carry ₹0 tax, so
-        // they net to zero here and need no special handling.
-        $creditNotes = \App\Models\CreditNote::where('company_id', $company->id)
-            ->whereBetween('credit_note_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get();
-        $outward['taxable'] = round($outward['taxable'] - (float) $creditNotes->sum('taxable_value'), 2);
-        $outward['igst']    = round($outward['igst'] - (float) $creditNotes->sum('total_igst'), 2);
-        $outward['cgst']    = round($outward['cgst'] - (float) $creditNotes->sum('total_cgst'), 2);
-        $outward['sgst']    = round($outward['sgst'] - (float) $creditNotes->sum('total_sgst'), 2);
-
-        // 3.1(d) — Inward supplies liable to reverse charge (we report from the
-        // invoice side: outgoing where the buyer pays). Tax is "would-have-been"
-        // on the line items even though we set CGST/SGST/IGST to ₹0 on the invoice.
-        // For now, surface the taxable value; the buyer side computes their own tax.
-        $rcm_outward = [
-            'taxable' => round((float) $rcm->sum('subtotal'), 2),
-            'igst'    => 0.0,
-            'cgst'    => 0.0,
-            'sgst'    => 0.0,
-        ];
-
-        // 4(A)(5) — ITC available: GST paid on expenses + cash memos in the period.
-        // For sub-₹5cr regular dealers this is the bulk of their ITC claim.
-        //
-        // Two correctness guards here:
-        //  1. whereNull('cash_memo_id') — every cash memo creates a linked
-        //     expense row carrying the same GST (see CashMemoController::store).
-        //     Cash memos are summed separately below with their exact
-        //     CGST/SGST/IGST split, so counting the linked expense too would
-        //     double-count that GST. Excluding them fixes the double count.
-        //  2. where('itc_eligible', true) — GST on "blocked credit" purchases
-        //     (motor vehicles, staff food/catering, personal-use items, etc.)
-        //     is NOT claimable under CGST Act §17(5). Users flag those rows so
-        //     the helper doesn't overstate ITC.
-        //
-        // Standalone expenses use the `is_interstate` flag set on each row:
-        //   - intra-state (default): GST splits 50/50 into CGST + SGST per §9(1)
-        //   - inter-state:           GST goes entirely to IGST per IGST Act §5(1)
-        $expensesInPeriod = $company->expenses()
-            ->whereNull('cash_memo_id')
-            ->where('itc_eligible', true)
-            ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get(['gst_amount', 'is_interstate']);
-
-        $intraExpenseGst = (float) $expensesInPeriod->where('is_interstate', false)->sum('gst_amount');
-        $interExpenseGst = (float) $expensesInPeriod->where('is_interstate', true)->sum('gst_amount');
-
-        $cashMemos = $company->cashMemos()
-            ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->get();
-        // Only ITC-eligible memos feed the claim; all memos still count for the
-        // memo tally below.
-        $eligibleMemos = $cashMemos->where('itc_eligible', true);
-
-        $itc = [
-            'igst' => round((float) $eligibleMemos->sum('total_igst') + $interExpenseGst, 2),
-            'cgst' => round((float) $eligibleMemos->sum('total_cgst') + ($intraExpenseGst / 2), 2),
-            'sgst' => round((float) $eligibleMemos->sum('total_sgst') + ($intraExpenseGst / 2), 2),
-        ];
-        $itc['total'] = round($itc['igst'] + $itc['cgst'] + $itc['sgst'], 2);
-
-        // 6.1 — Net cash payable per head
-        $netCash = [
-            'igst' => round(max(0, $outward['igst'] - $itc['igst']), 2),
-            'cgst' => round(max(0, $outward['cgst'] - $itc['cgst']), 2),
-            'sgst' => round(max(0, $outward['sgst'] - $itc['sgst']), 2),
-        ];
-        $netCash['total'] = round($netCash['igst'] + $netCash['cgst'] + $netCash['sgst'], 2);
-
-        return [
-            'outward' => $outward,
-            'rcm_outward' => $rcm_outward,
-            'itc' => $itc,
-            'netCash' => $netCash,
-            'invoiceCount' => $invoices->count(),
-            // Standalone expenses only — cash-memo-linked rows are tallied as
-            // cash memos below, so they'd otherwise be counted twice.
-            'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
-            'cashMemoCount' => $cashMemos->count(),
-        ];
+        return app(\App\Services\Gstr3bBuilder::class)->build($company, $from, $to);
     }
 
     /**
      * GSTR-3B is filed for a calendar month. We default to the previous month
      * (since the current month isn't yet closed for filing on the 20th).
      */
+    /** [start, end, label, ReturnPeriod] - a month, or a QRMP quarter. */
     private function resolveGstr3bPeriod(Request $request): array
     {
-        $month = $request->input('month'); // expected format: YYYY-MM
-        if ($month && preg_match('/^\d{4}-\d{2}$/', $month)) {
-            $start = Carbon::parse($month . '-01')->startOfMonth();
-        } else {
-            // Default: previous month if we're past the 11th (GSTR-1 filing window),
-            // else still on previous month so users can prepare ahead.
-            $start = now()->subMonthNoOverflow()->startOfMonth();
-        }
-        $end = $start->copy()->endOfMonth();
-        return [$start, $end, $start->format('F Y')];
+        $period = \App\Support\ReturnPeriod::fromRequest($request);
+
+        return [$period->start, $period->end, $period->label(), $period];
     }
 
     /**
@@ -699,15 +622,22 @@ class FinanceController extends Controller
             ->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->when($request->category, fn ($q, $c) => $q->where('category', $c))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('description', 'like', "%{$s}%")
-                    ->orWhere('vendor_name', 'like', "%{$s}%")
-                    ->orWhere('reference_number', 'like', "%{$s}%");
+                $w->whereLiteralLike('description', $s)
+                    ->orWhereLiteralLike('vendor_name', $s)
+                    ->orWhereLiteralLike('reference_number', $s);
             }));
     }
 
     public function createExpense(Request $request): View
     {
-        $expense = new Expense(['entry_date' => now()->toDateString(), 'payment_method' => 'bank']);
+        // Prefilled when coming from a bank statement line ("Add as expense").
+        $expense = new Expense([
+            'entry_date' => $request->date('entry_date')?->toDateString() ?? now()->toDateString(),
+            'payment_method' => 'bank',
+            'amount' => $request->filled('amount') ? round((float) $request->query('amount'), 2) : null,
+            'description' => mb_substr((string) $request->query('description', ''), 0, 255) ?: null,
+            'reference_number' => mb_substr((string) $request->query('reference', ''), 0, 50) ?: null,
+        ]);
         return view('finance.entry-form', compact('expense'));
     }
 
@@ -719,29 +649,55 @@ class FinanceController extends Controller
 
         if ($company->isBooksLockedOn($data['entry_date'])) {
             return redirect()->back()->withInput()
-                ->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Cannot add expense dated on or before that.");
+                ->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the expense after that.");
         }
 
         $expense = $company->expenses()->create(array_merge($data, ['user_id' => $user->id]));
 
         AuditLog::record('expense.created',
-            "Expense ₹" . number_format($expense->amount, 2) . " · " . ($expense->vendor_name ?: $expense->description),
+            "Expense ₹" . inr($expense->amount) . " · " . ($expense->vendor_name ?: $expense->description),
             $expense
         );
 
         return redirect()->route('finance.expenses')
-            ->with('status', "Expense of ₹" . number_format($expense->amount, 2) . " added.");
+            ->with('status', "Expense of ₹" . inr($expense->amount) . " added.");
     }
 
-    public function editExpense(Request $request, Expense $expense): View
+    public function editExpense(Request $request, Expense $expense): View|RedirectResponse
     {
         abort_unless($expense->user_id === $request->user()->id, 403);
+        if ($source = $this->mirroredSource($expense, 'edit')) {
+            return $source;
+        }
         return view('finance.entry-form', compact('expense'));
+    }
+
+    /**
+     * An expense row written by a cash memo or a purchase invoice is a mirror
+     * of that document: changing it alone would put the P&L, the document and
+     * GSTR-3B out of step (deleting a bill's row dropped the cost but kept the
+     * input credit). Send the user to the document instead.
+     */
+    private function mirroredSource(Expense $expense, string $action): ?RedirectResponse
+    {
+        if ($expense->purchase_bill_id) {
+            return redirect()->route($action === 'edit' ? 'purchases.edit' : 'purchases.show', $expense->purchase_bill_id)
+                ->with('error', 'This entry comes from a purchase invoice. ' . ($action === 'delete' ? 'Delete' : 'Change') . ' the purchase invoice instead.');
+        }
+        if ($expense->cash_memo_id) {
+            return redirect()->route($action === 'edit' ? 'finance.cash-memos.edit' : 'finance.cash-memos.show', $expense->cash_memo_id)
+                ->with('error', 'This entry comes from a cash memo. ' . ($action === 'delete' ? 'Delete' : 'Change') . ' the cash memo instead.');
+        }
+
+        return null;
     }
 
     public function updateExpense(Request $request, Expense $expense): RedirectResponse
     {
         abort_unless($expense->user_id === $request->user()->id, 403);
+        if ($source = $this->mirroredSource($expense, 'edit')) {
+            return $source;
+        }
         $company = $expense->company;
         if ($company->isBooksLockedOn($expense->entry_date)) {
             return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This expense cannot be edited.");
@@ -750,13 +706,13 @@ class FinanceController extends Controller
         $data = $this->validated($request);
         if ($company->isBooksLockedOn($data['entry_date'])) {
             return redirect()->back()->withInput()
-                ->with('error', "Cannot move this expense to a date inside the locked period (up to {$company->books_locked_until->format('d M Y')}).");
+                ->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. Choose a later date for this expense.");
         }
 
         $before = $expense->only(['amount', 'gst_amount', 'category', 'vendor_name', 'description', 'entry_date']);
         $expense->update($data);
         AuditLog::record('expense.updated',
-            "Expense #{$expense->id} updated · ₹" . number_format($expense->amount, 2),
+            "Expense #{$expense->id} updated · ₹" . inr($expense->amount),
             $expense,
             ['before' => $before, 'after' => $expense->only(['amount', 'gst_amount', 'category', 'vendor_name', 'description', 'entry_date'])]
         );
@@ -766,12 +722,15 @@ class FinanceController extends Controller
     public function destroyExpense(Request $request, Expense $expense): RedirectResponse
     {
         abort_unless($expense->user_id === $request->user()->id, 403);
+        if ($source = $this->mirroredSource($expense, 'delete')) {
+            return $source;
+        }
         $company = $expense->company;
         if ($company->isBooksLockedOn($expense->entry_date)) {
-            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This expense cannot be deleted because it falls inside the closed period.");
+            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This expense cannot be deleted.");
         }
         AuditLog::record('expense.deleted',
-            "Expense #{$expense->id} deleted · ₹" . number_format($expense->amount, 2) . " · " . ($expense->vendor_name ?: $expense->description),
+            "Expense #{$expense->id} deleted · ₹" . inr($expense->amount) . " · " . ($expense->vendor_name ?: $expense->description),
             $expense,
             $expense->toArray()
         );
@@ -785,6 +744,10 @@ class FinanceController extends Controller
      *
      * - If the expense was created via a Cash Memo, redirect to the memo's PDF
      *   (the memo IS the canonical voucher).
+     * - If it mirrors a purchase invoice, redirect to that invoice: what was
+     *   paid, when and how is on its page. A voucher printed "Total Cash Out"
+     *   with a payment mode for a bill that may be unpaid, and for a
+     *   reverse-charge bill counted the tax as paid to the vendor.
      * - Otherwise generate an "Expense Voucher" PDF on the fly.
      * - ?inline=1 streams to browser (View). Otherwise forces download.
      */
@@ -794,6 +757,9 @@ class FinanceController extends Controller
 
         if ($expense->cash_memo_id) {
             return redirect()->route('finance.cash-memos.pdf', $expense->cash_memo_id);
+        }
+        if ($expense->purchase_bill_id) {
+            return redirect()->route('purchases.show', $expense->purchase_bill_id);
         }
 
         $expense->load('company.state');
@@ -839,6 +805,7 @@ class FinanceController extends Controller
         // ITC eligibility: the form ships a hidden "0" plus the checkbox, so an
         // unticked box reads as not-eligible (blocked credit per §17(5)).
         $data['itc_eligible'] = $request->boolean('itc_eligible');
+        Expense::assertGstWithinSlab((float) $data['amount'], (float) $data['gst_amount']);
 
         return $data;
     }

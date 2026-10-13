@@ -24,8 +24,8 @@ class BlogAdminController extends Controller
         $posts = Post::with('author')
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('title', 'like', "%{$s}%")
-                  ->orWhere('slug', 'like', "%{$s}%");
+                $w->whereLiteralLike('title', $s)
+                  ->orWhereLiteralLike('slug', $s);
             }))
             ->orderByDesc('updated_at')
             ->paginate(20)
@@ -38,7 +38,7 @@ class BlogAdminController extends Controller
     {
         $post = new Post([
             'status' => 'draft',
-            'body' => "## Introduction\n\nWrite your post here. Markdown is supported — links, lists, code blocks, tables, images.\n\n## Section\n\nDetail.\n",
+            'body' => "## Introduction\n\nWrite your post here. Markdown is supported: links, lists, code blocks, tables, images.\n\n## Section\n\nDetail.\n",
         ]);
         return view('admin.blog.edit', compact('post'));
     }

@@ -1,6 +1,9 @@
 @php
     $c = $payment->invoice->company;
-    $cust = $payment->invoice->customer;
+    // The party as billed on the invoice this receipt settles (the snapshot
+    // frozen at issue), like the invoice and credit note PDFs, so a later
+    // edit to the customer record never changes a receipt already given.
+    $cust = $payment->invoice->billedCustomer() ?? $payment->invoice->customer;
     $inv = $payment->invoice;
     $methodLabel = config('payment_methods.methods.' . $payment->method . '.label', ucfirst($payment->method));
     $amountInWords = \App\Support\NumberToWords::indianRupees((float) $payment->amount, 'INR');
@@ -35,7 +38,7 @@
     table.kv { width: 100%; border-collapse: collapse; }
     table.kv th, table.kv td { padding: 6px 8px; text-align: left; font-size: 12px; }
     table.kv tr { border-bottom: 1px solid #e5e5e5; }
-    table.kv th { background: #f7f7f7; width: 32%; font-weight: 600; color: #333; }
+    table.kv th { background: #f7f7f7; width: 32%; font-weight: bold; color: #333; }
     .footer { margin-top: 28px; display: table; width: 100%; }
     .footer .col { padding-top: 50px; }
     .sign { border-top: 1px solid #111; padding-top: 4px; font-size: 10px; }
@@ -56,9 +59,7 @@
 
 <div class="row">
     <div class="col" style="width: 65%;">
-        @if ($c->logo_path && file_exists(public_path('storage/' . $c->logo_path)))
-            <img src="{{ public_path('storage/' . $c->logo_path) }}" alt="logo" style="max-height: 60px; max-width: 220px;"><br>
-        @endif
+        @include('partials.pdf-logo', ['c' => $c])
         <h2 class="company">{{ $c->name }}</h2>
         <div class="small muted">
             {{ $c->address_line1 }}@if ($c->address_line2), {{ $c->address_line2 }}@endif<br>
@@ -104,9 +105,28 @@
         <table class="kv" style="margin-top: 4px;">
             <tr><th>Invoice no.</th><td>{{ $inv->invoice_number ?? 'Draft' }}</td></tr>
             <tr><th>Invoice date</th><td>{{ $inv->invoice_date?->format('d M Y') }}</td></tr>
+            @php
+                // As things stood when this payment came in, not as they are
+                // today: a receipt for the first instalment must not show the
+                // later ones as "previously paid".
+                $paidBefore = (float) $inv->payments
+                    ->takeWhile(fn ($p) => $p->id !== $payment->id)
+                    ->sum('amount');
+                $creditedBefore = (float) $inv->creditNotes
+                    ->filter(fn ($cn) => $cn->credit_note_date && (
+                        $cn->credit_note_date->lt($payment->received_at->copy()->startOfDay())
+                        || ($cn->credit_note_date->isSameDay($payment->received_at)
+                            && (! $cn->created_at || ! $payment->created_at || $cn->created_at->lte($payment->created_at)))
+                    ))
+                    ->sum('amount');
+                $balanceAfter = round((float) $inv->grand_total - $creditedBefore - $paidBefore - (float) $payment->amount, 2);
+            @endphp
             <tr><th>Invoice total</th><td>&#8377; {{ inr($inv->grand_total) }}</td></tr>
-            <tr><th>Previously paid</th><td>&#8377; {{ inr($inv->paid_amount - (float) $payment->amount) }}</td></tr>
-            <tr><th>Balance after this payment</th><td><strong>&#8377; {{ inr($inv->balance) }}</strong></td></tr>
+            @if ($creditedBefore > 0)
+                <tr><th>Less credit notes</th><td>&#8377; {{ inr($creditedBefore) }}</td></tr>
+            @endif
+            <tr><th>Previously paid</th><td>&#8377; {{ inr($paidBefore) }}</td></tr>
+            <tr><th>Balance after this payment</th><td><strong>&#8377; {{ inr($balanceAfter) }}</strong></td></tr>
         </table>
     </div>
 </div>
@@ -127,7 +147,9 @@
                 <td style="font-family: DejaVu Sans Mono, monospace; text-align: right;">&#8377; {{ inr($payment->amount) }}</td>
             </tr>
             <tr>
-                <th>Less: TDS @if ($payment->tds_section) under Section {{ $payment->tds_section }}@endif @if ($payment->tds_rate) ({{ rtrim(rtrim(inr($payment->tds_rate), '0'), '.') }}%)@endif</th>
+                {{-- inr() already drops ".00"; trimming zeros again turned 10% into "1%".
+                     The stored section is an internal code (194J_prof); print the section. --}}
+                <th>Less: TDS @if ($payment->tds_section) under Section {{ preg_replace('/_.*$/', '', $payment->tds_section) }}@endif @if ($payment->tds_rate) ({{ inr($payment->tds_rate) }}%)@endif</th>
                 <td style="font-family: DejaVu Sans Mono, monospace; text-align: right; color: #b45309;">- &#8377; {{ inr($payment->tds_amount) }}</td>
             </tr>
             <tr style="border-top: 1px solid #d97706;">
@@ -158,7 +180,7 @@
     @endif
 </table>
 
-@if ((float) $inv->balance <= 0)
+@if ($balanceAfter <= 0)
     <div class="center">
         <span class="stamp">PAID IN FULL</span>
     </div>
@@ -169,10 +191,7 @@
         <div class="xs muted">Issued via {{ config('app.name', 'Apna Invoice') }} &middot; This is a computer-generated receipt.</div>
     </div>
     <div class="col right" style="width: 40%;">
-        @if ($c->signature_path && file_exists(public_path('storage/' . $c->signature_path)))
-            <img src="{{ public_path('storage/' . $c->signature_path) }}" alt="signature" style="max-height: 50px; max-width: 160px;"><br>
-        @endif
-        <div class="sign">Authorised signatory, {{ $c->name }}</div>
+        @include('partials.pdf-signatory', ['c' => $c])
     </div>
 </div>
 

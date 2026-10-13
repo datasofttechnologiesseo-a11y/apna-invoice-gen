@@ -23,8 +23,8 @@ class CashMemoController extends Controller
 
         $memos = $company->cashMemos()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('memo_number', 'like', "%{$s}%")
-                    ->orWhere('seller_name', 'like', "%{$s}%");
+                $w->whereLiteralLike('memo_number', $s)
+                    ->orWhereLiteralLike('seller_name', $s);
             }))
             ->when($request->from, fn ($q, $d) => $q->where('memo_date', '>=', $d))
             ->when($request->to, fn ($q, $d) => $q->where('memo_date', '<=', $d))
@@ -93,14 +93,14 @@ class CashMemoController extends Controller
             fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
 
             // Context block
-            fputcsv($out, ["Cash Memo Statement (Purchase Vouchers)"]);
-            fputcsv($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
-            fputcsv($out, ["Period", $label . ' [' . $from->format('d-M-Y') . ' to ' . $to->format('d-M-Y') . ']']);
-            fputcsv($out, ["Generated on", now()->format('d-M-Y H:i')]);
-            fputcsv($out, []);
+            csv_put($out, ["Cash Memo Statement (Purchase Vouchers)"]);
+            csv_put($out, ["Company", $company->name . ($company->gstin ? ' (GSTIN: ' . $company->gstin . ')' : '')]);
+            csv_put($out, ["Period", $label . ' [' . $from->format('d-M-Y') . ' to ' . $to->format('d-M-Y') . ']']);
+            csv_put($out, ["Generated on", now()->format('d-M-Y H:i')]);
+            csv_put($out, []);
 
             // Header row
-            fputcsv($out, [
+            csv_put($out, [
                 'S.No.', 'Date', 'Memo No.', 'Seller Name', 'Seller GSTIN', 'Seller State',
                 'Items', 'Taxable (Rs.)', 'CGST (Rs.)', 'SGST (Rs.)', 'IGST (Rs.)',
                 'Round Off', 'Grand Total (Rs.)', 'Payment Mode', 'Reference', 'Notes',
@@ -117,7 +117,7 @@ class CashMemoController extends Controller
                 $totals['igst']    += (float) $m->total_igst;
                 $totals['grand']   += (float) $m->grand_total;
 
-                fputcsv($out, [
+                csv_put($out, [
                     $i,
                     $m->memo_date->format('d-M-Y'),
                     $m->memo_number,
@@ -138,8 +138,8 @@ class CashMemoController extends Controller
             }
 
             // Totals row
-            fputcsv($out, []);
-            fputcsv($out, [
+            csv_put($out, []);
+            csv_put($out, [
                 '', '', '', '', '', '', 'TOTAL',
                 number_format($totals['taxable'], 2, '.', ''),
                 number_format($totals['cgst'], 2, '.', ''),
@@ -162,8 +162,8 @@ class CashMemoController extends Controller
     {
         return $company->cashMemos()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('memo_number', 'like', "%{$s}%")
-                    ->orWhere('seller_name', 'like', "%{$s}%");
+                $w->whereLiteralLike('memo_number', $s)
+                    ->orWhereLiteralLike('seller_name', $s);
             }))
             ->whereBetween('memo_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
     }
@@ -286,12 +286,12 @@ class CashMemoController extends Controller
             $expense->update(['cash_memo_id' => $memo->id]);
 
             AuditLog::record('cash_memo.created',
-                "Cash Memo {$memoNumber} · ₹" . number_format($memo->grand_total, 2) . " · " . $memo->seller_name,
+                "Cash Memo {$memoNumber} · ₹" . inr($memo->grand_total) . " · " . $memo->seller_name,
                 $memo
             );
 
             return redirect()->route('finance.cash-memos.show', $memo)
-                ->with('status', "Cash memo {$memoNumber} created · Expense entry added.");
+                ->with('status', "Cash memo {$memoNumber} created and added to expenses.");
         });
     }
 
@@ -343,7 +343,7 @@ class CashMemoController extends Controller
     {
         abort_unless($cashMemo->user_id === $request->user()->id, 403);
         $company = $cashMemo->company;
-        $data = $this->validated($request, $cashMemo->id);
+        $data = $this->validated($request, $cashMemo->id, $cashMemo->company_id);
 
         // Books-lock guards BOTH the existing date and the new date.
         if ($company->isBooksLockedOn($cashMemo->memo_date) || $company->isBooksLockedOn($data['memo_date'])) {
@@ -410,7 +410,7 @@ class CashMemoController extends Controller
         });
 
         AuditLog::record('cash_memo.updated',
-            "Cash Memo {$cashMemo->fresh()->memo_number} updated · ₹" . number_format($cashMemo->fresh()->grand_total, 2) . " · " . $cashMemo->seller_name,
+            "Cash Memo {$cashMemo->fresh()->memo_number} updated · ₹" . inr($cashMemo->fresh()->grand_total) . " · " . $cashMemo->seller_name,
             $cashMemo
         );
 
@@ -436,7 +436,7 @@ class CashMemoController extends Controller
 
         $company = $cashMemo->company;
         if ($company->isBooksLockedOn($cashMemo->memo_date)) {
-            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This cash memo cannot be deleted because it falls inside the closed period.");
+            return redirect()->back()->with('error', "Books are locked up to {$company->books_locked_until->format('d M Y')}. This cash memo cannot be deleted.");
         }
 
         $auditSnapshot = $cashMemo->only(['memo_number', 'memo_date', 'seller_name', 'grand_total', 'expense_id']);
@@ -450,7 +450,7 @@ class CashMemoController extends Controller
         });
 
         AuditLog::record('cash_memo.deleted',
-            "Cash Memo {$auditSnapshot['memo_number']} deleted · ₹" . number_format($auditSnapshot['grand_total'], 2) . " · " . $auditSnapshot['seller_name'],
+            "Cash Memo {$auditSnapshot['memo_number']} deleted · ₹" . inr($auditSnapshot['grand_total']) . " · " . $auditSnapshot['seller_name'],
             null,
             $auditSnapshot
         );
@@ -458,9 +458,10 @@ class CashMemoController extends Controller
         return redirect()->route('finance.cash-memos.index')->with('status', 'Cash memo deleted.');
     }
 
-    private function validated(Request $request, ?int $ignoreId = null): array
+    private function validated(Request $request, ?int $ignoreId = null, ?int $companyId = null): array
     {
-        $companyId = $request->user()->ensureCompany()->id;
+        // The memo's own business when editing (it need not be the open one).
+        $companyId ??= $request->user()->ensureCompany()->id;
 
         $data = $request->validate([
             'memo_date' => ['required', 'date'],
@@ -477,7 +478,7 @@ class CashMemoController extends Controller
             'seller_phone' => ['nullable', 'string', 'max:30'],
             'seller_state' => ['nullable', 'string', 'max:80'],
             'discount' => ['nullable', 'numeric', 'min:0'],
-            'gst_rate' => ['nullable', 'numeric', 'min:0', 'max:28'],
+            'gst_rate' => ['nullable', 'numeric', 'in:' . implode(',', config('gst.allowed_values'))],
             'is_interstate' => ['nullable', 'boolean'],
             'itc_eligible' => ['nullable', 'boolean'],
             'payment_mode' => ['required', 'string', 'in:cash,upi,card,bank,cheque,other'],
@@ -487,9 +488,9 @@ class CashMemoController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.hsn_sac' => ['nullable', 'string', 'max:10'],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001', 'decimal:0,3'],
             'items.*.unit' => ['nullable', 'string', 'max:20'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'items.*.rate' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
         ]);
 
         // ITC eligibility: checkbox defaults to ticked in the form, so an
@@ -521,7 +522,7 @@ class CashMemoController extends Controller
                 $igst = $gstAmount;
             } else {
                 $cgst = round($gstAmount / 2, 2);
-                $sgst = $gstAmount - $cgst; // absorb rounding diff
+                $sgst = round($gstAmount - $cgst, 2); // absorb rounding diff
             }
         }
 

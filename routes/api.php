@@ -28,8 +28,8 @@ use Illuminate\Support\Facades\Route;
 
 // --- Public auth (rate-limited; no captcha — mobile can't render Turnstile) ---
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:6,1');
-    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:6,1,api-register');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1,api-login');
 });
 
 // Static lookup — states list is needed on the login/onboarding screens too,
@@ -41,7 +41,9 @@ Route::get('blog', [BlogController::class, 'index']);
 Route::get('blog/{slug}', [BlogController::class, 'show'])->where('slug', '[a-z0-9-]+');
 
 // --- Authenticated ---
-Route::middleware('auth:sanctum')->group(function () {
+// "team": a team member's app requests run in the business they joined,
+// under their role (see App\Http\Middleware\ActAsTeamMember).
+Route::middleware(['auth:sanctum', 'team'])->group(function () {
     // Session
     Route::get('me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
@@ -60,8 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Backups (download ZIP, email, toggle weekly auto-backup)
     Route::get('backup', [BackupController::class, 'index']);
-    Route::get('backup/download', [BackupController::class, 'download'])->middleware('throttle:6,1');
-    Route::post('backup/email', [BackupController::class, 'emailNow'])->middleware('throttle:3,1');
+    Route::get('backup/download', [BackupController::class, 'download'])->middleware('throttle:6,1,api-backup-download');
+    Route::post('backup/email', [BackupController::class, 'emailNow'])->middleware('throttle:3,1,api-backup-email');
     Route::post('backup/toggle', [BackupController::class, 'toggle']);
 
     // Companies (multi-company)
@@ -90,7 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel']);
     Route::get('invoices/{invoice}/share-link', [InvoiceController::class, 'shareLink']);
     Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
-    Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])->middleware('throttle:5,1');
+    Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])->middleware('throttle:5,1,api-invoices-invoice-remind');
 
     // Payments (nested under invoice for create; flat for delete)
     Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'recordPayment']);

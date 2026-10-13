@@ -10,13 +10,15 @@ class StateSeeder extends Seeder
     public function run(): void
     {
         $states = [
-            ['code' => 'JK', 'name' => 'Jammu and Kashmir', 'gst_code' => '01', 'is_union_territory' => true],
+            // is_union_territory = levies UTGST (UT without a legislature). J&K,
+            // Delhi and Puducherry have legislatures and levy SGST.
+            ['code' => 'JK', 'name' => 'Jammu and Kashmir', 'gst_code' => '01', 'is_union_territory' => false],
             ['code' => 'HP', 'name' => 'Himachal Pradesh', 'gst_code' => '02', 'is_union_territory' => false],
             ['code' => 'PB', 'name' => 'Punjab', 'gst_code' => '03', 'is_union_territory' => false],
             ['code' => 'CH', 'name' => 'Chandigarh', 'gst_code' => '04', 'is_union_territory' => true],
             ['code' => 'UK', 'name' => 'Uttarakhand', 'gst_code' => '05', 'is_union_territory' => false],
             ['code' => 'HR', 'name' => 'Haryana', 'gst_code' => '06', 'is_union_territory' => false],
-            ['code' => 'DL', 'name' => 'Delhi', 'gst_code' => '07', 'is_union_territory' => true],
+            ['code' => 'DL', 'name' => 'Delhi', 'gst_code' => '07', 'is_union_territory' => false],
             ['code' => 'RJ', 'name' => 'Rajasthan', 'gst_code' => '08', 'is_union_territory' => false],
             ['code' => 'UP', 'name' => 'Uttar Pradesh', 'gst_code' => '09', 'is_union_territory' => false],
             ['code' => 'BR', 'name' => 'Bihar', 'gst_code' => '10', 'is_union_territory' => false],
@@ -42,10 +44,14 @@ class StateSeeder extends Seeder
             ['code' => 'LD', 'name' => 'Lakshadweep', 'gst_code' => '31', 'is_union_territory' => true],
             ['code' => 'KL', 'name' => 'Kerala', 'gst_code' => '32', 'is_union_territory' => false],
             ['code' => 'TN', 'name' => 'Tamil Nadu', 'gst_code' => '33', 'is_union_territory' => false],
-            ['code' => 'PY', 'name' => 'Puducherry', 'gst_code' => '34', 'is_union_territory' => true],
+            ['code' => 'PY', 'name' => 'Puducherry', 'gst_code' => '34', 'is_union_territory' => false],
             ['code' => 'AN', 'name' => 'Andaman and Nicobar Islands', 'gst_code' => '35', 'is_union_territory' => true],
             ['code' => 'TS', 'name' => 'Telangana', 'gst_code' => '36', 'is_union_territory' => false],
             ['code' => 'LA', 'name' => 'Ladakh', 'gst_code' => '38', 'is_union_territory' => true],
+            // GST portal place-of-supply codes outside the states: exports go
+            // to 96, supplies to offshore/other territory to 97.
+            ['code' => 'FC', 'name' => 'Foreign Country', 'gst_code' => '96', 'is_union_territory' => false],
+            ['code' => 'OT', 'name' => 'Other Territory', 'gst_code' => '97', 'is_union_territory' => false],
         ];
 
         $now = now();

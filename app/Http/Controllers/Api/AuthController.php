@@ -37,8 +37,10 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'device_name' => ['nullable', 'string', 'max:255'],
+            // A friend's referral code, as on the website (?ref=CODE).
+            'referral_code' => ['nullable', 'string', 'max:32'],
         ], [
-            'phone.required' => 'Please enter your mobile number so we can help you get started.',
+            'phone.required' => 'Enter your mobile number.',
             'phone.regex' => 'Enter a valid 10-digit Indian mobile number.',
         ]);
 
@@ -49,6 +51,14 @@ class AuthController extends Controller
             'phone' => '+91' . substr(preg_replace('/\D/', '', $data['phone']), -10),
             'password' => $data['password'], // hashed via cast
         ]);
+
+        // App sign-ups can be referred too: same rule as the website.
+        $code = strtoupper(trim((string) ($data['referral_code'] ?? '')));
+        if ($code !== '') {
+            \App\Services\Registration\AccountCreator::recordReferral(
+                $user, User::where('referral_code', $code)->first(), $code
+            );
+        }
 
         // Make sure the user has a company context from day one, matching the
         // web onboarding flow's guarantee.

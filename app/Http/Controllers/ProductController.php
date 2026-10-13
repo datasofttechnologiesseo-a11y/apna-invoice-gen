@@ -30,14 +30,24 @@ class ProductController extends Controller
         }
 
         $products = $company->products()
-            // The list asks each row whether it has invoice history, to
-            // decide between Archive and Delete. Counting here keeps that
-            // one query instead of one per row.
-            ->withCount('invoiceItems')
+            // The list asks each row whether it has any history, to decide
+            // between Archive and Delete. Counting here keeps that one query
+            // instead of one per row.
+            ->withCount(['invoiceItems', 'purchaseBillItems', 'quotationItems', 'stockMovements'])
+            // Stock on hand for items that track it, in the same query.
+            ->withSum('stockMovements', 'quantity')
+            // Stock filters use the real stock on hand: opening stock plus every movement.
+            ->when(in_array($request->stock, ['low', 'out'], true), function ($q) use ($request) {
+                $onHand = '(products.opening_stock + COALESCE((SELECT SUM(sm.quantity) FROM stock_movements sm WHERE sm.product_id = products.id), 0))';
+                $q->where('track_stock', true);
+                $request->stock === 'out'
+                    ? $q->whereRaw("{$onHand} <= 0")
+                    : $q->whereNotNull('low_stock_level')->whereRaw("{$onHand} > 0")->whereRaw("{$onHand} <= products.low_stock_level");
+            })
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")
-                  ->orWhere('sku', 'like', "%{$s}%")
-                  ->orWhere('hsn_sac', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)
+                  ->orWhereLiteralLike('sku', $s)
+                  ->orWhereLiteralLike('hsn_sac', $s);
             }))
             ->when($request->kind, fn ($q, $k) => $q->where('kind', $k))
             ->when($status === 'active', fn ($q) => $q->where('is_active', true))
@@ -50,7 +60,19 @@ class ProductController extends Controller
         // empty archive from a filter that is hiding things from you.
         $archivedCount = $company->products()->where('is_active', false)->count();
 
-        return view('products.index', compact('products', 'company', 'status', 'archivedCount'));
+        // Inventory at a glance, for items that track stock: what it is worth,
+        // what is running low and what has run out.
+        $tracked = $company->products()->where('is_active', true)->where('track_stock', true)
+            ->withSum('stockMovements', 'quantity')
+            ->get(['id', 'opening_stock', 'low_stock_level', 'purchase_rate', 'rate']);
+        $inventory = $tracked->isEmpty() ? null : [
+            'items' => $tracked->filter(fn ($p) => $p->stockOnHand() > 0)->count(),
+            'value' => round($tracked->sum(fn ($p) => max(0, $p->stockOnHand()) * (float) ($p->purchase_rate ?? $p->rate)), 2),
+            'low' => $tracked->filter(fn ($p) => $p->low_stock_level !== null && $p->stockOnHand() > 0 && $p->stockOnHand() <= (float) $p->low_stock_level)->count(),
+            'out' => $tracked->filter(fn ($p) => $p->stockOnHand() <= 0)->count(),
+        ];
+
+        return view('products.index', compact('products', 'company', 'status', 'archivedCount', 'inventory'));
     }
 
     public function create(Request $request): View
@@ -80,10 +102,13 @@ class ProductController extends Controller
         // already enforced "required" for GST-registered suppliers; if we land
         // here without HSN, the user is un-registered and the field is optional.
         $data['hsn_sac'] = $data['hsn_sac'] ?? '';
+        if (array_key_exists('track_stock', $data)) {
+            $data = $this->stockFields($data);
+        }
 
         $product = Product::create($data);
         return redirect()->route('products.index')
-            ->with('status', "Product '{$product->name}' added.");
+            ->with('status', "Item '{$product->name}' added.");
     }
 
     public function edit(Request $request, Product $product): View
@@ -100,26 +125,73 @@ class ProductController extends Controller
         $data = $this->validated($request, $product->company_id, $product->id);
         // Same NOT-NULL coercion as store() — see comment there.
         $data['hsn_sac'] = $data['hsn_sac'] ?? '';
+        if (array_key_exists('track_stock', $data)) {
+            $data = $this->stockFields($data);
+        }
         $product->update($data);
         return redirect()->route('products.index')
-            ->with('status', "Product '{$product->name}' updated.");
+            ->with('status', "Item '{$product->name}' updated.");
+    }
+
+    /** Stock history of one item, with a running balance, and the adjust form. */
+    public function stock(Request $request, Product $product): View
+    {
+        $this->authorize($request, $product);
+        $movements = $product->stockMovements()->with('source')->orderBy('moved_on')->orderBy('id')->get();
+        $running = (float) $product->opening_stock;
+        $rows = $movements->map(function ($m) use (&$running) {
+            $running = round($running + (float) $m->quantity, 3);
+
+            return ['movement' => $m, 'balance' => $running];
+        })->reverse()->values();
+
+        return view('products.stock', [
+            'product' => $product,
+            'rows' => $rows,
+            'onHand' => $running,
+        ]);
+    }
+
+    /** Add or remove stock by hand: damage, a return, a physical count. */
+    public function adjustStock(Request $request, Product $product): RedirectResponse
+    {
+        $this->authorize($request, $product);
+        abort_unless($product->track_stock, 422, 'Turn on stock tracking for this item first.');
+        $data = $request->validate([
+            'direction' => ['required', 'in:in,out'],
+            'quantity' => ['required', 'numeric', 'min:0.001', 'max:999999999'],
+            'moved_on' => ['required', 'date', 'before_or_equal:today'],
+            'reason' => ['required', 'string', 'max:200'],
+        ]);
+        $company = $product->company;
+        if ($company && $company->isBooksLockedOn($data['moved_on'])) {
+            return back()->withInput()->withErrors(['moved_on' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the adjustment after that."]);
+        }
+        $qty = (float) $data['quantity'] * ($data['direction'] === 'out' ? -1 : 1);
+        app(\App\Services\StockLedger::class)->adjust($product, $data['moved_on'], $qty, $data['reason'], $request->user());
+
+        return redirect()->route('products.stock', $product)
+            ->with('status', ($qty > 0 ? 'Added ' : 'Removed ') . (0 + abs($qty)) . ' ' . $product->unit . '. In stock now: ' . (0 + $product->stockOnHand()) . '.');
     }
 
     public function destroy(Request $request, Product $product): RedirectResponse
     {
         $this->authorize($request, $product);
 
-        // Keep historical invoice items intact (GST audit trail). Soft-disable
-        // if the product has ever been used; hard-delete only if never billed.
-        if ($product->invoiceItems()->exists()) {
+        // Keep history intact (GST audit trail, stock ledger). Archive the item
+        // if it has ever been billed, bought or quoted, or has stock movements;
+        // delete it only if it was never used. Deleting would also erase its
+        // stock history, which cascades with the item.
+        $usedOn = $product->usedOn();
+        if ($usedOn !== null) {
             $product->update(['is_active' => false]);
             return redirect()->route('products.index')
-                ->with('status', "'{$product->name}' is archived, not deleted - it has been on an invoice, so the records stay intact for GST. It will stop appearing when you make a new invoice. Restore it any time from the Archived tab.");
+                ->with('status', "'{$product->name}' is used on {$usedOn}, so it was archived, not deleted. It will not appear on new invoices. Restore it any time from the Archived tab.");
         }
 
         $product->delete();
         return redirect()->route('products.index')
-            ->with('status', "'{$product->name}' deleted. It had never been invoiced, so nothing was left to keep.");
+            ->with('status', "'{$product->name}' deleted.");
     }
 
     /**
@@ -138,7 +210,7 @@ class ProductController extends Controller
         $product->update(['is_active' => true]);
 
         return redirect()->route('products.index')
-            ->with('status', "'{$product->name}' is back in your catalogue and will show up in the invoice autocomplete again.");
+            ->with('status', "'{$product->name}' restored. It will appear on new invoices again.");
     }
 
     /**
@@ -153,13 +225,21 @@ class ProductController extends Controller
         $products = $company->products()
             ->where('is_active', true)
             ->when($q !== '', fn ($qb) => $qb->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('sku', 'like', "%{$q}%")
-                  ->orWhere('hsn_sac', 'like', "%{$q}%");
+                $w->whereLiteralLike('name', $q)
+                  ->orWhereLiteralLike('sku', $q)
+                  ->orWhereLiteralLike('hsn_sac', $q);
             }))
             ->orderBy('name')
             ->limit(50)
-            ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
+            ->withSum('stockMovements', 'quantity')
+            ->get()
+            // "stock" is on hand for items that track it, null otherwise; the
+            // invoice line shows it and warns when selling more than that.
+            ->map(fn ($p) => [
+                'id' => $p->id, 'name' => $p->name, 'sku' => $p->sku, 'hsn_sac' => $p->hsn_sac, 'unit' => $p->unit,
+                'rate' => $p->rate, 'gst_rate' => $p->gst_rate, 'purchase_rate' => $p->purchase_rate,
+                'stock' => $p->track_stock ? $p->stockOnHand() : null,
+            ]);
 
         return response()->json($products);
     }
@@ -213,7 +293,7 @@ class ProductController extends Controller
             'unit' => $product->unit,
             'rate' => $product->rate,
             'gst_rate' => $product->gst_rate,
-            'message' => "Product '{$product->name}' added.",
+            'message' => "Item '{$product->name}' added.",
         ], 201);
     }
 
@@ -252,6 +332,24 @@ class ProductController extends Controller
             'gst_rate' => ['required', 'numeric', Rule::in($gstRates)],
             'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string', 'max:1000'],
+            // Stock (optional). Services never track stock.
+            'track_stock' => ['nullable', 'boolean'],
+            'opening_stock' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'low_stock_level' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            'purchase_rate' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
+    }
+
+    /** Stock fields as stored: services and untracked items keep the defaults. */
+    private function stockFields(array $data): array
+    {
+        $track = ($data['kind'] ?? 'goods') === 'goods' && ! empty($data['track_stock']);
+        $data['track_stock'] = $track;
+        $data['opening_stock'] = $track ? (float) ($data['opening_stock'] ?? 0) : ($data['opening_stock'] ?? 0);
+        if (array_key_exists('low_stock_level', $data) && $data['low_stock_level'] === '') {
+            $data['low_stock_level'] = null;
+        }
+
+        return $data;
     }
 }

@@ -58,9 +58,10 @@ class DashboardAndAppChromeTest extends TestCase
 
         // The headline is the invoiced total, with the collected figure as the
         // supporting line - not the other way round.
-        $response->assertSee('title="₹1,18,000.00"', false);
-        $response->assertSee('₹20,000.00 received', false);
-        $response->assertSee('17%', false);   // 20,000 of 1,18,000
+        $response->assertSee('title="₹1,18,000"', false);
+        // The collected part is a share (the next tile is the rupees received).
+        $response->assertSee('₹20,000 of it received', false);
+        $response->assertSee('17% of it collected', false);   // 20,000 of 1,18,000
     }
 
     public function test_the_month_card_links_to_that_months_invoices(): void
@@ -104,17 +105,20 @@ class DashboardAndAppChromeTest extends TestCase
             ->assertSee('Datasoft Technologies');
     }
 
-    public function test_the_30_day_card_is_labelled_by_what_it_actually_counts(): void
+    public function test_the_key_figures_are_labelled_by_what_they_actually_count(): void
     {
-        // It plots payments received. Calling it "Revenue" put a second
-        // meaning of the word on the same screen as the P&L card below it,
-        // which counts invoices raised.
+        // Payments received is "Received this month" and invoices raised are
+        // "Sales this month". Calling either "Revenue" put a second meaning of
+        // the word on the same screen. The 30-day payments line was dropped:
+        // it repeated the received figure for a slightly different window.
         [$user, $company, $customer] = $this->fixture();
         Invoice::factory()->recycle($user)->recycle($company)->recycle($customer)->finalized()
             ->create(['finalized_at' => now()->subDays(3)]);
 
         $this->actingAs($user)->get(route('dashboard'))->assertOk()
-            ->assertSee('Payments received · last 30 days', false)
+            ->assertSee('Sales this month')
+            ->assertSee('Received this month')
+            ->assertSee('Outstanding receivables')
             ->assertDontSee('Revenue · last 30 days', false);
     }
 }

@@ -6,7 +6,7 @@
 {{--
     Compact Indian rupee formatter.
     - mode="short" (default): ₹12.5 L / ₹1.2 Cr for tight cards/headers
-    - mode="full": ₹12,50,000.00 with Indian lakh/crore comma grouping
+    - mode="full": ₹12,50,000 with Indian lakh/crore comma grouping
     - symbol=false: drops the ₹ prefix
 --}}
 
@@ -34,25 +34,9 @@
             $rendered = $symbolPrefix . number_format($n, 0);
         }
     } else {
-        // 'full' mode - Indian lakh/crore comma grouping with 2-decimal paise.
-        // PHP's number_format uses Western thousand-grouping (,) so we build
-        // the lakh-grouping manually: last 3 digits, then groups of 2.
-        $negative = $n < 0;
-        $abs = abs($n);
-        $whole = (int) floor($abs);
-        $paise = number_format($abs - $whole, 2, '.', '');
-        $paise = substr($paise, 1); // ".XX"
-
-        $s = (string) $whole;
-        if (strlen($s) <= 3) {
-            $grouped = $s;
-        } else {
-            $last3 = substr($s, -3);
-            $rest = substr($s, 0, -3);
-            $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $rest);
-            $grouped = $rest . ',' . $last3;
-        }
-        $rendered = ($negative ? '-' : '') . $symbolPrefix . $grouped . $paise;
+        // 'full' mode - whole rupees with Indian lakh/crore grouping.
+        $whole = rupees($n);
+        $rendered = str_starts_with($whole, '-') ? '-' . $symbolPrefix . substr($whole, 1) : $symbolPrefix . $whole;
     }
 @endphp
 {{ $rendered }}

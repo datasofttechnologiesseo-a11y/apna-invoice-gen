@@ -93,12 +93,18 @@
     @endif
 
     {{-- ─── Summary cards ─── --}}
+    @php
+        // GST on these entries is not all input credit: blocked credit
+        // (Section 17(5)) and most cash-memo GST cannot be claimed.
+        $itcGst = (float) $rows->where('itc_eligible', true)->sum('gst_amount');
+        $blockedGst = round($summary['gst'] - $itcGst, 2);
+    @endphp
     <table class="summary-cards">
         <tr>
             <td><div class="summary-card"><div class="lbl">Total Entries</div><div class="val">{{ number_format($summary['count']) }}</div></div></td>
             <td><div class="summary-card"><div class="lbl">Taxable Value</div><div class="val">Rs. {{ inr($summary['taxable']) }}</div></div></td>
-            <td><div class="summary-card"><div class="lbl">GST / ITC</div><div class="val">Rs. {{ inr($summary['gst']) }}</div></div></td>
-            <td><div class="summary-card"><div class="lbl">Total Cash Out</div><div class="val">Rs. {{ inr($summary['cash_out']) }}</div></div></td>
+            <td><div class="summary-card"><div class="lbl">GST paid</div><div class="val">Rs. {{ inr($summary['gst']) }}</div>@if ($blockedGst > 0.004)<div style="font-size: 8px; color: #555;">ITC claimable Rs. {{ inr($itcGst) }}</div>@endif</div></td>
+            <td><div class="summary-card"><div class="lbl">Total including GST</div><div class="val">Rs. {{ inr($summary['cash_out']) }}</div></div></td>
         </tr>
     </table>
 
@@ -185,7 +191,7 @@
         </table>
 
         <div class="words">
-            <div class="lbl">Amount in words (total cash out)</div>
+            <div class="lbl">Amount in words (total including GST)</div>
             <div class="val">{{ $summaryWords }}</div>
         </div>
     @endif
@@ -196,7 +202,7 @@
             <tr>
                 <td style="width: 50%;">
                     <div style="font-size: 8.5px; color: #666;">
-                        Notes: This is a computer-generated expense statement. Figures shown are taxable value and GST as recorded against each entry. Total cash out = taxable + GST. Subject to verification of underlying invoices and cash sales. E&amp;OE.
+                        Notes: This is a computer-generated expense statement. Figures shown are taxable value and GST as recorded against each entry. Total including GST = taxable value + GST. GST paid includes GST that cannot be claimed as input tax credit. Subject to verification of underlying invoices and cash memos. E&amp;OE.
                     </div>
                 </td>
                 <td style="width: 50%; text-align: right;">

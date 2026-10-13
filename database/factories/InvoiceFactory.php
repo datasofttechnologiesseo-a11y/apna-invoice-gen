@@ -42,7 +42,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state(fn () => [
             'status' => 'final',
-            'invoice_number' => 'INV-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT),
+            'invoice_number' => 'INV-' . str_pad((string) fake()->unique()->numberBetween(1, 999999), 4, '0', STR_PAD_LEFT),
             'finalized_at' => now(),
         ]);
     }

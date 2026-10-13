@@ -13,16 +13,31 @@ class Invoice extends Model
 {
     use HasFactory;
 
+    /**
+     * Zero-rated supplies (s.16 IGST Act) alongside the regular kind. Exports
+     * and supplies to an SEZ are always inter-state (s.7(5)); "with IGST" pays
+     * the tax and claims it back as a refund, "under LUT" charges none.
+     */
+    public const SUPPLY_TYPES = [
+        'regular' => 'Regular (within India)',
+        'export_igst' => 'Export (with payment of IGST)',
+        'export_lut' => 'Export (under LUT/bond, without IGST)',
+        'sez_igst' => 'Supply to SEZ (with payment of IGST)',
+        'sez_lut' => 'Supply to SEZ (under LUT/bond, without IGST)',
+    ];
+
     protected $fillable = [
         'user_id', 'company_id', 'customer_id',
         'invoice_number', 'invoice_date', 'due_date',
         'place_of_supply_state_id', 'is_interstate', 'reverse_charge',
+        'supply_type', 'export_port_code', 'shipping_bill_number', 'shipping_bill_date',
         'transporter_name', 'transporter_id', 'vehicle_number', 'transport_mode', 'eway_bill_number',
         'ship_to_name', 'ship_to_address_line1', 'ship_to_address_line2',
         'ship_to_city', 'ship_to_state_id', 'ship_to_postal_code', 'ship_to_gstin',
         'currency', 'exchange_rate', 'status', 'style',
         'subtotal', 'total_cgst', 'total_sgst', 'total_igst', 'total_tax',
-        'round_off', 'grand_total', 'paid_amount', 'credited_amount', 'balance',
+        'round_off', 'grand_total', 'paid_amount', 'paid_method', 'paid_reference', 'credited_amount', 'balance',
+        'customer_snapshot',
         'notes', 'terms', 'finalized_at',
         'cancelled_at', 'cancellation_reason',
     ];
@@ -32,6 +47,7 @@ class Invoice extends Model
         'due_date' => 'date',
         'finalized_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'shipping_bill_date' => 'date',
         'is_interstate' => 'boolean',
         'reverse_charge' => 'boolean',
         'subtotal' => 'decimal:2',
@@ -44,8 +60,27 @@ class Invoice extends Model
         'paid_amount' => 'decimal:2',
         'credited_amount' => 'decimal:2',
         'balance' => 'decimal:2',
+        'customer_snapshot' => 'array',
         'exchange_rate' => 'decimal:6',
     ];
+
+    protected static function booted(): void
+    {
+        // The referral offer: an invoice issued for the first time by someone
+        // who was referred earns their referrer lifetime free access. Runs
+        // after the issue is committed, from the web, the app or a team member.
+        static::saved(function (Invoice $invoice) {
+            $justIssued = $invoice->finalized_at !== null
+                && ($invoice->wasRecentlyCreated || $invoice->wasChanged('finalized_at'))
+                && $invoice->getOriginal('finalized_at') === null;
+            if ($justIssued && $invoice->user_id) {
+                $userId = (int) $invoice->user_id;
+                \Illuminate\Support\Facades\DB::afterCommit(
+                    fn () => app(\App\Services\ReferralRewards::class)->invoiceIssuedBy($userId)
+                );
+            }
+        });
+    }
 
     // GSTINs are upper case by definition (checksum alphabet is 0-9A-Z).
     // Normalise on write and on read so old rows saved in mixed case still
@@ -105,6 +140,43 @@ class Invoice extends Model
             ->orderBy('id');
     }
 
+    /**
+     * A bank transfer has one reference (UTR / cheque no.): the same reference
+     * twice on one invoice is the same money booked twice, from a double
+     * submit, an app retry or a second tab. Null when the reference is free.
+     */
+    public function duplicatePaymentReference(?string $reference): ?string
+    {
+        $reference = trim((string) $reference);
+        if ($reference === '') {
+            return null;
+        }
+        $existing = $this->payments()->reorder()
+            ->whereRaw('UPPER(TRIM(reference_number)) = ?', [strtoupper($reference)])
+            ->first(['receipt_number']);
+
+        return $existing
+            ? "A payment with reference {$reference} is already recorded on this invoice (receipt {$existing->receipt_number})."
+            : null;
+    }
+
+    /**
+     * The status as people read it, the same on every screen and document:
+     * Draft, Issued, Partly paid, Paid, Cancelled. ("final" is the stored key
+     * for an issued invoice; it was shown raw as "Final" on some lists.)
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Draft',
+            'final' => 'Issued',
+            'partially_paid' => 'Partly paid',
+            'paid' => 'Paid',
+            'cancelled' => 'Cancelled',
+            default => ucfirst(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)->orderBy('received_at')->orderBy('id');
@@ -160,7 +232,7 @@ class Invoice extends Model
         $amount = str_replace([',', ' ', '₹'], '', $term);
 
         return $query->where(function (Builder $w) use ($term, $amount) {
-            $w->where('invoice_number', 'like', "%{$term}%")
+            $w->whereLiteralLike('invoice_number', $term)
               ->orWhereHas('customer', fn (Builder $c) => $c->search($term));
 
             if (is_numeric($amount)) {
@@ -179,11 +251,301 @@ class Invoice extends Model
         return $this->status === 'cancelled';
     }
 
+    /**
+     * Freeze the recipient as printed on the issued invoice (Rule 46(d)/(e))
+     * so later edits to the customer record - a new GSTIN, a moved office -
+     * never rewrite a document that has already gone out, nor flip its
+     * B2B/B2C classification in GSTR-1.
+     */
+    public function snapshotCustomer(): void
+    {
+        $c = $this->customer;
+        if (! $c) {
+            return;
+        }
+        $s = $c->state;
+
+        $this->forceFill(['customer_snapshot' => [
+            'name' => $c->name,
+            'gstin' => $c->gstin,
+            'address_line1' => $c->address_line1,
+            'address_line2' => $c->address_line2,
+            'city' => $c->city,
+            'postal_code' => $c->postal_code,
+            'country' => $c->country,
+            'phone' => $c->phone,
+            'email' => $c->email,
+            'state' => $s ? [
+                'id' => $s->id,
+                'name' => $s->name,
+                'gst_code' => $s->gst_code,
+                'is_union_territory' => (bool) $s->is_union_territory,
+            ] : null,
+        ]])->save();
+    }
+
+    /**
+     * The customer as it should appear on this document: the snapshot taken
+     * at issue when there is one (issued invoices), otherwise the live row
+     * (drafts). Returned as an unsaved Customer with its state attached, so
+     * views keep reading $cust->name, $cust->state->gst_code unchanged.
+     */
+    public function billedCustomer(): ?Customer
+    {
+        $snap = $this->customer_snapshot;
+        if (! $snap) {
+            return $this->customer;
+        }
+
+        // forceFill: the snapshot keys are trusted and must not be filtered by
+        // the model's fillable list.
+        $cust = (new Customer())->forceFill(collect($snap)->except('state')->all());
+        $cust->exists = false;
+        $cust->setRelation('state', $snap['state'] ? (new State($snap['state']))->forceFill(['id' => $snap['state']['id']]) : null);
+        if (! empty($snap['state']['id'])) {
+            $cust->forceFill(['state_id' => $snap['state']['id']]);
+        }
+        if ($this->customer_id) {
+            $cust->forceFill(['id' => $this->customer_id]);
+        }
+
+        return $cust;
+    }
+
+    /**
+     * "SGST" or "UTGST" for the state share of an intra-state supply. UTGST
+     * applies when the place of supply is a Union Territory without a
+     * legislature (Chandigarh, DNH & DD, Lakshadweep, A&N, Ladakh); Delhi,
+     * Puducherry and J&K have legislatures and levy SGST. The amounts are
+     * identical - only the printed head differs.
+     */
+    public function stockMovements(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(StockMovement::class, 'source');
+    }
+
+    public function supplyType(): string
+    {
+        return array_key_exists((string) $this->supply_type, self::SUPPLY_TYPES) ? $this->supply_type : 'regular';
+    }
+
+    public function isExport(): bool
+    {
+        return str_starts_with($this->supplyType(), 'export_');
+    }
+
+    public function isSez(): bool
+    {
+        return str_starts_with($this->supplyType(), 'sez_');
+    }
+
+    public function isZeroRated(): bool
+    {
+        return $this->supplyType() !== 'regular';
+    }
+
+    /** Under a Letter of Undertaking / bond: zero-rated without paying IGST. */
+    public function isUnderLut(): bool
+    {
+        return str_ends_with($this->supplyType(), '_lut');
+    }
+
+    /**
+     * The line Rule 46 requires on an export / SEZ invoice, in the words of
+     * the proviso: with or without payment of integrated tax.
+     */
+    public function zeroRatedEndorsement(): ?string
+    {
+        if (! $this->isZeroRated()) {
+            return null;
+        }
+        $what = $this->isExport() ? 'SUPPLY MEANT FOR EXPORT' : 'SUPPLY TO SEZ UNIT OR SEZ DEVELOPER FOR AUTHORISED OPERATIONS';
+
+        return $this->isUnderLut()
+            ? $what . ' UNDER BOND OR LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX'
+            : $what . ' ON PAYMENT OF INTEGRATED TAX';
+    }
+
+    /**
+     * True when a draft's saved tax split no longer matches the parties: the
+     * customer moved state, or the business did, after the draft was saved.
+     * Issuing it as-is would print the wrong heads (CGST+SGST vs IGST).
+     */
+    public function taxBasisIsStale(): bool
+    {
+        $customer = $this->customer;
+        $company = $this->company;
+        if (! $customer?->state_id || ! $company?->state_id || (float) $this->total_tax <= 0) {
+            return false; // no tax heads to get wrong
+        }
+        $interstate = $this->isZeroRated()
+            || app(\App\Services\InvoiceCalculator::class)->isInterstate($company->state_id, $customer->state_id);
+        if ((bool) $this->is_interstate === $interstate) {
+            return false;
+        }
+        // Only a change made after the draft was saved counts; anything older
+        // is how the draft was deliberately saved.
+        $savedAt = $this->updated_at;
+
+        return $savedAt !== null
+            && (($customer->updated_at && $customer->updated_at->gt($savedAt))
+                || ($company->updated_at && $company->updated_at->gt($savedAt)));
+    }
+
+    /**
+     * Place of supply to print at issue: the customer's state as it is now,
+     * when that agrees with the saved tax split (a customer who moved between
+     * two other states still gets IGST, but the new state must be printed);
+     * otherwise what the draft stored.
+     */
+    public function placeOfSupplyForIssue(): ?int
+    {
+        $state = $this->customer?->state_id;
+        $companyState = $this->company?->state_id;
+        if (! $state || ! $companyState) {
+            return $this->place_of_supply_state_id;
+        }
+        $interstate = $this->isZeroRated() || app(\App\Services\InvoiceCalculator::class)->isInterstate($companyState, $state);
+
+        return (bool) $this->is_interstate === $interstate ? $state : $this->place_of_supply_state_id;
+    }
+
+    public function stateTaxLabel(): string
+    {
+        $state = $this->placeOfSupply ?? $this->customer?->state ?? $this->company?->state;
+
+        return $state?->is_union_territory ? 'UTGST' : 'SGST';
+    }
+
     public function canBeCancelled(): bool
     {
         // Only issued invoices can be cancelled. Drafts should be deleted,
-        // cancelled invoices can't be re-cancelled.
-        return ! $this->isDraft() && ! $this->isCancelled();
+        // cancelled invoices can't be re-cancelled. Once money has moved
+        // against it - a receipt or a credit note - cancelling would leave
+        // those documents pointing at nothing and drop the receipts out of
+        // the books; the correction is a credit note (s.34).
+        return ! $this->isDraft()
+            && ! $this->isCancelled()
+            && (float) $this->paid_amount <= 0
+            && (float) $this->credited_amount <= 0;
+    }
+
+    /**
+     * Only a draft can be deleted. An invoice that was issued keeps its row
+     * for good, cancelled or not: its number is part of the series reported
+     * in GSTR-1 Table 13, and a deleted row leaves a gap nobody can explain
+     * to the officer. (A cancelled row that never got a number is a draft in
+     * all but name, so it may go.)
+     */
+    public function canBeDeleted(): bool
+    {
+        if ($this->isEditable()) {
+            return true;
+        }
+
+        return $this->isCancelled() && $this->finalized_at === null && blank($this->invoice_number);
+    }
+
+    /** Today's date in India: the day every "not in the future" rule is read against. */
+    public static function todayInIndia(): string
+    {
+        return now('Asia/Kolkata')->toDateString();
+    }
+
+    /**
+     * Why this draft cannot be issued yet because of its date, or null.
+     * s.31: an invoice is issued before or at the time of supply, and the
+     * e-invoice portal refuses a document dated after the day it is
+     * reported. A draft may carry a later date; it is issued on that day.
+     */
+    public function issueDateProblem(): ?string
+    {
+        if ($this->invoice_date && $this->invoice_date->toDateString() > self::todayInIndia()) {
+            return 'This invoice is dated ' . $this->invoice_date->format('d M Y')
+                . '. Issue it on that day, or change the date to today or earlier.';
+        }
+
+        return null;
+    }
+
+    /**
+     * The books lock for a draft's date. A new draft cannot be dated inside
+     * a closed period. An existing draft is checked only when its date
+     * changes, so one already left there can still be opened and moved out.
+     */
+    public static function draftDateLockProblem(Company $company, ?string $date, ?self $existing = null): ?string
+    {
+        if (blank($date) || ! $company->isBooksLockedOn($date)) {
+            return null;
+        }
+        if ($existing?->invoice_date && $existing->invoice_date->toDateString() === \Illuminate\Support\Carbon::parse($date)->toDateString()) {
+            return null;
+        }
+
+        return "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the invoice after that.";
+    }
+
+    /**
+     * An issued invoice dated inside closed books is frozen as filed: not
+     * even its notes, due date or transport details change.
+     */
+    public function softEditLockProblem(): ?string
+    {
+        $company = $this->company;
+
+        return $company && $company->isBooksLockedOn($this->invoice_date)
+            ? "Books are locked up to {$company->books_locked_until->format('d M Y')}. This invoice cannot be changed."
+            : null;
+    }
+
+    /**
+     * Validation for the fields an issued invoice may still change (notes,
+     * terms, due date, transport). A due date before the invoice date would
+     * make the bill overdue before it existed; that is checked only when the
+     * due date is changed, so an older invoice saved that way keeps working.
+     */
+    public function softEditRules(array $input): array
+    {
+        $due = ['nullable', 'date'];
+        $given = $input['due_date'] ?? null;
+        if ($this->invoice_date && filled($given) && is_string($given)) {
+            try {
+                $changed = \Illuminate\Support\Carbon::parse($given)->toDateString() !== $this->due_date?->toDateString();
+            } catch (\Throwable) {
+                $changed = true; // not a date: the 'date' rule answers it
+            }
+            if ($changed) {
+                $due[] = 'after_or_equal:' . $this->invoice_date->toDateString();
+            }
+        }
+
+        return [
+            'due_date' => $due,
+            'notes' => ['nullable', 'string'],
+            'terms' => ['nullable', 'string'],
+            'transporter_name' => ['nullable', 'string', 'max:120'],
+            'transporter_id' => ['nullable', 'string', 'max:40'],
+            'vehicle_number' => ['nullable', 'string', 'max:30'],
+            'transport_mode' => ['nullable', 'string', 'in:Road,Rail,Air,Ship'],
+            'eway_bill_number' => ['nullable', 'string', 'max:30'],
+        ];
+    }
+
+    public function softEditMessages(): array
+    {
+        return [
+            'due_date.after_or_equal' => 'The due date cannot be before the invoice date ('
+                . $this->invoice_date?->format('d M Y') . ').',
+        ];
+    }
+
+    /**
+     * Whether a "pay" prompt (UPI QR, "Scan to pay", "Pay via UPI") belongs
+     * on this invoice: something is still owed and it has not been cancelled.
+     */
+    public function isPayable(): bool
+    {
+        return ! $this->isCancelled() && (float) $this->balance > 0;
     }
 
     /** Full edit (line items, customer, dates, amounts). Drafts only. */
@@ -348,7 +710,7 @@ class Invoice extends Model
         return match ($count) {
             1 => ['Original for Recipient'],
             2 => ['Original for Recipient', 'Duplicate for Supplier'],
-            3 => ['Original for Recipient', 'Duplicate for Supplier', 'Triplicate for Transporter'],
+            3 => ['Original for Recipient', 'Duplicate for Transporter', 'Triplicate for Supplier'],
         };
     }
 
@@ -361,20 +723,81 @@ class Invoice extends Model
      */
     public function copyLabelsFor(array $types): array
     {
+        // Rule 48(1), goods: Original/Recipient, Duplicate/Transporter,
+        // Triplicate/Supplier. Rule 48(2), services: Original/Recipient,
+        // Duplicate/Supplier - there is no transporter copy.
+        $services = $this->defaultCopyCount() === 2;
         $map = [
             'recipient' => 'Original for Recipient',
-            'supplier' => 'Duplicate for Supplier',
-            'transporter' => 'Triplicate for Transporter',
+            'transporter' => 'Duplicate for Transporter',
+            'supplier' => $services ? 'Duplicate for Supplier' : 'Triplicate for Supplier',
         ];
 
         $labels = [];
         foreach ($map as $key => $label) {
+            if ($services && $key === 'transporter') {
+                continue;
+            }
             if (in_array($key, $types, true)) {
                 $labels[] = $label;
             }
         }
 
         return $labels ?: ['Original for Recipient'];
+    }
+
+    /**
+     * A draft can carry an advance - the "Paid amount" box on the form - with
+     * no Payment row behind it. Give it one when the invoice is issued, so
+     * every later recompute from payments()->sum('amount') still counts the
+     * advance instead of wiping it on the first recorded payment. Returns
+     * the receipt created, or null when there was nothing to book.
+     *
+     * Caller must hold the transaction; the company row is locked here for
+     * the receipt counter, as recordPayment does.
+     */
+    public function bookAdvanceAsPayment(): ?Payment
+    {
+        $received = (float) $this->payments()->sum('amount');
+        $advance = round((float) $this->paid_amount - $received, 2);
+        // Never a receipt for more than the bill: an advance typed larger than
+        // the total would book money the customer was never asked for.
+        $advance = min($advance, round((float) $this->grand_total - $received, 2));
+        if ($advance <= 0) {
+            return null;
+        }
+        if ((float) $this->paid_amount > (float) $this->grand_total) {
+            $this->forceFill([
+                'paid_amount' => $this->grand_total,
+                'balance' => round(0 - (float) $this->credited_amount, 2),
+                'status' => 'paid',
+            ])->save();
+        }
+
+        $company = $this->company()->lockForUpdate()->first();
+        $company->increment('receipt_counter');
+        $receiptNumber = $company->receipt_prefix . '-' .
+            str_pad((string) $company->receipt_counter, $company->receipt_number_padding, '0', STR_PAD_LEFT);
+
+        // As chosen next to "Paid amount" on the form; invoices from before
+        // that choice existed (and API clients that do not send it) book cash.
+        $methods = array_keys(config('payment_methods.methods', []));
+        $method = in_array($this->paid_method, $methods, true)
+            ? $this->paid_method
+            : (in_array('cash', $methods, true) ? 'cash' : ($methods[0] ?? 'cash'));
+
+        return Payment::create([
+            'user_id' => $this->user_id,
+            'company_id' => $this->company_id,
+            'invoice_id' => $this->id,
+            'receipt_number' => $receiptNumber,
+            'received_at' => ($this->invoice_date ?? now())->toDateString(),
+            'amount' => $advance,
+            'tds_amount' => 0,
+            'method' => $method,
+            'reference_number' => $this->paid_reference ?: null,
+            'notes' => 'Advance recorded on the invoice',
+        ]);
     }
 
     /**
@@ -398,9 +821,13 @@ class Invoice extends Model
         $business = trim($company?->name ?? '') ?: 'Us';
         $docTitle = $this->documentTitle();
         $number = $this->invoice_number ?: ('#' . $this->id);
-        $grand = number_format((float) $this->grand_total, 2);
+        // Indian grouping (₹1,17,000.00) - the message goes to an Indian customer.
+        $grand = inr((float) $this->grand_total);
+        // What is owed is the total less payments AND credit notes (the
+        // balance column), so a credited bill is never chased for its total.
         $balance = (float) $this->balance;
         $paid = (float) $this->paid_amount;
+        $credited = (float) $this->credited_amount;
         $upi = trim((string) ($company?->upi_id ?? ''));
 
         // Build a public link only if the invoice is finalized — drafts have no
@@ -414,31 +841,52 @@ class Invoice extends Model
         $lines[] = '';
 
         if ($this->isCancelled()) {
-            $lines[] = "Please ignore {$docTitle} {$number} — it has been cancelled.";
+            $lines[] = "{$docTitle} {$number} has been cancelled. Please ignore it.";
             $lines[] = '';
-            $lines[] = "Sorry for any confusion. — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
         // PAID IN FULL — explicit thank-you message. Prevents the Vyapar
         // trust-killer where users get "Balance Due" reminders after paying.
+        // It quotes what was actually paid, as the rest may have been credited.
         if ($balance <= 0 && $paid > 0) {
-            $lines[] = "Thank you for the payment of ₹{$grand} for {$docTitle} {$number}.";
+            $lines[] = 'Thank you for the payment of ₹' . inr($paid) . " for {$docTitle} {$number}.";
             if ($url) {
                 $lines[] = '';
-                $lines[] = "Your receipt is here: {$url}";
+                $lines[] = "Receipt: {$url}";
             }
             $lines[] = '';
-            $lines[] = "Appreciate your business. — {$business}";
+            $lines[] = 'Regards,';
+            $lines[] = $business;
             return implode("\n", $lines);
         }
 
-        // PARTIALLY PAID
-        if ($paid > 0 && $balance > 0) {
-            $paidStr = number_format($paid, 2);
-            $balStr = number_format($balance, 2);
+        // Nothing paid and nothing owed: credit notes cover the whole bill.
+        // No due date, no overdue days, no "pay" prompt.
+        if ($balance <= 0 && $credited > 0) {
+            $lines[] = "{$docTitle} {$number} for ₹{$grand} is fully credited. Nothing is due.";
+            if ($url) {
+                $lines[] = '';
+                $lines[] = "View & download: {$url}";
+            }
+            $lines[] = '';
+            $lines[] = 'Regards,';
+            $lines[] = $business;
+            return implode("\n", $lines);
+        }
+
+        // PART PAID OR PART CREDITED: quote what is still owed.
+        if (($paid > 0 || $credited > 0) && $balance > 0) {
+            $balStr = inr($balance);
             $lines[] = "Sharing {$docTitle} {$number} for ₹{$grand}.";
-            $lines[] = "Already received: ₹{$paidStr}.";
+            if ($paid > 0) {
+                $lines[] = 'Already received: ₹' . inr($paid) . '.';
+            }
+            if ($credited > 0) {
+                $lines[] = 'Credit notes: ₹' . inr($credited) . '.';
+            }
             $dueClause = $this->due_date
                 ? " (due by " . $this->due_date->format('d M Y') . ")"
                 : '';
@@ -466,7 +914,8 @@ class Invoice extends Model
             $lines[] = "Pay via UPI: {$upi}";
         }
         $lines[] = '';
-        $lines[] = "Thanks, — {$business}";
+        $lines[] = 'Regards,';
+        $lines[] = $business;
 
         return implode("\n", $lines);
     }
@@ -477,10 +926,38 @@ class Invoice extends Model
      */
     public function whatsAppShareLink(string $context = 'share'): ?string
     {
-        $phone = $this->customer?->phone;
-        if (! $phone) return null;
-        $digits = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($digits) < 10) return null;
+        $digits = self::whatsAppNumber($this->customer?->phone);
+        if ($digits === null) return null;
         return 'https://wa.me/' . $digits . '?text=' . rawurlencode($this->shareMessageText($context));
+    }
+
+    /**
+     * A phone number as wa.me needs it: digits only, with the country code.
+     * Most customers are saved as a bare 10-digit Indian mobile
+     * ("98765 00001"), and wa.me/9876500001 opens no chat, so:
+     *   9876500001        → 919876500001
+     *   09876500001       → 919876500001
+     *   +91 98765 00001   → 919876500001 (already has the code)
+     *   +1 415 555 0100   → 14155550100  (left as typed)
+     * Null when there are fewer than 10 digits.
+     */
+    public static function whatsAppNumber(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D/', '', (string) $phone);
+        if (strlen($digits) < 10) {
+            return null;
+        }
+        if (strlen($digits) === 10) {
+            return '91' . $digits;
+        }
+        if (strlen($digits) === 11 && $digits[0] === '0') {
+            return '91' . substr($digits, 1);
+        }
+        // "0091 98765 00001": the international prefix, not part of the number.
+        if (str_starts_with($digits, '00')) {
+            return substr($digits, 2);
+        }
+
+        return $digits;
     }
 }

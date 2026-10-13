@@ -35,7 +35,7 @@ class DashboardController extends Controller
 
         $revenueFy = (float) $company->invoices()
             ->whereIn('status', $issued)
-            ->where('invoice_date', '>=', $fyStart->toDateString())
+            ->whereDate('invoice_date', '>=', $fyStart->toDateString())
             ->sum('grand_total');
 
         $revenueThisMonth = (float) $company->invoices()

@@ -23,7 +23,7 @@ class BackupMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config('app.name') . ' — Your weekly data backup',
+            subject: config('app.name') . ': your data backup',
         );
     }
 

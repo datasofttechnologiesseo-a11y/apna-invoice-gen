@@ -11,7 +11,7 @@ document.addEventListener('submit', (e) => {
     const form = e.target;
     if (!(form instanceof HTMLFormElement)) return;
     if (form.hasAttribute('data-no-submit-state')) return;
-    if ((form.method || 'get').toLowerCase() === 'get') return;
+    if ((form.getAttribute('method') || 'get').toLowerCase() === 'get') return;
     if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
 
     form.setAttribute('data-submitting', '');

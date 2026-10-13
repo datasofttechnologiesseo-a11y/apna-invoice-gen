@@ -18,7 +18,7 @@ class ReferralController extends Controller
         $code = $user->ensureReferralCode();
 
         $referrals = $user->referralsMade()
-            ->with('referee:id,name,email,created_at')
+            ->with('referee:id,name,created_at')
             ->latest('signed_up_at')
             ->get();
 
@@ -29,17 +29,21 @@ class ReferralController extends Controller
         ];
 
         $shareUrl = url('/register?ref=' . $code);
-        $shareText = "I've been using Apna Invoice for GST-compliant billing — it's free and actually works. Sign up with my code: {$code}\n\n{$shareUrl}";
+        $shareText = "I use Apna Invoice for GST billing. It is free to use. Sign up with my code: {$code}\n\n{$shareUrl}";
 
         return response()->json([
             'code' => $code,
             'share_url' => $shareUrl,
             'share_text' => $shareText,
             'wa_share' => 'https://wa.me/?text=' . rawurlencode($shareText),
+            // The offer: a referred friend who issues their first invoice earns
+            // the referrer lifetime free access.
+            'offer' => 'Refer a friend and get lifetime free access. It counts when they issue their first invoice.',
+            'lifetime_free' => $user->hasLifetimeFreeAccess(),
+            'lifetime_free_since' => optional($user->lifetime_free_at)->toDateString(),
             'stats' => $stats,
             'referrals' => $referrals->map(fn ($r) => [
                 'name' => $r->referee?->name,
-                'email' => $r->referee?->email,
                 'signed_up_at' => optional($r->signed_up_at)->toDateString(),
                 'reward_status' => $r->reward_status,
             ])->values(),

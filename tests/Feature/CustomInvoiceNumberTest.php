@@ -71,6 +71,20 @@ class CustomInvoiceNumberTest extends TestCase
         $this->assertSame(42, (int) $this->company->fresh()->invoice_counter);
     }
 
+    public function test_a_number_longer_than_16_characters_or_with_other_symbols_is_rejected(): void
+    {
+        // CGST Rule 46(b): up to 16 characters, letters, digits, "-" and "/".
+        $this->actingAs($this->user)
+            ->post(route('invoices.store'), $this->payload(['invoice_number' => 'SHARMA/2026-27/0042']))
+            ->assertSessionHasErrors('invoice_number');
+        $this->actingAs($this->user)
+            ->post(route('invoices.store'), $this->payload(['invoice_number' => 'INV 2026/01']))
+            ->assertSessionHasErrors('invoice_number');
+        $this->actingAs($this->user)
+            ->post(route('invoices.store'), $this->payload(['invoice_number' => 'INV/2026-27/0001']))
+            ->assertSessionHasNoErrors();
+    }
+
     public function test_duplicate_custom_number_is_rejected(): void
     {
         Invoice::factory()->recycle($this->user)->recycle($this->company)
@@ -119,7 +133,7 @@ class CustomInvoiceNumberTest extends TestCase
         $this->company->forceFill(['gstin' => '27AAPFU0939F1ZV'])->save();
 
         $this->actingAs($this->user)->post(route('invoices.store'), $this->payload([
-            'invoice_number' => 'SHARMA/2026-27/0042',
+            'invoice_number' => 'SHARMA/26-27/42', // 15 chars - within Rule 46(b)'s 16
             // GSTIN present → HSN becomes required on items.
             'items' => [
                 ['description' => 'Service', 'hsn_sac' => '998311', 'quantity' => 1, 'rate' => 1000, 'gst_rate' => 18],
@@ -127,11 +141,11 @@ class CustomInvoiceNumberTest extends TestCase
         ]))->assertSessionHasNoErrors();
 
         $invoice = Invoice::latest('id')->first();
-        $this->assertSame('SHARMA/2026-27/0042', $invoice->invoice_number);
+        $this->assertSame('SHARMA/26-27/42', $invoice->invoice_number);
 
         $this->actingAs($this->user)->post(route('invoices.finalize', $invoice));
         $invoice->refresh();
-        $this->assertSame('SHARMA/2026-27/0042', $invoice->invoice_number,
+        $this->assertSame('SHARMA/26-27/42', $invoice->invoice_number,
             'issuing must keep the number the business chose');
     }
 
@@ -147,13 +161,13 @@ class CustomInvoiceNumberTest extends TestCase
         ];
 
         $this->actingAs($this->user)->post(route('invoices.store'), $this->payload([
-            'invoice_number' => 'SHARMA/2026-27/0042', 'items' => $items,
+            'invoice_number' => 'SHARMA/26-27/42', 'items' => $items,
         ]))->assertSessionHasNoErrors();
 
         $this->actingAs($this->user)->post(route('invoices.store'), $this->payload([
-            'invoice_number' => 'SHARMA/2026-27/0042', 'items' => $items,
+            'invoice_number' => 'SHARMA/26-27/42', 'items' => $items,
         ]))->assertSessionHasErrors('invoice_number');
 
-        $this->assertSame(1, Invoice::where('invoice_number', 'SHARMA/2026-27/0042')->count());
+        $this->assertSame(1, Invoice::where('invoice_number', 'SHARMA/26-27/42')->count());
     }
 }

@@ -1,6 +1,6 @@
-<x-layouts.admin title="Data breaches" subtitle="Personal-data breach register - DPDP Act §8(6)">
+<x-layouts.admin title="Data breaches" subtitle="Personal data breach register under DPDP Act Section 8(6)">
     <x-slot name="action">
-        <a href="{{ route('admin.breaches.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-semibold hover:bg-danger-700 transition">
+        <a href="{{ route('admin.breaches.create') }}" class="inline-flex items-center gap-2 min-h-[40px] px-4 py-2 bg-danger-600 text-white rounded-lg text-sm font-semibold hover:bg-danger-700 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             Log breach
         </a>
@@ -22,8 +22,51 @@
     @endphp
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {{-- Phones: one card per incident --}}
+        <ul class="sm:hidden divide-y divide-gray-100">
+            @forelse ($breaches as $b)
+                <li class="p-4">
+                    <a href="{{ route('admin.breaches.show', $b) }}" class="block font-semibold text-gray-900 hover:text-danger-600 break-words">{{ $b->title }}</a>
+                    <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div>
+                            <dt class="text-xs text-gray-500">Severity</dt>
+                            <dd class="mt-0.5"><span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $sevTone[$b->severity] ?? '' }}">{{ ucfirst($b->severity) }}</span></dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500">Status</dt>
+                            <dd class="mt-0.5"><span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $statusTone[$b->status] ?? '' }}">{{ ucfirst($b->status) }}</span></dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500">Affected</dt>
+                            <dd class="tabular-nums text-gray-700">{{ number_format($b->affected_users) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500">Discovered</dt>
+                            <dd class="text-gray-700">{{ $b->discovered_at->format('d M Y') }}</dd>
+                        </div>
+                        <div class="col-span-2">
+                            <dt class="text-xs text-gray-500">Notifications</dt>
+                            <dd>
+                                @if ($b->board_notified_at && $b->users_notified_at)
+                                    <span class="text-money-600 font-medium">Complete</span>
+                                @elseif ($b->notificationOverdue())
+                                    <span class="text-danger-600 font-bold">Overdue (72h)</span>
+                                @else
+                                    <span class="text-accent-600 font-medium">Pending</span>
+                                @endif
+                            </dd>
+                        </div>
+                    </dl>
+                </li>
+            @empty
+                <li class="px-4 py-10 text-center text-gray-500">No breaches recorded.</li>
+            @endforelse
+        </ul>
+
+        {{-- Tablets and up: the full table --}}
+        <div class="hidden sm:block overflow-x-auto">
         <table class="min-w-full text-sm">
-            <thead class="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-400">
+            <thead class="bg-gray-50 text-left text-xs text-gray-500">
                 <tr>
                     <th class="px-4 py-3 font-semibold">Incident</th>
                     <th class="px-4 py-3 font-semibold">Severity</th>
@@ -54,11 +97,12 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-4 py-10 text-center text-gray-400">No breaches recorded. Good.</td></tr>
+                    <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">No breaches recorded.</td></tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
-    <div class="mt-4">{{ $breaches->links() }}</div>
+    <div class="mt-4 max-sm:[&_a]:min-h-[40px] max-sm:[&_span]:min-h-[40px]">{{ $breaches->links() }}</div>
 </x-layouts.admin>

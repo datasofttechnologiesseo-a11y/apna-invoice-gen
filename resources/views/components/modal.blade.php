@@ -43,9 +43,11 @@ $maxWidth = [
     x-on:close-modal.window="$event.detail == '{{ $name }}' ? show = false : null"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show = false"
-    x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"
-    x-on:keydown.shift.tab.prevent="prevFocusable().focus()"
+    {{-- Tab is kept inside by the [role=dialog][aria-modal] trap in app.js. --}}
     x-show="show"
+    role="dialog"
+    aria-modal="true"
+    @if ($attributes->has('aria-labelledby')) aria-labelledby="{{ $attributes->get('aria-labelledby') }}" @endif
     class="fixed inset-0 overflow-y-auto px-4 py-6 sm:px-0 z-50"
     style="display: {{ $show ? 'block' : 'none' }};"
 >

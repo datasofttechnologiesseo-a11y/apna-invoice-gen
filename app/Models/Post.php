@@ -116,7 +116,7 @@ class Post extends Model
                 ->where('id', '!=', $this->id)
                 ->where(function (Builder $q) use ($topics) {
                     foreach ($topics as $topic) {
-                        $q->orWhere('meta_keywords', 'like', '%' . $topic . '%');
+                        $q->orWhereLiteralLike('meta_keywords', $topic);
                     }
                 })
                 ->orderByDesc('published_at')

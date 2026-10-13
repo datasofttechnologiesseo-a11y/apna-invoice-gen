@@ -18,9 +18,9 @@ class ProductController extends Controller
 
         $products = $company->products()
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")
-                  ->orWhere('sku', 'like', "%{$s}%")
-                  ->orWhere('hsn_sac', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)
+                  ->orWhereLiteralLike('sku', $s)
+                  ->orWhereLiteralLike('hsn_sac', $s);
             }))
             ->when($request->kind, fn ($q, $k) => $q->where('kind', $k))
             ->when($request->boolean('only_inactive'), fn ($q) => $q->where('is_active', false))
@@ -40,15 +40,28 @@ class ProductController extends Controller
         $products = $company->products()
             ->where('is_active', true)
             ->when($q !== '', fn ($qb) => $qb->where(function ($w) use ($q) {
-                $w->where('name', 'like', "%{$q}%")
-                  ->orWhere('sku', 'like', "%{$q}%")
-                  ->orWhere('hsn_sac', 'like', "%{$q}%");
+                $w->whereLiteralLike('name', $q)
+                  ->orWhereLiteralLike('sku', $q)
+                  ->orWhereLiteralLike('hsn_sac', $q);
             }))
             ->orderBy('name')
             ->limit(50)
-            ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate']);
+            ->withSum('stockMovements', 'quantity')
+            ->get(['id', 'name', 'sku', 'hsn_sac', 'unit', 'rate', 'gst_rate', 'track_stock', 'opening_stock']);
 
-        return response()->json($products);
+        // Same fields as the website's item search, including stock on hand
+        // (null for items that do not track stock), so the app can warn
+        // before a line sells more than is on the shelf.
+        return response()->json($products->map(fn ($p) => [
+            'id' => $p->id,
+            'name' => $p->name,
+            'sku' => $p->sku,
+            'hsn_sac' => $p->hsn_sac,
+            'unit' => $p->unit,
+            'rate' => $p->rate,
+            'gst_rate' => $p->gst_rate,
+            'stock' => $p->track_stock ? $p->stockOnHand() : null,
+        ])->values());
     }
 
     public function store(Request $request): JsonResponse
@@ -87,13 +100,14 @@ class ProductController extends Controller
     {
         $this->authorizeProduct($request, $product);
 
-        // Keep historical invoice items intact (GST audit trail). Soft-disable
-        // if the product has ever been used; hard-delete only if never billed.
-        if ($product->invoiceItems()->exists()) {
+        // Same rule as the web: an item billed, bought, quoted or with stock
+        // entries is archived (history and stock ledger kept), never deleted.
+        $usedOn = $product->usedOn();
+        if ($usedOn !== null) {
             $product->update(['is_active' => false]);
 
             return response()->json([
-                'message' => "'{$product->name}' is archived, not deleted - it has been on an invoice, so the records stay intact. It will stop appearing when you make a new invoice, and can be restored from the Archived tab on the web app.",
+                'message' => "'{$product->name}' is used on {$usedOn}, so it was archived, not deleted. It will not appear on new invoices. Restore it from the Archived tab on the web app.",
                 'archived' => true,
             ]);
         }

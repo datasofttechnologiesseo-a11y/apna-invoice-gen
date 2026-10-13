@@ -206,7 +206,7 @@ return [
             'title' => 'More than one business, and backups',
             'blocks' => [
                 ['type' => 'p', 'text' => 'If you run several firms, each with its own GSTIN, you can keep them all in one login. Add each one under Companies. The business you are working in is shown at the top of the screen under Active company. Click it to switch. Every invoice, customer, product and report belongs to the active business only, so figures never mix between firms.'],
-                ['type' => 'p', 'text' => 'Under Backup you can download a ZIP file containing CSV copies of your invoices, customers, products and payments. You can also have a backup emailed to you. Data is stored in India, sent over an encrypted connection, and encrypted where it rests.'],
+                ['type' => 'p', 'text' => 'Under Backup you can download a ZIP file containing CSV copies of your invoices, customers, products and payments. You can also have a backup emailed to you.'],
                 ['type' => 'note', 'label' => 'Tip', 'text' => 'Take a backup at the end of every financial year and keep the ZIP somewhere safe. It is a plain CSV file that any accountant or spreadsheet can read, even years later.'],
             ],
         ],

@@ -73,6 +73,37 @@ class QuotationFlowTest extends TestCase
         $this->assertCount(1, $q->items);
     }
 
+    public function test_a_quote_level_discount_is_spread_before_tax(): void
+    {
+        ['user' => $user, 'customer' => $customer] = $this->setupOwner();
+
+        $this->actingAs($user)->post(route('quotations.store'), [
+            'customer_id' => $customer->id,
+            'quote_date' => now()->toDateString(),
+            'valid_until' => now()->addDays(30)->toDateString(),
+            'currency' => 'INR',
+            'style' => 'classic',
+            'quote_discount' => 5000,
+            'items' => [[
+                'description' => 'Website redesign',
+                'hsn_sac' => '998314',
+                'quantity' => 1,
+                'unit' => 'NOS',
+                'rate' => 50000,
+                'discount' => 0,
+                'gst_rate' => 18,
+            ]],
+        ])->assertRedirect();
+
+        $this->assertDatabaseCount('quotations', 1);
+        $q = Quotation::first();
+        $this->assertSame('draft', $q->status);
+        $this->assertNull($q->quote_number);
+        $this->assertSame(45000.0, (float) $q->subtotal); // 10% off before tax
+        $this->assertSame(8100.0, (float) $q->total_igst); // 18% of 45,000
+        $this->assertCount(1, $q->items);
+    }
+
     public function test_quotation_persists_subject_reference_and_delivery_period(): void
     {
         ['user' => $user, 'customer' => $customer] = $this->setupOwner();
@@ -232,6 +263,26 @@ class QuotationFlowTest extends TestCase
         $this->assertSame(1180.0, (float) $invoice->grand_total);
         $this->assertCount(1, $invoice->items);
         $this->assertSame('Design', $invoice->items->first()->description);
+        // The line's GST-inclusive Amount is printed from `total`; a converted
+        // line once arrived with total = 0 and printed as 0.00.
+        $this->assertEqualsWithDelta(1180.0, (float) $invoice->items->first()->total, 0.01);
+    }
+
+    public function test_deleting_the_draft_made_from_a_quotation_reopens_the_quotation(): void
+    {
+        ['user' => $user, 'company' => $company, 'customer' => $customer] = $this->setupOwner();
+        $q = Quotation::factory()->accepted()->create(['user_id' => $user->id, 'company_id' => $company->id, 'customer_id' => $customer->id]);
+        QuotationItem::create(['quotation_id' => $q->id, 'description' => 'Design', 'hsn_sac' => '998314', 'quantity' => 1, 'unit' => 'NOS', 'rate' => 1000, 'discount' => 0, 'gst_rate' => 18, 'amount' => 1000, 'cgst_amount' => 90, 'sgst_amount' => 90, 'igst_amount' => 0]);
+
+        $this->actingAs($user)->post(route('quotations.convert', $q))->assertRedirect();
+        $invoice = Invoice::find($q->fresh()->converted_to_invoice_id);
+
+        $this->actingAs($user)->delete(route('invoices.destroy', $invoice))->assertRedirect();
+
+        $q->refresh();
+        $this->assertSame('accepted', $q->status);
+        $this->assertNull($q->converted_to_invoice_id);
+        $this->assertTrue($q->canBeConverted(), 'the quote can be converted again');
     }
 
     public function test_already_converted_quotation_cannot_be_converted_again(): void

@@ -120,11 +120,11 @@ class DashboardController extends Controller
                     ->selectRaw('COALESCE(SUM(grand_total), 0)');
             }, 'revenue')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('users.name', 'like', "%{$s}%")->orWhere('users.email', 'like', "%{$s}%");
+                $w->whereLiteralLike('users.name', $s)->orWhereLiteralLike('users.email', $s);
                 // Phone matching: strip non-digits from the query so "98765 43210",
                 // "+91 98765-43210" and "9876543210" all find the same user.
                 if (($digits = preg_replace('/\D/', '', $s)) !== '') {
-                    $w->orWhere('users.phone', 'like', "%{$digits}%");
+                    $w->orWhereLiteralLike('users.phone', $digits);
                 }
             }))
             ->orderByDesc('users.created_at')
@@ -164,7 +164,7 @@ class DashboardController extends Controller
             ->with(['user', 'company', 'customer'])
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('invoice_number', 'like', "%{$s}%");
+                $w->whereLiteralLike('invoice_number', $s);
             }))
             ->orderByDesc('id')
             ->paginate(30)
@@ -179,7 +179,7 @@ class DashboardController extends Controller
             ->with(['user', 'state'])
             ->withCount(['customers', 'invoices'])
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")->orWhere('gstin', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)->orWhereLiteralLike('gstin', $s);
             }))
             ->orderByDesc('created_at')
             ->paginate(30)
@@ -194,9 +194,9 @@ class DashboardController extends Controller
             ->with(['user', 'company', 'state'])
             ->withCount('invoices')
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
-                $w->where('name', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%")
-                    ->orWhere('gstin', 'like', "%{$s}%");
+                $w->whereLiteralLike('name', $s)
+                    ->orWhereLiteralLike('email', $s)
+                    ->orWhereLiteralLike('gstin', $s);
             }))
             ->orderByDesc('created_at')
             ->paginate(30)

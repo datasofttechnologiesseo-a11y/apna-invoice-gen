@@ -1,26 +1,25 @@
 <x-app-layout title="Invoice templates">
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Pick a starting template</h1>
-                <p class="mt-1 text-sm text-gray-500">Every template shows a realistic sample below, pre-filled with your company. Use it as-is or tweak before finalising.</p>
-            </div>
-            <a href="{{ route('invoices.index') }}" class="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">← Back to invoices</a>
-        </div>
+        <x-breadcrumbs :items="[
+            ['label' => 'Invoices', 'href' => route('invoices.index')],
+            ['label' => 'Templates'],
+        ]" />
+        <h1 class="font-display font-extrabold text-xl sm:text-2xl text-gray-900 leading-tight">Choose a template</h1>
+        <p class="mt-1 text-sm text-gray-600">Samples use your company details. Everything stays editable before issue.</p>
     </x-slot>
 
-    <div class="py-10">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Top banner --}}
-            <div class="mb-8 p-5 rounded-2xl bg-gradient-to-br from-brand-50 via-white to-accent-50 ring-1 ring-brand-100 flex items-start gap-4">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 text-white flex items-center justify-center flex-shrink-0 shadow-brand">
+            <div class="mb-6 p-4 sm:p-5 rounded-xl bg-brand-50 border border-brand-200 flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-brand-700 text-white flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 </div>
                 <div class="flex-1 text-sm">
-                    <div class="font-display font-bold text-gray-900 text-base">What you're seeing</div>
+                    <div class="font-display font-bold text-gray-900 text-base">Sample invoices</div>
                     <p class="mt-1 text-gray-600 leading-relaxed">
-                        Each card below contains a <strong>mini invoice preview</strong> with sample line items, GST calculated correctly for your state, and the real total. Click <strong class="text-brand-700">Preview full PDF</strong> to see exactly what your customer will receive - with <strong>{{ $company->name }}</strong>'s branding. Pick the closest match - you can edit everything afterwards.
+                        Each card shows sample items with GST for your state. <strong class="text-brand-700">Preview PDF</strong> opens the full invoice with <strong>{{ $company->name }}</strong>'s branding.
                     </p>
                 </div>
             </div>
@@ -66,7 +65,7 @@
                                 <div class="w-11 h-11 rounded-xl bg-white/20 ring-1 ring-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $tpl['icon'] }}"/></svg>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full bg-white/20 ring-1 ring-white/30 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{{ $tpl['tag'] }}</span>
+                                <span class="px-2.5 py-1 rounded-full bg-white/20 ring-1 ring-white/30 text-xs font-semibold whitespace-nowrap">{{ $tpl['tag'] }}</span>
                             </div>
                             <h2 class="mt-3 font-display font-extrabold text-lg leading-tight">{{ $tpl['label'] }}</h2>
                             <p class="mt-1 text-white/85 text-sm leading-snug">{{ $tpl['tagline'] }}</p>
@@ -92,8 +91,8 @@
                                     <span class="text-xs text-gray-500">total (incl. GST)</span>
                                 </div>
                                 <div class="mt-0.5 text-xs text-gray-500">
-                                    Subtotal ₹{{ number_format((float) $totals['subtotal']) }}
-                                    · GST ₹{{ number_format((float) $totals['total_tax']) }}
+                                    Subtotal ₹{{ rupees($totals['subtotal']) }}
+                                    · GST ₹{{ rupees($totals['total_tax']) }}
                                     @if ($gstRates->count() === 1)
                                         ({{ rtrim(rtrim(number_format($gstRates->first()), '0'), '.') }}%)
                                     @elseif ($gstRates->count() > 1)
@@ -130,31 +129,31 @@
                                                     <td class="px-3 py-1.5 text-gray-800 truncate max-w-[140px]" title="{{ $item['description'] }}">{{ $item['description'] }}</td>
                                                     <td class="px-3 py-1.5 text-right font-mono text-gray-600 tabular-nums">{{ rtrim(rtrim(inr($item['quantity']), '0'), '.') }}</td>
                                                     <td class="px-3 py-1.5 text-right text-gray-600">{{ rtrim(rtrim(inr($item['gst_rate']), '0'), '.') }}%</td>
-                                                    <td class="px-3 py-1.5 text-right font-mono font-medium tabular-nums">₹{{ number_format((float) $item['amount']) }}</td>
+                                                    <td class="px-3 py-1.5 text-right font-mono font-medium tabular-nums">₹{{ rupees($item['amount']) }}</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot class="bg-gray-50/80 border-t border-gray-200 text-[11px]">
                                             <tr>
                                                 <td colspan="3" class="px-3 py-1 text-right text-gray-500">Subtotal</td>
-                                                <td class="px-3 py-1 text-right font-mono tabular-nums">₹{{ number_format((float) $totals['subtotal']) }}</td>
+                                                <td class="px-3 py-1 text-right font-mono tabular-nums">₹{{ rupees($totals['subtotal']) }}</td>
                                             </tr>
                                             <tr>
                                                 <td colspan="3" class="px-3 py-1 text-right text-gray-500">CGST + SGST</td>
-                                                <td class="px-3 py-1 text-right font-mono tabular-nums">₹{{ number_format((float) $totals['total_tax']) }}</td>
+                                                <td class="px-3 py-1 text-right font-mono tabular-nums">₹{{ rupees($totals['total_tax']) }}</td>
                                             </tr>
                                             <tr class="border-t border-gray-300">
                                                 <td colspan="3" class="px-3 py-1.5 text-right font-bold text-gray-900">Grand Total</td>
-                                                <td class="px-3 py-1.5 text-right font-mono font-bold text-gray-900 tabular-nums">₹{{ number_format((float) $totals['grand_total']) }}</td>
+                                                <td class="px-3 py-1.5 text-right font-mono font-bold text-gray-900 tabular-nums">₹{{ rupees($totals['grand_total']) }}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
                                 @else
                                     <div class="px-3 py-6 text-center text-xs text-gray-500 bg-white">
                                         <div class="font-medium text-gray-700">{{ $styleMeta['label'] }} style preview</div>
-                                        <div class="mt-1 italic text-gray-500">Your line items, totals and terms will appear here.</div>
+                                        <div class="mt-1 italic text-gray-500">Your line items, totals and terms appear here.</div>
                                         @if (! empty($tpl['items'][0]['gst_rate']))
-                                            <div class="mt-2 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
+                                            <div class="mt-2 text-xs text-gray-600 font-medium">Default GST: {{ rtrim(rtrim(inr($tpl['items'][0]['gst_rate']), '0'), '.') }}%</div>
                                         @endif
                                     </div>
                                 @endif
@@ -163,7 +162,7 @@
                             {{-- What this template auto-fills --}}
                             @if ($hasItems)
                                 <div class="mt-3 text-xs text-gray-500 leading-relaxed">
-                                    Pre-fills {{ count($items) }} line {{ Str::plural('item', count($items)) }} with correct HSN/SAC codes and GST rates. Edit anything before finalising.
+                                    Fills {{ count($items) }} line {{ Str::plural('item', count($items)) }} with HSN/SAC codes and GST rates.
                                 </div>
                             @endif
 
@@ -174,13 +173,13 @@
                                 <a href="{{ route('invoices.templates.preview', $key) }}"
                                    target="_blank" rel="noopener"
                                    class="relative z-20 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium ring-1 ring-gray-300 hover:ring-gray-400 transition"
-                                   title="Opens the full PDF in a new tab with your company branding"
+                                   title="Opens the full PDF in a new tab"
                                    onclick="event.stopPropagation();">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     Preview PDF
                                 </a>
                                 <span class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-700 group-hover:text-brand-900 transition">
-                                    <span>Click to use</span>
+                                    <span>Use template</span>
                                     <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M5 12h13"/></svg>
                                 </span>
                             </div>
@@ -193,19 +192,19 @@
             <div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500">
                 <div class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-money-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    GST calculated to the paisa
+                    GST worked out per line
                 </div>
                 <div class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-money-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    HSN/SAC codes pre-filled
+                    HSN/SAC codes included
                 </div>
                 <div class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-money-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    Edit everything after picking
+                    All fields editable
                 </div>
                 <div class="flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-money-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    No commitment - previews don't save
+                    Previews are not saved
                 </div>
             </div>
         </div>

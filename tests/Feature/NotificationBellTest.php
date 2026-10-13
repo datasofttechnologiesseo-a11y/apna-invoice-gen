@@ -85,7 +85,7 @@ class NotificationBellTest extends TestCase
 
         // The red badge counts what is still owed, not what is unread.
         $this->actingAs($user)->get(route('dashboard'))->assertOk()
-            ->assertSee('1 need attention');
+            ->assertSee('(1 overdue)');
     }
 
     public function test_the_endpoint_is_closed_to_guests(): void
