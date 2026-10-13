@@ -45,7 +45,7 @@
                         placeholder="Search by invoice #, customer, mobile, GSTIN or amount"
                         label="Search by invoice number, customer, mobile, GSTIN or amount"
                         all-label="See all invoices matching" />
-                    <select name="status" aria-label="Filter by status" class="border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
+                    <select name="status" aria-label="Filter by status" class="w-full sm:w-auto h-10 border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         <option value="outstanding" @selected(request('status') === 'outstanding')>Outstanding (unpaid)</option>
                         {{-- Same words as the badges: Invoice::statusLabel(). --}}
@@ -53,15 +53,19 @@
                             <option value="{{ $s }}" @selected(request('status') === $s)>{{ (new \App\Models\Invoice(['status' => $s]))->statusLabel() }}</option>
                         @endforeach
                     </select>
-                    <label class="inline-flex items-center gap-1.5 text-sm text-gray-500">
-                        <span class="hidden sm:inline">From</span>
-                        <input type="date" name="from" value="{{ request('from') }}" class="border-gray-300 rounded-md shadow-sm text-sm" aria-label="Invoices dated from">
-                    </label>
-                    <label class="inline-flex items-center gap-1.5 text-sm text-gray-500">
-                        <span class="hidden sm:inline">to</span>
-                        <input type="date" name="to" value="{{ request('to') }}" class="border-gray-300 rounded-md shadow-sm text-sm" aria-label="Invoices dated up to">
-                    </label>
-                    <button class="inline-flex items-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Apply</button>
+                    {{-- Labelled on every screen: on a phone two bare date boxes
+                         gave no hint which one was the start. --}}
+                    <div class="grid grid-cols-2 gap-3 w-full sm:w-auto sm:flex sm:items-center">
+                        <label class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-gray-600">
+                            <span>From</span>
+                            <input type="date" name="from" value="{{ request('from') }}" class="w-full sm:w-auto h-10 border-gray-300 rounded-md shadow-sm text-sm" aria-label="Invoices dated from">
+                        </label>
+                        <label class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-gray-600">
+                            <span>To</span>
+                            <input type="date" name="to" value="{{ request('to') }}" class="w-full sm:w-auto h-10 border-gray-300 rounded-md shadow-sm text-sm" aria-label="Invoices dated up to">
+                        </label>
+                    </div>
+                    <button class="inline-flex items-center justify-center w-full sm:w-auto h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Apply</button>
                     @if ($hasFilters)
                         <a href="{{ route('invoices.index') }}" class="inline-flex items-center min-h-[40px] text-sm text-gray-600 hover:text-gray-900 hover:underline">Clear</a>
                     @endif

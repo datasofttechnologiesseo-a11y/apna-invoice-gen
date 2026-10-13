@@ -1,17 +1,57 @@
 <x-layouts.admin title="Customers" subtitle="{{ $customers->total() }} total · every buyer recorded across all companies">
     <x-slot:action>
-        <form method="GET" class="flex gap-2">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, GSTIN" class="w-64 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Search name, email, GSTIN">
+        <form method="GET" class="flex w-full md:w-auto gap-2">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, GSTIN" class="min-h-[40px] min-w-0 flex-1 md:flex-none md:w-64 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600" aria-label="Search name, email, GSTIN">
             @if (request('search'))
-                <a href="{{ route('admin.customers') }}" class="px-3 py-2 text-sm text-gray-600 hover:text-gray-900">Clear</a>
+                <a href="{{ route('admin.customers') }}" class="inline-flex items-center min-h-[40px] px-3 text-sm text-gray-600 hover:text-gray-900">Clear</a>
             @endif
         </form>
     </x-slot:action>
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="overflow-x-auto">
+      {{-- Phones: one card per customer --}}
+      <ul class="sm:hidden divide-y divide-gray-100">
+          @forelse ($customers as $cust)
+              <li class="p-4">
+                  <div class="font-medium text-gray-900 break-words">{{ $cust->name }}</div>
+                  @if ($cust->gstin)
+                      <div class="text-xs text-gray-500 font-mono">{{ $cust->gstin }}</div>
+                  @endif
+                  @if ($cust->email)
+                      <div class="text-xs text-gray-500 break-all">{{ $cust->email }}</div>
+                  @endif
+                  <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <div class="min-w-0">
+                          <dt class="text-xs text-gray-500">Of company</dt>
+                          <dd class="text-gray-700 break-words">{{ $cust->company?->name ?? '-' }}</dd>
+                      </div>
+                      <div class="min-w-0">
+                          <dt class="text-xs text-gray-500">Owner</dt>
+                          <dd class="break-words"><a href="{{ route('admin.users.show', $cust->user) }}" class="text-brand-700 hover:underline">{{ $cust->user?->name }}</a></dd>
+                      </div>
+                      <div class="col-span-2">
+                          <dt class="text-xs text-gray-500">Location</dt>
+                          <dd class="text-gray-700">{{ $cust->city ? $cust->city . ', ' : '' }}{{ $cust->state?->name ?? $cust->country }}</dd>
+                      </div>
+                      <div>
+                          <dt class="text-xs text-gray-500">Invoices</dt>
+                          <dd class="font-mono tabular-nums text-gray-700">{{ $cust->invoices_count }}</dd>
+                      </div>
+                      <div>
+                          <dt class="text-xs text-gray-500">Added</dt>
+                          <dd class="text-gray-700">{{ $cust->created_at->format('d M Y') }}</dd>
+                      </div>
+                  </dl>
+              </li>
+          @empty
+              <li class="px-4 py-12 text-center text-gray-500">No customers match.</li>
+          @endforelse
+      </ul>
+
+      {{-- Tablets and up: the full table --}}
+      <div class="hidden sm:block overflow-x-auto">
         <table class="w-full text-sm min-w-[800px]">
-            <thead class="bg-gray-50 text-[10px] text-gray-500 uppercase tracking-wider">
+            <thead class="bg-gray-50 text-xs text-gray-500">
                 <tr>
                     <th class="px-5 py-3 text-left font-semibold">Customer</th>
                     <th class="px-5 py-3 text-left font-semibold">Of company</th>
@@ -51,5 +91,5 @@
       </div>
     </div>
 
-    <div class="mt-4">{{ $customers->links() }}</div>
+    <div class="mt-4 max-sm:[&_a]:min-h-[40px] max-sm:[&_span]:min-h-[40px]">{{ $customers->links() }}</div>
 </x-layouts.admin>

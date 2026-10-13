@@ -33,14 +33,14 @@
 
 {{-- Impersonation banner --}}
 @if ($impersonatorId)
-    <div class="bg-accent-500 text-accent-950 px-4 py-2 flex items-center justify-between text-sm font-semibold">
-        <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
-            <span>You are impersonating <strong>{{ auth()->user()->name }}</strong></span>
+    <div class="bg-accent-500 text-accent-950 px-4 py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm font-semibold">
+        <div class="flex items-center gap-2 min-w-0">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>
+            <span class="min-w-0 break-words">You are impersonating <strong>{{ auth()->user()->name }}</strong></span>
         </div>
         <form method="POST" action="{{ route('admin.impersonation.stop') }}">
             @csrf
-            <button class="px-3 py-1 bg-accent-950 text-accent-100 rounded text-xs font-bold uppercase tracking-wider hover:bg-accent-900">Stop impersonating</button>
+            <button class="inline-flex items-center min-h-[40px] sm:min-h-0 px-3 py-1 bg-accent-950 text-accent-100 rounded text-xs font-semibold hover:bg-accent-900">Stop impersonating</button>
         </form>
     </div>
 @endif
@@ -66,7 +66,7 @@
                     <div class="text-xs text-gray-400 leading-tight">Admin panel</div>
                 </div>
             </a>
-            <button type="button" @click="sidebarOpen = false" class="lg:hidden p-2 text-gray-400 hover:text-white" aria-label="Close menu">
+            <button type="button" @click="sidebarOpen = false" class="lg:hidden p-2.5 -mr-2 text-gray-400 hover:text-white" aria-label="Close menu">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -114,7 +114,7 @@
                 <div class="min-w-0 flex-1">
                     <h1 class="font-display font-extrabold text-lg sm:text-xl md:text-2xl text-gray-900 truncate">{{ $title }}</h1>
                     @if ($subtitle)
-                        <p class="text-xs sm:text-sm text-gray-500 mt-0.5 truncate hidden sm:block">{{ $subtitle }}</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">{{ $subtitle }}</p>
                     @endif
                 </div>
                 <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -132,9 +132,9 @@
                     </div>
                 </div>
             </div>
-            {{-- Mobile: action row below the title --}}
+            {{-- Phones and tablets: the actions get their own row below the title and wrap --}}
             @if (isset($action))
-                <div class="mt-3 flex items-center gap-2 md:hidden">
+                <div class="mt-3 flex flex-wrap items-center gap-2 md:hidden">
                     {{ $action }}
                 </div>
             @endif
