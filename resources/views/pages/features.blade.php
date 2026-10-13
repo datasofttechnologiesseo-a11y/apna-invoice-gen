@@ -153,7 +153,7 @@
 @endphp
 
 <x-layouts.marketing
-    title="Features: GST billing, purchases, stock and returns"
+    title="Features: GST billing, stock and returns"
     eyebrow="Features"
     lead="GST billing, purchases, stock, banking and GST returns in one place, built for Indian businesses. Every feature is free during beta."
     description="GST invoices, quotations, credit notes, purchases, stock, bank reconciliation, GSTR-1 JSON, GSTR-2B match and GSTR-3B. Free for Indian businesses."

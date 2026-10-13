@@ -56,7 +56,7 @@
         :follow="true"
         {{-- Page 2+ stand on their own canonicals, so each needs its own
              title; otherwise every page of the archive repeats page 1's. --}}
-        :title="'GST & Invoicing Blog for Small Business' . ($posts->currentPage() > 1 ? ' (Page ' . $posts->currentPage() . ')' : '')"
+        :title="'GST and invoicing blog for small business' . ($posts->currentPage() > 1 ? ' (Page ' . $posts->currentPage() . ')' : '')"
         description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow, written for Indian MSMEs, freelancers and CAs."
         keywords="GST blog India, invoicing tips, HSN SAC guide, GSTR-1 filing, MSME finance, free GST invoice software"
         type="website"
