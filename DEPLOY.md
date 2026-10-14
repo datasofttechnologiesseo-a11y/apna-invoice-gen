@@ -218,6 +218,18 @@ or data change is involved.
 
 ## Subsequent deploys
 
+The easy way is `bash deploy.sh` on the server. It finds the PHP version the
+website runs on (from this site's nginx config, or `DEPLOY_PHP_VERSION=8.2` in
+`.env` if you want to set it yourself), runs Composer and artisan with that
+PHP, and stops before going live if the installed packages don't load.
+
+By hand:
+
+> **Never run `composer update` on the server.** Always `composer install`,
+> which installs the exact versions in `composer.lock`. An update run with a
+> newer command-line PHP than the website uses is what takes the whole site
+> down with "Composer detected issues in your platform".
+
 ```bash
 git pull
 composer install --optimize-autoloader --no-dev
@@ -232,6 +244,26 @@ new release dir, run the above, and swap the symlink. Otherwise a ~1s
 window during `optimize:clear`/`cache` is expected.
 
 ## Troubleshooting quick-refs
+
+- **Every page shows "Composer detected issues in your platform: Your
+  Composer dependencies require a PHP version >= 8.4.1"**: the `vendor`
+  folder on the server doesn't match `composer.lock`. Usually someone ran
+  `composer update` there with a newer command-line PHP, which pulled in
+  Symfony 8 (needs PHP 8.4). The lock file only needs PHP 8.2. Fix, in the
+  app folder:
+
+  ```bash
+  php -v                                   # command-line PHP
+  ls /run/php/                             # phpX.Y-fpm.sock = the website's PHP
+  git checkout -- composer.lock
+  php8.2 $(which composer) install --no-dev --optimize-autoloader   # use the website's version
+  php8.2 artisan optimize:clear && php8.2 artisan optimize
+  sudo systemctl restart php8.2-fpm
+  ```
+
+  Or just run `bash deploy.sh`, which does the same. `composer.json` pins
+  Composer's platform to PHP 8.2, so a future `composer update` can't pull
+  in 8.4-only packages again (unless `--ignore-platform-reqs` is used; don't).
 
 - **"Page expired (419)"** after login: session cookie domain mismatch.
   Check `SESSION_DOMAIN` matches your actual domain, and `APP_URL` is set.
