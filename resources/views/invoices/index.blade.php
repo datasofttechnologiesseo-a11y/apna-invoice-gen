@@ -39,20 +39,32 @@
                      empty search bar to a new user is noise in front of the one thing
                      they actually came here to do. --}}
                 @if (! $invoices->isEmpty() || $hasFilters)
+                {{-- Status chips: counted within the same search and dates. --}}
+                @php
+                    $chips = ['' => 'All', 'draft' => 'Drafts', 'outstanding' => 'Unpaid', 'overdue' => 'Overdue', 'paid' => 'Paid', 'cancelled' => 'Cancelled'];
+                    $activeChip = (string) request('status', '');
+                @endphp
+                <nav aria-label="Invoice status" class="px-4 pt-4 -mb-1 flex gap-2 overflow-x-auto [scrollbar-width:none]">
+                    @foreach ($chips as $key => $chipLabel)
+                        @php $on = $activeChip === $key; @endphp
+                        <a href="{{ route('invoices.index', array_filter(['status' => $key ?: null, 'search' => request('search'), 'from' => request('from'), 'to' => request('to')])) }}"
+                           @if ($on) aria-current="page" @endif
+                           class="shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-sm font-semibold ring-1 transition {{ $on ? 'bg-brand-700 text-white ring-brand-700' : ($key === 'overdue' && ($chipCounts['overdue'] ?? 0) > 0 ? 'bg-white text-danger-700 ring-danger-200 hover:bg-danger-50' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50') }}">
+                            {{ $chipLabel }}
+                            <span class="tabular-nums text-xs font-medium {{ $on ? 'text-brand-100' : 'text-gray-500' }}">{{ $chipCounts[$key] ?? 0 }}</span>
+                        </a>
+                    @endforeach
+                </nav>
                 <form method="GET" class="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
                     <x-search-suggest
                         scope="invoices"
                         placeholder="Search by invoice #, customer, mobile, GSTIN or amount"
                         label="Search by invoice number, customer, mobile, GSTIN or amount"
                         all-label="See all invoices matching" />
-                    <select name="status" aria-label="Filter by status" class="w-full sm:w-auto h-10 border-gray-300 rounded-md shadow-sm" onchange="this.form.submit()">
-                        <option value="">All statuses</option>
-                        <option value="outstanding" @selected(request('status') === 'outstanding')>Outstanding (unpaid)</option>
-                        {{-- Same words as the badges: Invoice::statusLabel(). --}}
-                        @foreach (['draft','final','partially_paid','paid','cancelled'] as $s)
-                            <option value="{{ $s }}" @selected(request('status') === $s)>{{ (new \App\Models\Invoice(['status' => $s]))->statusLabel() }}</option>
-                        @endforeach
-                    </select>
+                    {{-- The chips choose the status; old links with ?status=final still work. --}}
+                    @if (filled(request('status')))
+                        <input type="hidden" name="status" value="{{ request('status') }}">
+                    @endif
                     {{-- Labelled on every screen: on a phone two bare date boxes
                          gave no hint which one was the start. --}}
                     <div class="grid grid-cols-2 gap-3 w-full sm:w-auto sm:flex sm:items-center">
@@ -70,6 +82,15 @@
                         <a href="{{ route('invoices.index') }}" class="inline-flex items-center min-h-[40px] text-sm text-gray-600 hover:text-gray-900 hover:underline">Clear</a>
                     @endif
                 </form>
+                @if (! $invoices->isEmpty())
+                    <p class="px-4 py-2.5 border-b border-gray-100 bg-gray-50 text-sm text-gray-600">
+                        {{ number_format((int) $listTotals->n) }} {{ (int) $listTotals->n === 1 ? 'invoice' : 'invoices' }}
+                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                        Total <span class="font-mono font-semibold text-gray-900">₹{{ rupees((float) $listTotals->total) }}</span>
+                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                        To receive <span class="font-mono font-semibold {{ (float) $listTotals->balance > 0 ? 'text-accent-800' : 'text-gray-900' }}">₹{{ rupees((float) $listTotals->balance) }}</span>
+                    </p>
+                @endif
                 @endif
 
                 @if ($invoices->isEmpty())
@@ -97,9 +118,14 @@
                                             @endif
                                         </div>
                                         <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $inv->customer?->name ?? '-' }}</div>
-                                        <div class="text-xs text-gray-500">{{ $inv->invoice_date?->format('d M Y') }}</div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $inv->invoice_date?->format('d M Y') }}
+                                            @if ($due = $inv->dueLabel())
+                                                <span class="mx-1" aria-hidden="true">·</span><span class="{{ $inv->isOverdue() ? 'font-semibold text-danger-700' : '' }}">{{ $due }}</span>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <x-status-badge class="shrink-0" :status="$inv->status" :label="$inv->statusLabel()" />
+                                    <x-status-badge class="shrink-0" :status="$inv->displayStatus()" :label="$inv->displayStatusLabel()" />
                                 </div>
                                 <div class="flex items-baseline justify-between text-sm">
                                     <span class="text-gray-500">Total <span class="font-mono font-semibold text-gray-900 ml-1">₹{{ rupees($inv->grand_total) }}</span></span>
@@ -110,6 +136,9 @@
                                 <div class="flex items-center gap-3 pt-1 text-sm">
                                     <a href="{{ route('invoices.show', $inv) }}" class="inline-flex items-center min-h-[40px] text-brand-700 font-semibold">View</a>
                                     <a href="{{ route('invoices.pdf', $inv) }}" class="inline-flex items-center min-h-[40px] text-gray-700">PDF</a>
+                                    @if (in_array($inv->status, ['final', 'partially_paid'], true) && (float) $inv->balance > 0)
+                                        <a href="{{ route('invoices.show', ['invoice' => $inv, 'pay_amount' => plain_amount($inv->balance)]) }}#record-payment" class="inline-flex items-center min-h-[40px] text-money-700 font-semibold">Record payment</a>
+                                    @endif
                                     @if ($inv->isEditable())
                                         <x-confirm-form
                                             :action="route('invoices.destroy', $inv)"
@@ -181,14 +210,23 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-right font-mono tabular-nums">₹{{ rupees($inv->grand_total) }}</td>
-                                    <td class="px-4 py-3 text-right font-mono tabular-nums">@if ($inv->status === 'cancelled')<span class="text-gray-500" title="A cancelled invoice is not owed">–</span>@else₹{{ rupees($inv->balance) }}@endif</td>
+                                    <td class="px-4 py-3 text-right font-mono tabular-nums">
+                                        @if ($inv->status === 'cancelled')<span class="text-gray-500" title="A cancelled invoice is not owed">–</span>@else₹{{ rupees($inv->balance) }}@endif
+                                        @if ($due = $inv->dueLabel())
+                                            <div class="font-sans text-xs {{ $inv->isOverdue() ? 'font-semibold text-danger-700' : 'text-gray-500' }}">{{ $due }}</div>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3">
-                                        <x-status-badge :status="$inv->status" :label="$inv->statusLabel()" />
+                                        <x-status-badge :status="$inv->displayStatus()" :label="$inv->displayStatusLabel()" />
                                     </td>
                                     <td class="px-4 py-3 text-right text-sm whitespace-nowrap">
                                         <a href="{{ route('invoices.show', $inv) }}" class="text-brand-700 hover:underline">View</a>
                                         <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                         <a href="{{ route('invoices.pdf', $inv) }}" class="text-gray-600 hover:underline">PDF</a>
+                                        @if (in_array($inv->status, ['final', 'partially_paid'], true) && (float) $inv->balance > 0)
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                                            <a href="{{ route('invoices.show', ['invoice' => $inv, 'pay_amount' => plain_amount($inv->balance)]) }}#record-payment" class="text-money-700 font-semibold hover:underline">Record payment</a>
+                                        @endif
                                         @if ($inv->isEditable())
                                             <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                                             <x-confirm-form

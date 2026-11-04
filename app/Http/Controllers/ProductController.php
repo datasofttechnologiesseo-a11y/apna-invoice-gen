@@ -62,12 +62,15 @@ class ProductController extends Controller
 
         // Inventory at a glance, for items that track stock: what it is worth,
         // what is running low and what has run out.
-        $tracked = $company->products()->where('is_active', true)->where('track_stock', true)
+        // The value counts archived items too: their goods are still on the
+        // shelf, and the card opens the Stock summary, which counts them.
+        $allTracked = $company->products()->where('track_stock', true)
             ->withSum('stockMovements', 'quantity')
-            ->get(['id', 'opening_stock', 'low_stock_level', 'purchase_rate', 'rate']);
+            ->get(['id', 'is_active', 'opening_stock', 'low_stock_level', 'purchase_rate', 'rate']);
+        $tracked = $allTracked->where('is_active', true);
         $inventory = $tracked->isEmpty() ? null : [
             'items' => $tracked->filter(fn ($p) => $p->stockOnHand() > 0)->count(),
-            'value' => round($tracked->sum(fn ($p) => max(0, $p->stockOnHand()) * (float) ($p->purchase_rate ?? $p->rate)), 2),
+            'value' => round($allTracked->sum(fn ($p) => round(max(0, $p->stockOnHand()) * (float) ($p->purchase_rate ?? $p->rate), 2)), 2),
             'low' => $tracked->filter(fn ($p) => $p->low_stock_level !== null && $p->stockOnHand() > 0 && $p->stockOnHand() <= (float) $p->low_stock_level)->count(),
             'out' => $tracked->filter(fn ($p) => $p->stockOnHand() <= 0)->count(),
         ];
@@ -152,26 +155,52 @@ class ProductController extends Controller
         ]);
     }
 
-    /** Add or remove stock by hand: damage, a return, a physical count. */
+    /**
+     * Add or remove stock by hand (damage, a return), or enter a physical
+     * count: the shop counts the shelf and the books are set to that number,
+     * the difference posted as one adjustment.
+     */
     public function adjustStock(Request $request, Product $product): RedirectResponse
     {
         $this->authorize($request, $product);
         abort_unless($product->track_stock, 422, 'Turn on stock tracking for this item first.');
         $data = $request->validate([
-            'direction' => ['required', 'in:in,out'],
-            'quantity' => ['required', 'numeric', 'min:0.001', 'max:999999999'],
+            'direction' => ['required', 'in:in,out,count'],
+            // A count can be zero (the shelf is empty); adding or removing nothing cannot.
+            'quantity' => ['required', 'numeric', $request->input('direction') === 'count' ? 'min:0' : 'min:0.001', 'max:999999999'],
             'moved_on' => ['required', 'date', 'before_or_equal:today'],
             'reason' => ['required', 'string', 'max:200'],
+        ], [
+            'quantity.min' => $request->input('direction') === 'count' ? 'The count cannot be below zero.' : 'Enter a quantity above zero.',
         ]);
         $company = $product->company;
         if ($company && $company->isBooksLockedOn($data['moved_on'])) {
             return back()->withInput()->withErrors(['moved_on' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the adjustment after that."]);
         }
+        $ledger = app(\App\Services\StockLedger::class);
+        $unit = $product->unit;
+        $num = fn (float $v) => 0 + round($v, 3);
+
+        if ($data['direction'] === 'count') {
+            $counted = round((float) $data['quantity'], 3);
+            $books = $ledger->onHand($product, $data['moved_on']);
+            $qty = round($counted - $books, 3);
+            if (abs($qty) < 0.0005) {
+                return redirect()->route('products.stock', $product)
+                    ->with('status', "Stock already matches the count: {$num($counted)} {$unit}. Nothing changed.");
+            }
+            $ledger->adjust($product, $data['moved_on'], $qty,
+                $data['reason'] . ": counted {$num($counted)}, books showed {$num($books)}", $request->user());
+
+            return redirect()->route('products.stock', $product)
+                ->with('status', 'Count saved. ' . ($qty > 0 ? 'Added ' : 'Removed ') . $num(abs($qty)) . " {$unit} to match. In stock now: " . $num($product->stockOnHand()) . '.');
+        }
+
         $qty = (float) $data['quantity'] * ($data['direction'] === 'out' ? -1 : 1);
-        app(\App\Services\StockLedger::class)->adjust($product, $data['moved_on'], $qty, $data['reason'], $request->user());
+        $ledger->adjust($product, $data['moved_on'], $qty, $data['reason'], $request->user());
 
         return redirect()->route('products.stock', $product)
-            ->with('status', ($qty > 0 ? 'Added ' : 'Removed ') . (0 + abs($qty)) . ' ' . $product->unit . '. In stock now: ' . (0 + $product->stockOnHand()) . '.');
+            ->with('status', ($qty > 0 ? 'Added ' : 'Removed ') . $num(abs($qty)) . ' ' . $unit . '. In stock now: ' . $num($product->stockOnHand()) . '.');
     }
 
     public function destroy(Request $request, Product $product): RedirectResponse

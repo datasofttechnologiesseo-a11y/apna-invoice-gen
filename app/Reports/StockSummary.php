@@ -22,6 +22,30 @@ class StockSummary extends Report
         return 'Stock Summary';
     }
 
+    /**
+     * "As on 04 Nov 2026" with no dates (stock on hand today), or the period
+     * when one is picked. Never "All records": stock is always as on a day.
+     */
+    public function subtitle(): string
+    {
+        [$from, $to] = $this->dateRange();
+        if ($from) {
+            return parent::subtitle();
+        }
+
+        return implode(' · ', array_merge(['As on ' . ($to ?? now())->format('d M Y')], $this->filterLabels()));
+    }
+
+    protected function filterLabels(): array
+    {
+        $labels = parent::filterLabels();
+        if ($this->request->query('status') === 'low') {
+            $labels[] = 'Low stock only';
+        }
+
+        return $labels;
+    }
+
     public function columns(): array
     {
         return [
@@ -83,7 +107,7 @@ class StockSummary extends Report
                 'in' => $in,
                 'out' => $out,
                 'closing' => $closing,
-                'status' => $closing < 0 ? 'Negative' : ($low ? 'Low' : 'OK'),
+                'status' => $closing < 0 ? 'Negative' : ($closing == 0 ? 'Out' : ($low ? 'Low' : 'OK')),
                 'price' => $price,
                 'value' => round(max(0, $closing) * $price, 2),
             ];

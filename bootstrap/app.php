@@ -41,6 +41,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security response headers on every HTML document.
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeaders::class,
+            // Remembers the ad click / UTM tags a visitor arrived with, for sign-up attribution.
+            \App\Http\Middleware\CaptureAttribution::class,
             // No-op unless APP_ENV=local and LOCAL_AUTO_LOGIN=true.
             \App\Http\Middleware\LocalAutoLogin::class,
             // Team members work in the owner's business under their role.

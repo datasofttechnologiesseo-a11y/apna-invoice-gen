@@ -17,7 +17,12 @@ use Illuminate\Support\Str;
  * original is stored as it is.
  *
  * On documents, fit() gives the exact width and height for the space
- * available, so a wide wordmark and a square emblem both sit right.
+ * available, so a wide wordmark and a square emblem both sit right. It
+ * draws a tightly cropped copy of the file (made once, next to it): the
+ * blank margin inside an image would otherwise push the artwork off the
+ * edge the business name and the "Tax Invoice" title line up on. Logos
+ * uploaded before cleaning existed get the same crop. The uploaded file
+ * itself is never changed.
  */
 class BrandImage
 {
@@ -39,6 +44,21 @@ class BrandImage
         return self::store($file, 'signatures', true);
     }
 
+    /** Remove a stored logo or signature, and the cropped copy documents draw. */
+    public static function delete(?string $storedPath): void
+    {
+        if (! $storedPath) {
+            return;
+        }
+        Storage::disk('public')->delete([$storedPath, self::tightPath($storedPath)]);
+    }
+
+    /** Where the cropped copy of a stored image lives, on the public disk. */
+    private static function tightPath(string $storedPath): string
+    {
+        return ltrim(trim(dirname($storedPath), '.') . '/tight/' . pathinfo($storedPath, PATHINFO_FILENAME) . '.png', '/');
+    }
+
     /**
      * Display size for a stored image inside a $boxW x $boxH box, keeping its
      * shape. Null when there is no image or the file is missing.
@@ -54,6 +74,10 @@ class BrandImage
         if (! is_file($file)) {
             return null;
         }
+        $url = asset('storage/' . $storedPath);
+        if ($tight = self::tight($storedPath, $file)) {
+            [$file, $url] = $tight;
+        }
         $size = @getimagesize($file);
         if (! $size || $size[0] < 1 || $size[1] < 1) {
             return null;
@@ -62,7 +86,66 @@ class BrandImage
         $w = min($boxW, $boxH * $ratio);
         $h = $w / $ratio;
 
-        return ['file' => $file, 'url' => asset('storage/' . $storedPath), 'w' => (int) round($w), 'h' => (int) round($h), 'ratio' => $ratio];
+        return ['file' => $file, 'url' => $url, 'w' => (int) round($w), 'h' => (int) round($h), 'ratio' => $ratio];
+    }
+
+    /**
+     * [file, url] of the cropped copy used on documents, made on first use
+     * and again whenever the original is newer. Null (use the original) when
+     * the copy cannot be made.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    private static function tight(string $storedPath, string $file): ?array
+    {
+        $rel = self::tightPath($storedPath);
+        $out = public_path('storage/' . $rel);
+        if (! is_file($out) || filemtime($out) < filemtime($file)) {
+            try {
+                $bytes = self::crop($file, str_starts_with($storedPath, 'signatures/'));
+            } catch (\Throwable) {
+                $bytes = null;
+            }
+            if ($bytes === null) {
+                return null;
+            }
+            if (! is_dir(dirname($out)) && ! @mkdir(dirname($out), 0775, true) && ! is_dir(dirname($out))) {
+                return null;
+            }
+            $tmp = $out . '.' . Str::random(8) . '.tmp';
+            if (@file_put_contents($tmp, $bytes) === false || ! @rename($tmp, $out)) {
+                @unlink($tmp);
+
+                return null;
+            }
+        }
+
+        return [$out, asset('storage/' . $rel)];
+    }
+
+    /** The image cut to its artwork with no margin, as PNG bytes; a signature's paper made transparent. */
+    private static function crop(string $file, bool $signature): ?string
+    {
+        if (! function_exists('imagecreatefromstring')) {
+            return null;
+        }
+        $img = @imagecreatefromstring((string) file_get_contents($file));
+        if (! $img) {
+            return null;
+        }
+        $img = self::truecolor($img);
+        $img = self::scaleDown($img, 1600, 1600);
+        $bg = self::background($img);
+        $img = self::trim($img, $bg, 0);
+        if ($signature && $bg !== null) {
+            self::clearBackground($img, $bg);
+        }
+        ob_start();
+        imagepng($img, null, 9);
+        $png = (string) ob_get_clean();
+        imagedestroy($img);
+
+        return $png === '' ? null : $png;
     }
 
     private static function store(UploadedFile $file, string $dir, bool $signature): string
@@ -223,8 +306,8 @@ class BrandImage
         return sqrt(($a['red'] - $b['red']) ** 2 + ($a['green'] - $b['green']) ** 2 + ($a['blue'] - $b['blue']) ** 2);
     }
 
-    /** Cut the blank margin around the artwork, keeping a small breathing space. */
-    private static function trim(\GdImage $img, string|array|null $bg): \GdImage
+    /** Cut the blank margin around the artwork, keeping a small breathing space ($padShare of its size). */
+    private static function trim(\GdImage $img, string|array|null $bg, float $padShare = 0.03): \GdImage
     {
         if ($bg === null) {
             return $img;
@@ -271,7 +354,7 @@ class BrandImage
             $right--;
         }
 
-        $pad = (int) round(max($right - $left, $bottom - $top) * 0.03);
+        $pad = (int) round(max($right - $left, $bottom - $top) * $padShare);
         $left = max(0, $left - $pad);
         $top = max(0, $top - $pad);
         $right = min($w - 1, $right + $pad);

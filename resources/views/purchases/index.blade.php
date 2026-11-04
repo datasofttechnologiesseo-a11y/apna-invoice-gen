@@ -5,6 +5,26 @@
         $badge = fn ($bill) => $bill->status === 'unpaid' && $bill->isOverdue() ? 'overdue' : $bill->status;
         $btnSecondary = 'inline-flex items-center justify-center gap-1.5 h-10 px-4 bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 text-sm font-semibold rounded-md whitespace-nowrap transition';
         $fieldLabel = 'block text-xs font-medium text-gray-600 mb-1';
+        // The due column reads as a to-do: settled bills fade, late ones say how late.
+        $due = function ($bill) {
+            if (! $bill->due_date) {
+                return null;
+            }
+            if ((float) $bill->balance <= 0) {
+                return ['Due ' . $bill->due_date->format('d M Y'), 'text-gray-400', true];
+            }
+            $late = $bill->isOverdue() ? (int) $bill->due_date->copy()->startOfDay()->diffInDays(now()->startOfDay()) : 0;
+            if ($late > 0) {
+                return ['Overdue ' . $late . ' ' . Str::plural('day', $late), 'text-danger-700 font-semibold', false];
+            }
+            if ($bill->due_date->isToday()) {
+                return ['Due today', 'text-accent-800 font-semibold', false];
+            }
+
+            return ['Due ' . $bill->due_date->format('d M Y'), '', true];
+        };
+        // Straight to the payment form on the invoice page.
+        $payUrl = fn ($bill) => route('purchases.show', $bill) . '#amount';
     @endphp
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -105,7 +125,8 @@
                                         <a href="{{ route('purchases.show', $bill) }}" class="font-mono text-sm font-semibold text-brand-700 hover:underline">{{ $bill->bill_number }}</a>
                                         @if ($bill->reverse_charge)<span class="ml-1 text-xs font-semibold text-accent-800" title="Reverse charge: tax payable by you">RCM</span>@endif
                                         <div class="mt-0.5 text-sm text-gray-900 truncate">{{ $bill->vendor->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $bill->bill_date->format('d M Y') }}@if ($bill->due_date) · <span class="{{ $bill->isOverdue() ? 'text-danger-700 font-semibold' : '' }}">Due {{ $bill->due_date->format('d M Y') }}</span>@endif</div>
+                                        @php $dueLine = $due($bill); @endphp
+                                        <div class="text-xs text-gray-500">{{ $bill->bill_date->format('d M Y') }}@if ($dueLine) · <span class="{{ $dueLine[1] }}" title="Due {{ $bill->due_date->format('d M Y') }}">{{ $dueLine[0] }}</span>@endif</div>
                                     </div>
                                     <x-status-badge class="shrink-0" :status="$badge($bill)" :label="$bill->statusLabel()" />
                                 </div>
@@ -117,6 +138,9 @@
                                 </div>
                                 <div class="mt-1 flex items-center gap-5 text-sm">
                                     <a href="{{ route('purchases.show', $bill) }}" class="inline-flex items-center min-h-[40px] font-semibold text-brand-700">View</a>
+                                    @if ((float) $bill->balance > 0)
+                                        <a href="{{ $payUrl($bill) }}" class="inline-flex items-center min-h-[40px] font-semibold text-money-700" aria-label="Record a payment for {{ $bill->bill_number }}">Pay</a>
+                                    @endif
                                     <a href="{{ route('purchases.edit', $bill) }}" class="inline-flex items-center min-h-[40px] text-gray-700">Edit</a>
                                 </div>
                             </li>
@@ -150,7 +174,14 @@
                                             @if ($bill->vendor->gstin)<div class="text-xs font-mono text-gray-500">{{ $bill->vendor->gstin }}</div>@endif
                                         </td>
                                         <td class="px-3 py-3 whitespace-nowrap">{{ $bill->bill_date->format('d M Y') }}</td>
-                                        <td class="px-3 py-3 whitespace-nowrap {{ $bill->isOverdue() ? 'text-danger-700 font-semibold' : '' }}">{{ $bill->due_date?->format('d M Y') ?? '–' }}</td>
+                                        @php $dueLine = $due($bill); @endphp
+                                        <td class="px-3 py-3 whitespace-nowrap">
+                                            @if (! $dueLine)
+                                                <span class="text-gray-400">–</span>
+                                            @else
+                                                <span class="{{ $dueLine[1] }}" title="Due {{ $bill->due_date->format('d M Y') }}">{{ $dueLine[2] ? $bill->due_date->format('d M Y') : $dueLine[0] }}</span>
+                                            @endif
+                                        </td>
                                         <td class="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap hidden xl:table-cell">₹{{ rupees($bill->subtotal) }}</td>
                                         <td class="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap hidden xl:table-cell {{ $bill->itc_eligible ? '' : 'text-gray-500' }}" title="{{ $bill->itc_eligible ? 'ITC claimable' : 'Blocked credit under Section 17(5), not claimable' }}">₹{{ rupees($bill->total_tax) }}</td>
                                         <td class="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap font-semibold">₹{{ rupees($bill->grand_total) }}</td>
@@ -158,6 +189,10 @@
                                         <td class="px-3 py-3"><x-status-badge :status="$badge($bill)" :label="$bill->statusLabel()" /></td>
                                         <td class="px-3 py-3 text-right whitespace-nowrap">
                                             <a href="{{ route('purchases.show', $bill) }}" class="text-brand-700 hover:underline">View</a>
+                                            @if ((float) $bill->balance > 0)
+                                                <span class="text-gray-300" aria-hidden="true">·</span>
+                                                <a href="{{ $payUrl($bill) }}" class="font-semibold text-money-700 hover:underline" aria-label="Record a payment for {{ $bill->bill_number }}">Pay</a>
+                                            @endif
                                             <span class="text-gray-300" aria-hidden="true">·</span>
                                             <a href="{{ route('purchases.edit', $bill) }}" class="text-gray-700 hover:underline">Edit</a>
                                         </td>

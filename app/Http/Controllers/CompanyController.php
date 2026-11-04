@@ -85,23 +85,23 @@ class CompanyController extends Controller
         $imageChanges = [];
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {
-                Storage::disk('public')->delete($company->logo_path);
+                \App\Support\BrandImage::delete($company->logo_path);
             }
             $data['logo_path'] = \App\Support\BrandImage::storeLogo($request->file('logo'));
             $imageChanges[] = 'logo replaced';
         } elseif ($request->boolean('remove_logo') && $company->logo_path) {
-            Storage::disk('public')->delete($company->logo_path);
+            \App\Support\BrandImage::delete($company->logo_path);
             $data['logo_path'] = null;
             $imageChanges[] = 'logo removed';
         }
         if ($request->hasFile('signature')) {
             if ($company->signature_path) {
-                Storage::disk('public')->delete($company->signature_path);
+                \App\Support\BrandImage::delete($company->signature_path);
             }
             $data['signature_path'] = \App\Support\BrandImage::storeSignature($request->file('signature'));
             $imageChanges[] = 'signature replaced';
         } elseif ($request->boolean('remove_signature') && $company->signature_path) {
-            Storage::disk('public')->delete($company->signature_path);
+            \App\Support\BrandImage::delete($company->signature_path);
             $data['signature_path'] = null;
             $imageChanges[] = 'signature removed';
         }

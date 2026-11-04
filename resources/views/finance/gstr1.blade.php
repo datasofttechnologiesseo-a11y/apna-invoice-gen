@@ -65,10 +65,22 @@
             @php
                 // Labels from the builder say "Rs"; the screen says ₹ everywhere.
                 $tableLabel = fn (string $l) => str_replace(['Rs. ', 'Rs '], '₹', $l);
+                // Tables with no records and no amounts fold away; they stay in
+                // the page and open for printing.
+                $isEmpty = fn (array $t) => ! $t['records'] && collect(['taxable', 'igst', 'cgst', 'sgst'])->every(fn ($k) => (float) ($t[$k] ?? 0) == 0.0);
+                $emptyCount = collect($tables)->filter($isEmpty)->count();
             @endphp
-            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g1-tables">
-                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
+            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g1-tables"
+                     x-data="{ showEmpty: false, keep: false }"
+                     @beforeprint.window="keep = showEmpty; showEmpty = true" @afterprint.window="showEmpty = keep">
+                <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                     <h2 id="g1-tables" class="font-display text-base sm:text-lg font-bold text-gray-900">Summary by GSTR-1 table</h2>
+                    @if ($emptyCount)
+                        <button type="button" @click="showEmpty = !showEmpty" :aria-expanded="showEmpty ? 'true' : 'false'"
+                                class="inline-flex items-center min-h-[40px] text-sm font-semibold text-brand-700 hover:underline print:hidden">
+                            <span x-text="showEmpty ? 'Hide empty tables' : 'Show {{ $emptyCount }} empty {{ \Illuminate\Support\Str::plural('table', $emptyCount) }}'">Show {{ $emptyCount }} empty {{ \Illuminate\Support\Str::plural('table', $emptyCount) }}</span>
+                        </button>
+                    @endif
                 </div>
                 <div class="hidden sm:block overflow-x-auto">
                     <table class="w-full text-sm">
@@ -85,7 +97,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($tables as $key => $t)
-                                <tr class="{{ $t['records'] ? '' : 'text-gray-500' }}">
+                                <tr class="{{ $t['records'] ? '' : 'text-gray-500' }}" @if ($isEmpty($t)) x-show="showEmpty" x-cloak @endif>
                                     <td class="px-4 py-2.5 font-semibold whitespace-nowrap">{{ $t['table'] }}</td>
                                     <td class="px-4 py-2.5">{{ $tableLabel($t['label']) }}</td>
                                     <td class="{{ $num }}">{{ $t['records'] }}</td>
@@ -101,7 +113,7 @@
                 {{-- Phones: one block per table, every amount on screen. --}}
                 <ul class="sm:hidden divide-y divide-gray-100">
                     @foreach ($tables as $key => $t)
-                        <li class="px-4 py-3 {{ $t['records'] ? '' : 'text-gray-500' }}">
+                        <li class="px-4 py-3 {{ $t['records'] ? '' : 'text-gray-500' }}" @if ($isEmpty($t)) x-show="showEmpty" x-cloak @endif>
                             <div class="flex items-baseline justify-between gap-3">
                                 <div class="text-sm min-w-0"><strong>{{ $t['table'] }}</strong> {{ $tableLabel($t['label']) }}</div>
                                 <div class="text-xs text-gray-500 shrink-0">{{ $t['records'] }} {{ \Illuminate\Support\Str::plural('record', $t['records']) }}</div>

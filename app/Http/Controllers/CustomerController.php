@@ -15,19 +15,38 @@ class CustomerController extends Controller
     {
         $company = $request->user()->ensureCompany();
 
+        $owedOnly = $request->boolean('owing');
+        $sort = $request->query('sort') === 'outstanding' ? 'outstanding' : 'name';
+        $owing = fn ($q) => $q->whereIn('status', ['final', 'partially_paid'])->where('balance', '>', 0);
+        $today = \App\Models\Invoice::todayInIndia();
+
         $customers = $company->customers()
             ->with('state')
             // What each customer owes: the unpaid balance of their issued
             // invoices, the same figure as the ledger and Receivables aging.
             ->withSum(['invoices as outstanding' => fn ($q) => $q->whereIn('status', ['final', 'partially_paid'])], 'balance')
+            // The oldest unpaid due date already past, for "overdue n days".
+            ->withMin(['invoices as oldest_overdue_due' => fn ($q) => $owing($q)
+                ->whereNotNull('due_date')->where('due_date', '<', $today)], 'due_date')
             // Customer::scopeSearch - name, mobile, email or GSTIN, and the
             // same definition the invoice list searches customers by.
             ->when($request->search, fn ($q, $s) => $q->search($s))
+            ->when($owedOnly, fn ($q) => $q->whereHas('invoices', $owing))
+            ->when($sort === 'outstanding', fn ($q) => $q->orderByDesc('outstanding'))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
-        return view('customers.index', compact('customers', 'company'));
+        // The collections line above the list: every customer of this
+        // business, whatever the search or filter.
+        $receivable = $company->invoices()
+            ->whereNotNull('customer_id')
+            ->where(fn ($q) => $owing($q))
+            ->selectRaw('COALESCE(SUM(balance), 0) as total, COUNT(DISTINCT customer_id) as customers')
+            ->toBase()->first();
+        $collections = ['total' => (float) $receivable->total, 'customers' => (int) $receivable->customers];
+
+        return view('customers.index', compact('customers', 'company', 'collections', 'owedOnly', 'sort', 'today'));
     }
 
     public function create(): View

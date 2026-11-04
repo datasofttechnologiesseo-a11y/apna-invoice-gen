@@ -209,6 +209,9 @@ Route::prefix('/')->name('pages.')->group(function () {
     Route::get('/manuals/apna-invoice-quick-start.pdf', [ManualController::class, 'quickStart'])
         ->name('manuals.quick-start');
     Route::view('/pricing', 'pages.pricing')->name('pricing');
+    // Landing page for paid ads: one goal (sign up), headline matched to the
+    // ad group with ?for=. Not in the sitemap and noindex (it repeats the home page).
+    Route::view('/start', 'pages.start')->name('start');
     Route::view('/faq', 'pages.faq')->name('faq');
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/press', 'pages.press')->name('press');

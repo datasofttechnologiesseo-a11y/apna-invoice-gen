@@ -47,31 +47,47 @@ class InvoiceController extends Controller
     {
         $company = $request->user()->ensureCompany();
 
-        $invoices = $company->invoices()
+        // One set of filters for the list, its status chips and its totals:
+        // the chips count within the same search and dates, so "Overdue 3"
+        // means three of the invoices this search would show.
+        $today = Invoice::todayInIndia();
+        $filtered = function (?string $status) use ($company, $request, $today) {
+            return $company->invoices()
+                ->when($status, function ($q, $s) use ($today) {
+                    // "outstanding" and "overdue" are views, not stored statuses:
+                    // issued invoices with money still owed (and past the due date).
+                    if ($s === 'outstanding' || $s === 'overdue') {
+                        $q->whereIn('status', ['final', 'partially_paid'])->where('balance', '>', 0);
+
+                        return $s === 'overdue' ? $q->whereNotNull('due_date')->whereDate('due_date', '<', $today) : $q;
+                    }
+
+                    return $q->where('status', $s);
+                })
+                // Invoice::scopeSearch, shared with the search box's typeahead.
+                ->when($request->search, fn ($q, $s) => $q->search($s))
+                // ?from / ?to bound the list by invoice date. Unparseable input is ignored.
+                ->when($this->parseFilterDate($request->query('from')), fn ($q, $d) => $q->whereDate('invoice_date', '>=', $d->toDateString()))
+                ->when($this->parseFilterDate($request->query('to')), fn ($q, $d) => $q->whereDate('invoice_date', '<=', $d->toDateString()));
+        };
+
+        $status = is_string($request->status) ? $request->status : null;
+        $invoices = $filtered($status)
             ->with(['customer', 'company'])
-            ->when($request->status, function ($q, $s) {
-                // "outstanding" is a virtual filter — final/partially-paid invoices
-                // that still have a balance. The collections workflow lands here
-                // from the Outstanding KPI card on the dashboard.
-                if ($s === 'outstanding') {
-                    return $q->whereIn('status', ['final', 'partially_paid'])
-                             ->where('balance', '>', 0);
-                }
-                return $q->where('status', $s);
-            })
-            // Invoice::scopeSearch — shared with the search box's typeahead so
-            // the dropdown can never offer a bill this filter then fails to find.
-            ->when($request->search, fn ($q, $s) => $q->search($s))
-            // ?from / ?to bound the list by invoice date - the dashboard's
-            // "Invoiced this month" card links straight in with them. They
-            // arrive from links and bookmarks rather than a validated form, so
-            // unparseable input is ignored instead of thrown at the user.
-            ->when($this->parseFilterDate($request->query('from')), fn ($q, $d) => $q->whereDate('invoice_date', '>=', $d->toDateString()))
-            ->when($this->parseFilterDate($request->query('to')), fn ($q, $d) => $q->whereDate('invoice_date', '<=', $d->toDateString()))
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
+
+        $chipCounts = [];
+        foreach (['' => null, 'draft' => 'draft', 'outstanding' => 'outstanding', 'overdue' => 'overdue', 'paid' => 'paid', 'cancelled' => 'cancelled'] as $key => $s) {
+            $chipCounts[$key] = $filtered($s)->count();
+        }
+        // Totals of everything the filter matches, not just this page. A
+        // cancelled invoice is not owed, so it adds nothing to the balance.
+        $listTotals = $filtered($status)->toBase()
+            ->selectRaw("COUNT(*) as n, COALESCE(SUM(CASE WHEN status <> 'cancelled' THEN grand_total ELSE 0 END), 0) as total, COALESCE(SUM(CASE WHEN status <> 'cancelled' THEN balance ELSE 0 END), 0) as balance")
+            ->first();
 
         // Section-tab stats — total + a "needs attention" sub-stat per doc
         // type. Two extra count() queries; cheap and lets the tab strip show
@@ -92,7 +108,7 @@ class InvoiceController extends Controller
             ],
         ];
 
-        return view('invoices.index', compact('invoices', 'company', 'salesStats'));
+        return view('invoices.index', compact('invoices', 'company', 'salesStats', 'chipCounts', 'listTotals'));
     }
 
     public function templatePreview(Request $request, string $template): Response|RedirectResponse

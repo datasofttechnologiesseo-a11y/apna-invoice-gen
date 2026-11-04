@@ -341,13 +341,29 @@
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-semibold text-gray-700">Item <span x-text="idx + 1"></span></span>
                                     @if (! $restricted)
+                                        <span class="flex items-center gap-3">
+                                        {{-- Fold a finished line so the next one is in reach. --}}
+                                        <button type="button" :class="rowOpen(item, idx) && rowHasContent(item) && ! rowHasError(idx) ? '' : 'hidden'" @click="item._open = false"
+                                                class="inline-flex items-center min-h-[40px] text-sm font-semibold text-brand-700">Done</button>
                                         <button type="button" @click="removeRow(idx)"
                                                 :disabled="items.length <= 1"
                                                 :class="items.length <= 1 ? 'text-gray-600 cursor-not-allowed' : 'text-danger-700'"
                                                 class="inline-flex items-center min-h-[40px] px-2 -mr-2 text-sm font-medium transition"
                                                 aria-label="Remove row">Remove</button>
+                                        </span>
                                     @endif
                                 </div>
+                                {{-- Folded: one tappable line with the item, quantity, rate and GST. --}}
+                                <button type="button" :class="rowOpen(item, idx) ? 'hidden' : ''" @click="item._open = true"
+                                        class="w-full flex items-center justify-between gap-3 min-h-[44px] rounded-md bg-gray-50 ring-1 ring-gray-200 px-3 py-2 text-left"
+                                        :aria-label="'Edit item ' + (idx + 1)">
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-semibold text-gray-900" x-text="item.description || 'Item ' + (idx + 1)"></span>
+                                        <span class="block text-xs text-gray-600 tabular-nums" x-text="rowSummary(item)"></span>
+                                    </span>
+                                    <span class="shrink-0 text-sm font-semibold text-brand-700">Edit</span>
+                                </button>
+                                <div class="space-y-3" :class="rowOpen(item, idx) ? '' : 'hidden'">
                                 @unless ($restricted)
                                     <div x-data="productRowCombobox(idx, item._uid)" class="relative" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
                                         <label class="text-sm font-medium text-gray-700">Item (search or type a new one)</label>
@@ -451,6 +467,7 @@
                                         </select>
                                     </div>
                                 </div>
+                                </div>
                                 <div class="flex justify-between pt-2 border-t text-sm">
                                     <span class="text-gray-600">Line amount <span x-show="item.tax > 0" class="text-xs">(incl. GST)</span></span>
                                     <span class="text-right">
@@ -509,7 +526,7 @@
                                         <td class="px-3 py-2 w-full">
                                           <div class="grid {{ $itemGrid }} gap-1.5">
                                             @unless ($restricted)
-                                                <div x-data="productRowCombobox(idx, item._uid)" class="relative min-w-0 col-span-2 xl:col-span-1" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
+                                                <div x-data="productRowCombobox(idx, item._uid)" class="relative min-w-0 col-span-2" :class="descNeeded(item) && 'xl:col-span-1'" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
                                                     <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
                                                     <div class="relative">
                                                         <input type="text"
@@ -532,10 +549,15 @@
                                                         </button>
                                                     </div>
                                                     @include('invoices._product-combobox-panel', ['mobile' => false])
+                                                    {{-- The description usually repeats the item name, so it stays
+                                                         folded until there is something more to say. --}}
+                                                    <button type="button" :class="descNeeded(item) ? 'hidden' : ''" @click="item._descOpen = true; $nextTick(() => $el.closest('tr')?.querySelector('[data-desc]')?.focus())"
+                                                            class="mt-1 inline-flex items-center py-1.5 -my-1 text-xs font-semibold text-brand-700 hover:underline">+ Add description</button>
                                                 </div>
                                             @endunless
-                                            <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Description (optional)" class="w-full min-w-0 h-9 {{ $cell }}">
-                                            <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? 'HSN/SAC' : 'HSN/SAC (optional)'" class="w-full h-9 rounded-md text-sm font-mono focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired">
+                                            <input data-desc :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Description (optional)" class="w-full min-w-0 h-9 {{ $cell }}"
+                                                   @unless ($restricted) :class="descNeeded(item) ? '' : 'hidden'" @endunless>
+                                            <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? 'HSN/SAC' : 'HSN/SAC (optional)'" class="{{ $restricted ? '' : 'col-start-2 xl:col-start-auto' }} w-full h-9 rounded-md text-sm font-mono focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired">
                                           </div>
                                         </td>
                                         <td class="px-1.5 py-2">
@@ -966,7 +988,8 @@
             // Math.random fallback is good enough for purely-local keys.
             const newUid = () => (window.crypto?.randomUUID?.() || ('row-' + Math.random().toString(36).slice(2) + '-' + Date.now()));
             return {
-                items: initialItems.map(i => ({product_id: null, _uid: newUid(), _prevProductName: null, ...i,
+                // _open: phone card unfolded (new and blank lines start open).
+                items: initialItems.map(i => ({product_id: null, _uid: newUid(), _prevProductName: null, _open: ! i.description, _descOpen: false, ...i,
                     _stock: (i.product_id && productMap[i.product_id]) ? (productMap[i.product_id].stock ?? null) : null,
                     _lineDisc: parseFloat(i.discount) || 0,
                     amount: 0, tax: 0, total: 0})),
@@ -976,6 +999,25 @@
                     return item._stock !== null && item._stock !== undefined && (parseFloat(item.quantity) || 0) > +item._stock;
                 },
                 _newUid: newUid,
+                rowHasContent(item) {
+                    return !! ((item.description || '').toString().trim() || item.product_id);
+                },
+                rowOpen(item, idx) {
+                    return item._open !== false || this.rowHasError(idx);
+                },
+                rowSummary(item) {
+                    const qty = parseFloat(item.quantity) || 0;
+                    return qty + (item.unit ? ' ' + item.unit : '') + ' × ₹' + this.fmt(parseFloat(item.rate) || 0) + ' · ' + (parseFloat(item.gst_rate) || 0) + '% GST';
+                },
+                // Show the description box when it says more than the item name,
+                // when the user asked for it, or when it has an error.
+                descNeeded(item) {
+                    if (item._descOpen) return true;
+                    const d = (item.description || '').toString().trim();
+                    if (! d || ! item.product_id) return false;
+                    const p = productMap[item.product_id];
+                    return ! p || d !== String(p.name || '').trim();
+                },
                 // Per-row validation errors from the last server submit, keyed by
                 // the row's original index: { "2": { hsn_sac: "Row 3: …" } }.
                 itemErrors: itemErrors || {},
@@ -1198,7 +1240,9 @@
                 },
                 addRow() {
                     // Stamp a fresh _uid so x-for keying is stable across splice()s.
-                    this.items.push({_uid: this._newUid(), _prevProductName: null, product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, discount: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
+                    // Fold the lines already filled in so the new one is in view on a phone.
+                    this.items.forEach((r) => { if (this.rowHasContent(r)) r._open = false; });
+                    this.items.push({_uid: this._newUid(), _prevProductName: null, _open: true, _descOpen: false, product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, discount: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
                 },
 
                 /**

@@ -74,8 +74,10 @@ class SecurityHeaders
             "img-src 'self' data: blob: https:",
             // Google's documented GA4 set: hits go to region-specific hosts
             // on both analytics domains, and gtag.js calls back to GTM.
-            "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
-            "frame-src https://challenges.cloudflare.com",
+            // Plus Google Ads: conversion and remarketing calls (and the
+            // td.doubleclick.net frame gtag adds for Ads).
+            "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.doubleclick.net",
+            "frame-src https://challenges.cloudflare.com https://td.doubleclick.net https://www.googletagmanager.com",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",

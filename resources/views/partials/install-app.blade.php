@@ -17,7 +17,12 @@
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0 translate-y-4"
      x-transition:enter-end="opacity-100 translate-y-0"
-     class="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none"
+     {{-- In the app the phone tab bar holds the bottom edge: sit just above it. --}}
+     @class([
+         'lg:hidden fixed inset-x-0 z-40 p-3 pointer-events-none',
+         'bottom-[calc(4rem+env(safe-area-inset-bottom))]' => ! empty($aboveTabBar),
+         'bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]' => empty($aboveTabBar),
+     ])
      role="region" aria-label="Install Apna Invoice">
     <div class="pointer-events-auto mx-auto max-w-md bg-white rounded-xl shadow-2xl ring-1 ring-gray-200 p-3">
         <div class="flex items-center gap-3">

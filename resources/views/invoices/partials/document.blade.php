@@ -33,10 +33,12 @@
         @endphp
         <div class="{{ $logoBeside ? 'flex items-start gap-4' : '' }}">
             @if ($logo)
-                <img src="{{ $logo['url'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" class="shrink-0 {{ $logoBeside ? '' : 'mb-3' }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px;">
+                {{-- block: no gap under an inline image. The file is cropped to the
+                     artwork, so it lines up with the name and the title. --}}
+                <img src="{{ $logo['url'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" class="block shrink-0 {{ $logoBeside ? '' : 'mb-3' }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px;">
             @endif
             <div>
-            <h1 style="font-size: 22px; font-weight: 700; margin: 0;">{{ $c->name }}</h1>
+            <h1 style="font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2;">{{ $c->name }}</h1>
             <div class="text-sm text-gray-600 mt-2">
                 {{ $c->address_line1 }}@if ($c->address_line2), {{ $c->address_line2 }}@endif<br>
                 {{ $c->city }}{{ $c->city && $c->state?->name ? ', ' : '' }}{{ $c->state?->name }}@if ($c->state?->gst_code) ({{ $c->state->gst_code }})@endif {{ $c->postal_code }}<br>
@@ -55,7 +57,7 @@
             </div>
         </div>
         <div class="sm:text-right print:text-right">
-            <h2 class="text-2xl font-bold tracking-wide uppercase">{{ $documentTitle }}</h2>
+            <h2 class="text-2xl font-bold tracking-wide uppercase leading-none">{{ $documentTitle }}</h2>
             @if ($invoice->isCancelled())
                 {{-- A cancelled invoice must never look payable, on screen or printed. --}}
                 <div class="mt-2 inline-block text-center px-3 py-1 border-2 border-danger-700 text-danger-700 rounded">
@@ -355,15 +357,17 @@
             <div class="mt-2">This is a computer-generated invoice.</div>
         </div>
         {{-- "For <business>", the signature (or room to sign), then the signatory line. --}}
-        @php $sig = \App\Support\BrandImage::fit($c->signature_path, 170, 54); @endphp
-        <div class="w-52 text-center">
-            <div class="font-semibold text-gray-900">For {{ $c->name }}</div>
-            <div class="h-[60px] flex items-end justify-center">
+        @php $sig = \App\Support\BrandImage::fit($c->signature_path, 180, 56); @endphp
+        {{-- The signature stands on the signatory line, centred under the
+             business name, like ink on a printed form. --}}
+        <div class="w-56 max-w-full ml-auto text-center">
+            <div class="font-semibold text-gray-900 leading-snug">For {{ $c->name }}</div>
+            <div class="h-[64px] flex items-end justify-center">
                 @if ($sig)
-                    <img src="{{ $sig['url'] }}" alt="Authorised signature" width="{{ $sig['w'] }}" height="{{ $sig['h'] }}" style="width: {{ $sig['w'] }}px; height: {{ $sig['h'] }}px;">
+                    <img src="{{ $sig['url'] }}" alt="Authorised signature" width="{{ $sig['w'] }}" height="{{ $sig['h'] }}" class="block" style="width: {{ $sig['w'] }}px; height: {{ $sig['h'] }}px; margin-bottom: 2px;">
                 @endif
             </div>
-            <div class="border-t border-gray-400 pt-1 mt-1 text-xs text-gray-500">Authorised signatory</div>
+            <div class="border-t border-gray-500 pt-1 text-xs text-gray-600">Authorised signatory</div>
         </div>
     </div>
 </div>

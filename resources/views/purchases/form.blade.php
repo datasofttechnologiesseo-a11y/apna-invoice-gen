@@ -13,8 +13,8 @@
             'paidNow' => (float) old('paid_now', 0),
             // From the GSTR-2B match: a supplier not saved yet opens quick-add, filled in.
             'prefillVendor' => $prefillVendor ?? null,
-            // Saved vendors for the picker (name and GSTIN, as people search them).
-            'vendors' => $vendors->map(fn ($v) => ['id' => (string) $v->id, 'label' => $v->name . ($v->gstin ? ' · ' . $v->gstin : '')])->values(),
+            // Saved vendors for the picker: searched by name or GSTIN, shown with their state.
+            'vendors' => $vendors->map(fn ($v) => ['id' => (string) $v->id, 'name' => $v->name, 'gstin' => (string) $v->gstin, 'state' => (string) $v->state?->name])->values(),
             // Bill-level discount: re-shown form keeps the typed value; an existing
             // bill opens with the sum of its saved line discounts.
             'discount' => (float) old('bill_discount', collect($oldItems)->sum(fn ($i) => (float) ($i['discount'] ?? 0))),
@@ -77,14 +77,51 @@
                                 <x-input-label for="vendor_id" value="Vendor *" />
                                 <button type="button" @click="quickAdd.open = !quickAdd.open" class="inline-flex items-center min-h-[32px] text-xs font-semibold text-brand-700 hover:underline">+ New vendor</button>
                             </div>
-                            <select id="vendor_id" name="vendor_id" x-model="vendorId" required
-                                    @error('vendor_id') aria-invalid="true" aria-describedby="vendor_id-error" @enderror
-                                    class="mt-1 {{ $field }}">
-                                <option value="">Select vendor</option>
-                                <template x-for="v in vendorList" :key="v.id">
-                                    <option :value="String(v.id)" x-text="v.label" :selected="String(v.id) === vendorId"></option>
-                                </template>
-                            </select>
+                            {{-- Type-ahead vendor picker. The saved vendor id goes in the
+                                 hidden vendor_id field, as the select it replaces did. --}}
+                            <div class="relative mt-1" @click.outside="vendorOpen = false">
+                                <input type="hidden" name="vendor_id" value="{{ $initial['vendorId'] }}" :value="vendorId">
+                                <input type="text" id="vendor_id" x-model="vendorQuery" autocomplete="off" spellcheck="false"
+                                       role="combobox" aria-autocomplete="list" aria-controls="vendor_id-list" aria-haspopup="listbox"
+                                       :aria-expanded="vendorOpen ? 'true' : 'false'"
+                                       :aria-activedescendant="vendorOpen && vendorMatches[vendorHi] ? 'vendor-opt-' + vendorMatches[vendorHi].id : null"
+                                       aria-required="true"
+                                       @error('vendor_id') aria-invalid="true" aria-describedby="vendor_id-error" @enderror
+                                       @focus="vendorOpen = true" @click="vendorOpen = true" @input="searchVendors()"
+                                       @keydown.arrow-down.prevent="moveVendor(1)" @keydown.arrow-up.prevent="moveVendor(-1)"
+                                       @keydown.enter="if (vendorOpen && vendorMatches.length) { $event.preventDefault(); pickVendor(vendorMatches[vendorHi]); }"
+                                       @keydown.escape="vendorOpen = false" @keydown.tab="vendorOpen = false"
+                                       @blur="setTimeout(() => leaveVendor(), 150)"
+                                       x-effect="$el.setCustomValidity(vendorId ? '' : 'Select a vendor from the list, or add a new one.')"
+                                       placeholder="Search vendor name or GSTIN"
+                                       class="{{ $field }} pr-9" :class="vendorId ? 'bg-brand-50/60' : ''">
+                                <button type="button" x-show="vendorId || vendorQuery" x-cloak @click="clearVendor()"
+                                        class="absolute inset-y-0 right-0 w-9 inline-flex items-center justify-center text-gray-500 hover:text-gray-800" aria-label="Clear the vendor">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                                <ul x-show="vendorOpen" x-cloak id="vendor_id-list" role="listbox" aria-label="Vendors"
+                                    class="absolute z-30 mt-1 w-full max-h-72 overflow-y-auto bg-white rounded-md shadow-lg ring-1 ring-gray-200 py-1">
+                                    <template x-for="(v, i) in vendorMatches" :key="v.id">
+                                        <li role="option" :id="'vendor-opt-' + v.id" :aria-selected="v.id === vendorId ? 'true' : 'false'"
+                                            @mousedown.prevent="pickVendor(v)" @mouseenter="vendorHi = i"
+                                            class="px-3 py-2 min-h-[40px] cursor-pointer" :class="i === vendorHi ? 'bg-brand-50' : 'hover:bg-gray-50'">
+                                            <span class="flex items-center justify-between gap-2">
+                                                <span class="text-sm text-gray-900 truncate" x-text="v.name"></span>
+                                                <svg x-show="v.id === vendorId" class="w-4 h-4 text-brand-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                            </span>
+                                            <span class="block text-xs text-gray-500">
+                                                <span x-text="v.state || 'State not set'"></span><template x-if="v.gstin"><span> · <span class="font-mono" x-text="v.gstin"></span></span></template><template x-if="!v.gstin"><span> · No GSTIN</span></template>
+                                            </span>
+                                        </li>
+                                    </template>
+                                    <li x-show="vendorMatches.length === 0" class="px-3 py-2 text-sm text-gray-500">
+                                        <span x-text="vendorList.length ? 'No saved vendor matches.' : 'No vendors saved yet.'"></span>
+                                        <button type="button" @mousedown.prevent="addVendorFromSearch()" class="mt-1 flex items-center min-h-[40px] font-semibold text-brand-700 hover:underline">
+                                            <span x-text="vendorQuery.trim() ? 'Add “' + vendorQuery.trim() + '” as a new vendor' : 'Add a new vendor'"></span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
                             <x-input-error :messages="$errors->get('vendor_id')" for="vendor_id" class="mt-1" />
                             <p class="mt-1 text-xs text-gray-500" x-show="vendorId">
                                 Tax: <strong class="font-semibold text-gray-700" x-text="taxModeLabel"></strong>
@@ -495,6 +532,55 @@
                 vendorList: (initial.vendors || []).slice(),
                 companyStateId,
                 vendorId: initial.vendorId || '',
+                // --- Vendor picker: type to filter saved vendors by name or GSTIN.
+                vendorQuery: ((initial.vendors || []).find(v => v.id === String(initial.vendorId || '')) || {}).name || '',
+                vendorOpen: false,
+                vendorHi: 0,
+                vendorName(id) { return (this.vendorList.find(v => v.id === String(id)) || {}).name || ''; },
+                get vendorMatches() {
+                    const q = (this.vendorQuery || '').trim().toLowerCase();
+                    const picked = this.vendorId && q === this.vendorName(this.vendorId).toLowerCase();
+                    const list = (!q || picked) ? this.vendorList
+                        : this.vendorList.filter(v => v.name.toLowerCase().includes(q) || (v.gstin || '').toLowerCase().includes(q));
+                    return list.slice(0, 50);
+                },
+                searchVendors() {
+                    this.vendorOpen = true; this.vendorHi = 0;
+                    // Typing over a picked vendor unlinks it until one is picked again.
+                    if (this.vendorId && this.vendorQuery !== this.vendorName(this.vendorId)) this.vendorId = '';
+                },
+                moveVendor(dir) {
+                    if (!this.vendorOpen) { this.vendorOpen = true; return; }
+                    const n = this.vendorMatches.length;
+                    if (n) this.vendorHi = (this.vendorHi + dir + n) % n;
+                    this.$nextTick(() => { const el = document.getElementById('vendor-opt-' + (this.vendorMatches[this.vendorHi] || {}).id); if (el) el.scrollIntoView({ block: 'nearest' }); });
+                },
+                pickVendor(v) {
+                    if (!v) return;
+                    this.vendorId = v.id;
+                    this.vendorQuery = v.name;
+                    this.vendorOpen = false;
+                },
+                leaveVendor() {
+                    this.vendorOpen = false;
+                    if (this.vendorId) { this.vendorQuery = this.vendorName(this.vendorId); return; }
+                    // A name typed in full picks that vendor.
+                    const q = (this.vendorQuery || '').trim().toLowerCase();
+                    const exact = q ? this.vendorList.filter(v => v.name.toLowerCase() === q || (v.gstin || '').toLowerCase() === q) : [];
+                    if (exact.length === 1) this.pickVendor(exact[0]);
+                },
+                clearVendor() {
+                    this.vendorId = ''; this.vendorQuery = ''; this.vendorHi = 0;
+                    this.$nextTick(() => document.getElementById('vendor_id').focus());
+                },
+                addVendorFromSearch() {
+                    const q = (this.vendorQuery || '').trim();
+                    // A typed GSTIN goes in the GSTIN box, anything else is the name.
+                    if (/^[0-9]{2}[A-Z0-9]{13}$/i.test(q)) this.quickAdd.gstin = q.toUpperCase();
+                    else if (q) this.quickAdd.name = q;
+                    this.quickAdd.open = true;
+                    this.vendorOpen = false;
+                },
                 interstateOverridden: initial.interstateOverride !== null && initial.interstateOverride !== undefined,
                 manualInterstate: !!(initial.interstateOverride),
                 reverseCharge: !!initial.reverseCharge,
@@ -601,10 +687,10 @@
                         });
                         const body = await res.json();
                         if (!res.ok) { this.quickAdd.error = body.message || Object.values(body.errors || {}).flat().join(' ') || 'Could not save the vendor.'; return; }
-                        const label = body.name + (body.state_name ? ' · ' + body.state_name : '') + (body.gstin ? ' · ' + body.gstin : '');
-                        this.vendorList.push({ id: String(body.id), label });
+                        const saved = { id: String(body.id), name: body.name, gstin: body.gstin || '', state: body.state_name || '' };
+                        this.vendorList.push(saved);
                         this.vendorStates[String(body.id)] = body.state_id;
-                        this.$nextTick(() => { this.vendorId = String(body.id); });
+                        this.$nextTick(() => { this.pickVendor(saved); });
                         this.quickAdd = { open: false, saving: false, error: '', name: '', gstin: '', state_id: '' };
                     } catch (e) {
                         this.quickAdd.error = 'Could not save the vendor. Check your connection and try again.';

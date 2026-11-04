@@ -41,7 +41,7 @@
                         confirm-class="bg-brand-700 hover:bg-brand-800"
                         tone="default"
                         :auto-open="request()->boolean('issue') && ! $errors->any() && ! session('error')">
-                        <button type="button" class="{{ $btnPrimary }}">Issue invoice</button>
+                        <button type="button" id="issue-invoice-button" class="{{ $btnPrimary }}">Issue invoice</button>
                     </x-confirm-form>
                 @elseif ($hasBalance)
                     <a href="#record-payment"
@@ -370,7 +370,9 @@
                     @endif
 
                     @if ($isIssued)
-                        @include('invoices.partials.share-panel', ['invoice' => $invoice])
+                        <div id="share-panel" class="scroll-mt-24">
+                            @include('invoices.partials.share-panel', ['invoice' => $invoice])
+                        </div>
                         @if ((float) $invoice->balance > 0)
                             @include('invoices.partials.reminder-panel', ['invoice' => $invoice])
                         @endif
@@ -422,6 +424,56 @@
             </div>
         </div>
     </div>
+
+    {{-- Phone and tablet: the next step stays in reach at the bottom (the app's
+         tab bar is not shown on this page). Issued: send, PDF, record payment.
+         Draft: issue it. Cancelled: nothing to do, so no bar. --}}
+    @if ($isIssued || $isDraft)
+        @php
+            $waLink = $isIssued ? $invoice->whatsAppShareLink('share') : null;
+            $barBtn = 'inline-flex flex-1 items-center justify-center gap-1.5 h-11 px-3 rounded-md text-sm font-semibold transition';
+            $barSecondary = $barBtn . ' bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50';
+            $barPrimary = $barBtn . ' bg-brand-700 hover:bg-brand-800 text-white shadow-sm';
+        @endphp
+        <div class="lg:hidden h-20" aria-hidden="true"></div>
+        <div class="lg:hidden fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] print:hidden"
+             role="region" aria-label="Invoice actions">
+            <div class="max-w-xl mx-auto flex items-center gap-2">
+                @if ($isDraft)
+                    @if ($invoice->isEditable())
+                        <a href="{{ route('invoices.edit', $invoice) }}" class="{{ $barSecondary }}">Edit draft</a>
+                    @endif
+                    {{-- Opens the same confirmation as the Issue button at the top. --}}
+                    <button type="button" @click="document.getElementById('issue-invoice-button')?.click()" class="{{ $barPrimary }}">Issue invoice</button>
+                @else
+                    @if ($waLink)
+                        <a href="{{ $waLink }}" target="_blank" rel="noopener" class="{{ $barSecondary }}" aria-label="Send on WhatsApp">
+                            <svg class="w-4 h-4 text-[#128C7E] shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488 11.815 11.815 0 0012.05 0z"/></svg>
+                            WhatsApp
+                        </a>
+                    @else
+                        {{-- No mobile number on the customer: open the share panel's prompt for it. --}}
+                        <button type="button" class="{{ $barSecondary }}" aria-label="Add the customer's mobile to send on WhatsApp"
+                                @click="const t = document.querySelector('#share-panel .grid > :first-child');
+                                        if (t && t.getAttribute('aria-expanded') !== 'true') { t.click(); }
+                                        setTimeout(() => document.getElementById('share-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);">
+                            <svg class="w-4 h-4 text-[#128C7E] shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488 11.815 11.815 0 0012.05 0z"/></svg>
+                            WhatsApp
+                        </button>
+                    @endif
+                    <a href="{{ route('invoices.pdf', $invoice) }}" class="{{ $barSecondary }}" aria-label="Download PDF">
+                        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        PDF
+                    </a>
+                    @if ($hasBalance)
+                        <a href="#record-payment"
+                           @click="$nextTick(() => document.getElementById('pay-amount')?.focus({ preventScroll: true }))"
+                           class="{{ $barPrimary }} flex-[1.4] whitespace-nowrap">Record payment</a>
+                    @endif
+                @endif
+            </div>
+        </div>
+    @endif
 
     {{-- One-click "Save & Download PDF" support: when the edit form sets
          post_save_action=pdf, the controller redirects here with ?download=1.

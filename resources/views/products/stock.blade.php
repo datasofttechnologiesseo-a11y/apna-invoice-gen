@@ -76,31 +76,39 @@
 
             @if ($product->track_stock)
                 {{-- Adjust --}}
-                <section class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-4 sm:p-5" x-data="{ dir: @js(old('direction', 'in')), reason: @js(old('reason', '')) }">
-                    <h2 class="text-sm font-semibold text-gray-900">Add or remove stock</h2>
+                <section id="adjust" class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-4 sm:p-5"
+                         x-data="{ dir: @js(old('direction', request('mode') === 'count' ? 'count' : 'in')), reason: @js(old('reason', request('mode') === 'count' ? 'Physical count' : '')), qty: @js(old('quantity', '')), books: @js($onHand) }">
+                    <h2 class="text-sm font-semibold text-gray-900">Add, remove or count stock</h2>
                     <p class="text-sm text-gray-600 mt-0.5">
                         Issued invoices take stock out; purchase invoices bring it in.
                         Bought on a supplier's bill? @if (\App\Support\Team::can('purchases.create'))<a href="{{ route('purchases.create') }}" class="text-brand-700 font-semibold underline">Enter a purchase invoice</a> and pick this item on the line, so stock and input tax credit update together.@else Enter it as a purchase invoice and pick this item on the line.@endif
-                        Use this form for everything else.
+                        Use this form for everything else. Counted the shelf? Pick <strong>Count</strong> and enter what you counted.
                     </p>
                     <form method="POST" action="{{ route('products.stock.adjust', $product) }}" class="mt-4 grid grid-cols-2 sm:grid-cols-12 gap-3 items-start">
                         @csrf
-                        <fieldset class="col-span-2 sm:col-span-3">
+                        <fieldset class="col-span-2 sm:col-span-4">
                             <legend class="text-sm font-medium text-gray-700">Stock *</legend>
-                            <div class="mt-1 grid grid-cols-2 rounded-md ring-1 ring-gray-300 overflow-hidden text-sm font-semibold">
+                            <div class="mt-1 grid grid-cols-3 rounded-md ring-1 ring-gray-300 overflow-hidden text-sm font-semibold">
                                 <label class="flex items-center justify-center h-10 cursor-pointer" :class="dir === 'in' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'">
                                     <input type="radio" name="direction" value="in" x-model="dir" class="sr-only"> Add
                                 </label>
                                 <label class="flex items-center justify-center h-10 cursor-pointer border-l border-gray-300" :class="dir === 'out' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'">
                                     <input type="radio" name="direction" value="out" x-model="dir" class="sr-only"> Remove
                                 </label>
+                                <label class="flex items-center justify-center h-10 cursor-pointer border-l border-gray-300" :class="dir === 'count' ? 'bg-brand-700 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                                       @click="if (! reason || reason === 'Stock received' || reason === 'Damaged / expired') reason = 'Physical count'">
+                                    <input type="radio" name="direction" value="count" x-model="dir" class="sr-only"> Count
+                                </label>
                             </div>
                             <x-input-error :messages="$errors->get('direction')" for="direction" class="mt-1" />
                         </fieldset>
                         <div class="col-span-1 sm:col-span-2">
-                            <label for="adj_qty" class="block text-sm font-medium text-gray-700">Quantity ({{ $unit }}) *</label>
-                            <input inputmode="decimal" id="adj_qty" name="quantity" type="number" step="any" min="0.001" required value="{{ old('quantity') }}"
+                            <label for="adj_qty" class="block text-sm font-medium text-gray-700"><span x-text="dir === 'count' ? 'Counted' : 'Quantity'">Quantity</span> ({{ $unit }}) *</label>
+                            <input inputmode="decimal" id="adj_qty" name="quantity" type="number" step="any" :min="dir === 'count' ? 0 : 0.001" min="0.001" required x-model="qty"
                                    @error('quantity') aria-invalid="true" aria-describedby="quantity-error" @enderror class="{{ $field }}">
+                            {{-- Count: what the books show and the change the count will make. --}}
+                            <p x-show="dir === 'count'" x-cloak class="mt-1 text-xs text-gray-600"
+                               x-text="(qty === '' || isNaN(parseFloat(qty))) ? 'Books show ' + (+books) : (Math.abs(parseFloat(qty) - books) < 0.0005 ? 'Matches the books' : (parseFloat(qty) > books ? 'Adds ' : 'Removes ') + +Math.abs(parseFloat(qty) - books).toFixed(3))"></p>
                             <x-input-error :messages="$errors->get('quantity')" for="quantity" class="mt-1" />
                         </div>
                         <div class="col-span-1 sm:col-span-3">
@@ -109,16 +117,16 @@
                                    @error('moved_on') aria-invalid="true" aria-describedby="moved_on-error" @enderror class="{{ $field }} min-w-0">
                             <x-input-error :messages="$errors->get('moved_on')" for="moved_on" class="mt-1" />
                         </div>
-                        <div class="col-span-2 sm:col-span-4">
+                        <div class="col-span-2 sm:col-span-3">
                             <label for="adj_reason" class="block text-sm font-medium text-gray-700">Reason *</label>
-                            <input id="adj_reason" name="reason" type="text" maxlength="200" required x-model="reason" :placeholder="dir === 'in' ? 'e.g. Stock received from godown' : 'e.g. Damaged in transit'"
+                            <input id="adj_reason" name="reason" type="text" maxlength="200" required x-model="reason" :placeholder="dir === 'in' ? 'e.g. Stock received from godown' : (dir === 'count' ? 'e.g. Month-end count' : 'e.g. Damaged in transit')"
                                    @error('reason') aria-invalid="true" aria-describedby="reason-error" @enderror class="{{ $field }}">
                             <x-input-error :messages="$errors->get('reason')" for="reason" class="mt-1" />
                         </div>
                         <div class="col-span-2 sm:col-span-12">
                             <span class="block text-xs text-gray-500 mb-1.5">Common reasons</span>
                             <div class="flex flex-wrap gap-2">
-                                @foreach (['in' => ['Stock received', 'Customer returned goods', 'Physical count correction', 'Opening stock correction'], 'out' => ['Damaged / expired', 'Returned to supplier', 'Free sample given', 'Used in-house', 'Physical count correction']] as $d => $labels)
+                                @foreach (['in' => ['Stock received', 'Customer returned goods', 'Opening stock correction'], 'out' => ['Damaged / expired', 'Returned to supplier', 'Free sample given', 'Used in-house'], 'count' => ['Physical count', 'Month-end count', 'Year-end count']] as $d => $labels)
                                     @foreach ($labels as $label)
                                         <button type="button" x-show="dir === '{{ $d }}'" @click="reason = @js($label)"
                                                 :class="reason === @js($label) ? 'bg-brand-50 ring-brand-300 text-brand-800' : 'bg-white ring-gray-300 text-gray-700 hover:bg-gray-50'"
@@ -128,7 +136,7 @@
                             </div>
                         </div>
                         <div class="col-span-2 sm:col-span-12 flex justify-end">
-                            <button class="inline-flex items-center justify-center h-10 px-4 w-full sm:w-auto bg-brand-700 hover:bg-brand-800 text-white rounded-md text-sm font-semibold" x-text="dir === 'in' ? 'Add to stock' : 'Remove from stock'">Save</button>
+                            <button class="inline-flex items-center justify-center h-10 px-4 w-full sm:w-auto bg-brand-700 hover:bg-brand-800 text-white rounded-md text-sm font-semibold" x-text="dir === 'in' ? 'Add to stock' : (dir === 'out' ? 'Remove from stock' : 'Save count')">Save</button>
                         </div>
                     </form>
                 </section>

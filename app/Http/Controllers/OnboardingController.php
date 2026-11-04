@@ -94,7 +94,7 @@ class OnboardingController extends Controller
 
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {
-                Storage::disk('public')->delete($company->logo_path);
+                \App\Support\BrandImage::delete($company->logo_path);
             }
             $data['logo_path'] = \App\Support\BrandImage::storeLogo($request->file('logo'));
         }

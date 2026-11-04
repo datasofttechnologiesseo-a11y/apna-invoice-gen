@@ -208,6 +208,52 @@ class Invoice extends Model
         };
     }
 
+    /**
+     * Issued, money still owed, and past the due date (India time). Shown as
+     * "Overdue" on lists; the stored status is unchanged.
+     */
+    public function isOverdue(): bool
+    {
+        return in_array($this->status, ['final', 'partially_paid'], true)
+            && (float) $this->balance > 0
+            && $this->due_date !== null
+            && $this->due_date->toDateString() < self::todayInIndia();
+    }
+
+    /** Whole days past the due date, or 0. */
+    public function overdueDays(): int
+    {
+        return $this->isOverdue()
+            ? (int) $this->due_date->copy()->startOfDay()->diffInDays(\Illuminate\Support\Carbon::parse(self::todayInIndia()))
+            : 0;
+    }
+
+    /** The status a list shows: the stored one, or "overdue" when it is. */
+    public function displayStatus(): string
+    {
+        return $this->isOverdue() ? 'overdue' : (string) $this->status;
+    }
+
+    public function displayStatusLabel(): string
+    {
+        return $this->isOverdue() ? 'Overdue' : $this->statusLabel();
+    }
+
+    /** "Overdue 12 days", "Due today", "Due 18 Nov", or null when nothing is owed. */
+    public function dueLabel(): ?string
+    {
+        if (! in_array($this->status, ['final', 'partially_paid'], true) || (float) $this->balance <= 0 || ! $this->due_date) {
+            return null;
+        }
+        if ($this->isOverdue()) {
+            $d = $this->overdueDays();
+
+            return 'Overdue ' . $d . ' ' . ($d === 1 ? 'day' : 'days');
+        }
+
+        return $this->due_date->toDateString() === self::todayInIndia() ? 'Due today' : 'Due ' . $this->due_date->format('d M');
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)->orderBy('received_at')->orderBy('id');

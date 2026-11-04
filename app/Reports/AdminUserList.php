@@ -73,11 +73,26 @@ class AdminUserList extends Report
             ['key' => 'state', 'label' => 'State', 'width' => 18],
             ['key' => 'pin', 'label' => 'PIN code', 'width' => 10],
             ['key' => 'signup', 'label' => 'Signed up with', 'width' => 14],
+            ['key' => 'source', 'label' => 'Came from', 'width' => 26],
+            ['key' => 'campaign', 'label' => 'Campaign', 'width' => 22],
             ['key' => 'registered', 'label' => 'Registered on', 'type' => 'date'],
             ['key' => 'businesses', 'label' => 'Businesses', 'type' => 'number'],
             ['key' => 'invoices', 'label' => 'Invoices issued', 'type' => 'number'],
             ['key' => 'marketing', 'label' => 'Marketing emails', 'width' => 12],
         ];
+    }
+
+    /** "Google Ads", or "source / medium" from UTM tags, or blank. */
+    private static function source(?array $a): ?string
+    {
+        if (! $a) {
+            return null;
+        }
+        if (! empty($a['gclid']) || ! empty($a['gbraid']) || ! empty($a['wbraid'])) {
+            return 'Google Ads';
+        }
+
+        return trim(($a['utm_source'] ?? '') . (! empty($a['utm_medium']) ? ' / ' . $a['utm_medium'] : '')) ?: null;
     }
 
     public function rows(): iterable
@@ -121,6 +136,8 @@ class AdminUserList extends Report
                 'state' => $company?->state?->name,
                 'pin' => $company?->postal_code,
                 'signup' => $u->google_id ? 'Google' : 'Email',
+                'source' => self::source($u->signup_attribution),
+                'campaign' => $u->signup_attribution['utm_campaign'] ?? null,
                 'registered' => $u->created_at,
                 'businesses' => (int) $u->companies_count,
                 'invoices' => (int) $u->issued_count,

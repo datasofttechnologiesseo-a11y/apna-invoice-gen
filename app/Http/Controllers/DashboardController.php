@@ -181,6 +181,57 @@ class DashboardController extends Controller
             ];
         }
 
+        // Bank statement lines not yet matched to anything in the books.
+        if (\App\Support\Team::can('bank.index')) {
+            $unmatchedLines = \App\Models\BankStatementLine::where('company_id', $company->id)
+                ->where('status', 'unmatched')->count();
+            if ($unmatchedLines > 0) {
+                array_unshift($laterItems, [
+                    'tone' => 'brand',
+                    'icon' => 'bank',
+                    'title' => $unmatchedLines === 1
+                        ? '1 bank line to review'
+                        : "{$unmatchedLines} bank lines to review",
+                    'sub'   => 'Match them to invoices, bills or expenses',
+                    'cta'   => 'Review',
+                    'href'  => route('bank.index'),
+                ]);
+            }
+        }
+
+        // "Who owes you": the five customers with the largest unpaid balance on
+        // issued invoices, in the same currency and on the same basis as the
+        // Outstanding receivables tile. Three queries in all, however many rows.
+        $whoOwes = collect();
+        if (\App\Support\Team::can('customers.ledger')) {
+            $owing = fn ($q) => $q->where('company_id', $company->id)
+                ->where('currency', $currency)
+                ->whereIn('status', ['final', 'partially_paid'])
+                ->where('balance', '>', 0);
+            $indiaToday = \App\Models\Invoice::todayInIndia();
+            $whoOwes = $company->customers()
+                ->whereHas('invoices', $owing)
+                ->withSum(['invoices as owed' => $owing], 'balance')
+                ->withMin(['invoices as oldest_overdue_due' => fn ($q) => $owing($q)
+                    ->whereNotNull('due_date')->where('due_date', '<', $indiaToday)], 'due_date')
+                ->orderByDesc('owed')
+                ->orderBy('name')
+                ->take(5)
+                ->get()
+                ->each(function ($c) use ($company, $indiaToday) {
+                    $c->overdue_days = $c->oldest_overdue_due
+                        ? (int) \Illuminate\Support\Carbon::parse($c->oldest_overdue_due)->startOfDay()
+                            ->diffInDays(\Illuminate\Support\Carbon::parse($indiaToday))
+                        : 0;
+                    $digits = \App\Models\Invoice::whatsAppNumber($c->phone);
+                    $c->remind_url = $digits
+                        ? 'https://wa.me/' . $digits . '?text=' . rawurlencode(
+                            "Namaste {$c->name}, this is a reminder from {$company->name} that ₹" . rupees($c->owed)
+                            . ' is due on your account. Please arrange the payment at the earliest. Thank you.')
+                        : null;
+                });
+        }
+
         $setup = [
             'business' => $company->isBusinessComplete(),
             'customer' => $company->customers()->exists(),
@@ -474,7 +525,7 @@ class DashboardController extends Controller
             'setupProgress',
             'receivables', 'spendByCategory', 'chartSeries',
             'greeting', 'firstName', 'festival', 'todayIssued', 'todayCollected',
-            'actionItems', 'isFirstRun', 'showReviewInvite'
+            'actionItems', 'isFirstRun', 'showReviewInvite', 'whoOwes'
         ));
     }
 }
