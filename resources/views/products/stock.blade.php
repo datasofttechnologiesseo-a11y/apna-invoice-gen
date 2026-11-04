@@ -4,6 +4,12 @@
         $price = (float) ($product->purchase_rate ?? $product->rate);
         $low = $product->low_stock_level !== null && $onHand <= (float) $product->low_stock_level;
         $qty = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.');
+        // Stock at the end of each day with a movement, oldest first, so a
+        // count dated in the past is compared with the books on that day.
+        $balanceOn = [];
+        foreach ($rows->reverse() as $r) {
+            $balanceOn[$r['movement']->moved_on->toDateString()] = (float) $r['balance'];
+        }
         $btnSecondary = 'inline-flex items-center justify-center h-10 px-4 bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 text-sm font-semibold rounded-md whitespace-nowrap';
         $field = 'mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm focus:border-brand-600 focus:ring-brand-600';
         // What each movement was and the document behind it.
@@ -77,7 +83,9 @@
             @if ($product->track_stock)
                 {{-- Adjust --}}
                 <section id="adjust" class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-4 sm:p-5"
-                         x-data="{ dir: @js(old('direction', request('mode') === 'count' ? 'count' : 'in')), reason: @js(old('reason', request('mode') === 'count' ? 'Physical count' : '')), qty: @js(old('quantity', '')), books: @js($onHand) }">
+                         x-data="{ dir: @js(old('direction', request('mode') === 'count' ? 'count' : 'in')), reason: @js(old('reason', request('mode') === 'count' ? 'Physical count' : '')), qty: @js(old('quantity', '')), day: @js(old('moved_on', now()->toDateString())),
+                                  opening: @js((float) $product->opening_stock), balanceOn: @js((object) $balanceOn),
+                                  get books() { let b = this.opening; for (const [d, v] of Object.entries(this.balanceOn)) { if (d <= this.day) b = v; } return b; } }">
                     <h2 class="text-sm font-semibold text-gray-900">Add, remove or count stock</h2>
                     <p class="text-sm text-gray-600 mt-0.5">
                         Issued invoices take stock out; purchase invoices bring it in.
@@ -113,7 +121,7 @@
                         </div>
                         <div class="col-span-1 sm:col-span-3">
                             <label for="adj_date" class="block text-sm font-medium text-gray-700">Date *</label>
-                            <input id="adj_date" name="moved_on" type="date" required value="{{ old('moved_on', now()->toDateString()) }}" max="{{ now()->toDateString() }}"
+                            <input id="adj_date" name="moved_on" type="date" required x-model="day" value="{{ old('moved_on', now()->toDateString()) }}" max="{{ now()->toDateString() }}"
                                    @error('moved_on') aria-invalid="true" aria-describedby="moved_on-error" @enderror class="{{ $field }} min-w-0">
                             <x-input-error :messages="$errors->get('moved_on')" for="moved_on" class="mt-1" />
                         </div>

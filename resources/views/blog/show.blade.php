@@ -98,16 +98,8 @@
         :author="$post->author?->name"
         :json-ld="array_values(array_filter([$articleJsonLd, $breadcrumbJsonLd, $faqJsonLd]))" />
     <link rel="alternate" type="application/rss+xml" title="{{ config('seo.name', config('app.name')) }} Blog" href="{{ route('blog.feed') }}">
-    {{-- crossorigin: font CSS + files are CORS-fetched, so the warmed
-         connection must match. Non-blocking load (media=print → all onload)
-         with a noscript fallback keeps fonts off the critical render path -
-         blog articles are the primary organic entry pages. Inter sets the
-         article body (as on every other page) and Jakarta the headings; the
-         separate serif body face was dropped, one font download fewer. --}}
-    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet"></noscript>
+    {{-- Inter sets the article body (as on every other page) and Jakarta the
+         headings, both served with the site's own stylesheet. --}}
     @if ($post->featured_image_path)
         {{-- Preload the cover - it's the article LCP on posts that have one. --}}
         <link rel="preload" as="image" href="{{ asset('storage/' . $post->featured_image_path) }}" fetchpriority="high">

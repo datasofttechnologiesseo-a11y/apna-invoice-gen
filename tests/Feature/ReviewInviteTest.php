@@ -19,7 +19,7 @@ class ReviewInviteTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const POSTER = 'brand/review-invite.png';
+    private const POSTER = 'brand/review-invite.webp';
 
     private User $user;
     private Company $company;
@@ -95,7 +95,7 @@ class ReviewInviteTest extends TestCase
         // The poster image sits inside a link to the review page that also
         // retires the invite.
         $this->assertMatchesRegularExpression(
-            '~<a href="https://g\.page/r/CTvUSP6MtrMaEBM/review"[^>]*@click="given\(\)"[^>]*>\s*<picture>~',
+            '~<a href="https://g\.page/r/CTvUSP6MtrMaEBM/review"[^>]*@click="given\(\)"[^>]*>\s*<img src="[^"]*brand/review-invite\.webp"~',
             $html
         );
     }

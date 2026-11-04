@@ -50,18 +50,37 @@ class BrandImage
         if (! $storedPath) {
             return;
         }
-        Storage::disk('public')->delete([$storedPath, self::tightPath($storedPath)]);
+        $tight = self::tightPath($storedPath);
+        Storage::disk('public')->delete([$storedPath, $tight, self::webpPath($tight)]);
     }
 
     /** Where the cropped copy of a stored image lives, on the public disk. */
     private static function tightPath(string $storedPath): string
     {
-        return ltrim(trim(dirname($storedPath), '.') . '/tight/' . pathinfo($storedPath, PATHINFO_FILENAME) . '.png', '/');
+        // A photographed (JPEG) logo stays JPEG: smaller PDFs to share, and
+        // no slow alpha-channel pass when the PDF is drawn.
+        $ext = self::isJpegLogo($storedPath) ? '.jpg' : '.png';
+
+        return ltrim(trim(dirname($storedPath), '.') . '/tight/' . pathinfo($storedPath, PATHINFO_FILENAME) . $ext, '/');
+    }
+
+    /** The WebP twin of a cropped copy, for screens (PDFs use the PNG/JPEG). */
+    private static function webpPath(string $tightPath): string
+    {
+        return preg_replace('/\.(png|jpe?g)$/i', '.webp', $tightPath);
+    }
+
+    private static function isJpegLogo(string $storedPath): bool
+    {
+        return ! str_starts_with($storedPath, 'signatures/')
+            && in_array(strtolower(pathinfo($storedPath, PATHINFO_EXTENSION)), ['jpg', 'jpeg'], true);
     }
 
     /**
      * Display size for a stored image inside a $boxW x $boxH box, keeping its
-     * shape. Null when there is no image or the file is missing.
+     * shape. Null when there is no image or the file is missing. 'file' is
+     * for the PDF renderer (PNG/JPEG); 'url' is for screens (WebP when it
+     * could be made: a fraction of the size).
      *
      * @return array{file: string, url: string, w: int, h: int, ratio: float}|null
      */
@@ -100,9 +119,11 @@ class BrandImage
     {
         $rel = self::tightPath($storedPath);
         $out = public_path('storage/' . $rel);
+        $webpRel = self::webpPath($rel);
+        $webp = public_path('storage/' . $webpRel);
         if (! is_file($out) || filemtime($out) < filemtime($file)) {
             try {
-                $bytes = self::crop($file, str_starts_with($storedPath, 'signatures/'));
+                $bytes = self::crop($file, str_starts_with($storedPath, 'signatures/'), self::isJpegLogo($storedPath));
             } catch (\Throwable) {
                 $bytes = null;
             }
@@ -118,13 +139,44 @@ class BrandImage
 
                 return null;
             }
+            @unlink($webp); // made again below from the new copy
+        }
+        if (! is_file($webp)) {
+            self::writeWebp($out, $webp);
         }
 
-        return [$out, asset('storage/' . $rel)];
+        return [$out, asset('storage/' . (is_file($webp) ? $webpRel : $rel))];
     }
 
-    /** The image cut to its artwork with no margin, as PNG bytes; a signature's paper made transparent. */
-    private static function crop(string $file, bool $signature): ?string
+    /** A WebP twin of the cropped copy, transparency kept. Skipped quietly if GD cannot. */
+    private static function writeWebp(string $from, string $to): void
+    {
+        if (! function_exists('imagewebp')) {
+            return;
+        }
+        try {
+            $img = @imagecreatefromstring((string) file_get_contents($from));
+            if (! $img) {
+                return;
+            }
+            $img = self::truecolor($img);
+            $tmp = $to . '.' . Str::random(8) . '.tmp';
+            if (@imagewebp($img, $tmp, 88) && filesize($tmp) > 0) {
+                @rename($tmp, $to);
+            }
+            @unlink($tmp);
+            imagedestroy($img);
+        } catch (\Throwable) {
+            // The PNG/JPEG copy is used instead.
+        }
+    }
+
+    /**
+     * The image cut to its artwork with no margin, no larger than an upload
+     * is kept (enough for sharp print); a signature's paper made transparent.
+     * PNG bytes, or JPEG for a JPEG logo.
+     */
+    private static function crop(string $file, bool $signature, bool $jpeg = false): ?string
     {
         if (! function_exists('imagecreatefromstring')) {
             return null;
@@ -140,12 +192,18 @@ class BrandImage
         if ($signature && $bg !== null) {
             self::clearBackground($img, $bg);
         }
+        [$maxW, $maxH] = $signature ? self::SIGNATURE_MAX : self::LOGO_MAX;
+        $img = self::scaleDown($img, $maxW, $maxH);
         ob_start();
-        imagepng($img, null, 9);
-        $png = (string) ob_get_clean();
+        if ($jpeg) {
+            imagejpeg($img, null, 90);
+        } else {
+            imagepng($img, null, 9);
+        }
+        $bytes = (string) ob_get_clean();
         imagedestroy($img);
 
-        return $png === '' ? null : $png;
+        return $bytes === '' ? null : $bytes;
     }
 
     private static function store(UploadedFile $file, string $dir, bool $signature): string

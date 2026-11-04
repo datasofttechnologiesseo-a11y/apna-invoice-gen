@@ -108,7 +108,7 @@
             ],
             'url' => $appUrl . '/',
             // The app icon (square), not the wide wordmark.
-            'image' => $appUrl . '/brand/icon-512.png',
+            'image' => $appUrl . '/brand/icon-512.webp',
             'applicationCategory' => 'BusinessApplication',
             'applicationSubCategory' => 'BillingAndInvoicing',
             'operatingSystem' => 'Any (web-based · PWA installable)',
@@ -159,16 +159,7 @@
     {{-- The logo is the one image in the first view (the sign-up form
          fills the hero; the screens sit below it). --}}
     <link rel="preload" href="{{ asset('brand/apna-invoice-logo-sm.webp') }}" as="image" type="image/webp" fetchpriority="high">
-    {{-- Fonts: warm the connection (crossorigin is REQUIRED - font files are
-         fetched with CORS, so a plain preconnect warms the wrong connection),
-         then load the stylesheet non-render-blocking. display=swap already
-         paints text immediately in a fallback face and swaps the web font in
-         on load, so making the request async costs nothing and frees up FCP. --}}
-    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|plus-jakarta-sans:600,700,800&display=swap">
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|plus-jakarta-sans:600,700,800&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|plus-jakarta-sans:600,700,800&display=swap"></noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @include('partials.google-analytics')

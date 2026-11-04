@@ -26,7 +26,7 @@
      role="region" aria-label="Install Apna Invoice">
     <div class="pointer-events-auto mx-auto max-w-md bg-white rounded-xl shadow-2xl ring-1 ring-gray-200 p-3">
         <div class="flex items-center gap-3">
-            <img src="/brand/icon-192.png?v=3" alt="" width="40" height="40" class="w-10 h-10 rounded-lg shrink-0">
+            <img src="/brand/icon-192.webp?v=3" alt="" width="40" height="40" class="w-10 h-10 rounded-lg shrink-0">
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold text-gray-900">Install Apna Invoice</p>
                 <p class="text-xs text-gray-600">Opens from your home screen like an app. Free.</p>

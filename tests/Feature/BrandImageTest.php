@@ -117,6 +117,7 @@ class BrandImageTest extends TestCase
         } finally {
             @unlink($file);
             @unlink(dirname($file) . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.png');
+            @unlink(dirname($file) . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.webp');
         }
     }
 
@@ -133,8 +134,11 @@ class BrandImageTest extends TestCase
         $tight = $dir . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.png';
         try {
             $fit = BrandImage::fit('logos/' . basename($file), 240, 64);
-            $this->assertSame($tight, $fit['file']);
-            $this->assertStringEndsWith('/storage/logos/tight/' . basename($tight), $fit['url']);
+            $this->assertSame($tight, $fit['file'], 'the PDF draws the PNG');
+            // Screens get the WebP twin.
+            $webp = substr($tight, 0, -4) . '.webp';
+            $this->assertStringEndsWith('/storage/logos/tight/' . basename($webp), $fit['url']);
+            $this->assertSame(IMAGETYPE_WEBP, getimagesize($webp)[2]);
             $this->assertEqualsWithDelta(3.0, $fit['ratio'], 0.05, 'the artwork, not the margin, sets the shape');
             $this->assertSame([192, 64], [$fit['w'], $fit['h']]);
             // The artwork starts at the very edge: it lines up with the text beside it.
@@ -145,6 +149,46 @@ class BrandImageTest extends TestCase
         } finally {
             @unlink($file);
             @unlink($tight);
+            @unlink(substr($tight, 0, -4) . '.webp');
+        }
+    }
+
+    public function test_a_jpeg_logo_stays_jpeg_when_cropped(): void
+    {
+        $dir = public_path('storage/logos');
+        @mkdir($dir, 0777, true);
+        $file = $dir . '/photo-logo-' . uniqid() . '.jpg';
+        $img = imagecreatetruecolor(800, 400);
+        imagefill($img, 0, 0, imagecolorallocate($img, 255, 255, 255));
+        imagefilledrectangle($img, 200, 100, 599, 299, imagecolorallocate($img, 200, 40, 40));
+        imagejpeg($img, $file, 92);
+        $tight = $dir . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.jpg';
+        try {
+            $fit = BrandImage::fit('logos/' . basename($file), 240, 64);
+            $this->assertSame($tight, $fit['file']);
+            $this->assertSame(IMAGETYPE_JPEG, getimagesize($tight)[2]);
+            $this->assertEqualsWithDelta(2.0, $fit['ratio'], 0.05);
+        } finally {
+            @unlink($file);
+            @unlink($tight);
+            @unlink(substr($tight, 0, -4) . '.webp');
+        }
+    }
+
+    public function test_removing_an_image_removes_its_cropped_copy_too(): void
+    {
+        Storage::disk('public')->put('logos/abc.jpg', 'x');
+        Storage::disk('public')->put('logos/tight/abc.jpg', 'x');
+        Storage::disk('public')->put('logos/tight/abc.webp', 'x');
+        Storage::disk('public')->put('signatures/def.png', 'x');
+        Storage::disk('public')->put('signatures/tight/def.png', 'x');
+
+        BrandImage::delete('logos/abc.jpg');
+        BrandImage::delete('signatures/def.png');
+        BrandImage::delete(null);
+
+        foreach (['logos/abc.jpg', 'logos/tight/abc.jpg', 'logos/tight/abc.webp', 'signatures/def.png', 'signatures/tight/def.png'] as $path) {
+            Storage::disk('public')->assertMissing($path);
         }
     }
 
@@ -167,6 +211,7 @@ class BrandImageTest extends TestCase
         } finally {
             @unlink($file);
             @unlink($tight);
+            @unlink(substr($tight, 0, -4) . '.webp');
         }
     }
 }

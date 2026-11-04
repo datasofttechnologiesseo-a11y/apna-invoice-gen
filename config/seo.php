@@ -68,11 +68,11 @@ return [
         'name' => 'Apna Invoice',
         'legal_name' => 'Datasoft Technologies',
         'url' => rtrim(env('APP_URL', 'https://apnainvoice.com'), '/') . '/',
-        'logo' => '/brand/apna-invoice-logo-512.png',
+        'logo' => '/brand/apna-invoice-logo-512.webp',
         'parent' => [
             'name' => 'Datasoft Technologies',
             'url' => 'https://www.datasofttechnologies.com/',
-            'logo' => '/brand/dst-logo.png',
+            'logo' => '/brand/dst-logo.webp',
         ],
         'country' => 'IN',
         'locality' => 'Delhi NCR',

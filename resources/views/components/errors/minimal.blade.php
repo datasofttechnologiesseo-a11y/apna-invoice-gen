@@ -10,9 +10,6 @@
     <link rel="icon" type="image/png" sizes="48x48" href="/brand/favicon-48.png?v=3">
     <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png?v=3">
     <meta name="theme-color" content="#167c88">
-    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|plus-jakarta-sans:700,800&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|plus-jakarta-sans:700,800&display=swap"></noscript>
     @vite(['resources/css/app.css'])
 
     @include('partials.google-analytics')

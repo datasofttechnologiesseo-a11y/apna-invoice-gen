@@ -73,9 +73,9 @@
 
             <h2 id="review-invite-title" class="sr-only">Leave us a Google review</h2>
 
-            {{-- 800px wide covers 2x retina in a modal this size. WebP first:
-                 the source PNG was 1.5 MB, which is several seconds on the
-                 mobile data this audience actually uses. --}}
+            {{-- 800px wide covers 2x retina in a modal this size. WebP only
+                 (93 KB): the PNG was 1 MB, several seconds on the mobile data
+                 this audience actually uses, and every current browser shows WebP. --}}
             @if ($reviewUrl)
                 <a href="{{ $reviewUrl }}" target="_blank" rel="noopener"
                    @click="given()"
@@ -84,14 +84,11 @@
             @else
                 <div class="relative">
             @endif
-                <picture>
-                    <source srcset="{{ asset('brand/review-invite.webp') }}" type="image/webp">
-                    <img src="{{ asset('brand/review-invite.png') }}"
-                         alt="Love our service? Leave us a review. Scan the QR code to share your experience on Google."
-                         class="w-full h-auto rounded-t-2xl"
-                         loading="lazy" decoding="async"
-                         width="800" height="1200">
-                </picture>
+                <img src="{{ asset('brand/review-invite.webp') }}"
+                     alt="Love our service? Leave us a review. Scan the QR code to share your experience on Google."
+                     class="w-full h-auto rounded-t-2xl"
+                     loading="lazy" decoding="async"
+                     width="800" height="1200">
                 @if ($scanQr)
                     {{-- Laid exactly over the printed code (x 100-368, y 498-766
                          of the 800 x 1200 poster), so it scales with the image. --}}

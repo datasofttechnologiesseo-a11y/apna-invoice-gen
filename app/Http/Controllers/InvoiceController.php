@@ -83,10 +83,14 @@ class InvoiceController extends Controller
         foreach (['' => null, 'draft' => 'draft', 'outstanding' => 'outstanding', 'overdue' => 'overdue', 'paid' => 'paid', 'cancelled' => 'cancelled'] as $key => $s) {
             $chipCounts[$key] = $filtered($s)->count();
         }
-        // Totals of everything the filter matches, not just this page. A
-        // cancelled invoice is not owed, so it adds nothing to the balance.
+        // Totals of everything the filter matches, not just this page. Only
+        // issued invoices are billed and owed: a draft is not a bill yet and a
+        // cancelled one is not owed, so neither adds to Total or To receive
+        // (the same figure the Unpaid tab, Customers and the dashboard show).
+        // On the Drafts tab the total is what the drafts add up to.
+        $billed = $status === 'draft' ? "status = 'draft'" : "status NOT IN ('draft', 'cancelled')";
         $listTotals = $filtered($status)->toBase()
-            ->selectRaw("COUNT(*) as n, COALESCE(SUM(CASE WHEN status <> 'cancelled' THEN grand_total ELSE 0 END), 0) as total, COALESCE(SUM(CASE WHEN status <> 'cancelled' THEN balance ELSE 0 END), 0) as balance")
+            ->selectRaw("COUNT(*) as n, COALESCE(SUM(CASE WHEN {$billed} THEN grand_total ELSE 0 END), 0) as total, COALESCE(SUM(CASE WHEN status NOT IN ('draft', 'cancelled') THEN balance ELSE 0 END), 0) as balance")
             ->first();
 
         // Section-tab stats — total + a "needs attention" sub-stat per doc

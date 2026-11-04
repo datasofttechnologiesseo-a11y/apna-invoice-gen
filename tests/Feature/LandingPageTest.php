@@ -76,6 +76,16 @@ class LandingPageTest extends TestCase
         ])->assertSessionHasNoErrors()->assertRedirect(route('register.verify'));
     }
 
+    public function test_a_sign_up_that_leaves_out_the_captcha_is_refused(): void
+    {
+        config(['captcha.secret_key' => 'test-secret']);
+        $this->from('/start')->post(route('register'), [
+            'name' => 'Bot', 'phone' => '9876543210', 'email' => 'bot@example.in',
+            'password' => 'Str0ng-pass-123', 'terms_accepted' => true,
+        ])->assertRedirect('/start')->assertSessionHasErrors('cf-turnstile-response');
+        $this->assertDatabaseMissing('users', ['email' => 'bot@example.in']);
+    }
+
     public function test_signed_in_visitors_see_the_dashboard_link_instead_of_the_form(): void
     {
         $user = User::factory()->create();

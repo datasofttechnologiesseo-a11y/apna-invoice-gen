@@ -188,7 +188,11 @@
                 </div>
             @endif
 
-            <form id="invoice-form" method="POST" action="{{ $invoice->exists ? route('invoices.update', $invoice) : route('invoices.store') }}" class="space-y-5">
+            {{-- A required field inside a folded phone card is hidden, and the
+                 browser cannot point at a hidden field: Save would just do nothing.
+                 openInvalidRow() unfolds that card and shows the message. --}}
+            <form id="invoice-form" method="POST" action="{{ $invoice->exists ? route('invoices.update', $invoice) : route('invoices.store') }}" class="space-y-5"
+                  @invalid.capture="openInvalidRow($event.target)">
                 @csrf
                 @if ($invoice->exists) @method('PATCH') @endif
                 <input type="hidden" name="currency" value="INR">
@@ -343,7 +347,8 @@
                                     @if (! $restricted)
                                         <span class="flex items-center gap-3">
                                         {{-- Fold a finished line so the next one is in reach. --}}
-                                        <button type="button" :class="rowOpen(item, idx) && rowHasContent(item) && ! rowHasError(idx) ? '' : 'hidden'" @click="item._open = false"
+                                        <button type="button" :class="rowOpen(item, idx) && rowHasContent(item) && ! rowHasError(idx) ? '' : 'hidden'"
+                                                @click="rowValid(idx) ? (item._open = false) : $el.closest('[data-row-index]').querySelector(':invalid')?.reportValidity()"
                                                 class="inline-flex items-center min-h-[40px] text-sm font-semibold text-brand-700">Done</button>
                                         <button type="button" @click="removeRow(idx)"
                                                 :disabled="items.length <= 1"
@@ -1005,6 +1010,19 @@
                 rowOpen(item, idx) {
                     return item._open !== false || this.rowHasError(idx);
                 },
+                // Every field on the line passes the browser's checks (HSN when
+                // required, quantity, rate). Reads validity without firing events.
+                rowValid(idx) {
+                    return [...this.$root.querySelectorAll(`[data-row-index="${idx}"] :is(input, select, textarea)`)]
+                        .every((el) => el.disabled || el.validity.valid);
+                },
+                openInvalidRow(el) {
+                    const card = el && el.closest ? el.closest('[data-row-index]') : null;
+                    const row = card ? this.items[+card.dataset.rowIndex] : null;
+                    if (! row || row._open !== false) return; // only a folded card needs this
+                    row._open = true;
+                    this.$nextTick(() => document.getElementById('invoice-form')?.reportValidity());
+                },
                 rowSummary(item) {
                     const qty = parseFloat(item.quantity) || 0;
                     return qty + (item.unit ? ' ' + item.unit : '') + ' × ₹' + this.fmt(parseFloat(item.rate) || 0) + ' · ' + (parseFloat(item.gst_rate) || 0) + '% GST';
@@ -1241,7 +1259,8 @@
                 addRow() {
                     // Stamp a fresh _uid so x-for keying is stable across splice()s.
                     // Fold the lines already filled in so the new one is in view on a phone.
-                    this.items.forEach((r) => { if (this.rowHasContent(r)) r._open = false; });
+                    // A line with a field still to fill (HSN, quantity) stays open.
+                    this.items.forEach((r, i) => { if (this.rowHasContent(r) && this.rowValid(i)) r._open = false; });
                     this.items.push({_uid: this._newUid(), _prevProductName: null, _open: true, _descOpen: false, product_id: null, description: '', hsn_sac: '', quantity: 1, unit: '', rate: 0, discount: 0, gst_rate: 18, amount: 0, tax: 0, total: 0});
                 },
 

@@ -126,6 +126,25 @@ class InvoiceListCancelTest extends TestCase
         $this->assertStringNotContainsString(route('credit-notes.create', $cancelled), $html);
     }
 
+    public function test_list_totals_count_only_issued_invoices_as_billed_and_owed(): void
+    {
+        $this->issued(['grand_total' => 10000, 'balance' => 10000]);
+        $this->issued(['grand_total' => 4000, 'balance' => 0, 'paid_amount' => 4000, 'status' => 'paid']);
+        $this->issued(['grand_total' => 3000, 'balance' => 3000, 'status' => 'cancelled', 'cancelled_at' => now(), 'cancellation_reason' => 'Duplicate bill']);
+        Invoice::factory()->recycle($this->user)->create(['company_id' => $this->company->id, 'status' => 'draft', 'grand_total' => 5000, 'balance' => 5000]);
+
+        $text = fn (string $q = '') => preg_replace('/\s+/', ' ', strip_tags(
+            $this->actingAs($this->user)->get(route('invoices.index') . $q)->assertOk()->getContent()));
+
+        // All: 4 rows; billed 10,000 + 4,000; owed 10,000. The draft and the cancelled bill add nothing.
+        $all = $text();
+        $this->assertStringContainsString('4 invoices · Total ₹14,000 · To receive ₹10,000', $all);
+        // Drafts: what they add up to, and nothing to receive.
+        $drafts = $text('?status=draft');
+        $this->assertStringContainsString('1 invoice · Total ₹5,000', $drafts);
+        $this->assertStringNotContainsString('To receive', $drafts);
+    }
+
     public function test_no_warning_before_the_months_gstr1_due_date(): void
     {
         // 5 Nov invoice, today 20 Nov: November's GSTR-1 is due 11 Dec.

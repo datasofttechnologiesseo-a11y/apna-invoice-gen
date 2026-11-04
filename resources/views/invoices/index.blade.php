@@ -87,8 +87,10 @@
                         {{ number_format((int) $listTotals->n) }} {{ (int) $listTotals->n === 1 ? 'invoice' : 'invoices' }}
                         <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
                         Total <span class="font-mono font-semibold text-gray-900">₹{{ rupees((float) $listTotals->total) }}</span>
-                        <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
-                        To receive <span class="font-mono font-semibold {{ (float) $listTotals->balance > 0 ? 'text-accent-800' : 'text-gray-900' }}">₹{{ rupees((float) $listTotals->balance) }}</span>
+                        @if (request('status') !== 'draft')
+                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                            To receive <span class="font-mono font-semibold {{ (float) $listTotals->balance > 0 ? 'text-accent-800' : 'text-gray-900' }}">₹{{ rupees((float) $listTotals->balance) }}</span>
+                        @endif
                     </p>
                 @endif
                 @endif

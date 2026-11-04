@@ -129,7 +129,7 @@
         '@id' => $origin . '#software',
         'name' => $appName,
         'url' => $origin . '/',
-        'image' => $origin . '/brand/icon-512.png',
+        'image' => $origin . '/brand/icon-512.webp',
         'screenshot' => $origin . '/brand/screens/invoice-view.webp',
         'applicationCategory' => 'BusinessApplication',
         'applicationSubCategory' => 'BillingAndInvoicing',

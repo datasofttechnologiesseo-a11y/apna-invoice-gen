@@ -122,7 +122,7 @@ final class BrandSchema
             // Two real alternative names, not a list of search phrases.
             'alternateName' => ['ApnaInvoice', 'Apna Invoice GST billing software'],
             'url' => $o . '/',
-            'image' => $o . '/brand/icon-512.png',
+            'image' => $o . '/brand/icon-512.webp',
             'screenshot' => [$o . '/brand/screens/invoice-view.webp', $o . '/brand/screens/dashboard.webp'],
             'applicationCategory' => 'BusinessApplication',
             'applicationSubCategory' => 'Billing and invoicing',
