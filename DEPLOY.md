@@ -223,6 +223,46 @@ website runs on (from this site's nginx config, or `DEPLOY_PHP_VERSION=8.2` in
 `.env` if you want to set it yourself), runs Composer and artisan with that
 PHP, and stops before going live if the installed packages don't load.
 
+It also protects users from a bad deploy:
+
+- Before migrating it backs up the database to
+  `storage/app/deploy-backups/` (the five most recent are kept). MySQL needs
+  `mysqldump` on the server. No backup, no migration; set
+  `DEPLOY_SKIP_DB_BACKUP=true` in `.env` only if you take your own dump first.
+- If any step fails, the version that was running before is put back
+  automatically. If a migration failed part way, the database is restored
+  from that backup first.
+- After going live it opens `/up` and `/login`. A 5xx there puts the previous
+  version back. If the server can't reach its own URL it only warns; open the
+  site and check it yourself.
+
+Migrations must stay additive (new columns, new tables, data fixes that only
+fill in). That is what lets the old code run on the new schema when a deploy
+is rolled back after going live.
+
+### A deploy failed
+
+Read the last `[WARN]`/`[ERROR]` lines of the deploy output.
+
+- **"The previous version is live again"**: users are on the old version and
+  nothing is lost. Fix the error shown above it and deploy again.
+- **"The site stays in maintenance mode"**: the script could not undo things
+  by itself. Users see the "back soon" page. In the app folder:
+
+  ```bash
+  git log -1 --oneline                       # what is checked out now
+  git reset --hard <previous commit>         # the one the deploy printed as "A -> B"
+  php8.2 $(which composer) install --no-dev --optimize-autoloader
+  # only if a migration failed part way (the message names the file):
+  gunzip -c storage/app/deploy-backups/db-<stamp>.sql.gz | mysql -u <user> -p <database>
+  php8.2 artisan optimize:clear && php8.2 artisan optimize
+  sudo systemctl restart php8.2-fpm
+  php8.2 artisan up
+  ```
+
+- **"Could not back up the database"**: nothing was changed. Install the MySQL
+  client (`sudo apt install mysql-client`) and deploy again.
+
 By hand:
 
 > **Never run `composer update` on the server.** Always `composer install`,
