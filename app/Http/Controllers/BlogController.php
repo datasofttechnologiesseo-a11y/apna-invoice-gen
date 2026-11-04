@@ -38,7 +38,21 @@ class BlogController extends Controller
         // budget. Serve a real 404 instead. Page 1 of an empty blog stays valid.
         abort_if($posts->currentPage() > $posts->lastPage(), 404);
 
-        return view('blog.index', compact('posts'));
+        // Topic filters above the list: the tags used on at least two posts,
+        // most used first. Tags are meta_keywords (see Post::topics()) and the
+        // search above already matches that column, so each chip is a search.
+        $topics = Post::published()
+            ->whereNotNull('meta_keywords')
+            ->pluck('meta_keywords')
+            ->flatMap(fn ($k) => (new Post(['meta_keywords' => $k]))->topics())
+            ->countBy()
+            ->filter(fn ($n) => $n >= 2)
+            ->sortDesc()
+            ->take(8)
+            ->keys()
+            ->all();
+
+        return view('blog.index', compact('posts', 'topics'));
     }
 
     /**

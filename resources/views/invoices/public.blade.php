@@ -30,6 +30,8 @@
         :title="$docTitle . ' ' . $number"
         :description="$docTitle . ' ' . $number . ' from ' . ($c?->name ?: 'a business') . ' for ' . $grand . '. View or download the PDF, and pay by UPI.'"
         :og-title="$ogTitle"
+        {{-- og:url keeps the signature: Facebook and LinkedIn fetch it again. --}}
+        :url="rtrim(config('app.url'), '/') . '/' . request()->path() . (request()->getQueryString() ? '?' . request()->getQueryString() : '')"
         :noindex="true" />
     @vite(['resources/css/app.css'])
 </head>

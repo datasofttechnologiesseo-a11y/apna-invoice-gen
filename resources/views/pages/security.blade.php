@@ -1,7 +1,7 @@
 <x-layouts.marketing
     title="Security and data protection"
     eyebrow="Trust"
-    lead="How we protect your invoices, customer data, and account. Transparent practices, no marketing theatre."
+    lead="How we protect your invoices, customer data and account."
     description="How we keep your invoice and customer data safe: encrypted in transit and at rest, access controls, daily backups and responsible disclosure."
     keywords="Apna Invoice security, invoice software security India, SaaS encryption India, GST data security, DPDP Act security, responsible disclosure Datasoft"
     type="article"

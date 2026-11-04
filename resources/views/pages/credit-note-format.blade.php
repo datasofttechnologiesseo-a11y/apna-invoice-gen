@@ -54,7 +54,7 @@
 <x-layouts.marketing
     title="GST credit note format and rules"
     eyebrow="Guide"
-    lead="When to issue a credit note, what it must contain under Section 34 of the CGST Act, the 30 November deadline that catches businesses out, and a free way to issue compliant credit notes."
+    lead="When to issue a credit note, what it must contain under Section 34 of the CGST Act, the 30 November deadline, and a free way to issue compliant credit notes."
     description="GST credit note format under Section 34: mandatory fields, the 30 November deadline, credit note vs debit note, and how the tax reversal works. Issue them free."
     keywords="credit note format GST, GST credit note, credit note under GST, section 34 CGST credit note, credit note format India, credit note time limit GST, credit note against invoice, sales return GST credit note"
     type="article"
@@ -127,11 +127,11 @@
         <li>Signature or digital signature of the supplier or authorised signatory</li>
     </ul>
 
-    <h2>The deadline most businesses miss</h2>
+    <h2>The 30 November deadline</h2>
     <div class="mt-4 flex gap-3 rounded-lg border-l-[3px] border-accent-500 bg-accent-50/70 px-5 py-4 text-gray-700">
         <svg class="mt-1 w-5 h-5 shrink-0 text-accent-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         <p>
-            Section 34(2) sets a hard clock: the credit note must be declared in a return <strong>no later than 30 November
+            Section 34(2) sets the time limit: the credit note must be declared in a return <strong>no later than 30 November
             following the end of the financial year of the original supply</strong> (or the annual return date, if earlier).
             A March 2026 invoice, for instance, can be credited with GST effect only until 30 November 2026. After that, a
             credit note can still settle accounts commercially, but it cannot reduce your GST liability.
@@ -144,13 +144,13 @@
         The credit note reverses tax at the same rate and in the same heads as the original invoice (CGST + SGST for a
         same-state supply, IGST for inter-state), in proportion to the amount credited. It reduces your outward liability
         in GSTR-1 and GSTR-3B for the period you declare it, and the buyer (if registered) must reverse the matching
-        input tax credit. To sanity-check any split, use the
+        input tax credit. To check a split, use the
         <a href="{{ route('pages.gst-calculator') }}">free GST calculator</a>.
     </p>
 
     <h2>Issue compliant credit notes, free</h2>
     <p>
-        In {{ $appName }}, a credit note is two clicks from the invoice it corrects: pick a reason, enter the amount
+        In {{ $appName }}, you raise a credit note from the invoice it corrects: pick a reason, enter the amount
         (full or partial), and the CGST/SGST/IGST reversal, serial numbering, invoice reference and Section 34 deadline
         check are handled for you. The buyer gets a PDF and the reversal flows into your GSTR-1.
         <a href="{{ route('register') }}">Create a free account</a>, or start from the

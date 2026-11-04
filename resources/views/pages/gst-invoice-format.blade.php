@@ -87,17 +87,17 @@
 <x-layouts.marketing
     title="GST invoice format: rules and template"
     eyebrow="Guide"
-    lead="Everything a GST invoice must contain under CGST Rule 46, explained in plain English, with a sample layout and a free way to make one."
+    lead="Everything a GST invoice must contain under CGST Rule 46, with a sample layout and a free way to make one."
     description="GST invoice format for India. The mandatory fields under CGST Rule 46, the CGST, SGST and IGST split, HSN and SAC codes, a sample layout and a free template."
     keywords="GST invoice format, tax invoice format India, GST compliant invoice, HSN code invoice, SAC code invoice, CGST SGST IGST invoice, GST invoice format download, GST bill format"
     type="article"
     :json-ld="[$articleSchema, $howToSchema, $faqSchema]">
 
     <p>
-        A GST invoice is not just a bill. It is a legal document, and the rules for what it must contain come from
+        A GST invoice is a legal document, and what it must contain is set by
         <strong>CGST Rule 46</strong>. Get the fields right and your customer can claim input tax credit and your books
         stay clean. Get them wrong and you invite queries at filing time. This guide lists what belongs on a GST
-        invoice, shows a sample layout, and gives you a free way to make one without memorising any of it.
+        invoice, shows a sample layout, and shows how to make one free.
     </p>
 
     <h2>The mandatory fields on a GST invoice</h2>
@@ -235,9 +235,9 @@
         </ol>
     </div>
 
-    <h2>Make a GST invoice free, without the manual work</h2>
+    <h2>Make a GST invoice free</h2>
     <p>
-        You should not have to remember Rule 46 to send a bill. With <strong>{{ $appName }}</strong> you pick the customer,
+        With <strong>{{ $appName }}</strong> you pick the customer,
         add the items, and the GSTIN, place of supply, CGST, SGST and IGST split and HSN or SAC fields are handled for you.
         You get a compliant PDF, ready to share on WhatsApp.
         <a href="{{ route('register') }}">Create your first GST invoice free</a>, or try the

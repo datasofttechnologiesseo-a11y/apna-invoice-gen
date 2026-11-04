@@ -85,7 +85,7 @@
                                 <li>
                                     <a href="{{ $link['href'] }}"
                                        @if (! empty($link['external'])) target="_blank" rel="noopener noreferrer" @endif
-                                       class="inline-flex items-center gap-1.5 py-1.5 text-gray-600 hover:text-gray-900 hover:underline underline-offset-4 decoration-gray-300 transition-colors">
+                                       class="inline-flex items-center gap-1.5 py-2.5 sm:py-1.5 text-gray-600 hover:text-gray-900 hover:underline underline-offset-4 decoration-gray-300 transition-colors">
                                         {{ $link['label'] }}
                                         @if (! empty($link['external']))
                                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
@@ -152,14 +152,14 @@
                 <div class="text-center sm:text-left">
                     &copy; {{ now()->year }}
                     <a href="https://www.datasofttechnologies.com/" target="_blank" rel="noopener"
-                       class="font-semibold text-gray-600 hover:text-brand-700 transition">Datasoft Technologies</a>. All rights reserved.
+                       class="inline-block py-2 sm:py-0 font-semibold text-gray-600 hover:text-brand-700 transition">Datasoft Technologies</a>. All rights reserved.
                 </div>
                 <div class="flex flex-wrap items-center justify-center gap-x-1 gap-y-1">
                     {{-- WhatsApp support lives in the ribbon (and the top bar), not
                          in a bubble floating over the page. --}}
                     @if ($wa = config('seo.contact.whatsapp_url'))
                         <a href="{{ $wa }}" target="_blank" rel="noopener"
-                           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold text-[#0f7540] bg-[#0f7540]/[0.07] hover:bg-[#0f7540]/[0.14] transition">
+                           class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1 rounded-full font-semibold text-[#0f7540] bg-[#0f7540]/[0.07] hover:bg-[#0f7540]/[0.14] transition">
                             <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
                             Chat with us
                         </a>

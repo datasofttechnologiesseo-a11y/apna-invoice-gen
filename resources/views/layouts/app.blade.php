@@ -106,6 +106,10 @@
         {{-- No floating chat bubble inside the app: WhatsApp support is in the
              top bar, the footer ribbon and (on phones) the menu. --}}
         @include('partials.cookie-banner')
+        {{-- Inside the app only on the dashboard: other screens have their own bottom bars. --}}
+        @if (request()->routeIs('dashboard'))
+            @include('partials.install-app')
+        @endif
         @stack('scripts')
     </body>
 </html>

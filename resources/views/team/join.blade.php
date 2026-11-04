@@ -1,4 +1,5 @@
-<x-guest-layout>
+{{-- A private invitation: never in search results. --}}
+<x-guest-layout :title="'Join a team'" :noindex="true">
     <div class="text-center">
         <div class="text-xs font-semibold text-brand-700">Invitation</div>
         <h1 class="mt-1 font-display text-xl font-extrabold text-gray-900">Join {{ $member->company->name }}</h1>

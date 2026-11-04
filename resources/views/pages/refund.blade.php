@@ -2,7 +2,7 @@
 <x-layouts.marketing
     title="Refund policy"
     eyebrow="Legal"
-    lead="Fair, predictable refunds. While the Service is free during beta, this policy applies once paid plans launch."
+    lead="How cancellations and refunds work. The Service is free during beta, so this policy applies once paid plans launch."
     description="Our refund policy: 14-day money-back on annual plans, rules for monthly cancellations and duplicate charges, GST credit notes, and how long refunds take."
     keywords="Apna Invoice refund policy, SaaS refund India, invoice software money-back, GST credit note, Datasoft Technologies billing"
     type="article"

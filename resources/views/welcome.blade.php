@@ -81,43 +81,8 @@
         // FAQPage schema now lives on the dedicated /faq page, and HowTo on
         // /how-to-use - those pages own that structured data so it isn't
         // duplicated across two URLs. The home page keeps a visible FAQ.
-        // WebApplication schema, declares the page hosts a free GST calculator
-        // tool. Targets rich-result eligibility for "free GST calculator",
-        // "GST calculator India", "CGST SGST IGST calculator" queries.
-        [
-            '@context' => 'https://schema.org',
-            '@type' => 'WebApplication',
-            'name' => 'Free GST Calculator',
-            'alternateName' => [
-                'GST Calculator India',
-                'Online GST Calculator',
-                'CGST SGST IGST Calculator',
-                'Reverse GST Calculator',
-                'Free GST Tax Calculator',
-            ],
-            'url' => $appUrl . '/#gst-calculator',
-            'applicationCategory' => 'FinanceApplication',
-            'operatingSystem' => 'Any (web-based)',
-            'browserRequirements' => 'Requires JavaScript',
-            'inLanguage' => 'en-IN',
-            'isAccessibleForFree' => true,
-            'description' => 'Free online GST calculator for India, compute CGST, SGST and IGST on any amount. Supports intra-state and inter-state supplies, plus tax-inclusive and tax-exclusive modes (reverse GST). Works with the 0%, 5%, 18% and 40% slabs. No login, no signup, runs in your browser.',
-            'featureList' => [
-                'Calculate CGST + SGST for intra-state supplies',
-                'Calculate IGST for inter-state supplies',
-                'Reverse-calculate GST from a tax-inclusive price',
-                'Quick presets: ₹1K / ₹10K / ₹50K / ₹1L / ₹5L',
-                'WhatsApp share of the calculation result',
-                'No login or signup required',
-            ],
-            'offers' => [
-                '@type' => 'Offer',
-                'price' => '0',
-                'priceCurrency' => 'INR',
-            ],
-            'creator' => $orgRef,
-            'publisher' => $orgRef,
-        ],
+        // The GST calculator is described on /gst-calculator itself; a second
+        // node here, with another name and URL, conflicted with it.
         // SoftwareApplication schema, declares the invoicing/billing tool
         // itself. Targets rich-result eligibility for "online invoice generator",
         // "free bill generator", "GST bill generator", "invoice generator India".
@@ -908,6 +873,7 @@
 
 <x-whatsapp-float />
 @include('partials.cookie-banner')
+@include('partials.install-app')
 
 </body>
 </html>

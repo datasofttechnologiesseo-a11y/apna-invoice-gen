@@ -9,7 +9,7 @@
         '@context' => 'https://schema.org',
         '@type' => 'Blog',
         'name' => 'Apna Invoice Blog',
-        'description' => 'GST tips, invoicing how-tos, and Indian small-business finance guides, written by the Apna Invoice team.',
+        'description' => 'GST rules, invoices and returns explained for Indian shop owners, traders, freelancers and CAs, by the Apna Invoice team.',
         'url' => $blogUrl,
         'inLanguage' => 'en-IN',
         // The home page's Organization and WebSite nodes, by @id: the blog is
@@ -57,8 +57,8 @@
         {{-- Page 2+ stand on their own canonicals, so each needs its own
              title; otherwise every page of the archive repeats page 1's. --}}
         :title="'GST and invoicing blog for small business' . ($posts->currentPage() > 1 ? ' (Page ' . $posts->currentPage() . ')' : '')"
-        description="Practical guides on GST invoicing, HSN/SAC codes, GSTR-1 / GSTR-3B filing, and small-business cash flow, written for Indian MSMEs, freelancers and CAs."
-        keywords="GST blog India, invoicing tips, HSN SAC guide, GSTR-1 filing, MSME finance, free GST invoice software"
+        description="Guides on GST invoices, HSN codes, GSTR-1, GSTR-3B, credit notes and getting paid on time, for Indian shop owners, traders, freelancers and CAs."
+        keywords="GST blog India, GST invoice rules, HSN SAC guide, GSTR-1 filing, GSTR-3B, free GST invoice software"
         type="website"
         :json-ld="[$blogJsonLd]" />
     <link rel="alternate" type="application/rss+xml" title="{{ config('seo.name', config('app.name')) }} Blog" href="{{ route('blog.feed') }}">
@@ -75,39 +75,68 @@
 
 <x-site-header />
 
+@php
+    $search = trim((string) request('search'));
+    $activeTopic = $search !== '' ? mb_strtolower($search) : null;
+    $chip = 'inline-flex items-center min-h-[36px] px-3 rounded-lg text-sm font-medium ring-1 transition';
+    $chipOff = 'bg-white text-gray-700 ring-gray-300 hover:ring-gray-400 hover:text-gray-900';
+    $chipOn = 'bg-brand-700 text-white ring-brand-700';
+    // Tags are stored lower-case; print GST, HSN, GSTR-1 and the like in capitals.
+    $topicLabel = fn (string $t) => \Illuminate\Support\Str::ucfirst(preg_replace_callback(
+        '/\b(gstr-?\w+|gstin|gst|hsn|sac|itc|tds|tcs|upi|msme|b2b|b2c|rcm|lut|sez|pan|igst|cgst|sgst|utgst|ca)\b/u',
+        fn ($m) => mb_strtoupper($m[1]), $t));
+@endphp
 <section class="bg-gray-50 border-b border-gray-200">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10 md:pt-14 md:pb-14">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10 md:pt-14 md:pb-12">
         <div class="max-w-3xl">
             <p class="flex items-center gap-2.5 text-sm font-semibold text-brand-700">
-                <span class="w-6 h-0.5 rounded-full bg-accent-500" aria-hidden="true"></span>Apna Invoice Blogs
+                <span class="w-6 h-0.5 rounded-full bg-accent-500" aria-hidden="true"></span>Apna Invoice blog
             </p>
-            <h1 class="mt-3 font-display text-4xl md:text-5xl font-extrabold text-gray-900 leading-[1.12] tracking-tight">GST tips, invoicing how-tos, and small-business guides</h1>
-            <p class="mt-4 text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl">Written for Indian freelancers, MSMEs and CAs. Practical help with GST, billing and running a small business.</p>
+            <h1 class="mt-3 font-display text-4xl md:text-5xl font-extrabold text-gray-900 leading-[1.12] tracking-tight">GST and billing guides</h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 leading-relaxed max-w-2xl">GST rules, invoices, returns and getting paid, explained for shop owners, traders, freelancers and their CAs.</p>
 
-            <form method="GET" class="mt-7 max-w-md" role="search">
+            <form method="GET" action="{{ route('blog.index') }}" class="mt-7 max-w-md" role="search">
                 <label for="blog-search" class="sr-only">Search articles</label>
                 <div class="relative">
-                    <input id="blog-search" type="search" name="search" value="{{ request('search') }}"
-                           placeholder="Search articles…"
-                           class="block w-full min-h-[48px] pl-11 pr-4 border-gray-300 rounded-lg bg-white shadow-sm focus:border-brand-600 focus:ring-brand-600 text-base" aria-label="Search articles…">
+                    <input id="blog-search" type="search" name="search" value="{{ $search }}"
+                           placeholder="Search, for example HSN or credit note"
+                           class="block w-full min-h-[48px] pl-11 pr-4 border-gray-300 rounded-lg bg-white shadow-sm focus:border-brand-600 focus:ring-brand-600 text-base">
                     <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                 </div>
             </form>
         </div>
+
+        {{-- Topic filters: the tags used on more than one post (see
+             BlogController::index). Each one is a search on that tag. --}}
+        @if (! empty($topics))
+            <nav aria-label="Topics" class="mt-6 flex flex-wrap items-center gap-2">
+                <a href="{{ route('blog.index') }}" class="{{ $chip }} {{ $search === '' ? $chipOn : $chipOff }}" @if ($search === '') aria-current="page" @endif>All articles</a>
+                @foreach ($topics as $topic)
+                    <a href="{{ route('blog.index', ['search' => $topic]) }}"
+                       class="{{ $chip }} {{ $activeTopic === $topic ? $chipOn : $chipOff }}"
+                       @if ($activeTopic === $topic) aria-current="page" @endif>{{ $topicLabel($topic) }}</a>
+                @endforeach
+            </nav>
+        @endif
     </div>
 </section>
 
 <main id="main-content" tabindex="-1" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 focus:outline-none">
     @if ($posts->isEmpty())
-        <div class="max-w-xl py-12">
-            <h2 class="font-display text-2xl font-bold text-gray-900">No posts yet</h2>
-            <p class="mt-2 text-gray-600">@if (request('search'))No articles match "{{ request('search') }}". <a href="{{ route('blog.index') }}" class="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">Clear search</a>.@else New guides are published here as they are written.@endif</p>
+        <div class="max-w-xl py-6">
+            @if ($search !== '')
+                <h2 class="font-display text-2xl font-bold text-gray-900">No articles match "{{ $search }}"</h2>
+                <p class="mt-2 text-gray-600">Try a shorter word, such as GST, HSN or GSTR-1, or <a href="{{ route('blog.index') }}" class="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">see all articles</a>.</p>
+            @else
+                <h2 class="font-display text-2xl font-bold text-gray-900">No articles yet</h2>
+                <p class="mt-2 text-gray-600">New guides are added here as they are written. Until then, the <a href="{{ route('pages.gst-invoice-format') }}" class="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">GST invoice format guide</a> and the <a href="{{ route('pages.how-to-use') }}" class="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">how to use guide</a> cover the basics.</p>
+            @endif
         </div>
     @else
-        @if (request('search'))
+        @if ($search !== '')
             <p class="mb-6 text-gray-600">
-                Articles matching <span class="font-semibold text-gray-900">"{{ request('search') }}"</span> ·
-                <a href="{{ route('blog.index') }}" class="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">Clear search</a>
+                {{ $posts->total() }} {{ \Illuminate\Support\Str::plural('article', $posts->total()) }} matching <span class="font-semibold text-gray-900">"{{ $search }}"</span> ·
+                <a href="{{ route('blog.index') }}" class="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-700">See all articles</a>
             </p>
         @endif
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
@@ -155,6 +184,30 @@
 
         <div class="mt-10">{{ $posts->links() }}</div>
     @endif
+
+    {{-- Two plain next steps, below the list: the free calculator (no
+         account) and sign-up. --}}
+    <aside aria-label="Free tools" class="mt-14 grid gap-4 md:grid-cols-2">
+        <a href="{{ route('pages.gst-calculator') }}" class="group flex flex-col rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-5 sm:p-6 hover:ring-gray-300 hover:shadow transition">
+            <span class="font-display text-lg font-bold text-gray-900 group-hover:text-brand-700 transition-colors">GST calculator</span>
+            <span class="mt-1.5 text-[15px] text-gray-600 leading-relaxed">Add or remove GST on any amount and see the CGST, SGST or IGST split. Free, no account needed.</span>
+            <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700">Open the calculator
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </span>
+        </a>
+        <div class="flex flex-col rounded-xl bg-brand-900 text-white p-5 sm:p-6">
+            <span class="font-display text-lg font-bold">Make your GST invoices on Apna Invoice</span>
+            <span class="mt-1.5 text-[15px] text-brand-100 leading-relaxed">Invoices, payments, purchases and GSTR-1 in one place. Free during beta. No card.</span>
+            <span class="mt-4 flex flex-wrap gap-3">
+                @auth
+                    <a href="{{ route('dashboard') }}" class="inline-flex items-center min-h-[44px] px-5 bg-white hover:bg-brand-50 text-brand-900 rounded-lg font-semibold transition-colors">Go to dashboard</a>
+                @else
+                    <a href="{{ route('register') }}" class="inline-flex items-center min-h-[44px] px-5 bg-white hover:bg-brand-50 text-brand-900 rounded-lg font-semibold transition-colors">Create free account</a>
+                    <a href="{{ route('pages.how-to-use') }}" class="inline-flex items-center min-h-[44px] px-5 ring-1 ring-white/40 hover:bg-white/10 text-white rounded-lg font-semibold transition-colors">How it works</a>
+                @endauth
+            </span>
+        </div>
+    </aside>
 </main>
 
 <x-site-footer />

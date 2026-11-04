@@ -55,7 +55,7 @@
         '@type' => 'BreadcrumbList',
         'itemListElement' => [
             ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => $origin . '/'],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blogs', 'item' => $origin . route('blog.index', [], false)],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => $origin . route('blog.index', [], false)],
             ['@type' => 'ListItem', 'position' => 3, 'name' => $post->title, 'item' => $postUrl],
         ],
     ];
@@ -168,7 +168,7 @@
         <nav aria-label="Breadcrumb" class="text-sm text-gray-500">
             <a href="{{ url('/') }}" class="hover:text-brand-700">Home</a>
             <span class="mx-1.5 text-gray-400" aria-hidden="true">/</span>
-            <a href="{{ route('blog.index') }}" class="hover:text-brand-700">Blogs</a>
+            <a href="{{ route('blog.index') }}" class="hover:text-brand-700">Blog</a>
         </nav>
         <h1 class="mt-4 font-display text-3xl sm:text-4xl md:text-[2.75rem] font-extrabold text-gray-900 leading-[1.15] tracking-tight">{{ $post->title }}</h1>
         @if ($post->excerpt)
@@ -328,8 +328,8 @@
 
     {{-- Sign-up, the page's one dark section. --}}
     <aside aria-labelledby="blog-cta-title" class="mt-12 rounded-xl bg-brand-900 text-white p-6 sm:p-8">
-        <h2 id="blog-cta-title" class="font-display font-bold text-2xl leading-tight">Make GST invoices free with Apna Invoice</h2>
-        <p class="mt-2 text-brand-100 max-w-xl leading-relaxed">CGST, SGST or IGST worked out from the place of supply, HSN/SAC on every line, a UPI QR on the PDF and one-tap WhatsApp share. Free during beta, no card needed.</p>
+        <h2 id="blog-cta-title" class="font-display font-bold text-2xl leading-tight">Make your GST invoices on Apna Invoice</h2>
+        <p class="mt-2 text-brand-100 max-w-xl leading-relaxed">CGST and SGST or IGST from the place of supply, HSN/SAC on every line, a UPI QR on the PDF, and the bill sent on WhatsApp. Free during beta. No card.</p>
         <div class="mt-6 flex flex-wrap gap-3">
             @auth
                 <a href="{{ route('dashboard') }}" class="inline-flex items-center min-h-[44px] px-5 bg-white hover:bg-brand-50 text-brand-900 rounded-lg font-semibold transition-colors">Go to dashboard</a>
@@ -344,7 +344,7 @@
 @if ($related->isNotEmpty())
     <section class="bg-gray-50 border-t border-gray-200">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-14">
-            <h2 class="font-display text-2xl font-bold text-gray-900">More blogs</h2>
+            <h2 class="font-display text-2xl font-bold text-gray-900">More articles</h2>
             <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach ($related as $rp)
                     <a href="{{ route('blog.show', $rp->slug) }}" class="group block bg-white rounded-xl ring-1 ring-gray-200 shadow-sm p-5 hover:ring-gray-300 hover:shadow-md transition">

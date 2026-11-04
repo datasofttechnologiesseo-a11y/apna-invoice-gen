@@ -1,4 +1,5 @@
 {
+    "id": "/",
     "name": "Apna Invoice: GST Billing for India",
     "short_name": "Apna Invoice",
     "description": "Free GST invoice generator and GST calculator for India. Make CGST/SGST/IGST invoices with HSN/SAC, UPI QR and WhatsApp share.",

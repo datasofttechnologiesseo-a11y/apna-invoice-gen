@@ -213,8 +213,7 @@
         </div>
     </div>
     <p>
-        The formulas are simple, but working them by hand for every line of an invoice is where mistakes creep in.
-        The calculator above works in both directions and splits the tax the way GST works in India.
+        The calculator above works in both directions and splits the tax as GST requires in India.
     </p>
 
     <h2>CGST, SGST and IGST, in plain words</h2>
@@ -257,9 +256,9 @@
     </div>
     <p>The old 12% and 28% slabs still apply to supplies made before 22 September 2025, and tobacco products stay at 28% plus cess for now.</p>
 
-    <h2>From calculation to a real invoice</h2>
+    <h2>From calculation to invoice</h2>
     <p>
-        A calculator gives you a number. An invoice gives you a record. When you make a GST bill with {{ $appName }},
+        When you make a GST bill with {{ $appName }},
         the CGST, SGST and IGST split happens automatically from your customer's state, the HSN or SAC code sits on each
         line, and you get a PDF ready to share on WhatsApp. See the
         <a href="{{ route('pages.gst-invoice-format') }}">GST invoice format guide</a>, explore
@@ -283,7 +282,8 @@
          a live referral + backlink surface pointing back at the tool. --}}
     <h2>Embed this GST calculator on your site</h2>
     <p>For CA practices, tax blogs and MSME portals. Add this free calculator to any page by copying the snippet below. No fees, no sign-up.</p>
-    <div class="mt-4" x-data="{ copied: false, code: '<iframe src=&quot;{{ url('/gst-calculator/embed') }}&quot; width=&quot;100%&quot; height=&quot;520&quot; style=&quot;border:1px solid #e5e7eb;border-radius:12px;max-width:480px&quot; title=&quot;GST Calculator by Apna Invoice&quot; loading=&quot;lazy&quot;></iframe>' }">
+    <div class="mt-4" x-data="{ copied: false, code: '<iframe src=&quot;{{ rtrim(config('app.url'), '/') }}/gst-calculator/embed&quot; width=&quot;100%&quot; height=&quot;520&quot; style=&quot;border:1px solid #e5e7eb;border-radius:12px;max-width:480px&quot; title=&quot;GST Calculator by Apna Invoice&quot; loading=&quot;lazy&quot;></iframe>
+<p style=&quot;font-size:12px;margin:6px 0 0&quot;><a href=&quot;{{ rtrim(config('app.url'), '/') }}/gst-calculator&quot;>GST calculator by Apna Invoice</a></p>' }">
         <pre class="text-[13px] leading-relaxed bg-gray-900 text-gray-100 rounded-xl p-4 overflow-x-auto"><code x-text="code"></code></pre>
         <button type="button"
                 @click="navigator.clipboard.writeText(code); copied = true; setTimeout(() => copied = false, 2000)"

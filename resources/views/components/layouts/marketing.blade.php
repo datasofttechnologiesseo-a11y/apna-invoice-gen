@@ -261,6 +261,7 @@
 <x-site-footer />
 
 @include('partials.cookie-banner')
+@include('partials.install-app')
 @stack('scripts')
 
 </body>

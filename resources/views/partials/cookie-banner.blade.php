@@ -56,6 +56,8 @@ function cookieBanner() {
                 localStorage.setItem(this.VERSION_KEY, this.CURRENT_VERSION);
             } catch (e) { /* private mode */ }
             this.visible = false;
+            // The install bar waits for this so the two never stack.
+            window.dispatchEvent(new CustomEvent('cookie-choice-made'));
             this.syncToServer(prefs);
         },
         acceptAll() {

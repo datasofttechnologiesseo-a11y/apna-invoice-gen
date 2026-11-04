@@ -1,138 +1,128 @@
 @php
     $appName = config('seo.name', 'Apna Invoice');
 
-    // Every feature in the product, grouped the way the app's menu is. Only
-    // what the software does today: no roadmap items.
+    // Who uses it, in their own terms. Only what the software does today.
+    $businesses = [
+        ['Shops and showrooms', 'Bill walk-in customers at the counter, print on 80 mm paper, take UPI or cash, and see which items are running low.'],
+        ['Wholesalers and distributors', 'IGST is charged automatically when goods go to another state. Add the transporter and e-way bill number, and track who still owes you.'],
+        ['Service businesses and freelancers', 'Bill with SAC codes, record TDS your client deducts, send the invoice on WhatsApp and get paid by UPI.'],
+        ['Traders and manufacturers', 'Enter supplier bills, claim input tax credit, keep stock in and out, and see profit and loss for the month.'],
+        ['CAs and accountants', 'Get your client\'s GSTR-1 JSON, 2B match and GSTR-3B figures, registers in Excel, and your own login with the Accountant role.'],
+    ];
+
+    // Feature areas, each shown with a real screen from a sample business.
     $sections = [
         [
-            'id' => 'sales', 'title' => 'Sales and billing', 'tint' => 'brand',
-            'intro' => 'GST invoices that are right the first time, shared the way your customers like.',
-            'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            'id' => 'billing', 'title' => 'GST invoices', 'screen' => 'invoice-form.webp', 'url' => 'apnainvoice.com/invoices/create',
+            'alt' => 'Invoice form with four items, HSN codes, GST rates and the IGST total',
+            'intro' => 'Pick the customer, add items, and the tax works itself out from the place of supply.',
             'features' => [
-                ['GST tax invoices', 'CGST and SGST (or UTGST) for same-state sales, IGST across states, picked from the place of supply.'],
-                ['Bill of supply', 'Composition dealers get a bill of supply with the declaration the law requires.'],
-                ['Draft, then issue', 'Edit a draft freely. Issuing fixes the number in your financial-year series, with no gaps or duplicates.'],
-                ['Five PDF styles', 'Classic, Executive, Minimal, Mercantile and Heritage. Colour or ink-saving, with your logo and signature.'],
-                ['Original, duplicate, triplicate', 'Choose the copies to print: for the recipient, the transporter and your records.'],
-                ['Share in one tap', 'WhatsApp with a ready message, email with the PDF attached, or a secure link valid for 30 days.'],
-                ['UPI QR on every invoice', 'Customers scan and pay the exact balance from any UPI app.'],
-                ['Quotations', 'Send a quote in its own number series and turn it into an invoice in one click.'],
-                ['Credit notes', 'Returns and price corrections under Section 34, with the deadline tracked for you.'],
-                ['Payments and receipts', 'Part payments, TDS deducted by the customer, numbered receipts, and the balance kept up to date.'],
-                ['Payment reminders', 'Email reminders go out on a schedule after the due date, or follow up on WhatsApp in one tap.'],
-                ['Export and SEZ invoices', 'Zero-rated supplies under LUT or with IGST, with port code and shipping bill details.'],
-                ['Reverse charge', 'Invoices for supplies where the recipient pays the tax, with the required declaration.'],
-                ['Ship-to and e-way bill', 'A separate delivery address, transporter details and the e-way bill number on the invoice.'],
-                ['Counter bills', 'Bill walk-in customers and print on 80 mm thermal paper at the counter.'],
-                ['Discounts before tax', 'An invoice-level discount, in rupees or percent, applied before GST as the law requires.'],
+                ['CGST and SGST, or IGST', 'Same state or another state, decided from the customer\'s state. UTGST where it applies.'],
+                ['HSN and SAC on every line', 'A "Find code" link opens the official GST portal search when you are not sure of a code.'],
+                ['Save and issue', 'The invoice gets the next number in your series for the financial year. Drafts stay editable.'],
+                ['Your own numbering', 'Continue the series you already use, within the 16-character limit of Rule 46.'],
+                ['Five PDF styles', 'With your logo and signature, in colour or ink-saving, with original, duplicate and triplicate copies.'],
+                ['Discount before tax', 'One discount on the whole bill, in rupees or percent, applied before GST.'],
+                ['Export, SEZ and reverse charge', 'Zero-rated supplies under LUT or with IGST, and reverse-charge invoices with the declaration.'],
+                ['Quotations and credit notes', 'Turn an accepted quotation into an invoice in one click. Credit notes follow Section 34.'],
             ],
         ],
         [
-            'id' => 'purchases', 'title' => 'Purchases and expenses', 'tint' => 'accent',
-            'intro' => 'Record what you buy so input tax credit and profit are always accurate.',
-            'icon' => 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z',
+            'id' => 'payments', 'title' => 'Share and get paid', 'screen' => 'm-invoice-view.webp', 'mobile' => true,
+            'alt' => 'An issued invoice on a phone, with share and payment buttons',
+            'intro' => 'Send the bill the way your customer prefers, and keep track of what has come in.',
             'features' => [
-                ['Purchase invoices', "Enter supplier bills with items and GST. The supplier's state is read from the GSTIN."],
-                ['Input tax credit', 'Eligible GST flows into GSTR-3B; blocked credit under Section 17(5) stays out.'],
-                ['Payments made', 'Record what you have paid and see what is still due to each supplier.'],
-                ['Expenses', 'Rent, salaries, utilities and other costs by category, with GST input where it applies.'],
-                ['Cash memos', 'A voucher in your own books for cash purchases where the seller gives no bill.'],
-                ['Vendor book', 'Save suppliers once with GSTIN and state, and pick them on every purchase.'],
+                ['WhatsApp, email or a link', 'WhatsApp opens with the message ready. Email goes with the PDF. A link stays valid for 30 days.'],
+                ['UPI QR on the invoice', 'Add your UPI ID once. Customers scan and pay the balance from any UPI app.'],
+                ['Part payments and TDS', 'Record what came in, by cash, UPI, NEFT or cheque, and TDS the customer deducted. Receipts are numbered.'],
+                ['Reminders', 'Email reminders go after the due date. A WhatsApp reminder is one tap from the invoice.'],
+                ['Counter bills', 'Walk-in customers and 80 mm thermal printing for shops.'],
             ],
         ],
         [
-            'id' => 'inventory', 'title' => 'Items and stock', 'tint' => 'money',
-            'intro' => 'Save what you sell once and know what is left on the shelf.',
-            'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+            'id' => 'purchases', 'title' => 'Purchases and expenses', 'screen' => 'purchases.webp', 'url' => 'apnainvoice.com/purchases',
+            'alt' => 'List of purchase invoices with amounts due to each supplier',
+            'intro' => 'Enter supplier bills once. Input tax credit and profit and loss follow from them.',
             'features' => [
-                ['Goods and services', 'Name, HSN or SAC, unit, rate and GST rate, filled in on the invoice when you pick the item.'],
-                ['Stock tracking', 'Optional per item: issued invoices reduce stock, purchases add to it, cancellations put it back.'],
-                ['Low-stock alerts', 'Set a reorder level and see low items on the dashboard and in the stock summary.'],
-                ['Stock adjustments', 'Record damage, returns or a physical count, with a full movement history.'],
-                ['Stock value and summary', 'Stock valued at purchase price, and opening, in, out and closing for any period in Excel or PDF.'],
+                ['Purchase invoices', 'Items and GST as on the supplier\'s bill. The supplier\'s state is read from the GSTIN.'],
+                ['Input tax credit', 'Eligible credit goes to GSTR-3B. Blocked credit under Section 17(5) stays out.'],
+                ['180-day rule', 'Credit on a bill unpaid for 180 days is reversed, and claimed again once you pay (Rule 37).'],
+                ['Payments made', 'What you have paid each supplier and what is still due, with payables aging.'],
+                ['Expenses and cash memos', 'Rent, electricity, transport and other costs, and cash purchases where the seller gave no bill.'],
             ],
         ],
         [
-            'id' => 'banking', 'title' => 'Banking', 'tint' => 'brand',
-            'intro' => 'Reconcile your bank account with your books in minutes.',
-            'icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
+            'id' => 'stock', 'title' => 'Items and stock', 'screen' => 'stock.webp', 'url' => 'apnainvoice.com/reports/stock-summary',
+            'alt' => 'Stock summary with opening, in, out and closing quantity for each item',
+            'intro' => 'Turn on stock for the items you keep, and leave it off for services.',
             'features' => [
-                ['Upload any bank statement', 'Excel or CSV from net banking, read as downloaded from HDFC, SBI, ICICI, Axis and others.'],
-                ['Automatic matching', 'Each bank line is matched to a receipt, supplier payment or expense of the same amount.'],
-                ['Fill the gaps', 'Record a missing receipt or expense straight from the bank line, or mark bank charges as done.'],
+                ['Stock in and out', 'Issued invoices take stock out, purchases bring it in, cancellations and returns put it back.'],
+                ['Low stock', 'Set a reorder level. Items at or below it show on the dashboard.'],
+                ['Adjustments', 'Record damage, breakage or a physical count, with the history of every movement.'],
+                ['Stock summary', 'Opening, in, out and closing for any period, in Excel or PDF.'],
             ],
         ],
         [
-            'id' => 'gst', 'title' => 'GST returns', 'tint' => 'accent',
-            'intro' => 'Returns prepared from your own books, ready for you or your CA to file.',
-            'icon' => 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            'id' => 'banking', 'title' => 'Bank reconciliation', 'screen' => 'bank.webp', 'url' => 'apnainvoice.com/bank',
+            'alt' => 'Bank statement lines matched to receipts and payments, with one line left to review',
+            'intro' => 'Upload the statement you download from net banking. Most lines match on their own.',
             'features' => [
-                ['GSTR-1', 'All tables, with a JSON file to upload on the GST portal and an Excel file for the offline tool.'],
-                ['GSTR-2B match', 'Upload GSTR-2B and see each supplier invoice as matched, mismatched, missing or not yet in 2B.'],
-                ['GSTR-3B', 'Tables 3.1, 4 and 6.1 worked out, with input tax credit set off in the order Rule 88A requires.'],
-                ['HSN summary', 'The HSN-wise summary for GSTR-1 Table 12, split for B2B and B2C.'],
-                ['Monthly or quarterly', 'Works for monthly filers and the QRMP scheme, with due dates shown on the dashboard.'],
+                ['Any bank', 'Excel or CSV as downloaded from HDFC, SBI, ICICI, Axis and other banks.'],
+                ['Matched for you', 'Each line is matched to a receipt, supplier payment or expense of the same amount. Cash entries are never matched to the bank.'],
+                ['Fill the gaps', 'Add a missing receipt or expense from the bank line, or mark bank charges as done.'],
             ],
         ],
         [
-            'id' => 'reports', 'title' => 'Reports', 'tint' => 'money',
-            'intro' => 'The reports your CA asks for at month-end, one click away.',
-            'icon' => 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z',
+            'id' => 'gst', 'title' => 'GST returns', 'screen' => 'gstr1.webp', 'url' => 'apnainvoice.com/finance/gstr1',
+            'alt' => 'GSTR-1 summary for October with B2B, B2C and HSN tables',
+            'intro' => 'Prepared from your own invoices and bills. You or your CA file them on the GST portal.',
             'features' => [
-                ['Profit and loss', 'Accrual, cash and GST views, net of credit notes and blocked GST.'],
-                ['Receivables and payables aging', 'Who owes you and whom you owe, by 0-30, 31-60, 61-90 and 90+ days.'],
-                ['Sales and purchase registers', 'Every invoice and bill with taxable value and tax, for any month, quarter or year.'],
-                ['Customer ledger', 'A running balance of invoices, payments and credit notes for each customer.'],
-                ['More registers', 'Receipts, supplier payments, credit notes, quotations, customers, vendors, items and stock.'],
-                ['Excel, CSV, PDF and print', 'Every report and list exports in the format your accountant prefers.'],
+                ['GSTR-1', 'Every table, with a JSON file to upload on the portal and an Excel file for the offline tool.'],
+                ['GSTR-2B match', 'Upload the 2B file. Each supplier bill shows as matched, mismatched, missing or not yet in 2B.'],
+                ['GSTR-3B', 'Tables 3.1, 4 and 6.1, with credit set off in the Rule 88A order and unused credit carried to the next month.'],
+                ['HSN summary', 'Table 12, split for B2B and B2C.'],
+                ['Monthly or quarterly', 'For monthly filers and the QRMP scheme, with due dates on the dashboard.'],
             ],
         ],
         [
-            'id' => 'business', 'title' => 'Business and team', 'tint' => 'brand',
-            'intro' => 'Run every business you own, with the right people given the right access.',
-            'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+            'id' => 'reports', 'title' => 'Reports for your CA', 'screen' => 'reports.webp', 'url' => 'apnainvoice.com/reports',
+            'alt' => 'Reports page listing registers, aging and summary reports',
+            'intro' => 'The month-end reports an accountant asks for, in the format they want.',
             'features' => [
-                ['Multiple businesses', 'Each GSTIN with its own logo, numbering and books, switched from one login.'],
-                ['Team access with roles', 'Invite an admin, your accountant or CA, or billing staff, each with the right permissions.'],
-                ['Activity log', 'Every change is recorded with who made it and when.'],
-                ['Books lock', 'Lock a closed financial year so nothing filed can be changed or backdated.'],
-                ['Import from Excel', 'Bring in customers, items and vendors from a spreadsheet, with a preview before saving.'],
-                ['Backups', 'Download all your data at any time, or have a backup emailed to you every week.'],
-                ['Any device', 'Works in any browser on phone, tablet or computer, and installs like an app.'],
+                ['Profit and loss', 'Accrual, cash and GST views, net of credit notes and blocked credit.'],
+                ['Aging', 'Who owes you and whom you owe, by 0 to 30, 31 to 60, 61 to 90 and over 90 days.'],
+                ['Registers and ledgers', 'Sales, purchases, receipts, credit notes and a running ledger for each customer.'],
+                ['Excel, CSV, PDF, print', 'Every report and list, for any month, quarter or year.'],
             ],
         ],
         [
-            'id' => 'tools', 'title' => 'Free tools', 'tint' => 'accent',
-            'intro' => 'Useful without an account.',
-            'icon' => 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+            'id' => 'business', 'title' => 'Your business and team', 'screen' => 'dashboard.webp', 'url' => 'apnainvoice.com/dashboard',
+            'alt' => 'Dashboard with sales, receivables, payables, overdue invoices and GST due dates',
+            'intro' => 'One login for every GSTIN you run, and the right access for each person who helps.',
             'features' => [
-                ['GST calculator', 'Add or remove GST at any rate with the CGST, SGST and IGST split. Free to embed on your own site.'],
-                ['Invoice format guides', 'What a GST invoice, cash memo and credit note must contain, with samples.'],
+                ['Several businesses', 'Each GSTIN with its own logo, numbering and books.'],
+                ['Team roles', 'Admin, Accountant or CA, and Billing staff. Staff can bill but cannot cancel invoices or see accounts.'],
+                ['Activity log and books lock', 'Every change is recorded. Lock a closed year so nothing in it can be changed.'],
+                ['Import and backup', 'Bring customers, items and vendors in from Excel. Download all your data any time, or get it by email every week.'],
+                ['On your phone', 'Works in the phone\'s browser and installs on the home screen like an app.'],
             ],
         ],
     ];
-
-    $featureCount = collect($sections)->sum(fn ($s) => count($s['features']));
 
     $compliance = [
-        'Every field CGST Rule 46 requires on a tax invoice',
-        'Copies as Rule 48 requires: original, duplicate, triplicate',
-        'Credit notes under Section 34 with the time limit tracked',
-        'GST 2.0 rates (5%, 18%, 40%) and the legacy slabs',
-        'UTGST for Union Territories and IGST across states',
-        'Invoice numbers within the 16-character limit',
-        'Rule 88A order for setting off input tax credit',
-        'Amounts in lakh and crore, with amount in words',
+        'Every detail Rule 46 needs on a tax invoice',
+        'Original, duplicate and triplicate copies (Rule 48)',
+        'Credit notes within the Section 34 time limit',
+        'GST 2.0 rates of 5%, 18% and 40%, and the older slabs',
+        'UTGST in Union Territories, IGST across states',
+        'Invoice numbers within 16 characters',
+        'Input tax credit set off in the Rule 88A order',
+        'Amounts in lakh and crore, with the amount in words',
     ];
 
-    // The same app the home page describes (same @id), listing every feature on this page.
+    $notYet = ['E-invoice (IRN) generation', 'E-way bill generation', 'Filing returns from the app', 'Tally export', 'Hindi screens', 'Recurring invoices'];
+
     $origin = rtrim(config('app.url'), '/');
-    $orgRef = [
-        '@type' => 'Organization',
-        '@id' => $origin . '#organization',
-        'name' => config('seo.organization.name'),
-        'url' => config('seo.organization.url'),
-    ];
     $appSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'SoftwareApplication',
@@ -140,6 +130,7 @@
         'name' => $appName,
         'url' => $origin . '/',
         'image' => $origin . '/brand/icon-512.png',
+        'screenshot' => $origin . '/brand/screens/invoice-view.webp',
         'applicationCategory' => 'BusinessApplication',
         'applicationSubCategory' => 'BillingAndInvoicing',
         'operatingSystem' => 'Any (web-based)',
@@ -148,37 +139,50 @@
         'isAccessibleForFree' => true,
         'featureList' => collect($sections)->flatMap(fn ($s) => array_column($s['features'], 0))->values()->all(),
         'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'INR'],
-        'publisher' => $orgRef,
+        'publisher' => [
+            '@type' => 'Organization',
+            '@id' => $origin . '#organization',
+            'name' => config('seo.organization.name'),
+            'url' => config('seo.organization.url'),
+        ],
     ];
 @endphp
 
 <x-layouts.marketing
     title="Features: GST billing, stock and returns"
     eyebrow="Features"
-    lead="GST billing, purchases, stock, banking and GST returns in one place, built for Indian businesses. Every feature is free during beta."
-    description="GST invoices, quotations, credit notes, purchases, stock, bank reconciliation, GSTR-1 JSON, GSTR-2B match and GSTR-3B. Free for Indian businesses."
+    lead="GST invoices, purchases, stock, bank matching and GST returns for Indian businesses, in one account. Free during beta."
+    description="GST invoices, quotations, purchases, stock, bank matching, GSTR-1 JSON, GSTR-2B match and GSTR-3B. Free billing software for Indian businesses."
     keywords="GST billing software features, GST invoice software India, GSTR-1 JSON, GSTR-2B reconciliation, GSTR-3B, bank reconciliation, inventory, free billing software"
     :wide="true"
     :json-ld="[$appSchema]">
 
-    {{-- At a glance. Every figure is counted from the lists above or the
-         report registry, so it cannot drift from what the page shows. --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        @foreach ([
-            [$featureCount . ' features', 'across ' . count($sections) . ' areas'],
-            ['GSTR-1, 2B, 3B', 'prepared from your books'],
-            [count(config('reports.registry', [])) . ' reports', 'in Excel, CSV and PDF'],
-            ['₹0', 'free during beta'],
-        ] as [$big, $small])
-            <div class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm px-4 py-4 sm:px-5">
-                <p class="font-display text-xl sm:text-2xl font-extrabold text-gray-900 tabular-nums">{{ $big }}</p>
-                <p class="mt-0.5 text-sm text-gray-600">{{ $small }}</p>
-            </div>
-        @endforeach
+    {{-- Real screens first: what the product looks like, before what it says. --}}
+    <div class="relative pb-10 sm:pb-14">
+        <x-screen src="invoice-view.webp" :eager="true" url="apnainvoice.com/invoices/SE-26-27-0001"
+                  alt="An issued GST tax invoice with CGST and SGST, receipt and share options"
+                  class="lg:w-[86%]" />
+        <x-screen src="m-invoice-form.webp" :mobile="true" :eager="true"
+                  alt="New invoice on a phone with the customer chosen and Save and issue at the bottom"
+                  class="hidden sm:block absolute right-0 bottom-0 !w-[190px] lg:!w-[230px] !max-w-none" />
     </div>
+    <p class="text-sm text-gray-500">Screens from a sample business, Sharma Electricals in Pune.</p>
 
-    {{-- Jump to a section. Pinned while the sections scroll past. --}}
-    <nav aria-label="Feature areas" class="sticky top-0 z-20 mt-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 py-3 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+    {{-- Who it is for --}}
+    <section aria-labelledby="who-title" class="mt-12 md:mt-16">
+        <h2 id="who-title" class="font-display text-2xl md:text-[1.75rem] font-bold leading-tight text-gray-900">Made for your kind of business</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            @foreach ($businesses as [$who, $what])
+                <div class="rounded-xl bg-white ring-1 ring-gray-200 p-5">
+                    <h3 class="font-semibold text-gray-900 leading-snug">{{ $who }}</h3>
+                    <p class="mt-2 text-sm text-gray-600 leading-relaxed">{{ $what }}</p>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- Jump to an area. Pinned while the sections scroll past. --}}
+    <nav aria-label="Feature areas" class="sticky top-0 z-20 mt-12 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 py-3 bg-white/95 backdrop-blur-sm border-b border-gray-200">
         <ul class="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
             @foreach ($sections as $s)
                 <li class="shrink-0">
@@ -188,29 +192,32 @@
         </ul>
     </nav>
 
-    @foreach ($sections as $s)
-        <section id="{{ $s['id'] }}" class="scroll-mt-20 pt-12 md:pt-14" aria-labelledby="{{ $s['id'] }}-title">
-            <div class="flex items-start gap-3 max-w-3xl">
-                <svg class="mt-1 w-6 h-6 shrink-0 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $s['icon'] }}"/></svg>
-                <div>
+    {{-- Each area: the real screen beside the details, alternating sides. --}}
+    @foreach ($sections as $i => $s)
+        <section id="{{ $s['id'] }}" class="scroll-mt-20 pt-14 md:pt-20" aria-labelledby="{{ $s['id'] }}-title">
+            <div class="grid items-center gap-8 lg:gap-12 {{ ! empty($s['mobile']) ? 'lg:grid-cols-[minmax(0,1fr)_280px]' : 'lg:grid-cols-2' }}">
+                <div class="{{ $i % 2 === 1 && empty($s['mobile']) ? 'lg:order-2' : '' }}">
                     <h2 id="{{ $s['id'] }}-title" class="font-display text-2xl md:text-[1.75rem] font-bold leading-tight text-gray-900">{{ $s['title'] }}</h2>
-                    <p class="mt-1.5 text-gray-600 text-[1.0625rem] leading-relaxed">{{ $s['intro'] }}</p>
+                    <p class="mt-2 text-gray-600 text-[1.0625rem] leading-relaxed">{{ $s['intro'] }}</p>
+                    <dl class="mt-6 space-y-4">
+                        @foreach ($s['features'] as [$name, $body])
+                            <div class="border-l-2 border-brand-200 pl-4">
+                                <dt class="font-semibold text-gray-900">{{ $name }}</dt>
+                                <dd class="mt-0.5 text-sm text-gray-600 leading-relaxed">{{ $body }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </div>
+                <div class="{{ $i % 2 === 1 && empty($s['mobile']) ? 'lg:order-1' : '' }}">
+                    <x-screen :src="$s['screen']" :alt="$s['alt']" :url="$s['url'] ?? null" :mobile="! empty($s['mobile'])" />
                 </div>
             </div>
-            <ul class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach ($s['features'] as [$name, $body])
-                    <li class="rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-5">
-                        <h3 class="font-semibold text-gray-900 leading-snug">{{ $name }}</h3>
-                        <p class="mt-1.5 text-sm text-gray-600 leading-relaxed">{{ $body }}</p>
-                    </li>
-                @endforeach
-            </ul>
         </section>
     @endforeach
 
     {{-- GST compliance: the page's one dark section. --}}
-    <section aria-labelledby="compliance-title" class="mt-14 md:mt-16 rounded-xl bg-brand-900 text-white p-6 sm:p-8 md:p-10">
-        <h2 id="compliance-title" class="font-display text-2xl md:text-[1.75rem] font-bold leading-tight text-white">Built for Indian GST</h2>
+    <section aria-labelledby="compliance-title" class="mt-16 md:mt-20 rounded-xl bg-brand-900 text-white p-6 sm:p-8 md:p-10">
+        <h2 id="compliance-title" class="font-display text-2xl md:text-[1.75rem] font-bold leading-tight text-white">Follows the GST rules</h2>
         <ul class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3.5">
             @foreach ($compliance as $point)
                 <li class="flex items-start gap-3 text-brand-50 leading-relaxed">
@@ -221,11 +228,35 @@
         </ul>
     </section>
 
+    {{-- Honest limits: better found here than after signing up. --}}
+    <section aria-labelledby="not-yet-title" class="mt-8 rounded-xl bg-white ring-1 ring-gray-200 p-6 sm:p-8">
+        <h2 id="not-yet-title" class="font-display text-xl font-bold text-gray-900">Not in {{ $appName }} yet</h2>
+        <p class="mt-2 text-gray-600 leading-relaxed">
+            {{ implode(' · ', $notYet) }}.
+            Returns are prepared here and filed on the GST portal, and e-way bills are generated on the free government portal, with the number typed on the invoice.
+        </p>
+    </section>
+
+    {{-- Where to read more. --}}
+    <nav aria-label="Read more" class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        @foreach ([
+            [route('pages.pricing'), 'Pricing', 'Free during beta, and what that covers.'],
+            [route('pages.faq'), 'FAQ', 'GSTIN, IGST, e-way bills, Tally, phone use.'],
+            [route('pages.gst-invoice-format'), 'GST invoice format', 'What Rule 46 asks a tax invoice to show.'],
+            [route('pages.gst-calculator'), 'GST calculator', 'Add or remove GST, free and without sign-up.'],
+        ] as [$href, $label, $hint])
+            <a href="{{ $href }}" class="block rounded-xl bg-white ring-1 ring-gray-200 hover:ring-brand-300 p-4 transition">
+                <span class="font-semibold text-brand-800">{{ $label }}</span>
+                <span class="mt-1 block text-sm text-gray-600">{{ $hint }}</span>
+            </a>
+        @endforeach
+    </nav>
+
     {{-- Start --}}
     <section aria-labelledby="start-title" class="mt-8 rounded-xl bg-white ring-1 ring-gray-200 shadow-sm p-6 sm:p-8 md:flex md:items-center md:justify-between md:gap-10">
         <div class="max-w-2xl">
             <h2 id="start-title" class="font-display text-2xl font-bold leading-tight text-gray-900">Start billing free</h2>
-            <p class="mt-2 text-gray-600 leading-relaxed">Create your account and issue your first GST invoice in a few minutes. No card needed. Refer a friend and get lifetime free access.</p>
+            <p class="mt-2 text-gray-600 leading-relaxed">No card needed and no limit on invoices. Refer a friend who issues their first invoice, and your account stays free for life.</p>
         </div>
         <div class="mt-6 md:mt-0 flex flex-wrap gap-3 md:shrink-0">
             @auth
@@ -233,7 +264,6 @@
             @else
                 <a href="{{ route('register') }}" class="inline-flex items-center min-h-[44px] px-5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow-sm transition-colors">Create free account</a>
             @endauth
-            <a href="{{ route('pages.pricing') }}" class="inline-flex items-center min-h-[44px] px-5 rounded-lg bg-white ring-1 ring-gray-300 hover:ring-gray-400 text-gray-800 font-semibold transition">See pricing</a>
             <a href="{{ route('pages.how-to-use') }}" class="inline-flex items-center min-h-[44px] px-5 rounded-lg bg-white ring-1 ring-gray-300 hover:ring-gray-400 text-gray-800 font-semibold transition">How to use</a>
         </div>
     </section>

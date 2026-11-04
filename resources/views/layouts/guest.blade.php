@@ -18,7 +18,10 @@
             :noindex="$noindex" />
 
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" rel="stylesheet" />
+        {{-- Loaded without blocking the first paint, as on the marketing pages. --}}
+        <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap">
+        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap" media="print" onload="this.media='all'">
+        <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700|plus-jakarta-sans:600,700,800&display=swap"></noscript>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -111,6 +114,7 @@
         </div>
         <x-whatsapp-float />
         @include('partials.cookie-banner')
+        @include('partials.install-app')
         @stack('scripts')
     </body>
 </html>
