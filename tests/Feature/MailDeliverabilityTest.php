@@ -108,7 +108,7 @@ class MailDeliverabilityTest extends TestCase
 
         $this->get(route('password.request'))
             ->assertOk()
-            ->assertSee('We have emailed your password reset link.', false)
+            ->assertSee('Reset link sent. Check your email.', false)
             ->assertSee('no email was actually sent', false)
             ->assertSee('storage/logs/laravel.log', false);
     }
@@ -125,10 +125,10 @@ class MailDeliverabilityTest extends TestCase
         // posting the form: under a production environment the Turnstile rule
         // fails closed on the missing captcha secret, which is correct and is
         // not what this test is about.
-        $this->withSession(['status' => 'We have emailed your password reset link.'])
+        $this->withSession(['status' => 'Reset link sent. Check your email.'])
             ->get(route('password.request'))
             ->assertOk()
-            ->assertSee('We have emailed your password reset link.', false)
+            ->assertSee('Reset link sent. Check your email.', false)
             ->assertDontSee('no email was actually sent', false)
             ->assertDontSee('MAIL_MAILER', false);
     }

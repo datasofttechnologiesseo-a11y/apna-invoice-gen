@@ -240,7 +240,7 @@
                                     @endif
                                     <th class="px-3 py-2 text-left">Description</th>
                                     <th class="px-3 py-2 text-left">
-                                        <span class="inline-flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-3">
                                             <span>HSN/SAC</span>
                                             @include('partials.hsn-search-link')
                                         </span>

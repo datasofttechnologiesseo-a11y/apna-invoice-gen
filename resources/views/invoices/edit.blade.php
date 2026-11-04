@@ -165,7 +165,7 @@
             @if ($restricted)
                 <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-xl text-sm">
                     <div class="font-semibold">Issued invoice. Only some fields can be changed.</div>
-                    <div class="mt-0.5">You can change the notes, terms, due date and transport details. Amounts, items, customer and invoice number are locked under GST rules: issue a credit note, or cancel this invoice and issue a new one.</div>
+                    <div class="mt-0.5">Notes, terms, due date and transport details can be changed. Amounts, items, customer and invoice number are locked. To correct them, issue a credit note, or cancel this invoice and issue a new one.</div>
                 </div>
             @endif
 
@@ -177,13 +177,6 @@
                     <button type="button" @click="localStorage.setItem('hideFirstInvoiceTip','1'); show=false" class="shrink-0 inline-flex items-center justify-center w-10 h-10 -my-1 -mr-2 text-brand-800 hover:bg-brand-100 rounded-md text-xl leading-none" aria-label="Dismiss tip">×</button>
                 </div>
             @endunless
-
-            @if ($customers->isEmpty() && ! $restricted)
-                <div class="p-4 bg-accent-50 border border-accent-200 text-accent-900 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3 text-sm">
-                    <div class="flex-1"><span class="font-semibold">No customers yet.</span> Add one here without leaving the invoice.</div>
-                    <button type="button" @click="$dispatch('open-quick-customer')" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 whitespace-nowrap">New customer</button>
-                </div>
-            @endif
 
             {{-- Without a business state the invoice cannot tell a same-state sale
                  from an inter-state one; a taxed invoice cannot be issued (see
@@ -227,7 +220,7 @@
                                                    @keydown.arrow-up.prevent="customerComboMove(-1)"
                                                    @keydown.enter.prevent="customerComboEnter()"
                                                    @keydown.escape="customerCombo.open = false"
-                                                   placeholder="Search by name, phone or GSTIN…"
+                                                   placeholder="{{ $customers->isEmpty() ? 'Type the customer name to add them' : 'Search by name, phone or GSTIN…' }}"
                                                    autocomplete="off"
                                                    aria-describedby="customer_id-error"
                                                    class="block w-full h-10 border-gray-300 rounded-md shadow-sm pr-10 focus:border-brand-600 focus:ring-brand-600">
@@ -299,12 +292,20 @@
                             @endif
                         </div>
 
-                        <div>
+                        {{-- A future date can be saved as a draft but issued only on that
+                             day (s.31), so say so here rather than at Issue. --}}
+                        <div x-data="{ date: @js(old('invoice_date', $invoice->invoice_date?->toDateString() ?? now()->toDateString())), today: @js(\App\Models\Invoice::todayInIndia()) }">
                             <label for="invoice_date" class="{{ $lblClass }}">Invoice date *</label>
                             <input id="invoice_date" name="invoice_date" type="date" required @disabled($restricted)
                                    value="{{ old('invoice_date', $invoice->invoice_date?->toDateString() ?? now()->toDateString()) }}"
-                                   aria-describedby="invoice_date-error"
+                                   x-model="date"
+                                   aria-describedby="invoice_date-error invoice_date-future"
                                    class="{{ $field }} {{ $restricted ? 'bg-gray-100 cursor-not-allowed' : '' }}">
+                            @unless ($restricted)
+                                <p id="invoice_date-future" x-show="date > today" x-cloak class="mt-1 text-xs font-semibold text-accent-800">
+                                    After today. It can be saved as a draft and issued on that date.
+                                </p>
+                            @endunless
                             <x-input-error :messages="$errors->get('invoice_date')" for="invoice_date" class="mt-1" />
                         </div>
 
@@ -461,20 +462,38 @@
                         </template>
                     </div>
 
-                    {{-- Desktop table, sized to fit 1024px with the sidebar open: the item
-                         cell stacks the search, description and HSN/SAC; quantity sits over
-                         its unit. --}}
+                    {{-- Desktop table. From 1280px every line is one row: item, description,
+                         HSN/SAC, quantity, unit, rate, GST, amount. Between 1024 and 1280px
+                         (sidebar open) the item search takes the first line and description
+                         and HSN/SAC the second, and quantity sits over its unit, so nothing
+                         is squeezed. --}}
+                    @php
+                        $itemGrid = $restricted
+                            ? 'grid-cols-[minmax(0,1fr)_8rem]'
+                            : 'grid-cols-[minmax(0,1fr)_8rem] xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_8rem]';
+                    @endphp
                     <div class="hidden lg:block">
                         <table class="w-full text-sm">
                             <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase">
                                 <tr>
                                     <th class="px-3 py-2 text-left">
-                                        <span class="inline-flex items-center gap-1.5">
+                                        <span class="xl:hidden inline-flex items-center gap-3">
                                             Item, description, HSN/SAC
-                                            @include('partials.hsn-search-link')
+                                            @include('partials.hsn-search-link', ['label' => 'Find HSN/SAC code'])
+                                        </span>
+                                        <span class="hidden xl:grid {{ $itemGrid }} gap-1.5 items-center text-left">
+                                            @unless ($restricted)<span>Item</span>@endunless
+                                            <span>Description</span>
+                                            <span class="inline-flex items-center gap-2">
+                                                HSN/SAC
+                                                @include('partials.hsn-search-link', ['label' => 'Find'])
+                                            </span>
                                         </span>
                                     </th>
-                                    <th class="px-1.5 py-2 text-right">Quantity</th>
+                                    <th class="px-1.5 py-2 text-right">
+                                        <span class="xl:hidden">Quantity</span>
+                                        <span class="hidden xl:flex justify-end gap-1.5"><span class="w-24 text-right">Quantity</span><span class="w-20 text-left">Unit</span></span>
+                                    </th>
                                     <th class="px-1.5 py-2 text-right">Rate (₹)</th>
                                     <th class="px-1.5 py-2 text-right">GST</th>
                                     <th class="px-3 py-2 text-right">Amount <span class="font-normal normal-case">(incl. GST)</span></th>
@@ -488,8 +507,9 @@
                                         @input="clearRowError(idx)" @change="clearRowError(idx)"
                                         :class="rowHasError(idx) && 'bg-danger-50'">
                                         <td class="px-3 py-2 w-full">
+                                          <div class="grid {{ $itemGrid }} gap-1.5">
                                             @unless ($restricted)
-                                                <div x-data="productRowCombobox(idx, item._uid)" class="relative" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
+                                                <div x-data="productRowCombobox(idx, item._uid)" class="relative min-w-0 col-span-2 xl:col-span-1" @click.outside="combo.open = false; quickAdd.open = false; commitTypedText()">
                                                     <input type="hidden" :name="`items[${idx}][product_id]`" :value="item.product_id || ''">
                                                     <div class="relative">
                                                         <input type="text"
@@ -514,17 +534,18 @@
                                                     @include('invoices._product-combobox-panel', ['mobile' => false])
                                                 </div>
                                             @endunless
-                                            <div class="{{ $restricted ? '' : 'mt-1.5' }} grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_7rem] gap-1.5">
-                                                <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Description (optional)" class="w-full h-9 {{ $cell }}">
-                                                <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? 'HSN/SAC' : 'HSN/SAC (optional)'" class="w-full xl:w-28 h-9 rounded-md text-sm font-mono focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired">
-                                            </div>
+                                            <input :name="`items[${idx}][description]`" :aria-label="`Item description for line item ${idx + 1}`" x-model="item.description" maxlength="150" placeholder="Description (optional)" class="w-full min-w-0 h-9 {{ $cell }}">
+                                            <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" inputmode="numeric" maxlength="8" :placeholder="hsnRequired ? 'HSN/SAC' : 'HSN/SAC (optional)'" class="w-full h-9 rounded-md text-sm font-mono focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'hsn_sac') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" :required="hsnRequired">
+                                          </div>
                                         </td>
                                         <td class="px-1.5 py-2">
-                                            <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 h-9 rounded-md text-sm text-right focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'quantity') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required>
-                                            <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="mt-1.5 w-20 h-9 {{ $cell }} text-right" placeholder="Unit">
+                                            <div class="flex flex-col xl:flex-row items-end xl:items-start gap-1.5">
+                                                <input :name="`items[${idx}][quantity]`" aria-label="Quantity" x-model.number="item.quantity" @input="recompute()" type="number" step="any" min="0.001" inputmode="decimal" class="w-20 xl:w-24 h-9 rounded-md text-sm text-right focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'quantity') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required>
+                                                <input :name="`items[${idx}][unit]`" aria-label="Unit" x-model="item.unit" class="w-20 h-9 {{ $cell }} text-right xl:text-left" placeholder="Unit">
+                                            </div>
                                             <p x-show="stockShort(item)" x-cloak class="mt-0.5 w-20 text-xs font-semibold text-accent-800" x-text="'Only ' + (+item._stock) + ' in stock'"></p>
                                         </td>
-                                        <td class="px-1.5 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-24 h-9 rounded-md text-sm text-right focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'rate') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required></td>
+                                        <td class="px-1.5 py-2"><input :name="`items[${idx}][rate]`" aria-label="Rate" x-model.number="item.rate" @input="recompute()" type="number" step="any" min="0" inputmode="decimal" class="w-24 xl:w-28 h-9 rounded-md text-sm text-right focus:border-brand-600 focus:ring-brand-600" :class="fieldHasError(idx, 'rate') ? 'border-danger-400 ring-1 ring-danger-300' : 'border-gray-300'" required></td>
                                         <td class="px-1.5 py-2">
                                             {{-- "18%" only; the full slab name and note are in each option's title. --}}
                                             <select :name="`items[${idx}][gst_rate]`" aria-label="GST rate" x-model.number="item.gst_rate" @change="recompute()" class="w-20 h-9 {{ $cell }}">
@@ -533,7 +554,7 @@
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td class="px-3 py-2 text-right font-mono text-sm whitespace-nowrap tabular-nums">
+                                        <td class="px-3 py-2 xl:min-w-[8.5rem] text-right font-mono text-sm whitespace-nowrap tabular-nums">
                                             <div class="font-medium leading-9" x-text="fmt(item.total)"></div>
                                             <div x-show="item.tax > 0" class="text-xs text-gray-600" x-text="'Taxable ' + fmt(item.amount)"></div>
                                         </td>
@@ -775,7 +796,7 @@
 
                         <section>
                             <h3 class="font-semibold text-gray-900">Ship-to address</h3>
-                            <p class="text-xs text-gray-600">For delivery to an address other than the billing address. GST follows the place of supply (the bill-to customer's state), not the ship-to state.</p>
+                            <p class="text-xs text-gray-600">For delivery to a different address. Place of supply stays the bill-to customer's state.</p>
                             <fieldset @disabled($restricted) class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
                                     <label for="ship_to_name" class="{{ $lblClass }}">Consignee name</label>
@@ -823,17 +844,17 @@
                 </div>
 
                 {{-- Hidden field set by the save buttons so the controller knows
-                     whether to open the invoice or also download the PDF. --}}
+                     what to do after saving: '' open, 'pdf' preview, 'issue' issue. --}}
                 <input type="hidden" name="post_save_action" x-ref="postSaveAction" value="">
 
-                {{-- In-page actions. On a phone the sticky bar below carries Save draft;
+                {{-- In-page actions. On a phone the sticky bar below carries Save draft and Save and issue;
                      an issued invoice (limited edit) saves from here on every screen. --}}
                 <div class="flex flex-wrap items-center justify-end gap-2 {{ $restricted ? '' : 'lg:hidden' }}">
                     <a href="{{ $invoice->exists ? route('invoices.show', $invoice) : route('invoices.index') }}" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Cancel</a>
                     @if ($restricted)
                         <button type="button" @click="submitForm('')" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-sm">Save changes</button>
                     @else
-                        <button type="button" @click="submitForm('pdf')" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Save and download PDF</button>
+                        <button type="button" @click="submitForm('pdf')" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50">Save and preview PDF</button>
                     @endif
                 </div>
             </form>
@@ -852,7 +873,7 @@
                             <span x-show="isInterstate">IGST <span class="font-mono text-gray-900" x-text="'₹' + fmt(totals.igst)"></span></span>
                         </div>
                         <div class="hidden xl:block text-gray-500 mt-0.5">
-                            <kbd class="font-mono text-gray-700">F2</kbd> add row · <kbd class="font-mono text-gray-700">Ctrl+S</kbd> save draft · <kbd class="font-mono text-gray-700">F9</kbd> save and download PDF
+                            <kbd class="font-mono text-gray-700">F2</kbd> add row · <kbd class="font-mono text-gray-700">Ctrl+S</kbd> save draft · <kbd class="font-mono text-gray-700">F9</kbd> preview PDF
                         </div>
                     </div>
                     <div class="flex-1"></div>
@@ -868,9 +889,15 @@
                                 class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 transition">
                             Save draft
                         </button>
+                        {{-- A draft's PDF is a preview marked DRAFT: never the main step,
+                             or it gets sent to the customer instead of the issued invoice. --}}
                         <button type="button" @click="submitForm('pdf')"
+                                class="inline-flex items-center justify-center h-10 px-3 rounded-md text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                            Preview PDF
+                        </button>
+                        <button type="button" @click="submitForm('issue')"
                                 class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-sm transition">
-                            Save and download PDF
+                            Save and issue
                         </button>
                     </div>
                 </div>
@@ -878,15 +905,19 @@
             {{-- Room under the form so the bar never covers its last part. --}}
             <div class="hidden lg:block h-20" aria-hidden="true"></div>
 
-            {{-- Phone and tablet: the total and Save draft always in reach. --}}
+            {{-- Phone and tablet: the total, Save draft and Save and issue always in reach. --}}
             <div class="lg:hidden fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center gap-3">
                 <div class="flex-1 min-w-0">
                     <div class="text-xs text-gray-600">Grand total</div>
                     <div class="font-bold text-lg text-gray-900 tabular-nums leading-tight truncate" x-text="'₹' + fmt(totals.grandTotal)"></div>
                 </div>
                 <button type="button" @click="submitForm('')"
-                        class="inline-flex items-center justify-center h-11 px-5 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-sm">
+                        class="inline-flex items-center justify-center h-11 px-4 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800">
                     Save draft
+                </button>
+                <button type="button" @click="submitForm('issue')"
+                        class="inline-flex items-center justify-center h-11 px-4 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-sm">
+                    Save and issue
                 </button>
             </div>
             <div class="lg:hidden h-20" aria-hidden="true"></div>

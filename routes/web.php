@@ -342,6 +342,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:10,1,web-invoices-invoice-share-email')
         ->name('invoices.share.email');
     Route::get('invoices/{invoice}/share/link', [InvoiceShareController::class, 'publicLink'])->name('invoices.share.link');
+    // Share panel: save the customer's mobile in place so WhatsApp can be used.
+    Route::post('invoices/{invoice}/customer-phone', [InvoiceShareController::class, 'saveCustomerPhone'])
+        ->middleware('throttle:20,1')
+        ->name('invoices.customer-phone');
     Route::post('invoices/{invoice}/cancel', [InvoiceShareController::class, 'cancel'])->name('invoices.cancel');
 
     // Payment reminders — hard cap to prevent spam against a single customer.
@@ -458,6 +462,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('super-admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/users', [\App\Http\Controllers\Admin\DashboardController::class, 'users'])->name('users');
+        // Before /users/{user}, or "export" would be read as a user id.
+        Route::get('/users/export', [\App\Http\Controllers\Admin\DashboardController::class, 'exportUsers'])->name('users.export');
         Route::get('/users/{user}', [\App\Http\Controllers\Admin\DashboardController::class, 'userDetail'])->name('users.show');
         Route::post('/users/{user}/impersonate', [\App\Http\Controllers\Admin\DashboardController::class, 'impersonate'])->name('users.impersonate');
         Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Admin\DashboardController::class, 'resetPassword'])->name('users.reset-password');

@@ -64,6 +64,10 @@ class AuthController extends Controller
         // web onboarding flow's guarantee.
         $user->ensureCompany();
 
+        // Same welcome email as a website sign-up. Never blocks sign-up: the
+        // mailer logs and swallows its own failures.
+        app(\App\Services\Onboarding\OnboardingMailer::class)->send($user, 'welcome');
+
         return $this->tokenResponse($user, $data['device_name'] ?? 'mobile', 201);
     }
 

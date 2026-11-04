@@ -6,6 +6,7 @@
     'confirmLabel' => 'Confirm',
     'confirmClass' => 'bg-brand-700 hover:bg-brand-800',
     'tone' => 'default', // default | danger | warning
+    'autoOpen' => false, // open on page load, e.g. after "Save and issue"
 ])
 
 @php
@@ -19,7 +20,7 @@
     $id = 'confirm-' . md5($action . $title . mt_rand());
 @endphp
 
-<div x-data="{ open: false }" class="inline">
+<div x-data="{ open: {{ $autoOpen ? 'true' : 'false' }} }" class="inline">
     <div @click="open = true" class="inline">
         {{ $slot }}
     </div>

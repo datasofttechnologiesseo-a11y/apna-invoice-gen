@@ -134,6 +134,22 @@ class DashboardController extends Controller
         return view('admin.users', compact('users'));
     }
 
+    /**
+     * Download registered users as Excel or CSV: verified ones by default,
+     * everyone with ?scope=all, narrowed by the list's search. Logged in the
+     * audit trail, since it is a bulk export of personal data.
+     */
+    public function exportUsers(Request $request, \App\Services\ReportExporter $exporter): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $report = new \App\Reports\AdminUserList($request);
+        $format = $request->query('format') === 'csv' ? 'csv' : 'xlsx';
+
+        AuditLog::record('admin.users.exported', $report->title() . ' downloaded as ' . strtoupper($format)
+            . (filled($request->query('search')) ? ' (search: ' . \Illuminate\Support\Str::limit((string) $request->query('search'), 40) . ')' : ''));
+
+        return $format === 'csv' ? $exporter->csv($report) : $exporter->xlsx($report);
+    }
+
     public function userDetail(User $user): View
     {
         $user->load([

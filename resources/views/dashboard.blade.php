@@ -160,7 +160,7 @@
                 {{-- Nothing billed yet. The checklist above already says what to do;
                      this only shows what the page becomes after the first bill. --}}
                 <div class="rounded-xl border border-dashed border-gray-300 bg-white/60 px-5 py-5 sm:px-6">
-                    <div class="text-sm font-semibold text-gray-700">After your first invoice, this page shows</div>
+                    <div class="text-sm font-semibold text-gray-700">After your first invoice you will see</div>
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         @foreach ([
                             ['t' => 'Money owed to you', 'd' => 'Outstanding balance and overdue invoices'],
@@ -363,7 +363,7 @@
                 <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="recent-title">
                     <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between gap-3">
                         <h2 id="recent-title" class="font-semibold text-gray-900">Recent invoices</h2>
-                        <a href="{{ route('invoices.index') }}" class="text-sm text-brand-700 hover:text-brand-800 font-semibold">View all</a>
+                        <a href="{{ route('invoices.index') }}" class="inline-flex items-center py-2.5 -my-2.5 text-sm text-brand-700 hover:text-brand-800 font-semibold">View all</a>
                     </div>
                     @if ($recent->isEmpty())
                         <div class="px-5 py-10 text-center">

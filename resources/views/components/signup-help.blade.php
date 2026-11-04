@@ -19,7 +19,7 @@
         <div class="min-w-0">
             <div class="text-sm font-semibold text-gray-800">Need help? Talk to our team.</div>
             <p class="mt-0.5 text-xs text-gray-500 leading-relaxed">
-                {{ $note ?? 'We help new businesses with sign-up and setup every day.' }}
+                {{ $note ?? 'Call or WhatsApp us for help with sign-up and setup.' }}
             </p>
             <div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
                 @if ($whatsapp)

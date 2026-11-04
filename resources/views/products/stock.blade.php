@@ -79,7 +79,7 @@
                 <section class="bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-4 sm:p-5" x-data="{ dir: @js(old('direction', 'in')), reason: @js(old('reason', '')) }">
                     <h2 class="text-sm font-semibold text-gray-900">Add or remove stock</h2>
                     <p class="text-sm text-gray-600 mt-0.5">
-                        Issued invoices take stock out and purchase invoices bring it in automatically.
+                        Issued invoices take stock out; purchase invoices bring it in.
                         Bought on a supplier's bill? @if (\App\Support\Team::can('purchases.create'))<a href="{{ route('purchases.create') }}" class="text-brand-700 font-semibold underline">Enter a purchase invoice</a> and pick this item on the line, so stock and input tax credit update together.@else Enter it as a purchase invoice and pick this item on the line.@endif
                         Use this form for everything else.
                     </p>

@@ -110,7 +110,7 @@ class NewBusinessJourneyTest extends TestCase
 
         $res = $this->post('/register', $this->signupForm());
         $res->assertRedirect(route('register.verify'));
-        $res->assertSessionHas('status', "We've emailed you a 6-digit verification code.");
+        $res->assertSessionHas('status', 'Verification code sent to your email.');
         $code = (string) $res->getSession()->get('otp_dev_code');
         $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
 
@@ -243,7 +243,7 @@ class NewBusinessJourneyTest extends TestCase
         $firstText = $this->flatten($first->getContent());
         $this->assertStringContainsString('One step left before your first invoice', $firstText);
         $this->assertStringContainsString('67%', $firstText, '2 of 3 setup steps = 66.7% -> 67%');
-        $this->assertStringContainsString('After your first invoice, this page shows', $firstText);
+        $this->assertStringContainsString('After your first invoice you will see', $firstText);
         $first->assertSee('appTour(', false);
 
         // ── 6. First item ─────────────────────────────────────────────────
@@ -470,7 +470,7 @@ class NewBusinessJourneyTest extends TestCase
         $res = $this->from(route('register.verify'))->post(route('register.resend'));
         $res->assertRedirect(route('register.verify'))
             ->assertSessionHasNoErrors()
-            ->assertSessionHas('status', 'A new code is on its way.');
+            ->assertSessionHas('status', 'New code sent.');
         $second = (string) $res->getSession()->get('otp_dev_code');
         $this->assertMatchesRegularExpression('/^\d{6}$/', $second);
         $pending = session('pending_registration');
@@ -500,7 +500,7 @@ class NewBusinessJourneyTest extends TestCase
             $this->travel(31)->seconds();
             $this->from(route('register.verify'))->post(route('register.resend'))
                 ->assertSessionHasNoErrors()
-                ->assertSessionHas('status', 'A new code is on its way.');
+                ->assertSessionHas('status', 'New code sent.');
             $this->assertSame($n, session('pending_registration')['resends']);
         }
 

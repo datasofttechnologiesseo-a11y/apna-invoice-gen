@@ -17,7 +17,7 @@
     $btn = 'inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-md text-sm font-semibold bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 transition';
 @endphp
 
-<div x-data="{ open: {{ $errors->hasAny(['to', 'cc', 'subject', 'body']) ? "'email'" : 'null' }} }" class="bg-white rounded-xl ring-1 ring-gray-200">
+<div x-data="{ open: {{ $errors->hasAny(['to', 'cc', 'subject', 'body']) ? "'email'" : ($errors->has('customer_phone') ? "'mobile'" : 'null') }} }" class="bg-white rounded-xl ring-1 ring-gray-200">
     <div class="p-4">
         <h2 class="font-semibold text-gray-900">Share</h2>
         <p class="mt-0.5 text-xs text-gray-600">Email with the PDF attached, send on WhatsApp, or copy the public link (valid 30 days).</p>
@@ -28,9 +28,13 @@
                     WhatsApp
                 </a>
             @else
-                <a href="{{ route('customers.edit', $invoice->customer_id) }}" class="{{ $btn }} text-gray-600" title="Add the customer's mobile number to share on WhatsApp">
-                    Add mobile
-                </a>
+                {{-- No mobile on the customer: ask for it here instead of sending
+                     the user off to the customer form. --}}
+                <button type="button" @click="open = open === 'mobile' ? null : 'mobile'; $nextTick(() => document.getElementById('share-customer-phone')?.focus())"
+                        :aria-expanded="(open === 'mobile').toString()" class="{{ $btn }}" title="Add the customer's mobile number to share on WhatsApp">
+                    <svg class="w-4 h-4 text-[#128C7E]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488 11.815 11.815 0 0012.05 0z"/></svg>
+                    WhatsApp
+                </button>
             @endif
 
             <button type="button" @click="open = open === 'email' ? null : 'email'" :aria-expanded="(open === 'email').toString()" class="{{ $btn }}">
@@ -56,6 +60,23 @@
             </button>
         </div>
     </div>
+
+    @unless ($waLink)
+        <div x-show="open === 'mobile'" x-cloak class="p-4 border-t border-gray-100">
+            <form method="POST" action="{{ route('invoices.customer-phone', $invoice) }}" class="space-y-2">
+                @csrf
+                <label for="share-customer-phone" class="block text-sm font-medium text-gray-700">{{ $cust?->name }}'s mobile</label>
+                <div class="flex gap-2">
+                    <input id="share-customer-phone" type="tel" name="customer_phone" inputmode="tel" autocomplete="off" required
+                           value="{{ old('customer_phone') }}" placeholder="98765 43210" aria-describedby="customer_phone-error"
+                           class="block w-full h-10 border-gray-300 rounded-md shadow-sm text-sm font-mono">
+                    <button type="submit" class="shrink-0 inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white">Save</button>
+                </div>
+                <p class="text-xs text-gray-500">Saved to the customer, so it is there next time too.</p>
+                <x-input-error :messages="$errors->get('customer_phone')" for="customer_phone" class="mt-1" />
+            </form>
+        </div>
+    @endunless
 
     <div x-show="open === 'email'" x-cloak class="p-4 border-t border-gray-100">
         <form method="POST" action="{{ route('invoices.share.email', $invoice) }}" class="space-y-3">

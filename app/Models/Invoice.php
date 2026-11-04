@@ -160,6 +160,37 @@ class Invoice extends Model
             : null;
     }
 
+    /** Minutes within which an identical payment is taken for a repeat of the same one. */
+    public const DUPLICATE_PAYMENT_MINUTES = 10;
+
+    /**
+     * A payment with no reference (cash, or UPI without a UTR) cannot be told
+     * apart by duplicatePaymentReference(). The same amount, method and date
+     * recorded on this invoice in the last few minutes is almost always the
+     * same payment submitted twice (double click, back button, second tab or
+     * a retried app request), so it is refused unless the user confirms it is
+     * a second payment. Returns the message to show, or null.
+     */
+    public function recentDuplicatePayment(float $amount, string $method, string $receivedOn): ?string
+    {
+        $existing = $this->payments()->reorder()
+            ->where('method', $method)
+            ->whereDate('received_at', \Illuminate\Support\Carbon::parse($receivedOn)->toDateString())
+            ->whereRaw('ABS(amount - ?) < 0.005', [round($amount, 2)])
+            ->where('created_at', '>=', now()->subMinutes(self::DUPLICATE_PAYMENT_MINUTES))
+            ->latest('id')
+            ->first(['receipt_number', 'created_at']);
+
+        if (! $existing) {
+            return null;
+        }
+        $label = config("payment_methods.methods.{$method}.label", ucfirst($method));
+
+        return 'A payment of ₹' . inr($amount) . " by {$label} on this date was recorded "
+            . $existing->created_at->diffForHumans() . " (receipt {$existing->receipt_number}). "
+            . 'If this is a second payment, tick "Record as a separate payment" and save again.';
+    }
+
     /**
      * The status as people read it, the same on every screen and document:
      * Draft, Issued, Partly paid, Paid, Cancelled. ("final" is the stored key
@@ -428,6 +459,37 @@ class Invoice extends Model
             && ! $this->isCancelled()
             && (float) $this->paid_amount <= 0
             && (float) $this->credited_amount <= 0;
+    }
+
+    /**
+     * Shown before cancelling once the GSTR-1 due date for the invoice's month
+     * has passed (the monthly 11th, the earliest a QRMP filer's IFF could
+     * also have carried it). The app cannot see whether the return was filed,
+     * so this warns and never blocks. A reported invoice is corrected with a
+     * credit note (Section 34), not by cancelling it.
+     */
+    public function gstr1CancelWarning(?\Carbon\Carbon $today = null): ?string
+    {
+        if (! $this->invoice_date || $this->isDraft()) {
+            return null;
+        }
+        $period = \App\Support\ReturnPeriod::for($this->invoice_date->copy());
+        $due = $period->gstr1Due();
+        $today ??= \Carbon\Carbon::parse(self::todayInIndia());
+        if ($today->lte($due)) {
+            return null;
+        }
+
+        return "GSTR-1 for {$period->label()} was due on {$due->format('d M Y')}, so this invoice may already be reported. "
+            . 'If it is, issue a credit note instead (Section 34).';
+    }
+
+    /** An issued invoice with value left to credit (the Section 34(2) window is checked separately). */
+    public function canIssueCreditNote(): bool
+    {
+        return ! $this->isDraft()
+            && ! $this->isCancelled()
+            && (float) $this->grand_total > (float) $this->credited_amount;
     }
 
     /**

@@ -1,5 +1,5 @@
 <x-guest-layout
-    :title="'Sign up free, GST Invoice Generator'"
+    :title="'Create a free GST invoice account'"
     :description="'Create your free Apna Invoice account: GST invoices with HSN/SAC, Indian number format and payment reminders, for SMEs, freelancers and CAs.'"
     :keywords="'free GST invoice signup, invoice generator signup India, create GST invoice free, Apna Invoice register'">
     <div class="mb-7">
@@ -56,12 +56,8 @@
             <x-input-error :messages="$errors->get('password')" for="password" class="mt-2" />
         </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-5">
-            <x-input-label for="password_confirmation" :value="__('Confirm password *')" class="font-semibold text-gray-800" />
-            <x-password-input id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="min-h-[44px] !rounded-lg" />
-            <x-input-error :messages="$errors->get('password_confirmation')" for="password_confirmation" class="mt-2" />
-        </div>
+        {{-- No "confirm password" box: the password field has show/hide, so a
+             typo can be seen before submitting, and Forgot password covers the rest. --}}
 
         {{-- DPDP Act §6 / GDPR Art.7, explicit, unbundled, affirmative consent.
              Pre-ticked boxes are NOT valid consent (CJEU Planet49), so defaults are false. --}}

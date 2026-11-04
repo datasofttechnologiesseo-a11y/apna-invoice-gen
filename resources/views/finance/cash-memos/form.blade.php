@@ -130,14 +130,7 @@
                                         <div>
                                             <div class="inline-flex items-center gap-1.5">
                                                 <label class="text-xs text-gray-500 font-semibold">HSN/SAC</label>
-                                                <a href="https://services.gst.gov.in/services/searchhsnsac"
-                                                   target="_blank" rel="noopener"
-                                                   onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   class="inline-flex items-center justify-center p-2 -m-2 rounded text-brand-700 hover:text-brand-800"
-                                                   aria-label="Search HSN/SAC code on the official GST portal"
-                                                   title="Search HSN/SAC code on the official GST portal">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-                                                </a>
+                                                @include('partials.hsn-search-link', ['label' => 'Find code'])
                                             </div>
                                             <input :name="`items[${idx}][hsn_sac]`" :aria-label="`HSN or SAC code for line item ${idx + 1}`" x-model="item.hsn_sac" maxlength="10" class="mt-1 block w-full border-gray-300 rounded text-sm font-mono">
                                         </div>
@@ -170,16 +163,9 @@
                                         <th class="px-3 py-2 text-left w-10">#</th>
                                         <th class="px-3 py-2 text-left">Description</th>
                                         <th class="px-3 py-2 text-left">
-                                            <span class="inline-flex items-center gap-1.5">
+                                            <span class="inline-flex items-center gap-3">
                                                 <span>HSN/SAC</span>
-                                                <a href="https://services.gst.gov.in/services/searchhsnsac"
-                                                   target="_blank" rel="noopener"
-                                                   onclick="window.open(this.href, 'hsn_sac_search', 'width=1100,height=750,resizable=yes,scrollbars=yes'); return false;"
-                                                   class="inline-flex items-center justify-center p-2 -m-2 rounded text-brand-700 hover:text-brand-800"
-                                                   aria-label="Search HSN/SAC code on the official GST portal"
-                                                   title="Search HSN/SAC code on the official GST portal">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-                                                </a>
+                                                @include('partials.hsn-search-link', ['label' => 'Find HSN/SAC code'])
                                             </span>
                                         </th>
                                         <th class="px-3 py-2 text-left">Qty</th>
@@ -289,7 +275,7 @@
                                 </template>
                                 <div class="flex justify-between text-xs text-gray-500"><span>Round off</span><span class="font-mono tabular-nums" x-text="(totals.roundOff >= 0 ? '+ ' : '− ') + '₹ ' + fmt(Math.abs(totals.roundOff))"></span></div>
                                 <div class="flex justify-between pt-2 border-t border-gray-300 font-bold text-base">
-                                    <span>Grand Total</span>
+                                    <span>Grand total</span>
                                     <span class="font-mono tabular-nums" x-text="'₹ ' + fmt(totals.grandTotal)"></span>
                                 </div>
                                 <div class="text-xs text-gray-600 italic pt-1" x-text="amountInWords"></div>

@@ -393,8 +393,8 @@ class DashboardController extends Controller
             && $stats['receipts_issued'] === 0
             && ! $company->expenses()->exists();
 
-        // Review invite, "registration" moment: the first dashboard a new user
-        // sees, and the first visit of an existing user never asked before.
+        // Review invite, dashboard moment: the first dashboard of each day
+        // until the review is given (a new user's very first one included).
         // The other moment - every alternate invoice - is in finalize().
         $reviewPrompt = app(\App\Services\ReviewPrompt::class);
         $showReviewInvite = $reviewPrompt->shouldPromptOnDashboard($user);

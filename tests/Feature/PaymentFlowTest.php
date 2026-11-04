@@ -164,9 +164,11 @@ class PaymentFlowTest extends TestCase
         $user = User::factory()->create();
         $invoice = $this->finalizedInvoice($user);
 
+        // Three different part payments: the same amount, method and date
+        // seconds apart is taken for one payment sent twice (RepeatedPaymentTest).
         for ($i = 0; $i < 3; $i++) {
             $this->actingAs($user)->post(route('invoices.payments', $invoice), [
-                'amount' => 100,
+                'amount' => 100 + $i,
                 'method' => 'cash',
                 'received_at' => now()->toDateString(),
             ]);

@@ -37,7 +37,7 @@
                     <x-empty-state
                         icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         :title="request('search') ? 'No customers match this search' : 'No customers yet'"
-                        :description="request('search') ? 'Try another name, mobile number or GSTIN.' : 'Saved details fill in on every invoice. Their state sets CGST/SGST or IGST.'"
+                        :description="request('search') ? 'Try another name, mobile number or GSTIN.' : 'Add your first customer. Their details fill in on every invoice.'"
                         :actionHref="request('search') ? route('customers.index') : route('customers.create')"
                         :actionLabel="request('search') ? 'Clear search' : 'New customer'"
                     />

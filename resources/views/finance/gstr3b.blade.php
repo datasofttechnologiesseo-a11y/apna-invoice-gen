@@ -330,6 +330,14 @@
                                     @endforeach
                                 </tr>
                             @endif
+                            @if (($itc_carry_in['total'] ?? 0) > 0)
+                                <tr>
+                                    <td class="{{ $cellLabel }} text-gray-700">ITC brought forward <span class="text-xs text-gray-500">(unused credit from earlier periods, used before cash)</span></td>
+                                    @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                        <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carry_in[$head]) }}</td>
+                                    @endforeach
+                                </tr>
+                            @endif
                             <tr>
                                 <td class="{{ $cellLabel }} text-gray-700">Less: paid through ITC <span class="text-xs text-gray-500">(Section 49(5): IGST credit first)</span></td>
                                 <td class="{{ $cellNum }} text-gray-900">−{{ rupees($itc_used['igst']) }}</td>

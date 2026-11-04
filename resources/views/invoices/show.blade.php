@@ -39,7 +39,8 @@
                         message="This assigns the next invoice number and locks the amounts, line items and customer. Notes, terms, due date and transporter details stay editable."
                         confirm-label="Issue invoice"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
-                        tone="default">
+                        tone="default"
+                        :auto-open="request()->boolean('issue') && ! $errors->any() && ! session('error')">
                         <button type="button" class="{{ $btnPrimary }}">Issue invoice</button>
                     </x-confirm-form>
                 @elseif ($hasBalance)
@@ -154,42 +155,18 @@
     </x-slot>
 
     @if ($invoice->canBeCancelled())
-        <dialog id="cancel-invoice-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100vh-3rem)]">
-            <form method="POST" action="{{ route('invoices.cancel', $invoice) }}" class="p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                @csrf
-                <div>
-                    <h2 class="font-display font-bold text-lg text-gray-900">Cancel this invoice?</h2>
-                    <p class="mt-1 text-sm text-gray-600">
-                        <strong class="font-mono">{{ $invoice->invoice_number }}</strong> stays on record for GST audit,
-                        but no further payments can be recorded against it. The number is not reused.
-                    </p>
-                </div>
-                <div>
-                    <label for="cancellation_reason" class="block text-sm font-medium text-gray-700">Reason *</label>
-                    <textarea name="cancellation_reason" id="cancellation_reason" rows="3" required minlength="5" maxlength="500"
-                              aria-describedby="cancellation_reason-error"
-                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                              placeholder="e.g. Wrong amount, replaced by INV-0145">{{ old('cancellation_reason') }}</textarea>
-                    <x-input-error :messages="$errors->get('cancellation_reason')" for="cancellation_reason" class="mt-1" />
-                </div>
-                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
-                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').close()" class="{{ $btnSecondary }}">Keep invoice</button>
-                    <button type="submit" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-danger-600 hover:bg-danger-700 text-white">Cancel invoice</button>
-                </div>
-            </form>
-        </dialog>
-        @error('cancellation_reason')
-            @push('scripts')
-            <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('cancel-invoice-modal')?.showModal());</script>
-            @endpush
-        @enderror
+        @include('invoices.partials.cancel-dialog', ['invoice' => $invoice])
     @endif
 
     <div class="py-6 sm:py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <x-flash />
-            @if ($errors->any() && ! $errors->has('cancellation_reason'))
-                <x-flash type="error" :message="implode(' · ', $errors->all())" :auto="false" />
+            @php
+                // The cancel dialog and the repeated-payment notice show their own message.
+                $pageErrors = collect($errors->getMessages())->except(['cancellation_reason', 'confirm_duplicate', 'customer_phone'])->flatten();
+            @endphp
+            @if ($pageErrors->isNotEmpty() && ! $errors->has('cancellation_reason'))
+                <x-flash type="error" :message="$pageErrors->implode(' · ')" :auto="false" />
             @endif
 
             {{-- First issued invoice: one short line, shown once (server gate:
@@ -266,8 +243,21 @@
                                 <div>
                                     <label for="pay-reference-number" class="block text-sm font-medium text-gray-700">Reference</label>
                                     <input id="pay-reference-number" type="text" name="reference_number" value="{{ old('reference_number', mb_substr((string) request('pay_ref', ''), 0, 80)) }}" maxlength="80" placeholder="UPI txn / cheque no." class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm font-mono text-sm">
+                                    <x-input-error :messages="$errors->get('reference_number')" for="pay-reference-number" class="mt-1" />
                                 </div>
                             </div>
+
+                            {{-- The same amount, method and date was recorded a moment ago:
+                                 most likely the same payment sent twice. --}}
+                            @error('confirm_duplicate')
+                                <div class="rounded-md bg-accent-50 ring-1 ring-accent-200 p-3 text-sm text-accent-900" role="alert">
+                                    <p>{{ $message }}</p>
+                                    <label class="mt-2 flex items-center gap-2 font-medium">
+                                        <input type="checkbox" name="confirm_duplicate" value="1" class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                                        Record as a separate payment
+                                    </label>
+                                </div>
+                            @enderror
 
                             {{-- TDS: collapsed by default. Corporate customers often deduct
                                  TDS under Sections 194-x before paying a service invoice. --}}

@@ -121,6 +121,14 @@
                                             tone="danger">
                                             <button type="button" class="inline-flex items-center min-h-[40px] text-danger-600">Delete</button>
                                         </x-confirm-form>
+                                    @elseif ($inv->canBeCancelled() && \App\Support\Team::can('invoices.cancel'))
+                                        <button type="button" onclick="openCancelDialog(this)" data-cancel-trigger
+                                                data-id="{{ $inv->id }}" data-number="{{ $inv->invoice_number }}"
+                                                data-action="{{ route('invoices.cancel', $inv) }}" data-warning="{{ $inv->gstr1CancelWarning() }}"
+                                                class="inline-flex items-center min-h-[40px] text-danger-600">Cancel</button>
+                                    @elseif ($inv->canIssueCreditNote() && ! $inv->isCreditNoteWindowClosed() && \App\Support\Team::can('credit-notes.create'))
+                                        <a href="{{ route('credit-notes.create', $inv) }}" class="inline-flex items-center min-h-[40px] text-gray-700"
+                                           title="Paid or credited invoices are corrected with a credit note (Section 34)">Credit note</a>
                                     @endif
                                 </div>
                             </li>
@@ -193,6 +201,16 @@
                                                 tone="danger">
                                                 <button type="button" class="text-danger-600 hover:underline">Delete</button>
                                             </x-confirm-form>
+                                        @elseif ($inv->canBeCancelled() && \App\Support\Team::can('invoices.cancel'))
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                                            <button type="button" onclick="openCancelDialog(this)" data-cancel-trigger
+                                                    data-id="{{ $inv->id }}" data-number="{{ $inv->invoice_number }}"
+                                                    data-action="{{ route('invoices.cancel', $inv) }}" data-warning="{{ $inv->gstr1CancelWarning() }}"
+                                                    class="text-danger-600 hover:underline">Cancel</button>
+                                        @elseif ($inv->canIssueCreditNote() && ! $inv->isCreditNoteWindowClosed() && \App\Support\Team::can('credit-notes.create'))
+                                            <span class="text-gray-400 mx-1" aria-hidden="true">·</span>
+                                            <a href="{{ route('credit-notes.create', $inv) }}" class="text-gray-600 hover:underline"
+                                               title="Paid or credited invoices are corrected with a credit note (Section 34)">Credit note</a>
                                         @endif
                                     </td>
                                 </tr>
@@ -207,4 +225,5 @@
     </div>
 
     <x-quick-action-fab />
+    @include('invoices.partials.cancel-dialog', ['invoice' => null, 'returnTo' => 'list'])
 </x-app-layout>

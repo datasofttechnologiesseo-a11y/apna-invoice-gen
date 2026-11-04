@@ -3,12 +3,15 @@
 {{--
     Google review invite.
 
-    Shown to new and existing users alike - on the first dashboard after
-    registration, and right after every second invoice they issue - until
-    they click "Write a review" or "I've already reviewed", after which it
+    Shown to new and existing users alike - on the first dashboard of each
+    day, and right after every second invoice they issue - until they click
+    the poster, "Write a review" or "I've already reviewed", after which it
     never returns (App\Services\ReviewPrompt). On the invoice page it opens
     after a short delay so the issued bill is seen first, and closes with
     one click.
+
+    The whole poster is a link to the Google review page, so a click
+    anywhere on it opens the review form.
 
     The poster's printed QR code is covered by one made for this account: a
     signed link that records the review the moment it is scanned, then goes
@@ -73,7 +76,14 @@
             {{-- 800px wide covers 2x retina in a modal this size. WebP first:
                  the source PNG was 1.5 MB, which is several seconds on the
                  mobile data this audience actually uses. --}}
-            <div class="relative">
+            @if ($reviewUrl)
+                <a href="{{ $reviewUrl }}" target="_blank" rel="noopener"
+                   @click="given()"
+                   aria-label="Write a Google review for Apna Invoice"
+                   class="block relative cursor-pointer">
+            @else
+                <div class="relative">
+            @endif
                 <picture>
                     <source srcset="{{ asset('brand/review-invite.webp') }}" type="image/webp">
                     <img src="{{ asset('brand/review-invite.png') }}"
@@ -91,7 +101,11 @@
                         {!! $scanQr !!}
                     </div>
                 @endif
-            </div>
+            @if ($reviewUrl)
+                </a>
+            @else
+                </div>
+            @endif
 
             <div class="p-5 flex flex-col sm:flex-row items-center gap-3">
                 @if ($reviewUrl)

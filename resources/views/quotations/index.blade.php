@@ -24,7 +24,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span class="flex-1">
-                    Quotations are not reported in GSTR-1 or GSTR-3B and are not affected by locked books. Use <strong>Convert to invoice</strong> on an accepted quote to raise the tax invoice.
+                    Quotations are not reported in GSTR-1 or GSTR-3B and are not affected by locked books. Use <strong>Convert to invoice</strong> on an accepted quote.
                 </span>
                 <button type="button" @click="localStorage.setItem('hideQuotationsTip','1'); show=false"
                         class="shrink-0 inline-flex items-center justify-center w-10 h-10 -my-2 rounded text-lg text-brand-700 hover:text-brand-900 hover:bg-brand-100"

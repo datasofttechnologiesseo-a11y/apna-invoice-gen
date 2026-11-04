@@ -214,7 +214,10 @@
                                     </div>
 
                                     <div class="col-span-1 sm:col-span-2 xl:col-span-1">
-                                        <label :for="`line-${item._uid}-hsn`" class="{{ $label }}">HSN/SAC</label>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label :for="`line-${item._uid}-hsn`" class="{{ $label }}">HSN/SAC</label>
+                                            @include('partials.hsn-search-link', ['size' => 'w-3 h-3', 'label' => 'Find'])
+                                        </div>
                                         <input :id="`line-${item._uid}-hsn`" :name="`items[${idx}][hsn_sac]`" x-model="item.hsn_sac" maxlength="10" inputmode="numeric"
                                                @input="clearLineError(idx, 'hsn_sac')" class="{{ $field }} font-mono">
                                         <p x-show="lineError(idx, 'hsn_sac')" x-text="lineError(idx, 'hsn_sac')" class="mt-1 text-xs text-danger-600"></p>
@@ -296,7 +299,7 @@
                                     <span class="block text-xs text-gray-500">The vendor charges no GST. You pay it in GSTR-3B.</span></span>
                             </label>
                             <details class="ml-6 mt-1 text-xs text-gray-600">
-                                <summary class="inline-flex items-center min-h-[28px] cursor-pointer font-semibold text-brand-700">Why?</summary>
+                                <summary class="inline-flex items-center min-h-[40px] cursor-pointer font-semibold text-brand-700">Why?</summary>
                                 <p class="mt-1">Section 9(3) and 9(4) services, such as GTA, legal and security services, import of services, or commercial rent from an unregistered owner. Report the tax in GSTR-3B 3.1(d) and claim ITC if eligible.</p>
                             </details>
                         </div>
@@ -308,7 +311,7 @@
                                     <span class="block text-xs text-gray-500">Untick for blocked credit. The GST is then added to cost.</span></span>
                             </label>
                             <details class="ml-6 mt-1 text-xs text-gray-600">
-                                <summary class="inline-flex items-center min-h-[28px] cursor-pointer font-semibold text-brand-700">Why?</summary>
+                                <summary class="inline-flex items-center min-h-[40px] cursor-pointer font-semibold text-brand-700">Why?</summary>
                                 <p class="mt-1">Section 17(5) blocks credit on motor vehicles, staff food and catering, and goods for personal use.</p>
                             </details>
                         </div>

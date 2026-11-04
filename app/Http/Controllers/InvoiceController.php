@@ -235,6 +235,16 @@ class InvoiceController extends Controller
             'style' => $template['style'] ?? 'classic',
         ]);
 
+        // Pre-select the customer: one named in the link (from the customer's
+        // page or the end of setup), else the only customer the business has,
+        // so the first invoice does not ask to pick again the customer that
+        // was just added.
+        $preselect = $customers->firstWhere('id', (int) $request->query('customer_id'))
+            ?? ($customers->count() === 1 ? $customers->first() : null);
+        if ($preselect) {
+            $invoice->customer_id = $preselect->id;
+        }
+
         // Pre-fill items from template (ephemeral — not persisted until submit)
         $templateItems = collect($template['items'] ?? [])->map(fn ($i, $idx) => (new InvoiceItem($i))->forceFill(['id' => null]));
         $invoice->setRelation('items', $templateItems);
@@ -321,12 +331,7 @@ class InvoiceController extends Controller
             return $invoice;
         });
 
-        // "Save & Download PDF" one-click flow: the form posts post_save_action=pdf.
-        // Send the user to the show page with ?download=1; an unobtrusive script
-        // on that page triggers the PDF download once the page is rendered.
-        $action = $request->input('post_save_action');
-        $redirect = redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => $action === 'pdf' ? 1 : null]);
-        return $redirect->with('status', $action === 'pdf' ? 'Draft saved. Downloading PDF.' : 'Draft invoice created.');
+        return $this->afterSave($request, $invoice, 'Draft invoice created.');
     }
 
     /**
@@ -532,9 +537,34 @@ class InvoiceController extends Controller
             $invoice->items()->createMany($calc['items']);
         });
 
+        return $this->afterSave($request, $invoice, 'Invoice updated.');
+    }
+
+    /**
+     * Where the invoice form goes after saving, by the button used
+     * (post_save_action):
+     *  - issue: the saved draft with the "Issue this invoice?" confirmation
+     *    open, so issuing runs every check finalize() makes and still asks
+     *    once. Saving no longer hands out a PDF marked DRAFT as the main step.
+     *  - pdf:   the invoice page, which then downloads the PDF (?download=1).
+     *    For a draft that is a preview, numbered "DRAFT".
+     *  - none:  the invoice page.
+     */
+    private function afterSave(Request $request, Invoice $invoice, string $saved): RedirectResponse
+    {
         $action = $request->input('post_save_action');
-        $redirect = redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => $action === 'pdf' ? 1 : null]);
-        return $redirect->with('status', $action === 'pdf' ? 'Invoice saved. Downloading PDF.' : 'Invoice updated.');
+        $invoice->refresh();
+
+        if ($action === 'issue' && $invoice->isDraft()) {
+            return redirect()->route('invoices.show', ['invoice' => $invoice, 'issue' => 1])
+                ->with('status', 'Draft saved. Check it and issue.');
+        }
+        if ($action === 'pdf') {
+            return redirect()->route('invoices.show', ['invoice' => $invoice, 'download' => 1])
+                ->with('status', $invoice->isDraft() ? 'Draft saved. Downloading a preview PDF.' : 'Invoice saved. Downloading PDF.');
+        }
+
+        return redirect()->route('invoices.show', $invoice)->with('status', $saved);
     }
 
     public function destroy(Request $request, Invoice $invoice): RedirectResponse
@@ -626,8 +656,14 @@ class InvoiceController extends Controller
         // The tax split was worked out when the draft was saved. If the
         // customer's state (or yours) has changed since, issuing now would print
         // CGST+SGST on what is now an inter-state sale, or the other way round.
+        // A draft can be worked out again safely, so do it here rather than
+        // send the user back to open and re-save it.
+        $splitUpdated = false;
         if ($invoice->taxBasisIsStale()) {
-            return redirect()->back()->with('error', "The customer's state or your business state has changed since this draft was saved. Open the draft and save it again to update the GST split, then issue it.");
+            if (! $this->refreshTaxBasis($invoice)) {
+                return redirect()->back()->with('error', "The customer's state or your business state has changed, and the amount already received is more than the new total. Open the draft, check the amounts and save it, then issue it.");
+            }
+            $splitUpdated = true;
         }
 
         $issued = DB::transaction(function () use ($invoice) {
@@ -709,7 +745,10 @@ class InvoiceController extends Controller
         }
 
         return redirect()->route('invoices.show', $invoice)
-            ->with('status', 'Invoice ' . $invoice->fresh()->invoice_number . ' issued.')
+            ->with('status', 'Invoice ' . $invoice->fresh()->invoice_number . ' issued.'
+                . ($splitUpdated ? ($invoice->fresh()->is_interstate
+                    ? " The customer is now in another state, so IGST was charged."
+                    : " The customer is now in your state, so CGST and SGST were charged.") : ''))
             ->with('review_invite', $askForReview);
     }
 
@@ -744,6 +783,7 @@ class InvoiceController extends Controller
             'tds_amount' => ['nullable', 'numeric', 'min:0', 'lt:amount'],
             'tds_section' => ['nullable', 'string', 'max:16'],
             'tds_rate' => ['nullable', 'numeric', 'min:0', 'max:30'],
+            'confirm_duplicate' => ['nullable', 'boolean'],
         ]);
 
         // A receipt dated inside a closed period would change that period's
@@ -774,6 +814,12 @@ class InvoiceController extends Controller
             // does not. Checked under the lock so two tabs cannot both pass.
             if ($duplicate = $invoice->duplicatePaymentReference($data['reference_number'] ?? null)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['reference_number' => $duplicate]);
+            }
+            // Without a reference, the same amount, method and date a moment ago
+            // is the same payment sent twice, unless the user says otherwise.
+            if (empty($data['confirm_duplicate'])
+                && ($repeat = $invoice->recentDuplicatePayment((float) $data['amount'], $data['method'], $data['received_at']))) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['confirm_duplicate' => $repeat]);
             }
 
             $company->increment('receipt_counter');
@@ -1205,6 +1251,46 @@ class InvoiceController extends Controller
         return $invoice->items()->orderBy('sort_order')->orderBy('id')->get()->values()
             ->filter(fn ($item) => trim((string) $item->hsn_sac) === '')
             ->keys()->map(fn ($k) => $k + 1)->all();
+    }
+
+    /**
+     * Work a draft's tax out again from its saved lines, for the customer's
+     * and business's states as they are now (finalize(), when the split it was
+     * saved with no longer matches). Same calculation as saving the draft.
+     * False, changing nothing, when an amount already received would exceed
+     * the new total.
+     */
+    private function refreshTaxBasis(Invoice $invoice): bool
+    {
+        $company = $invoice->company;
+        $customer = $invoice->customer;
+        [$isInterstate, $noTax] = $this->calculator->taxBasis(
+            $company->state_id, $customer->state_id, $invoice->supply_type ?: 'regular', (bool) $invoice->reverse_charge
+        );
+        $noTax = $noTax || (bool) $company->composition_dealer;
+        $lines = $invoice->items()->get()->map(fn ($i) => $i->only([
+            'product_id', 'description', 'hsn_sac', 'quantity', 'unit', 'rate', 'discount', 'gst_rate', 'sort_order',
+        ]))->all();
+        $calc = $this->calculator->recalculate($invoice, $lines, $isInterstate, $noTax);
+
+        $paid = (float) $invoice->paid_amount;
+        if ($paid > (float) $calc['totals']['grand_total'] + 0.001) {
+            return false;
+        }
+
+        DB::transaction(function () use ($invoice, $customer, $calc, $isInterstate, $paid) {
+            $invoice->update([
+                'is_interstate' => $isInterstate,
+                'place_of_supply_state_id' => $customer->state_id,
+                ...$calc['totals'],
+                'balance' => max(0, round($calc['totals']['grand_total'] - $paid, 2)),
+            ]);
+            $invoice->items()->delete();
+            $invoice->items()->createMany($calc['items']);
+        });
+        $invoice->refresh();
+
+        return true;
     }
 
     private function guardPaidAmount(array $data, array $calc): void
