@@ -98,6 +98,24 @@ class LandingPageTest extends TestCase
         }
     }
 
+    public function test_the_ads_page_answers_questions_and_compares_with_the_bill_book(): void
+    {
+        $this->get('/start')->assertOk()
+            ->assertSee('Before you sign up')
+            ->assertSee('Does it file my GST return?')
+            ->assertSee('From the bill book and Excel to Apna Invoice')
+            ->assertSee('Made for how India bills')
+            ->assertSee('Billing, GST, stock and money, in one app');
+        // The home page keeps its own FAQ and does not repeat the short one.
+        $this->get('/')->assertOk()->assertDontSee('Before you sign up');
+    }
+
+    public function test_the_ad_group_opens_its_own_business_tab(): void
+    {
+        $this->get('/start?for=wholesale')->assertOk()->assertSee("x-data=\"{ tab: 'wholesale' }\"", false);
+        $this->get('/start')->assertOk()->assertSee("x-data=\"{ tab: 'shop' }\"", false);
+    }
+
     public function test_the_ads_page_is_not_in_the_sitemap(): void
     {
         $this->get('/sitemap.xml')->assertOk()->assertDontSee('/start<', false);

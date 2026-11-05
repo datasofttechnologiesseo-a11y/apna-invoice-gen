@@ -94,10 +94,14 @@
 
 <main id="main">
     @include('partials.landing.hero', ['h1' => $h1, 'sub' => $sub, 'formPrefix' => 'hero-'])
+    @include('partials.landing.india')
     @include('partials.landing.audience', ['activeAudience' => $activeAudience])
     @include('partials.landing.usp')
+    @include('partials.landing.features-grid')
+    @include('partials.landing.compare')
     @include('partials.landing.included')
     @include('partials.landing.steps')
+    @include('partials.landing.faq')
     @include('partials.landing.final-cta')
 </main>
 

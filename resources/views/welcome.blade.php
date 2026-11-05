@@ -197,8 +197,11 @@
      partials/landing. Ad and campaign tags on the URL are kept server-side
      (CaptureAttribution), so the form needs nothing extra for them. --}}
 @include('partials.landing.hero', ['formPrefix' => 'home-'])
+@include('partials.landing.india')
 @include('partials.landing.audience')
 @include('partials.landing.usp')
+@include('partials.landing.features-grid')
+@include('partials.landing.compare')
 @include('partials.landing.included')
 @include('partials.landing.steps')
 
