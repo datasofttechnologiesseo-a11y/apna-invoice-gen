@@ -235,6 +235,14 @@
                         @endforeach
                     </tr>
                 @endif
+                @if (($itc_carry_in['total'] ?? 0) > 0)
+                    <tr>
+                        <td>ITC brought forward <span class="label-sub">(unused credit from earlier periods)</span></td>
+                        <td class="r">{{ inr($itc_carry_in['igst']) }}</td>
+                        <td class="r">{{ inr($itc_carry_in['cgst']) }}</td>
+                        <td class="r">{{ inr($itc_carry_in['sgst']) }}</td>
+                    </tr>
+                @endif
                 <tr>
                     <td>Less: paid through ITC <span class="label-sub">(s.49(5) order)</span></td>
                     <td class="r">−{{ inr($itc_used['igst']) }}</td>

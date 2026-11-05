@@ -11,15 +11,15 @@
     $tourStart = request()->boolean('tour')
         || ($tourUser && $tourUser->guide_completed_at === null && request()->routeIs('dashboard', 'invoices.index'));
     $tourSteps = [
-        ['target' => null, 'title' => 'Welcome to Apna Invoice', 'body' => 'A one-minute tour of where everything is. You can take it again any time from the account menu.'],
-        ['target' => 'new', 'title' => 'Create anything', 'body' => 'Invoices, quotations, purchases, expenses, customers and items all start here. Alt+N opens a new invoice.'],
-        ['target' => 'search', 'title' => 'Search everything', 'body' => 'Find an invoice or a customer, or type what you want to do, like "GSTR-1" or "add customer". Press / to jump here.'],
+        ['target' => null, 'title' => 'Welcome to Apna Invoice', 'body' => 'A short tour of the main screens. Take it again any time from the account menu.'],
+        ['target' => 'new', 'title' => 'Create new', 'body' => 'Invoices, quotations, purchases, expenses, customers and items all start here. Alt+N opens a new invoice.'],
+        ['target' => 'search', 'title' => 'Search', 'body' => 'Find an invoice or a customer, or type what you want to do, like "GSTR-1" or "add customer". Press / to jump here.'],
         ['target' => 'nav-sales', 'title' => 'Sales', 'body' => 'Invoices, quotations, credit notes and payments received.'],
         ['target' => 'nav-purchases', 'can' => 'purchases.index', 'title' => 'Purchases', 'body' => 'Supplier invoices, payments made, expenses and cash memos. They feed your input tax credit.'],
         ['target' => 'nav-gst-returns', 'can' => 'finance.gstr1', 'title' => 'GST returns', 'body' => 'GSTR-1 JSON for the portal, GSTR-2B matching and GSTR-3B, prepared from your books.'],
-        ['target' => 'nav-reports', 'can' => 'reports.index', 'title' => 'Reports', 'body' => 'Profit and loss, aging and registers, ready to send to your CA in Excel or PDF.'],
+        ['target' => 'nav-reports', 'can' => 'reports.index', 'title' => 'Reports', 'body' => 'Profit and loss, aging and registers, in Excel or PDF for your CA.'],
         ['target' => 'company', 'title' => 'Your business', 'body' => 'Switch between businesses here. GSTIN, logo, signature, bank and UPI details are in Company settings.'],
-        ['target' => 'help', 'can' => 'help', 'title' => 'Help is always here', 'body' => 'Opens the guide for the page you are on. For anything else, message us on WhatsApp.'],
+        ['target' => 'help', 'can' => 'help', 'title' => 'Help', 'body' => 'Opens the guide for the page you are on. For anything else, message us on WhatsApp.'],
     ];
     // Only the parts this person's role opens (a team member's tour is shorter).
     $tourSteps = array_values(array_filter($tourSteps, fn ($s) => empty($s['can']) || \App\Support\Team::can($s['can'])));

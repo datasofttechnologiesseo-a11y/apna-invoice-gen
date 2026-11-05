@@ -31,7 +31,8 @@
                 @if ($isFirstRun)
                     <a href="{{ route('invoices.create', ['sample' => 1]) }}" class="inline-flex items-center justify-center h-10 px-4 bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded-md transition whitespace-nowrap">Sample invoice</a>
                 @endif
-                <a href="{{ route('invoices.create') }}" class="inline-flex items-center justify-center gap-1.5 h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition whitespace-nowrap">
+                {{-- Phones use the + New button in the top bar instead. --}}
+                <a href="{{ route('invoices.create') }}" class="hidden sm:inline-flex items-center justify-center gap-1.5 h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm transition whitespace-nowrap">
                     <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     New invoice
                 </a>
@@ -160,7 +161,7 @@
                 {{-- Nothing billed yet. The checklist above already says what to do;
                      this only shows what the page becomes after the first bill. --}}
                 <div class="rounded-xl border border-dashed border-gray-300 bg-white/60 px-5 py-5 sm:px-6">
-                    <div class="text-sm font-semibold text-gray-700">After your first invoice, this page shows</div>
+                    <div class="text-sm font-semibold text-gray-700">After your first invoice you will see</div>
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         @foreach ([
                             ['t' => 'Money owed to you', 'd' => 'Outstanding balance and overdue invoices'],
@@ -248,7 +249,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {{-- Needs attention: one list, most urgent first. It only says
                      "nothing" when nothing is overdue, due or low. --}}
-                <section class="{{ $gstCalendar ? 'lg:col-span-2' : 'lg:col-span-3' }} min-w-0 bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="attention-title">
+                @php $hasSideColumn = $gstCalendar || $whoOwes->isNotEmpty(); @endphp
+                <section class="{{ $hasSideColumn ? 'lg:col-span-2' : 'lg:col-span-3' }} min-w-0 bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="attention-title">
                     <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between gap-3">
                         <h2 id="attention-title" class="font-semibold text-gray-900">Needs attention</h2>
                         @if (count($actionItems) > 0)
@@ -269,6 +271,7 @@
                                         'draft'   => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
                                         'stock'   => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
                                         'gst'     => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                                        'bank'    => 'M3 10h18M5 10v8m4-8v8m6-8v8m4-8v8M3 21h18M12 3l9 5H3l9-5z',
                                     ][$item['icon']] ?? 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
                                 @endphp
                                 <li class="flex items-center gap-3 sm:gap-4 px-5 py-3">
@@ -292,12 +295,14 @@
                             </span>
                             <div>
                                 <div class="text-sm font-semibold text-gray-900">Nothing needs attention</div>
-                                <div class="text-xs text-gray-500">No overdue invoices, returns due this week or items low on stock.</div>
+                                <div class="text-xs text-gray-500">No overdue invoices, returns due this week, items low on stock or bank lines to review.</div>
                             </div>
                         </div>
                     @endif
                 </section>
 
+                @if ($hasSideColumn)
+                <div class="min-w-0 space-y-6">
                 @if ($gstCalendar)
                     {{-- Last month's GST returns in filing order. Dates from ReturnPeriod. --}}
                     @php
@@ -355,6 +360,52 @@
                         </ul>
                     </section>
                 @endif
+
+                @if ($whoOwes->isNotEmpty())
+                    {{-- Who owes you: the five largest balances, each one tap from a
+                         reminder on WhatsApp (or the ledger when there is no mobile). --}}
+                    <section class="min-w-0 bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="owes-title">
+                        <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between gap-3">
+                            <h2 id="owes-title" class="font-semibold text-gray-900">Who owes you</h2>
+                            @if (\App\Support\Team::can('customers.index'))
+                                <a href="{{ route('customers.index', ['owing' => 1, 'sort' => 'outstanding']) }}" class="inline-flex items-center py-2.5 -my-2.5 text-sm text-brand-700 hover:text-brand-800 font-semibold">View all</a>
+                            @endif
+                        </div>
+                        <ul class="divide-y divide-gray-100">
+                            @foreach ($whoOwes as $c)
+                                <li class="flex items-center gap-3 px-5 py-3">
+                                    <div class="flex-1 min-w-0">
+                                        <a href="{{ route('customers.ledger', $c) }}" class="block text-sm font-semibold text-gray-900 hover:text-brand-700 truncate" title="Open the ledger">{{ $c->name }}</a>
+                                        <div class="text-xs">
+                                            <span class="font-semibold tabular-nums text-gray-900">₹{{ rupees($c->owed) }}</span>
+                                            @if ($c->overdue_days > 0)
+                                                <span class="text-gray-400 mx-0.5" aria-hidden="true">·</span>
+                                                <span class="text-danger-700 font-medium">Oldest {{ $c->overdue_days }} {{ \Illuminate\Support\Str::plural('day', $c->overdue_days) }} overdue</span>
+                                            @else
+                                                <span class="text-gray-400 mx-0.5" aria-hidden="true">·</span>
+                                                <span class="text-gray-500">Not overdue</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if ($c->remind_url)
+                                        <a href="{{ $c->remind_url }}" target="_blank" rel="noopener"
+                                           class="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 rounded-md bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-semibold transition whitespace-nowrap"
+                                           aria-label="Remind {{ $c->name }} on WhatsApp">
+                                            <svg class="w-4 h-4 text-money-700" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                            Remind
+                                        </a>
+                                    @else
+                                        <a href="{{ route('customers.ledger', $c) }}"
+                                           class="inline-flex items-center justify-center h-10 sm:h-9 px-3 rounded-md bg-white ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-semibold transition whitespace-nowrap"
+                                           title="No mobile number saved for this customer">Ledger</a>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
+                </div>
+                @endif
             </div>
             @endif
 
@@ -363,7 +414,7 @@
                 <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="recent-title">
                     <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between gap-3">
                         <h2 id="recent-title" class="font-semibold text-gray-900">Recent invoices</h2>
-                        <a href="{{ route('invoices.index') }}" class="text-sm text-brand-700 hover:text-brand-800 font-semibold">View all</a>
+                        <a href="{{ route('invoices.index') }}" class="inline-flex items-center py-2.5 -my-2.5 text-sm text-brand-700 hover:text-brand-800 font-semibold">View all</a>
                     </div>
                     @if ($recent->isEmpty())
                         <div class="px-5 py-10 text-center">
@@ -384,7 +435,7 @@
                                         </div>
                                         <div class="text-right shrink-0">
                                             <div class="font-semibold text-gray-900 tabular-nums">₹{{ rupees($inv->grand_total) }}</div>
-                                            <x-status-badge :status="$inv->status" :label="$inv->statusLabel()" class="mt-0.5" />
+                                            <x-status-badge :status="$inv->displayStatus()" :label="$inv->displayStatusLabel()" class="mt-0.5" />
                                         </div>
                                     </a>
                                 </li>

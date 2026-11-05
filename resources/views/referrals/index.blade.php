@@ -33,7 +33,7 @@
                     It counts when your friend signs up with your code and issues their first invoice.
                 </p>
                 <p class="mt-2 text-sm text-gray-600 max-w-2xl">
-                    Accounts on the free plan today keep it. Lifetime free access goes further: your account stays free
+                    Accounts on the free plan today keep it. With lifetime free access, your account stays free
                     even after paid plans are introduced.
                 </p>
                 <div class="mt-5 flex flex-wrap gap-2">

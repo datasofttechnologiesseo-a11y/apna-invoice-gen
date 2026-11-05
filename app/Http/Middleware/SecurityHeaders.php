@@ -66,16 +66,21 @@ class SecurityHeaders
         $csp = [
             "default-src 'self'",
             // 'unsafe-eval' is Alpine; 'unsafe-inline' is the inline blocks.
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://challenges.cloudflare.com",
-            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
-            "font-src 'self' data: https://fonts.bunny.net",
+            // Google Ads scripts per Google's CSP guide for the Google tag.
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://googleads.g.doubleclick.net https://challenges.cloudflare.com",
+            // Fonts are served from the site itself (resources/css/fonts.css).
+            "style-src 'self' 'unsafe-inline'",
+            "font-src 'self' data:",
             // Customers upload their own logo and signature, and invoices embed
             // them as data URIs for the PDF renderer.
             "img-src 'self' data: blob: https:",
             // Google's documented GA4 set: hits go to region-specific hosts
             // on both analytics domains, and gtag.js calls back to GTM.
-            "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
-            "frame-src https://challenges.cloudflare.com",
+            // Plus Google Ads: conversion and remarketing calls (and the
+            // td.doubleclick.net frame gtag adds for Ads).
+            // Visitors in India are also sent to the google.co.in host.
+            "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://google.com https://www.google.co.in https://www.googleadservices.com https://googleads.g.doubleclick.net https://*.doubleclick.net https://pagead2.googlesyndication.com",
+            "frame-src https://challenges.cloudflare.com https://td.doubleclick.net https://bid.g.doubleclick.net https://www.googletagmanager.com",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",

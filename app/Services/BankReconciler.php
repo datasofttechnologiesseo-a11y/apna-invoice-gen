@@ -43,7 +43,11 @@ class BankReconciler
             // A receipt reaches the bank net of any TDS the customer kept back
             // (Payment::netReceived()); one without TDS, in full. A credit
             // equal to a TDS receipt's gross is some other money.
+            // Money received in cash never passes through the bank: matching a
+            // cash receipt to a bank credit marked the credit as explained while
+            // its real receipt was never recorded.
             $payments = Payment::where('company_id', $company->id)->whereBetween('received_at', [$from, $to])
+                ->where(fn ($q) => $q->whereNull('method')->orWhere('method', '!=', 'cash'))
                 ->whereRaw('ABS((amount - COALESCE(tds_amount, 0)) - ?) < 0.005', [round($amount, 2)])
                 ->with('invoice.customer')->get();
             foreach ($payments as $p) {

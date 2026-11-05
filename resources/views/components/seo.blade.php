@@ -20,6 +20,8 @@
     // the <title> shown in the browser tab / SERP. Falls back to $title/$descr.
     'ogTitle' => null,
     'ogDescription' => null,
+    // Describes the share image for screen readers and some scrapers.
+    'ogImageAlt' => null,
 ])
 
 @php
@@ -77,7 +79,7 @@
     if (! $image && ($routeName = request()->route()?->getName())) {
         $slug = str_starts_with($routeName, 'pages.')
             ? substr($routeName, strlen('pages.'))
-            : null;
+            : ($routeName === 'blog.index' ? 'blog' : null);
         if ($slug && preg_match('/^[a-z0-9-]+$/', $slug)
             && is_file(public_path("brand/og/{$slug}.png"))) {
             $autoCard = "/brand/og/{$slug}.png";
@@ -106,6 +108,11 @@
         && ($ogImageSize = @getimagesize($ogImageFile))) {
         [$ogImageWidth, $ogImageHeight] = $ogImageSize;
         $ogImageType = $ogImageSize['mime'] ?? null;
+        // WhatsApp, Facebook and LinkedIn cache a card by its URL; a version
+        // from the file's date makes them fetch a redrawn card.
+        if (! parse_url($ogImage, PHP_URL_QUERY)) {
+            $ogImage .= '?v=' . filemtime($ogImageFile);
+        }
     }
     $ogImageType ??= match (strtolower(pathinfo($ogImagePath, PATHINFO_EXTENSION))) {
         'png' => 'image/png',
@@ -120,8 +127,15 @@
 
     // Social-card title/description default to the page title/description but
     // can be overridden for a richer unfurl (e.g. "Invoice INV-042 - ₹12,500").
-    $socialTitle = $ogTitle ?: ($title ?: $siteName);
+    // The brand goes with the title on social cards too: WhatsApp shows the
+    // title but not og:site_name, so a shared link read "Free GST Invoice
+    // Generator India" with no sign of whose page it was.
+    $socialTitle = $ogTitle ?: $fullTitle;
     $socialDescr = $ogDescription ?: $descr;
+    $imageAlt = $plain($ogImageAlt) ?: ($siteName . ': ' . ($title ?: config('seo.tagline', 'free GST billing software for India')));
+
+    // Brand nodes put right on every page (see App\Support\BrandSchema).
+    $jsonLd = \App\Support\BrandSchema::normalise(array_values((array) $jsonLd), ! $noindex);
 @endphp
 
 <title>{{ $fullTitle }}</title>
@@ -185,7 +199,7 @@
 <meta property="og:image:width" content="{{ $ogImageWidth }}">
 <meta property="og:image:height" content="{{ $ogImageHeight }}">
 @endif
-<meta property="og:image:alt" content="{{ $socialTitle }}">
+<meta property="og:image:alt" content="{{ $imageAlt }}">
 
 @if ($type === 'article')
     @if ($publishedTime)<meta property="article:published_time" content="{{ $publishedTime }}">@endif
@@ -200,7 +214,7 @@
 <meta name="twitter:title" content="{{ $socialTitle }}">
 <meta name="twitter:description" content="{{ $socialDescr }}">
 <meta name="twitter:image" content="{{ $ogImage }}">
-<meta name="twitter:image:alt" content="{{ $socialTitle }}">
+<meta name="twitter:image:alt" content="{{ $imageAlt }}">
 @if ($twitter)
     <meta name="twitter:site" content="{{ $twitter }}">
     <meta name="twitter:creator" content="{{ $twitter }}">

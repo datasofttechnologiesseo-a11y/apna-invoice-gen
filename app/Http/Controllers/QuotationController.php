@@ -300,7 +300,7 @@ class QuotationController extends Controller
             'decline_reason' => $reason,
         ]);
         AuditLog::record('quotation.declined',
-            "Quotation {$quotation->quote_number} marked as declined" . ($reason ? " — {$reason}" : ''),
+            "Quotation {$quotation->quote_number} marked as declined" . ($reason ? " · Reason: {$reason}" : ''),
             $quotation
         );
         return redirect()->route('quotations.show', $quotation)->with('status', 'Quotation marked as declined.');

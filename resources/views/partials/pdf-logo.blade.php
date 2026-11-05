@@ -7,5 +7,5 @@
     }
 @endphp
 @if ($pdfLogo)
-    <img src="{{ $pdfLogo['file'] }}" alt="{{ $c->name }} logo" width="{{ $pdfLogo['w'] }}" height="{{ $pdfLogo['h'] }}" style="display: block; width: {{ $pdfLogo['w'] }}px; height: {{ $pdfLogo['h'] }}px; margin-bottom: 6px;">
+    <img src="{{ $pdfLogo['file'] }}" alt="{{ $c->name }} logo" width="{{ $pdfLogo['w'] }}" height="{{ $pdfLogo['h'] }}" style="display: block; width: {{ $pdfLogo['w'] }}px; height: {{ $pdfLogo['h'] }}px; margin-bottom: 8px;">
 @endif

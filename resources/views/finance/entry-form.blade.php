@@ -38,7 +38,7 @@
                                     </svg>
                                 </div>
                                 <div class="flex-1">
-                                    <h3 class="font-bold text-gray-900">Standard Expense</h3>
+                                    <h3 class="font-bold text-gray-900">Standard expense</h3>
                                     <p class="text-xs text-gray-500 mt-0.5">Bank · UPI · Card · Cheque</p>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                     </svg>
                                 </div>
                                 <div class="flex-1">
-                                    <h3 class="font-bold text-gray-900 group-hover:text-accent-700">Cash Memo <span class="text-[10px] font-semibold text-accent-700 bg-accent-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h3>
+                                    <h3 class="font-bold text-gray-900 group-hover:text-accent-700">Cash memo <span class="text-[10px] font-semibold text-accent-700 bg-accent-50 px-2 py-0.5 rounded uppercase tracking-wider align-middle ml-1">Generates voucher</span></h3>
                                     <p class="text-xs text-gray-500 mt-0.5">Cash purchase without a proper bill</p>
                                 </div>
                             </div>
@@ -73,7 +73,7 @@
                             </p>
                             <ul class="mt-3 space-y-1 text-xs text-gray-600">
                                 <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Printable A4 cash memo as your purchase voucher</span></li>
-                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Creates the matching expense entry automatically</span></li>
+                                <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>Creates the matching expense entry</span></li>
                                 <li class="flex items-start gap-1.5"><span class="text-accent-700 font-bold">✓</span><span>FY-wise memo number, e.g. CM/26-27/0001</span></li>
                             </ul>
                             <div class="mt-4 text-xs text-accent-700 font-semibold inline-flex items-center gap-1 group-hover:underline">

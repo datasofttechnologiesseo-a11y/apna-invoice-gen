@@ -3,12 +3,15 @@
 {{--
     Google review invite.
 
-    Shown to new and existing users alike - on the first dashboard after
-    registration, and right after every second invoice they issue - until
-    they click "Write a review" or "I've already reviewed", after which it
+    Shown to new and existing users alike - on the first dashboard of each
+    day, and right after every second invoice they issue - until they click
+    the poster, "Write a review" or "I've already reviewed", after which it
     never returns (App\Services\ReviewPrompt). On the invoice page it opens
     after a short delay so the issued bill is seen first, and closes with
     one click.
+
+    The whole poster is a link to the Google review page, so a click
+    anywhere on it opens the review form.
 
     The poster's printed QR code is covered by one made for this account: a
     signed link that records the review the moment it is scanned, then goes
@@ -70,18 +73,22 @@
 
             <h2 id="review-invite-title" class="sr-only">Leave us a Google review</h2>
 
-            {{-- 800px wide covers 2x retina in a modal this size. WebP first:
-                 the source PNG was 1.5 MB, which is several seconds on the
-                 mobile data this audience actually uses. --}}
-            <div class="relative">
-                <picture>
-                    <source srcset="{{ asset('brand/review-invite.webp') }}" type="image/webp">
-                    <img src="{{ asset('brand/review-invite.png') }}"
-                         alt="Love our service? Leave us a review. Scan the QR code to share your experience on Google."
-                         class="w-full h-auto rounded-t-2xl"
-                         loading="lazy" decoding="async"
-                         width="800" height="1200">
-                </picture>
+            {{-- 800px wide covers 2x retina in a modal this size. WebP only
+                 (93 KB): the PNG was 1 MB, several seconds on the mobile data
+                 this audience actually uses, and every current browser shows WebP. --}}
+            @if ($reviewUrl)
+                <a href="{{ $reviewUrl }}" target="_blank" rel="noopener"
+                   @click="given()"
+                   aria-label="Write a Google review for Apna Invoice"
+                   class="block relative cursor-pointer">
+            @else
+                <div class="relative">
+            @endif
+                <img src="{{ asset('brand/review-invite.webp') }}"
+                     alt="Love our service? Leave us a review. Scan the QR code to share your experience on Google."
+                     class="w-full h-auto rounded-t-2xl"
+                     loading="lazy" decoding="async"
+                     width="800" height="1200">
                 @if ($scanQr)
                     {{-- Laid exactly over the printed code (x 100-368, y 498-766
                          of the 800 x 1200 poster), so it scales with the image. --}}
@@ -91,7 +98,11 @@
                         {!! $scanQr !!}
                     </div>
                 @endif
-            </div>
+            @if ($reviewUrl)
+                </a>
+            @else
+                </div>
+            @endif
 
             <div class="p-5 flex flex-col sm:flex-row items-center gap-3">
                 @if ($reviewUrl)

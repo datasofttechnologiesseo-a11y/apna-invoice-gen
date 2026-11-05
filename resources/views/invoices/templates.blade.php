@@ -19,7 +19,7 @@
                 <div class="flex-1 text-sm">
                     <div class="font-display font-bold text-gray-900 text-base">Sample invoices</div>
                     <p class="mt-1 text-gray-600 leading-relaxed">
-                        Each card shows sample items with GST for your state. <strong class="text-brand-700">Preview PDF</strong> opens the full invoice with <strong>{{ $company->name }}</strong>'s branding.
+                        Sample items with GST worked out for your state. <strong class="text-brand-700">Preview PDF</strong> opens the full invoice with <strong>{{ $company->name }}</strong>'s branding.
                     </p>
                 </div>
             </div>

@@ -8,16 +8,16 @@ use App\Models\User;
  * Decides when to invite a user to leave a Google review.
  *
  * Two moments, for new and existing users alike, until the review is given:
- *  - at registration: the first dashboard a user sees, and the first time an
- *    existing user who has never been asked opens the dashboard;
+ *  - on the dashboard, once a day: the first dashboard a new user sees, then
+ *    the first dashboard of every later day;
  *  - on every alternate invoice: right after issuing their 2nd, 4th, 6th…
  *    invoice.
- * Once they click "Write a review" or "I've already reviewed", it never
- * appears again.
+ * Once they click the poster, "Write a review" or "I've already reviewed",
+ * it never appears again.
  */
 class ReviewPrompt
 {
-    /** First dashboard visit of anyone who has never been asked. */
+    /** The first dashboard of the day, until the review is given. */
     public function shouldPromptOnDashboard(User $user): bool
     {
         // A team member is not the account holder asked for the review.
@@ -25,7 +25,8 @@ class ReviewPrompt
             return false;
         }
 
-        return $user->review_given_at === null && $user->review_prompt_shown_at === null;
+        return $user->review_given_at === null
+            && ($user->review_prompt_shown_at === null || ! $user->review_prompt_shown_at->isToday());
     }
 
     /** Right after issuing an invoice, when it is an even-numbered one. */

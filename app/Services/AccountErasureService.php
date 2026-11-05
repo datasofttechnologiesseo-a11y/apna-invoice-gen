@@ -222,6 +222,9 @@ class AccountErasureService
             'auto_backup_enabled' => false,
             'referral_code' => null,
             'referred_by_user_id' => null,
+            // The ad click id, campaign tags and referring site of the visit
+            // that signed them up.
+            'signup_attribution' => null,
             'erased_at' => now(),
         ])->save();
 

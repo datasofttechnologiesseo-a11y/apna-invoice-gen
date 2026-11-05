@@ -8,7 +8,7 @@
             @if ($counts['unmatched'])
                 <form method="POST" action="{{ route('bank.auto-match') }}" class="self-start sm:self-auto">
                     @csrf
-                    <button class="inline-flex items-center justify-center h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm whitespace-nowrap">Match automatically</button>
+                    <button class="inline-flex items-center justify-center h-10 px-4 bg-white ring-1 ring-inset ring-gray-300 text-gray-800 hover:bg-gray-50 text-sm font-semibold rounded-md whitespace-nowrap">Match automatically</button>
                 </form>
             @endif
         </div>
@@ -51,7 +51,7 @@
                                             </span>
                                             <x-confirm-form :action="route('bank.statements.destroy', $st)" method="DELETE" title="Remove this statement?"
                                                             message="Its lines and matches are deleted. Receipts, payments and expenses are not affected." confirmLabel="Remove statement" confirmClass="bg-danger-600 hover:bg-danger-700" tone="danger">
-                                                <button type="button" class="inline-flex items-center justify-center min-h-[36px] px-3 rounded-md text-sm font-medium text-danger-700 ring-1 ring-danger-200 hover:bg-danger-50"
+                                                <button type="button" class="inline-flex items-center justify-center min-h-[40px] px-1 text-sm text-gray-500 hover:text-danger-700 hover:underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500"
                                                         aria-label="Remove the {{ $st->account_name }} statement for {{ $st->period_from?->format('d M') }} to {{ $st->period_to?->format('d M Y') }}">Remove</button>
                                             </x-confirm-form>
                                         </li>
@@ -80,7 +80,7 @@
                             <x-input-error :messages="$errors->get('file')" for="file" class="mt-1" />
                         </div>
                         <div class="flex justify-end">
-                            <button class="inline-flex items-center justify-center h-10 px-4 bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50 text-sm font-semibold rounded-md">Upload and match</button>
+                            <button class="w-full sm:w-auto inline-flex items-center justify-center h-11 sm:h-10 px-4 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-md shadow-sm">Upload and match</button>
                         </div>
                     </form>
                 </div>

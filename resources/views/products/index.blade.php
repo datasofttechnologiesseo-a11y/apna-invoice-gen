@@ -115,9 +115,8 @@
                 @if ($status === 'archived')
                     <div class="px-4 py-3 bg-accent-50 border-b border-accent-200 text-sm text-accent-900">
                         <strong>Archived is not deleted.</strong>
-                        Deleting an item already used on an invoice archives it; those invoices do not change.
-                        Archived items are not offered on new invoices.
-                        <span class="block mt-1">Use <strong>Restore</strong> on a row to bring it back into use.</span>
+                        An item already used on an invoice is archived when deleted, and those invoices do not change.
+                        Archived items are not offered on new invoices until you click <strong>Restore</strong>.
                     </div>
                 @endif
 
@@ -193,7 +192,7 @@
                                             :action="route('products.destroy', $p)"
                                             method="DELETE"
                                             title="{{ $willArchive ? 'Archive' : 'Delete' }} {{ $p->name }}?"
-                                            message="{{ $willArchive ? 'This item is used on ' . $usedOn . ', so it will be archived, not deleted. That history does not change. It will not be offered on new invoices; restore it any time from the Archived tab.' : 'This item has never been used, so it will be deleted. This cannot be undone.' }}"
+                                            message="{{ $willArchive ? 'This item is used on ' . $usedOn . ', so it will be archived, not deleted. Those invoices do not change. It will not be offered on new invoices; restore it any time from the Archived tab.' : 'This item has never been used, so it will be deleted. This cannot be undone.' }}"
                                             confirm-label="{{ $willArchive ? 'Archive' : 'Delete' }} item"
                                             confirm-class="{{ $willArchive ? 'bg-brand-700 hover:bg-brand-800' : 'bg-danger-600 hover:bg-danger-700' }}"
                                             tone="{{ $willArchive ? 'warning' : 'danger' }}">
@@ -277,7 +276,7 @@
                                                 :action="route('products.destroy', $p)"
                                                 method="DELETE"
                                                 title="{{ $willArchive ? 'Archive' : 'Delete' }} {{ $p->name }}?"
-                                                message="{{ $willArchive ? 'This item is used on ' . $usedOn . ', so it will be archived, not deleted. That history does not change. It will not be offered on new invoices; restore it any time from the Archived tab.' : 'This item has never been used, so it will be deleted. This cannot be undone.' }}"
+                                                message="{{ $willArchive ? 'This item is used on ' . $usedOn . ', so it will be archived, not deleted. Those invoices do not change. It will not be offered on new invoices; restore it any time from the Archived tab.' : 'This item has never been used, so it will be deleted. This cannot be undone.' }}"
                                                 confirm-label="{{ $willArchive ? 'Archive' : 'Delete' }} item"
                                                 confirm-class="{{ $willArchive ? 'bg-brand-700 hover:bg-brand-800' : 'bg-danger-600 hover:bg-danger-700' }}"
                                                 tone="{{ $willArchive ? 'warning' : 'danger' }}">

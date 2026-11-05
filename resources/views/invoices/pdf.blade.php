@@ -311,15 +311,15 @@
                     }
                 @endphp
                 @if ($logo && ! $logoBeside)
-                    <img src="{{ $logo['file'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px; margin-bottom: 6px;">
+                    <img src="{{ $logo['file'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" style="display: block; width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px; margin-bottom: 8px;">
                 @endif
-                <table style="width: 100%;"><tr>
+                <table style="width: 100%; border-collapse: collapse;"><tr>
                 @if ($logoBeside)
-                    <td style="vertical-align: top; width: {{ $logo['w'] }}px; padding-right: 10px;">
-                        <img src="{{ $logo['file'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" style="width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px;">
+                    <td style="vertical-align: top; width: {{ $logo['w'] }}px; padding: 0 12px 0 0;">
+                        <img src="{{ $logo['file'] }}" alt="{{ $c->name }} logo" width="{{ $logo['w'] }}" height="{{ $logo['h'] }}" style="display: block; width: {{ $logo['w'] }}px; height: {{ $logo['h'] }}px;">
                     </td>
                 @endif
-                <td style="vertical-align: top;">
+                <td style="vertical-align: top; padding: 0;">
                 <div class="co-name">{{ $c->name }}</div>
                 <div class="small muted" style="margin-top: 3px; line-height: 1.45;">
                     {!! nl2br(e(trim($c->address_line1 . ($c->address_line2 ? ', ' . $c->address_line2 : '') . "\n" . trim(($c->city ?? '') . ($c->city && $c->state?->name ? ', ' : '') . ($c->state?->name ?? '') . ($c->state?->gst_code ? ' · State ' . $c->state->gst_code : '') . ' ' . ($c->postal_code ?? '')) . "\n" . $c->country))) !!}
@@ -755,16 +755,7 @@
             <td style="width: 43%; vertical-align: bottom; text-align: right;">
                 {{-- "For <business>", the signature (or room to sign), then the
                      signatory line: the usual order on an Indian tax invoice. --}}
-                @php $sig = \App\Support\BrandImage::fit($c->signature_path, 150, 46); @endphp
-                <table style="width: 190px; margin-left: auto;">
-                    <tr><td style="text-align: center; font-size: 9px; font-weight: bold;">For {{ $c->name }}</td></tr>
-                    <tr><td style="height: 50px; vertical-align: bottom; text-align: center;">
-                        @if ($sig)
-                            <img src="{{ $sig['file'] }}" alt="Authorised signature" width="{{ $sig['w'] }}" height="{{ $sig['h'] }}" style="width: {{ $sig['w'] }}px; height: {{ $sig['h'] }}px;">
-                        @endif
-                    </td></tr>
-                    <tr><td class="x-small muted" style="text-align: center; padding-top: 3px; border-top: 1px solid {{ $t['divider'] }};">Authorised signatory</td></tr>
-                </table>
+                @include('partials.pdf-signatory', ['c' => $c, 'line' => $t['divider']])
             </td>
         </tr>
     </table>

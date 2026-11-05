@@ -59,8 +59,8 @@
     :json-ld="[$appSchema, $faqSchema]">
 
     <p>
-        Most billing software in India is either a desktop program you must install and license per computer, or
-        a monthly subscription that costs more than a small shop's electricity bill. <strong>{{ $appName }}</strong> is
+        Most billing software in India is either a desktop program licensed per computer, or a monthly
+        subscription. <strong>{{ $appName }}</strong> is
         free billing software that runs in the browser on any phone, tablet or computer. Make GST bills, print receipts,
         track who owes you money and give your CA clean reports at filing time.
     </p>
@@ -72,7 +72,7 @@
             CGST Rule 48.</li>
         <li><strong>Counter sales.</strong> Bill walk-in customers and print on 80 mm thermal paper at the counter.
             Cash purchases from sellers who give no bill are recorded as cash memos.</li>
-        <li><strong>Get paid faster.</strong> A UPI QR code on every bill, one-tap WhatsApp share with a pre-written
+        <li><strong>Collect payments.</strong> A UPI QR code on every bill, one-tap WhatsApp share with a pre-written
             message, and payment reminders for overdue bills.</li>
         <li><strong>Know your dues.</strong> Every bill tracks paid, partially paid and outstanding amounts, and the
             receivables aging report shows who owes you and for how long.</li>
@@ -121,8 +121,7 @@
     <h2>Built for Indian businesses</h2>
     <p>
         Indian number format (lakhs and crores), all GST slabs pre-loaded, financial-year invoice numbering that
-        resets on 1 April, state-wise place of supply for correct tax splits, and UPI-first payments. It works the way
-        Indian businesses bill, from kirana counters to consultants.
+        resets on 1 April, state-wise place of supply for correct tax splits, and UPI payments.
     </p>
 
     <h2>Frequently asked questions</h2>
@@ -135,10 +134,10 @@
         @endforeach
     </div>
 
-    <h2>Start billing today</h2>
+    <h2>Start billing</h2>
     <p>
-        <a href="{{ route('register') }}">Create your free account</a>. No card, no trial timer. Add your business
-        once, and your first GST bill is a minute away. Want to see the maths first? Try the
+        <a href="{{ route('register') }}">Create your free account</a>. No card and no trial period. Add your business
+        once and issue your first GST bill. To check the numbers first, try the
         <a href="{{ route('pages.gst-calculator') }}">free GST calculator</a>, or read what a compliant bill must contain
         in our <a href="{{ route('pages.gst-invoice-format') }}">GST invoice format guide</a>.
     </p>

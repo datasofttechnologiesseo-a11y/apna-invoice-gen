@@ -6,6 +6,24 @@
                 <a href="{{ route('admin.users') }}" class="inline-flex items-center min-h-[40px] px-3 text-sm text-gray-600 hover:text-gray-900">Clear</a>
             @endif
         </form>
+        {{-- Download, narrowed by the search above when there is one. --}}
+        <div x-data="{ open: false }" class="relative" @click.outside="open = false" @keydown.escape="open = false">
+            <button type="button" @click="open = !open" :aria-expanded="open"
+                    class="inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-md bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                Download
+            </button>
+            <div x-show="open" x-cloak x-transition
+                 class="absolute right-0 z-20 mt-1 w-56 rounded-lg bg-white shadow-lg ring-1 ring-black/10 py-1 text-sm">
+                <div class="px-3 pt-1.5 pb-1 text-xs font-semibold text-gray-500">Verified users</div>
+                <a href="{{ route('admin.users.export', array_filter(['format' => 'xlsx', 'search' => request('search')])) }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50">Excel (.xlsx)</a>
+                <a href="{{ route('admin.users.export', array_filter(['format' => 'csv', 'search' => request('search')])) }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50">CSV</a>
+                <div class="my-1 border-t border-gray-100"></div>
+                <div class="px-3 pt-1.5 pb-1 text-xs font-semibold text-gray-500">All users</div>
+                <a href="{{ route('admin.users.export', array_filter(['format' => 'xlsx', 'scope' => 'all', 'search' => request('search')])) }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50">Excel (.xlsx)</a>
+                <a href="{{ route('admin.users.export', array_filter(['format' => 'csv', 'scope' => 'all', 'search' => request('search')])) }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50">CSV</a>
+            </div>
+        </div>
     </x-slot:action>
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">

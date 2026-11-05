@@ -16,6 +16,8 @@
         :title="'Quotation ' . $number"
         :description="'Quotation ' . $number . ' from ' . ($c?->name ?: 'a business') . ' for ' . $grand . '. View or download the PDF.'"
         :og-title="$ogTitle"
+        {{-- og:url keeps the signature: Facebook and LinkedIn fetch it again. --}}
+        :url="rtrim(config('app.url'), '/') . '/' . request()->path() . (request()->getQueryString() ? '?' . request()->getQueryString() : '')"
         :noindex="true" />
     @vite(['resources/css/app.css'])
 </head>

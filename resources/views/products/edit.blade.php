@@ -151,7 +151,12 @@
                             <x-input-label for="opening_stock" value="Opening stock" />
                             <x-text-input inputmode="decimal" id="opening_stock" name="opening_stock" type="number" step="any" min="0" class="mt-1 block w-full"
                                           :value="old('opening_stock', $product->exists ? (0 + (float) $product->opening_stock) : 0)" />
-                            <p class="text-xs text-gray-500 mt-1">Quantity on hand today, before any new bill.</p>
+                            @if ($product->exists && $product->track_stock && $product->stockMovements()->exists())
+                                {{-- Changing the opening figure after bills have moved stock shifts every balance since. --}}
+                                <p class="text-xs text-gray-500 mt-1">What you started with. To fix today's figure, <a href="{{ route('products.stock', ['product' => $product, 'mode' => 'count']) }}#adjust" class="font-semibold text-brand-700 hover:underline">enter a stock count</a> instead.</p>
+                            @else
+                                <p class="text-xs text-gray-500 mt-1">Quantity on hand today, before any new bill.</p>
+                            @endif
                             <x-input-error :messages="$errors->get('opening_stock')" for="opening_stock" class="mt-1" />
                         </div>
                         <div>

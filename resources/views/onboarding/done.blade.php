@@ -6,8 +6,10 @@
                 <div class="mx-auto w-20 h-20 rounded-full bg-white/20 backdrop-blur ring-4 ring-white/30 flex items-center justify-center">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 </div>
-                <h1 class="mt-6 font-display text-3xl md:text-4xl font-extrabold">Setup complete</h1>
-                <p class="mt-3 text-money-50 max-w-xl mx-auto text-lg">Your business is ready to issue GST invoices.</p>
+                <h1 class="mt-6 font-display text-3xl md:text-4xl font-extrabold">{{ $hasCustomer ? 'Setup complete' : 'Business details saved' }}</h1>
+                <p class="mt-3 text-money-50 max-w-xl mx-auto text-lg">
+                    {{ $hasCustomer ? 'Your business is ready to issue GST invoices.' : 'Add your customer on the invoice form, then issue the invoice.' }}
+                </p>
             </div>
         </div>
 
@@ -46,20 +48,21 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-                @if ($hasCustomer)
-                    <a href="{{ route('invoices.create') }}" class="inline-flex items-center px-8 py-4 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-brand transition text-lg">
-                        Create your first invoice
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
-                    </a>
-                @else
-                    <a href="{{ route('customers.create') }}" class="inline-flex items-center px-8 py-4 bg-accent-700 hover:bg-accent-800 text-white font-bold rounded-xl shadow-brand transition text-lg">
-                        Add a customer →
-                    </a>
-                @endif
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center px-8 py-4 bg-white border-2 border-gray-200 hover:border-brand-500 text-gray-800 font-semibold rounded-xl transition">
-                    Go to dashboard
+            {{-- One main step. The customer added in setup comes pre-selected; without
+                 one, the invoice form adds a customer without leaving the page. --}}
+            <div class="mt-8 flex flex-col items-center gap-3">
+                <a href="{{ route('invoices.create', array_filter(['customer_id' => $customer?->id])) }}"
+                   class="inline-flex items-center px-8 py-4 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-brand transition text-lg">
+                    Create your first invoice
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M5 12h13"/></svg>
                 </a>
+                <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm">
+                    @unless ($hasCustomer)
+                        <a href="{{ route('customers.create') }}" class="text-brand-700 hover:underline font-medium">Add a customer first</a>
+                        <span class="text-gray-300" aria-hidden="true">·</span>
+                    @endunless
+                    <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-gray-900 hover:underline font-medium">Go to dashboard</a>
+                </div>
             </div>
 
             <div class="mt-8 pt-6 border-t text-sm text-gray-500">

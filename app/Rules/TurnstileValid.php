@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Log;
  */
 class TurnstileValid implements ValidationRule
 {
+    /**
+     * Run even when the field is missing or empty. Laravel skips an ordinary
+     * rule for an absent field, so a bot that simply left the captcha field
+     * out of its request would have got through.
+     */
+    public bool $implicit = true;
+
     public function __construct(private readonly ?string $ip = null) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void

@@ -48,7 +48,7 @@
 <x-layouts.marketing
     title="Contact us: India-based support"
     eyebrow="Contact"
-    lead="Running 100+ invoices a month, managing several GSTINs, or stuck on a setting? Our India-based team replies within one business day."
+    lead="Sales, support and partnerships. Our team in India replies within one business day."
     description="Contact our India-based team for help with GST invoicing, multi-GSTIN setup, custom plans and partnerships. Support for MSMEs, startups, freelancers and CAs."
     keywords="Apna Invoice contact, GST invoice support India, invoice software help India, MSME invoicing support, Datasoft Technologies contact, CA partnership India"
     :json-ld="[$contactSchema]">
@@ -97,7 +97,7 @@
         <li>For a bug, include your account email and a short description of what you saw.</li>
     </ul>
 
-    <h2>Or send us a message</h2>
+    <h2>Send a message</h2>
 
     @if ($errors->any())
         {{-- Brought into view, so a failed send is never below the fold. --}}

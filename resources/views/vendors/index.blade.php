@@ -35,7 +35,7 @@
                     <x-empty-state
                         icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                         :title="request('search') ? 'No vendors match the search' : 'No vendors yet'"
-                        :description="request('search') ? 'Search by another name or GSTIN.' : 'The vendor state sets CGST/SGST or IGST; the GSTIN is used for the GSTR-2B match.'"
+                        :description="request('search') ? 'Search by another name or GSTIN.' : 'Add your first vendor to record purchase invoices.'"
                         :actionHref="request('search') ? route('vendors.index') : route('vendors.create')"
                         :actionLabel="request('search') ? 'Clear search' : 'New vendor'"
                     />

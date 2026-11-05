@@ -13,7 +13,15 @@ use Illuminate\Support\Carbon;
  */
 class Gstr3bBuilder
 {
-    public function build(Company $company, Carbon $from, Carbon $to): array
+    /** How far back unused credit is replayed: older credit is taken as used. */
+    private const ITC_CARRY_MONTHS = 60;
+
+    /**
+     * @param  array{igst: float, cgst: float, sgst: float}|null  $itcCarryIn
+     *         Unused credit brought into the period. Null works it out by
+     *         replaying the earlier periods (see itcCarryIn()).
+     */
+    public function build(Company $company, Carbon $from, Carbon $to, ?array $itcCarryIn = null): array
     {
         // 3.1(a) and 3.1(c) come from the same GSTR-1 build the GSTR-1
         // export uses, so the two returns always agree: issued, non-cancelled,
@@ -166,7 +174,13 @@ class Gstr3bBuilder
             $payable[$head] = round($v + $carryIn[$head], 2);
             $carryOut[$head] = min(0.0, $payable[$head]);
         }
-        $setOff = $this->settleNet($payable, $itc);
+        // Credit left unused in earlier periods stays in the electronic credit
+        // ledger (s.49(2)) and is used before cash. It is not part of this
+        // period's Table 4, only of the set-off. Without it a month with sales
+        // and no purchases showed the full tax as cash while last month's
+        // unused credit was shown as "available next month" and then lost.
+        $itcCarryIn ??= $this->itcCarryIn($company, $from, $to);
+        $setOff = $this->settleNet($payable, $itc, $itcCarryIn);
         $netCash = $setOff['cash'];
         $itcCarried = $setOff['carried'];
         // Reverse-charge tax on inward supplies (3.1(d)) must be paid in cash -
@@ -189,6 +203,12 @@ class Gstr3bBuilder
             'negative_carry_out' => $carryOut,
             'payable' => $payable,
             'itc_2b' => $itc2b,
+            'itc_carry_in' => [
+                'igst' => round((float) ($itcCarryIn['igst'] ?? 0), 2),
+                'cgst' => round((float) ($itcCarryIn['cgst'] ?? 0), 2),
+                'sgst' => round((float) ($itcCarryIn['sgst'] ?? 0), 2),
+                'total' => round((float) ($itcCarryIn['igst'] ?? 0) + (float) ($itcCarryIn['cgst'] ?? 0) + (float) ($itcCarryIn['sgst'] ?? 0), 2),
+            ],
             'itc_carried' => $itcCarried,
             'itc_used' => $setOff['used'],
             // Which credit paid which tax, from the same set-off as the cash
@@ -220,6 +240,85 @@ class Gstr3bBuilder
             'expenseCount' => $company->expenses()->whereNull('cash_memo_id')->whereNull('purchase_bill_id')->whereBetween('entry_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])->count(),
             'cashMemoCount' => $cashMemos->count(),
         ];
+    }
+
+    /**
+     * Unused input credit brought into the period: each earlier period's own
+     * credit plus what it brought in, less what its set-off used, period by
+     * period from the first one with any document (months, or quarters for a
+     * QRMP return, as negativeCarryIn()). Replays at most ITC_CARRY_MONTHS.
+     *
+     * The app cannot see the portal's credit ledger, so this assumes each
+     * earlier return used credit the way this page showed. Cached per period
+     * against a fingerprint of the documents, so a change anywhere in the
+     * books recomputes it.
+     *
+     * @return array{igst: float, cgst: float, sgst: float}
+     */
+    private function itcCarryIn(Company $company, Carbon $from, Carbon $to): array
+    {
+        $zero = ['igst' => 0.0, 'cgst' => 0.0, 'sgst' => 0.0];
+        $quarterly = $to->gt($from->copy()->endOfMonth());
+
+        $first = $this->firstBookDate($company);
+        if (! $first || $first->gte($from)) {
+            return $zero;
+        }
+        $earliest = $from->copy()->subMonthsNoOverflow(self::ITC_CARRY_MONTHS)->startOfMonth();
+        $start = \App\Support\ReturnPeriod::for($first->max($earliest), $quarterly)->start->copy();
+
+        $key = 'gstr3b-itc-carry:' . $company->id . ':' . ($quarterly ? 'q' : 'm') . ':' . $from->toDateString()
+            . ':' . $this->booksFingerprint($company);
+
+        $replay = function () use ($company, $from, $start, $quarterly, $zero) {
+            $carry = $zero;
+            for ($p = $start; $p->lt($from); $p = $p->copy()->addMonthsNoOverflow($quarterly ? 3 : 1)) {
+                $period = \App\Support\ReturnPeriod::for($p, $quarterly);
+                $carried = $this->build($company, $period->start->copy(), $period->end->copy()->endOfDay(), $carry)['itc_carried'];
+                $carry = ['igst' => (float) $carried['igst'], 'cgst' => (float) $carried['cgst'], 'sgst' => (float) $carried['sgst']];
+            }
+
+            return $carry;
+        };
+
+        // The cache only saves time: if it cannot be reached, work it out.
+        try {
+            return \Illuminate\Support\Facades\Cache::remember($key, now()->addDays(7), $replay);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $replay();
+        }
+    }
+
+    /** Date of the company's earliest document that can carry GST either way. */
+    private function firstBookDate(Company $company): ?Carbon
+    {
+        $dates = array_filter([
+            $company->invoices()->whereIn('status', ['final', 'partially_paid', 'paid'])->min('invoice_date'),
+            $company->purchaseBills()->min(\Illuminate\Support\Facades\DB::raw('COALESCE(booked_on, bill_date)')),
+            $company->expenses()->min('entry_date'),
+            $company->cashMemos()->min('memo_date'),
+            \App\Models\CreditNote::where('company_id', $company->id)->min('credit_note_date'),
+        ]);
+
+        return $dates ? Carbon::parse(min(array_map(fn ($d) => Carbon::parse($d)->toDateString(), $dates)))->startOfDay() : null;
+    }
+
+    /** Changes whenever a document that feeds GSTR-3B is added, edited or removed. */
+    private function booksFingerprint(Company $company): string
+    {
+        $parts = [];
+        foreach ([
+            $company->invoices(), $company->purchaseBills(), $company->expenses(), $company->cashMemos(),
+            \App\Models\CreditNote::where('company_id', $company->id),
+            \App\Models\PurchasePayment::where('company_id', $company->id),
+        ] as $query) {
+            $row = $query->toBase()->selectRaw('COUNT(*) as c, MAX(updated_at) as u, MAX(id) as i')->first();
+            $parts[] = ($row->c ?? 0) . '/' . ($row->u ?? '') . '/' . ($row->i ?? '');
+        }
+
+        return md5(implode('|', $parts));
     }
 
     /**
@@ -539,12 +638,14 @@ class Gstr3bBuilder
      * negative liability carried from earlier periods keeps its own carry
      * and does not absorb it.
      */
-    private function settleNet(array $payable, array $netItc): array
+    private function settleNet(array $payable, array $netItc, array $carryIn = []): array
     {
         $due = [];
         $credit = [];
         foreach (['igst', 'cgst', 'sgst'] as $head) {
-            $credit[$head] = max(0.0, (float) $netItc[$head]);
+            // The period's net credit (4(C)) plus unused credit brought in. A
+            // 4(C) below nil stays tax to pay, which the credit may then settle.
+            $credit[$head] = round(max(0.0, (float) $netItc[$head]) + max(0.0, (float) ($carryIn[$head] ?? 0)), 2);
             $due[$head] = round(max(0.0, (float) $payable[$head]) + max(0.0, -(float) $netItc[$head]), 2);
         }
 

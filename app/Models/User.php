@@ -161,6 +161,7 @@ class User extends Authenticatable
             'review_given_at' => 'datetime',
             'notifications_seen_at' => 'datetime',
             'lifetime_free_at' => 'datetime',
+            'signup_attribution' => 'array',
             'guide_completed_at' => 'datetime',
         ];
     }

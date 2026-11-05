@@ -39,8 +39,9 @@
                         message="This assigns the next invoice number and locks the amounts, line items and customer. Notes, terms, due date and transporter details stay editable."
                         confirm-label="Issue invoice"
                         confirm-class="bg-brand-700 hover:bg-brand-800"
-                        tone="default">
-                        <button type="button" class="{{ $btnPrimary }}">Issue invoice</button>
+                        tone="default"
+                        :auto-open="request()->boolean('issue') && ! $errors->any() && ! session('error')">
+                        <button type="button" id="issue-invoice-button" class="{{ $btnPrimary }}">Issue invoice</button>
                     </x-confirm-form>
                 @elseif ($hasBalance)
                     <a href="#record-payment"
@@ -154,42 +155,18 @@
     </x-slot>
 
     @if ($invoice->canBeCancelled())
-        <dialog id="cancel-invoice-modal" class="rounded-xl shadow-2xl p-0 backdrop:bg-black/40 w-[calc(100vw-1.5rem)] max-w-lg max-h-[calc(100vh-3rem)]">
-            <form method="POST" action="{{ route('invoices.cancel', $invoice) }}" class="p-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
-                @csrf
-                <div>
-                    <h2 class="font-display font-bold text-lg text-gray-900">Cancel this invoice?</h2>
-                    <p class="mt-1 text-sm text-gray-600">
-                        <strong class="font-mono">{{ $invoice->invoice_number }}</strong> stays on record for GST audit,
-                        but no further payments can be recorded against it. The number is not reused.
-                    </p>
-                </div>
-                <div>
-                    <label for="cancellation_reason" class="block text-sm font-medium text-gray-700">Reason *</label>
-                    <textarea name="cancellation_reason" id="cancellation_reason" rows="3" required minlength="5" maxlength="500"
-                              aria-describedby="cancellation_reason-error"
-                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                              placeholder="e.g. Wrong amount, replaced by INV-0145">{{ old('cancellation_reason') }}</textarea>
-                    <x-input-error :messages="$errors->get('cancellation_reason')" for="cancellation_reason" class="mt-1" />
-                </div>
-                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
-                    <button type="button" onclick="document.getElementById('cancel-invoice-modal').close()" class="{{ $btnSecondary }}">Keep invoice</button>
-                    <button type="submit" class="inline-flex items-center justify-center h-10 px-4 rounded-md text-sm font-semibold bg-danger-600 hover:bg-danger-700 text-white">Cancel invoice</button>
-                </div>
-            </form>
-        </dialog>
-        @error('cancellation_reason')
-            @push('scripts')
-            <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('cancel-invoice-modal')?.showModal());</script>
-            @endpush
-        @enderror
+        @include('invoices.partials.cancel-dialog', ['invoice' => $invoice])
     @endif
 
     <div class="py-6 sm:py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <x-flash />
-            @if ($errors->any() && ! $errors->has('cancellation_reason'))
-                <x-flash type="error" :message="implode(' · ', $errors->all())" :auto="false" />
+            @php
+                // The cancel dialog and the repeated-payment notice show their own message.
+                $pageErrors = collect($errors->getMessages())->except(['cancellation_reason', 'confirm_duplicate', 'customer_phone'])->flatten();
+            @endphp
+            @if ($pageErrors->isNotEmpty() && ! $errors->has('cancellation_reason'))
+                <x-flash type="error" :message="$pageErrors->implode(' · ')" :auto="false" />
             @endif
 
             {{-- First issued invoice: one short line, shown once (server gate:
@@ -266,8 +243,21 @@
                                 <div>
                                     <label for="pay-reference-number" class="block text-sm font-medium text-gray-700">Reference</label>
                                     <input id="pay-reference-number" type="text" name="reference_number" value="{{ old('reference_number', mb_substr((string) request('pay_ref', ''), 0, 80)) }}" maxlength="80" placeholder="UPI txn / cheque no." class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm font-mono text-sm">
+                                    <x-input-error :messages="$errors->get('reference_number')" for="pay-reference-number" class="mt-1" />
                                 </div>
                             </div>
+
+                            {{-- The same amount, method and date was recorded a moment ago:
+                                 most likely the same payment sent twice. --}}
+                            @error('confirm_duplicate')
+                                <div class="rounded-md bg-accent-50 ring-1 ring-accent-200 p-3 text-sm text-accent-900" role="alert">
+                                    <p>{{ $message }}</p>
+                                    <label class="mt-2 flex items-center gap-2 font-medium">
+                                        <input type="checkbox" name="confirm_duplicate" value="1" class="rounded border-gray-300 text-brand-700 focus:ring-brand-600">
+                                        Record as a separate payment
+                                    </label>
+                                </div>
+                            @enderror
 
                             {{-- TDS: collapsed by default. Corporate customers often deduct
                                  TDS under Sections 194-x before paying a service invoice. --}}
@@ -380,7 +370,9 @@
                     @endif
 
                     @if ($isIssued)
-                        @include('invoices.partials.share-panel', ['invoice' => $invoice])
+                        <div id="share-panel" class="scroll-mt-24">
+                            @include('invoices.partials.share-panel', ['invoice' => $invoice])
+                        </div>
                         @if ((float) $invoice->balance > 0)
                             @include('invoices.partials.reminder-panel', ['invoice' => $invoice])
                         @endif
@@ -432,6 +424,56 @@
             </div>
         </div>
     </div>
+
+    {{-- Phone and tablet: the next step stays in reach at the bottom (the app's
+         tab bar is not shown on this page). Issued: send, PDF, record payment.
+         Draft: issue it. Cancelled: nothing to do, so no bar. --}}
+    @if ($isIssued || $isDraft)
+        @php
+            $waLink = $isIssued ? $invoice->whatsAppShareLink('share') : null;
+            $barBtn = 'inline-flex flex-1 items-center justify-center gap-1.5 h-11 px-3 rounded-md text-sm font-semibold transition';
+            $barSecondary = $barBtn . ' bg-white ring-1 ring-gray-300 text-gray-800 hover:bg-gray-50';
+            $barPrimary = $barBtn . ' bg-brand-700 hover:bg-brand-800 text-white shadow-sm';
+        @endphp
+        <div class="lg:hidden h-20" aria-hidden="true"></div>
+        <div class="lg:hidden fixed inset-x-0 bottom-0 z-20 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] print:hidden"
+             role="region" aria-label="Invoice actions">
+            <div class="max-w-xl mx-auto flex items-center gap-2">
+                @if ($isDraft)
+                    @if ($invoice->isEditable())
+                        <a href="{{ route('invoices.edit', $invoice) }}" class="{{ $barSecondary }}">Edit draft</a>
+                    @endif
+                    {{-- Opens the same confirmation as the Issue button at the top. --}}
+                    <button type="button" @click="document.getElementById('issue-invoice-button')?.click()" class="{{ $barPrimary }}">Issue invoice</button>
+                @else
+                    @if ($waLink)
+                        <a href="{{ $waLink }}" target="_blank" rel="noopener" class="{{ $barSecondary }}" aria-label="Send on WhatsApp">
+                            <svg class="w-4 h-4 text-[#128C7E] shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488 11.815 11.815 0 0012.05 0z"/></svg>
+                            WhatsApp
+                        </a>
+                    @else
+                        {{-- No mobile number on the customer: open the share panel's prompt for it. --}}
+                        <button type="button" class="{{ $barSecondary }}" aria-label="Add the customer's mobile to send on WhatsApp"
+                                @click="const t = document.querySelector('#share-panel .grid > :first-child');
+                                        if (t && t.getAttribute('aria-expanded') !== 'true') { t.click(); }
+                                        setTimeout(() => document.getElementById('share-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);">
+                            <svg class="w-4 h-4 text-[#128C7E] shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.463 3.488 11.815 11.815 0 0012.05 0z"/></svg>
+                            WhatsApp
+                        </button>
+                    @endif
+                    <a href="{{ route('invoices.pdf', $invoice) }}" class="{{ $barSecondary }}" aria-label="Download PDF">
+                        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        PDF
+                    </a>
+                    @if ($hasBalance)
+                        <a href="#record-payment"
+                           @click="$nextTick(() => document.getElementById('pay-amount')?.focus({ preventScroll: true }))"
+                           class="{{ $barPrimary }} flex-[1.4] whitespace-nowrap">Record payment</a>
+                    @endif
+                @endif
+            </div>
+        </div>
+    @endif
 
     {{-- One-click "Save & Download PDF" support: when the edit form sets
          post_save_action=pdf, the controller redirects here with ?download=1.

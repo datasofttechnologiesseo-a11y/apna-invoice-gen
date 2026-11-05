@@ -229,15 +229,17 @@ class Gstr3bVsGstr1Test extends TestCase
         //     S->I 4,644.07 each -> IGST cash 4,651.86; + RCM 200/200 -> 5,051.86.
         //  Q3 L I23,000 C/S 430 | ITC I15,000 (18,000 less Rule 37 3,000) C/S 7,200: I->I 15,000;
         //     C->C, S->S 430; C->I 6,770, S->I 1,230 -> no cash; carried C 0, S 5,540.
-        //  Q4 L I30,060 C/S 3,195.36 | ITC I1,370 C/S 865.42 (2,040 less Rule 37 1,174.58): I->I 1,370;
-        //     C->C, S->S 865.42 -> cash I28,690, C/S 2,329.94; + RCM 1,500/1,500 -> 36,349.88.
+        //  Q4 L I30,060 C/S 3,195.36 | ITC I1,370 C/S 865.42 (2,040 less Rule 37 1,174.58), plus the
+        //     S 5,540 Q3 left unused (s.49(2)), so S credit 6,405.42: I->I 1,370; C->C 865.42;
+        //     S->S 3,195.36; S->I 3,210.06 -> cash I25,479.94, C 2,329.94, S 0;
+        //     + RCM 1,500/1,500 -> 30,809.88.
         //  Apr L I29,070 C/S 162 | ITC I3,000 C/S 8,350: I->I 3,000; C->C, S->S 162; C->I, S->I
         //     8,188 each -> IGST cash 9,694; + RCM 250/250 -> 10,194.
         $hand = [
             'Q1' => ['cash' => [25530.19, 2500.00, 2500.00, 30530.19], 'used' => [29156.00, 1512.00, 1512.00], 'carried' => [0, 0, 0]],
             'Q2' => ['cash' => [4651.86, 200.00, 200.00, 5051.86], 'used' => [10788.14, 955.93, 955.93], 'carried' => [0, 0, 0]],
             'Q3' => ['cash' => [0, 0, 0, 0], 'used' => [23000.00, 430.00, 430.00], 'carried' => [0, 0, 5540.00]],
-            'Q4' => ['cash' => [28690.00, 3829.94, 3829.94, 36349.88], 'used' => [1370.00, 865.42, 865.42], 'carried' => [0, 0, 0]],
+            'Q4' => ['cash' => [25479.94, 3829.94, 1500.00, 30809.88], 'used' => [4580.06, 865.42, 3195.36], 'carried' => [0, 0, 0]],
             'Apr' => ['cash' => [9694.00, 250.00, 250.00, 10194.00], 'used' => [19376.00, 162.00, 162.00], 'carried' => [0, 0, 0]],
         ];
         $periods = [];
@@ -272,7 +274,8 @@ class Gstr3bVsGstr1Test extends TestCase
                 $this->check($failures, "{$label} {$h}: cash + credit = payable", round(max(0.0, $payable) + $shortfall, 2), round($cashOutward + (float) $d['itc_used'][$h], 2));
                 // Which credit paid which tax adds up both ways.
                 $this->check($failures, "{$label} matrix column {$h} = credit used on it", (float) $d['itc_used'][$h], $m['igst'][$h] + $m['cgst'][$h] + $m['sgst'][$h]);
-                $this->check($failures, "{$label} matrix row {$h} = credit taken less carried", max(0.0, (float) $d['itc'][$h]) - (float) $d['itc_carried'][$h], array_sum($m[$h]));
+                // Credit available = this period's own (4(C)) + unused credit brought in.
+                $this->check($failures, "{$label} matrix row {$h} = credit taken less carried", max(0.0, (float) $d['itc'][$h]) + (float) $d['itc_carry_in'][$h] - (float) $d['itc_carried'][$h], array_sum($m[$h]));
             }
             // CGST credit never pays SGST, nor SGST credit CGST.
             $this->check($failures, "{$label} CGST credit used for SGST", 0, $m['cgst']['sgst']);

@@ -37,6 +37,11 @@ class OpenGraphCardTest extends TestCase
             'credit note' => ['/gst-credit-note-format', 'og/credit-note-format.png'],
             'pricing'     => ['/pricing', 'og/pricing.png'],
             'how to use'  => ['/how-to-use', 'og/how-to-use.png'],
+            'features'    => ['/features', 'og/features.png'],
+            'faq'         => ['/faq', 'og/faq.png'],
+            'about'       => ['/about', 'og/about.png'],
+            'contact'     => ['/contact', 'og/contact.png'],
+            'blog'        => ['/blog', 'og/blog.png'],
         ];
     }
 
@@ -64,7 +69,7 @@ class OpenGraphCardTest extends TestCase
     {
         // The fallback is what makes the convention safe: a missing card must
         // give a generic image, never a broken one.
-        foreach (['/features', '/faq', '/about', '/contact'] as $uri) {
+        foreach (['/partners', '/press', '/security'] as $uri) {
             $this->assertStringContainsString('og-card.png', $this->ogImage($uri),
                 "{$uri} should fall back to the default card");
         }

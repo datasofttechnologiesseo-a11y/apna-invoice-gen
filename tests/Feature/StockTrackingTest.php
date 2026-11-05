@@ -185,6 +185,59 @@ class StockTrackingTest extends TestCase
         ])->assertSessionHasErrors('quantity');
     }
 
+    public function test_a_physical_count_sets_stock_to_what_was_counted(): void
+    {
+        $inv = $this->draft(30);
+        $this->actingAs($this->user)->post(route('invoices.finalize', $inv));
+        // Books: 100 opening - 30 sold = 70. The shelf has 64.
+        $this->actingAs($this->user)->post(route('products.stock.adjust', $this->cement), [
+            'direction' => 'count', 'quantity' => 64, 'moved_on' => now()->toDateString(), 'reason' => 'Physical count',
+        ])->assertRedirect(route('products.stock', $this->cement))->assertSessionHas('status');
+        $this->assertEqualsWithDelta(64.0, $this->cement->fresh()->stockOnHand(), 0.001);
+        $m = StockMovement::where('product_id', $this->cement->id)->where('kind', 'adjustment')->sole();
+        $this->assertEqualsWithDelta(-6.0, (float) $m->quantity, 0.001);
+        $this->assertStringContainsString('counted 64, books showed 70', $m->note);
+
+        // Counting what the books already show changes nothing.
+        $this->actingAs($this->user)->post(route('products.stock.adjust', $this->cement), [
+            'direction' => 'count', 'quantity' => 64, 'moved_on' => now()->toDateString(), 'reason' => 'Physical count',
+        ])->assertSessionHas('status', fn ($s) => str_contains($s, 'already matches'));
+        $this->assertSame(1, StockMovement::where('product_id', $this->cement->id)->where('kind', 'adjustment')->count());
+
+        // A count of zero is allowed (shelf empty); a negative one is not.
+        $this->actingAs($this->user)->post(route('products.stock.adjust', $this->cement), [
+            'direction' => 'count', 'quantity' => 0, 'moved_on' => now()->toDateString(), 'reason' => 'Physical count',
+        ])->assertSessionHasNoErrors();
+        $this->assertEqualsWithDelta(0.0, $this->cement->fresh()->stockOnHand(), 0.001);
+        $this->actingAs($this->user)->post(route('products.stock.adjust', $this->cement), [
+            'direction' => 'count', 'quantity' => -1, 'moved_on' => now()->toDateString(), 'reason' => 'Physical count',
+        ])->assertSessionHasErrors('quantity');
+    }
+
+    public function test_the_items_page_values_stock_the_same_as_the_stock_summary(): void
+    {
+        // An archived item still has goods on the shelf: both screens count them.
+        $this->cement->update(['is_active' => false]);
+        Product::create([
+            'user_id' => $this->user->id, 'company_id' => $this->company->id, 'name' => 'TMT Bar 12mm', 'kind' => 'goods',
+            'hsn_sac' => '72142090', 'unit' => 'KGS', 'rate' => 70, 'gst_rate' => 18, 'is_active' => true,
+            'track_stock' => true, 'opening_stock' => 10, 'purchase_rate' => 60,
+        ]);
+        // 100 x 320 + 10 x 60 = 32,600
+        $this->actingAs($this->user)->get(route('products.index'))->assertOk()->assertSee('32,600');
+        $csv = $this->actingAs($this->user)->get(route('reports.export', ['report' => 'stock-summary', 'format' => 'csv']))->streamedContent();
+        $this->assertStringContainsString('32600.00', $csv);
+    }
+
+    public function test_an_item_at_zero_reads_out_of_stock_in_the_summary(): void
+    {
+        $this->actingAs($this->user)->post(route('products.stock.adjust', $this->cement), [
+            'direction' => 'out', 'quantity' => 100, 'moved_on' => now()->toDateString(), 'reason' => 'Damaged / expired',
+        ]);
+        $csv = $this->actingAs($this->user)->get(route('reports.export', ['report' => 'stock-summary', 'format' => 'csv']))->streamedContent();
+        $this->assertStringContainsString(',Out,', str_replace('"', '', $csv));
+    }
+
     public function test_the_stock_summary_report(): void
     {
         $inv = $this->draft(30);

@@ -115,7 +115,7 @@ return [
     'missing_with_all' => 'The :attribute field must be missing when :values are present.',
     'multiple_of' => 'The :attribute field must be a multiple of :value.',
     'not_in' => 'The selected :attribute is invalid.',
-    'not_regex' => 'The :attribute field format is invalid.',
+    'not_regex' => 'The :attribute is not in the right format.',
     'numeric' => 'The :attribute field must be a number.',
     'password' => [
         'letters' => 'The :attribute field must contain at least one letter.',
@@ -135,7 +135,7 @@ return [
     'prohibited_if_declined' => 'The :attribute field is prohibited when :other is declined.',
     'prohibited_unless' => 'The :attribute field is prohibited unless :other is in :values.',
     'prohibits' => 'The :attribute field prohibits :other from being present.',
-    'regex' => 'The :attribute field format is invalid.',
+    'regex' => 'The :attribute is not in the right format.',
     // "a :attribute" produced "a Email", "a Invoice prefix", "a IFSC
     // code" and "a UPI ID". "the" agrees with every attribute name, so the
     // message stays friendly without needing per-field wording.
@@ -178,14 +178,6 @@ return [
     */
 
     'custom' => [
-        // Rates are stored to the paisa and quantities to 3 decimals; more
-        // would print a rate x quantity that does not give the line value.
-        'items.*.rate' => [
-            'decimal' => 'Rate can have at most 2 decimals (paise), e.g. 12.35. For smaller unit prices, bill per 10 or per 100 units.',
-        ],
-        'items.*.quantity' => [
-            'decimal' => 'Quantity can have at most 3 decimals, e.g. 1.235.',
-        ],
         'gstin' => [
             'regex' => 'Enter a valid 15-character GSTIN, e.g. 27AABCU9603R1ZM.',
             'size' => 'GSTIN must be exactly 15 characters.',
@@ -220,16 +212,21 @@ return [
         'items.*.hsn_sac' => [
             'required' => 'Each line item needs an HSN or SAC code.',
         ],
+        // Rates are stored to the paisa and quantities to 3 decimals; more
+        // would print a rate x quantity that does not give the line value.
+        // (These used to be declared twice, so the decimal lines were lost.)
         'items.*.quantity' => [
             'required' => 'Quantity is required on every line.',
             'min' => 'Quantity must be greater than zero.',
+            'decimal' => 'Quantity can have at most 3 decimals, e.g. 1.235.',
         ],
         'items.*.rate' => [
             'required' => 'Rate is required on every line.',
+            'decimal' => 'Rate can have at most 2 decimals (paise), e.g. 12.35. For smaller unit prices, bill per 10 or per 100 units.',
         ],
         'items.*.gst_rate' => [
             'required' => 'Select a GST rate for every line.',
-            'in' => 'Select a valid GST rate (0%, 5%, 12%, 18%, 28% etc.).',
+            'in' => 'Select a valid GST rate, such as 0%, 5%, 18% or 40%.',
         ],
         'transport_mode' => [
             'in' => 'Transport mode must be Road, Rail, Air, or Ship.',

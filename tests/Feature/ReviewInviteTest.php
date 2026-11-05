@@ -19,7 +19,7 @@ class ReviewInviteTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const POSTER = 'brand/review-invite.png';
+    private const POSTER = 'brand/review-invite.webp';
 
     private User $user;
     private Company $company;
@@ -64,8 +64,40 @@ class ReviewInviteTest extends TestCase
         $this->actingAs($this->user)->get(route('dashboard'))->assertOk()->assertSee(self::POSTER, false);
         $this->assertNotNull($this->user->fresh()->review_prompt_shown_at);
 
-        // Once is enough for that moment; the next one is the 2nd invoice.
+        // Once a day is enough.
         $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+    }
+
+    public function test_without_a_review_it_returns_on_the_first_dashboard_of_every_day(): void
+    {
+        $this->actingAs($this->user)->get(route('dashboard'))->assertSee(self::POSTER, false);   // closed with "Not now"
+
+        $this->travel(1)->days();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertSee(self::POSTER, false);
+        $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+
+        $this->travel(3)->days();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertSee(self::POSTER, false);
+    }
+
+    public function test_once_given_it_does_not_return_on_later_days(): void
+    {
+        $this->actingAs($this->user)->post(route('review-invite.given'))->assertNoContent();
+
+        $this->travel(2)->days();
+        $this->actingAs($this->user)->get(route('dashboard'))->assertDontSee(self::POSTER, false);
+    }
+
+    public function test_clicking_the_poster_opens_the_google_review_page(): void
+    {
+        $html = $this->actingAs($this->user)->get(route('dashboard'))->getContent();
+
+        // The poster image sits inside a link to the review page that also
+        // retires the invite.
+        $this->assertMatchesRegularExpression(
+            '~<a href="https://g\.page/r/CTvUSP6MtrMaEBM/review"[^>]*@click="given\(\)"[^>]*>\s*<img src="[^"]*brand/review-invite\.webp"~',
+            $html
+        );
     }
 
     public function test_an_existing_user_never_asked_before_is_asked_on_the_dashboard(): void

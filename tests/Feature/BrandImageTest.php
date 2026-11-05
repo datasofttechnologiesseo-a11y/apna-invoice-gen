@@ -116,6 +116,102 @@ class BrandImageTest extends TestCase
             $this->assertNull(BrandImage::fit('logos/missing.png', 64, 64));
         } finally {
             @unlink($file);
+            @unlink(dirname($file) . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.png');
+            @unlink(dirname($file) . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.webp');
+        }
+    }
+
+    public function test_an_old_uncropped_logo_is_drawn_from_a_cropped_copy_so_it_lines_up(): void
+    {
+        // Uploaded before cleaning existed: a 300 x 100 wordmark in a wide white margin.
+        $dir = public_path('storage/logos');
+        @mkdir($dir, 0777, true);
+        $file = $dir . '/old-logo-' . uniqid() . '.png';
+        $img = imagecreatetruecolor(900, 500);
+        imagefill($img, 0, 0, imagecolorallocate($img, 255, 255, 255));
+        imagefilledrectangle($img, 300, 200, 599, 299, imagecolorallocate($img, 20, 60, 150));
+        imagepng($img, $file);
+        $tight = $dir . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.png';
+        try {
+            $fit = BrandImage::fit('logos/' . basename($file), 240, 64);
+            $this->assertSame($tight, $fit['file'], 'the PDF draws the PNG');
+            // Screens get the WebP twin.
+            $webp = substr($tight, 0, -4) . '.webp';
+            $this->assertStringEndsWith('/storage/logos/tight/' . basename($webp), $fit['url']);
+            $this->assertSame(IMAGETYPE_WEBP, getimagesize($webp)[2]);
+            $this->assertEqualsWithDelta(3.0, $fit['ratio'], 0.05, 'the artwork, not the margin, sets the shape');
+            $this->assertSame([192, 64], [$fit['w'], $fit['h']]);
+            // The artwork starts at the very edge: it lines up with the text beside it.
+            $out = imagecreatefromstring(file_get_contents($tight));
+            $this->assertSame(0, imagecolorsforindex($out, imagecolorat($out, 0, 0))['red'] > 200 ? 1 : 0);
+            // The uploaded file is never changed.
+            $this->assertSame([900, 500], array_slice(getimagesize($file), 0, 2));
+        } finally {
+            @unlink($file);
+            @unlink($tight);
+            @unlink(substr($tight, 0, -4) . '.webp');
+        }
+    }
+
+    public function test_a_jpeg_logo_stays_jpeg_when_cropped(): void
+    {
+        $dir = public_path('storage/logos');
+        @mkdir($dir, 0777, true);
+        $file = $dir . '/photo-logo-' . uniqid() . '.jpg';
+        $img = imagecreatetruecolor(800, 400);
+        imagefill($img, 0, 0, imagecolorallocate($img, 255, 255, 255));
+        imagefilledrectangle($img, 200, 100, 599, 299, imagecolorallocate($img, 200, 40, 40));
+        imagejpeg($img, $file, 92);
+        $tight = $dir . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.jpg';
+        try {
+            $fit = BrandImage::fit('logos/' . basename($file), 240, 64);
+            $this->assertSame($tight, $fit['file']);
+            $this->assertSame(IMAGETYPE_JPEG, getimagesize($tight)[2]);
+            $this->assertEqualsWithDelta(2.0, $fit['ratio'], 0.05);
+        } finally {
+            @unlink($file);
+            @unlink($tight);
+            @unlink(substr($tight, 0, -4) . '.webp');
+        }
+    }
+
+    public function test_removing_an_image_removes_its_cropped_copy_too(): void
+    {
+        Storage::disk('public')->put('logos/abc.jpg', 'x');
+        Storage::disk('public')->put('logos/tight/abc.jpg', 'x');
+        Storage::disk('public')->put('logos/tight/abc.webp', 'x');
+        Storage::disk('public')->put('signatures/def.png', 'x');
+        Storage::disk('public')->put('signatures/tight/def.png', 'x');
+
+        BrandImage::delete('logos/abc.jpg');
+        BrandImage::delete('signatures/def.png');
+        BrandImage::delete(null);
+
+        foreach (['logos/abc.jpg', 'logos/tight/abc.jpg', 'logos/tight/abc.webp', 'signatures/def.png', 'signatures/tight/def.png'] as $path) {
+            Storage::disk('public')->assertMissing($path);
+        }
+    }
+
+    public function test_an_old_signature_on_paper_is_drawn_cropped_and_transparent(): void
+    {
+        $dir = public_path('storage/signatures');
+        @mkdir($dir, 0777, true);
+        $file = $dir . '/old-sign-' . uniqid() . '.png';
+        $img = imagecreatetruecolor(1000, 500);
+        imagefill($img, 0, 0, imagecolorallocate($img, 238, 236, 230));
+        imagesetthickness($img, 6);
+        imageline($img, 300, 300, 700, 220, imagecolorallocate($img, 20, 30, 90));
+        imagepng($img, $file);
+        $tight = $dir . '/tight/' . pathinfo($file, PATHINFO_FILENAME) . '.png';
+        try {
+            $fit = BrandImage::fit('signatures/' . basename($file), 180, 56);
+            $out = imagecreatefromstring(file_get_contents($fit['file']));
+            $this->assertLessThan(420, imagesx($out), 'cropped to the ink');
+            $this->assertSame(127, imagecolorsforindex($out, imagecolorat($out, 0, 0))['alpha'], 'paper is transparent');
+        } finally {
+            @unlink($file);
+            @unlink($tight);
+            @unlink(substr($tight, 0, -4) . '.webp');
         }
     }
 }

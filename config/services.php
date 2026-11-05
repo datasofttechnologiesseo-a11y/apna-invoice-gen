@@ -33,6 +33,18 @@ return [
     // → Credentials → OAuth client ID (type: Web application). Add the redirect
     // URI shown below. The "Sign up with Google" button only appears once
     // GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set.
+    // Google tag (gtag.js) on every public and signed-in page: GA4 analytics
+    // and Google Ads. Loaded on production only unless GOOGLE_TAGS_ENABLED is
+    // set. GOOGLE_ADS_SIGNUP_LABEL is the label of the "Sign up" conversion
+    // action in Google Ads (Goals > Conversions > the action > Tag setup:
+    // send_to 'AW-…/LABEL'); without it, import the GA4 sign_up event instead.
+    'google_tags' => [
+        'enabled' => (bool) env('GOOGLE_TAGS_ENABLED', env('APP_ENV') === 'production'),
+        'ga4' => env('GA4_MEASUREMENT_ID', 'G-8RLQRM0KMV'),
+        'ads' => env('GOOGLE_ADS_ID', 'AW-18551697749'),
+        'ads_signup_label' => env('GOOGLE_ADS_SIGNUP_LABEL'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

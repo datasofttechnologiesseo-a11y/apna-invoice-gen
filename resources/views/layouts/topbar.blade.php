@@ -93,8 +93,10 @@
             </x-slot>
         </x-dropdown>
 
-        {{-- + New --}}
-        <x-dropdown align="right" width="w-56">
+        {{-- + New. On a phone with the bottom tab bar, its centre "New" opens
+             the same list, so the top bar does not repeat it. --}}
+        <div @class(['hidden lg:block' => ! empty($showTabBar)])>
+        <x-dropdown align="right" width="w-60">
             <x-slot name="trigger">
                 <button type="button" aria-label="New" data-tour="new" class="inline-flex items-center justify-center gap-1.5 h-10 min-w-[2.5rem] sm:h-9 px-2.5 sm:px-3 rounded-md text-sm font-semibold text-white bg-brand-700 hover:bg-brand-800 shadow-sm">
                     <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -102,22 +104,21 @@
                 </button>
             </x-slot>
             <x-slot name="content">
-                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold">Sales</div>
-                @if (\App\Support\Team::can('invoices.create'))<x-dropdown-link :href="route('invoices.create')">Invoice <span class="float-right text-[10px] text-gray-500 font-mono" aria-hidden="true">Alt+N</span></x-dropdown-link>@endif
-                @if (\App\Support\Team::can('quotations.create'))<x-dropdown-link :href="route('quotations.create')">Quotation</x-dropdown-link>@endif
-                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold border-t border-gray-100">Purchases</div>
-                @if (\App\Support\Team::can('purchases.create'))<x-dropdown-link :href="route('purchases.create')">Purchase invoice</x-dropdown-link>@endif
-                @if (\App\Support\Team::can('finance.expenses.create'))<x-dropdown-link :href="route('finance.expenses.create')">Expense</x-dropdown-link>@endif
-                @if (\App\Support\Team::can('finance.cash-memos.create'))<x-dropdown-link :href="route('finance.cash-memos.create')">Cash memo</x-dropdown-link>@endif
-                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold border-t border-gray-100">Parties &amp; items</div>
-                @if (\App\Support\Team::can('customers.create'))<x-dropdown-link :href="route('customers.create')">Customer</x-dropdown-link>@endif
-                @if (\App\Support\Team::can('vendors.create'))<x-dropdown-link :href="route('vendors.create')">Vendor</x-dropdown-link>@endif
-                @if (\App\Support\Team::can('products.create'))<x-dropdown-link :href="route('products.create')">Item</x-dropdown-link>@endif
-                <div class="px-4 py-1.5 text-xs text-gray-500 font-semibold border-t border-gray-100">Banking &amp; GST</div>
-                @if (\App\Support\Team::can('bank.index'))<x-dropdown-link :href="route('bank.index')">Upload bank statement</x-dropdown-link>@endif
-                @if (\App\Support\Team::can('finance.gstr2b'))<x-dropdown-link :href="route('finance.gstr2b')">Upload GSTR-2B</x-dropdown-link>@endif
+                @foreach ($newMenu ?? [] as $gi => [$heading, $items])
+                    <div @class(['px-4 py-1.5 text-xs text-gray-500 font-semibold', 'border-t border-gray-100' => $gi > 0])>{{ $heading }}</div>
+                    @foreach ($items as [$label, $routeName, $params, $keys])
+                        <x-dropdown-link :href="route($routeName, $params)" class="flex items-center justify-between gap-3">
+                            <span>{{ $label }}</span>
+                            @if ($keys)<kbd class="text-[10px] text-gray-500 font-mono font-normal" aria-hidden="true">{{ $keys }}</kbd>@endif
+                        </x-dropdown-link>
+                    @endforeach
+                @endforeach
+                <button type="button" @click="shortcuts = true" class="block w-full px-4 py-2 text-left text-xs text-gray-500 hover:bg-gray-100 border-t border-gray-100">
+                    Keyboard shortcuts <kbd class="ml-1 font-mono">?</kbd>
+                </button>
             </x-slot>
         </x-dropdown>
+        </div>
 
         {{-- Help with the page you are on: opens that section of the guide. --}}
         @if (\App\Support\Team::can('help'))

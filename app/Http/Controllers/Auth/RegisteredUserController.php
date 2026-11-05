@@ -60,7 +60,9 @@ class RegisteredUserController extends Controller
             // never comes" drop-off.
             'phone' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            // No confirmation box on the form (the field has show/hide). The
+            // app's API keeps its own rule (Api\AuthController).
+            'password' => ['required', Rules\Password::defaults()],
             'terms_accepted' => ['accepted'],
             'marketing_opt_in' => ['nullable', 'boolean'],
             'cf-turnstile-response' => ['nullable', 'string', new TurnstileValid($request->ip())],
@@ -104,8 +106,8 @@ class RegisteredUserController extends Controller
     private function codeSentMessage(string $channel): string
     {
         return $channel === 'email'
-            ? 'We\'ve emailed you a 6-digit verification code.'
-            : 'We\'ve sent a 6-digit code to your mobile.';
+            ? 'Verification code sent to your email.'
+            : 'Verification code sent to your mobile.';
     }
 
     /**
@@ -294,7 +296,7 @@ class RegisteredUserController extends Controller
         $request->session()->put(self::SESSION_KEY, $reg);
 
         return back()
-            ->with('status', 'A new code is on its way.')
+            ->with('status', 'New code sent.')
             ->with('otp_dev_code', $result['dev_code']);
     }
 }

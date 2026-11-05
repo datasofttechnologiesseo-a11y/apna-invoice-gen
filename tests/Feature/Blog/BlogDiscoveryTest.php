@@ -57,7 +57,7 @@ class BlogDiscoveryTest extends TestCase
         $this->makePost('festive-season-billing', 'festival, sales', 3);
 
         $html = $this->get(route('blog.show', $subject->slug))->assertOk()->getContent();
-        $tail = substr($html, strpos($html, 'More blogs'));
+        $tail = substr($html, strpos($html, 'More articles</h2>'));
 
         $this->assertStringContainsString('eway-bill-distance-limits', $tail, 'the closest match should be offered');
         $this->assertStringContainsString('transport-documents', $tail, 'a partial topic match should be offered');
@@ -71,7 +71,7 @@ class BlogDiscoveryTest extends TestCase
 
         $html = $this->get(route('blog.show', $subject->slug))->assertOk()->getContent();
 
-        $this->assertStringContainsString('More blogs', $html);
+        $this->assertStringContainsString('More articles</h2>', $html);
         $this->assertStringContainsString('something-recent', $html);
     }
 
@@ -82,7 +82,7 @@ class BlogDiscoveryTest extends TestCase
 
         $tail = substr(
             $this->get(route('blog.show', $subject->slug))->assertOk()->getContent(),
-            strpos($this->get(route('blog.show', $subject->slug))->getContent(), 'More blogs')
+            strpos($this->get(route('blog.show', $subject->slug))->getContent(), 'More articles</h2>')
         );
 
         $this->assertStringNotContainsString('/blog/gst-basics"', $tail);

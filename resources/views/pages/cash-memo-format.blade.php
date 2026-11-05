@@ -59,10 +59,9 @@
     :json-ld="[$articleSchema, $faqSchema]">
 
     <p>
-        Every counter sale needs a paper trail. The <strong>cash memo</strong> is the simplest one there is: proof
-        that goods changed hands and cash was received, in one small document. This guide covers the standard cash
-        memo format, how it differs from an invoice and a receipt, what GST expects of it, and a free way to make
-        printable cash memos without designing anything in Word.
+        A <strong>cash memo</strong> records a sale paid for on the spot: what was sold, and that the cash was
+        received. This guide covers the standard cash memo format, how it differs from an invoice and a receipt,
+        what GST expects of it, and how to make printable cash memos free.
     </p>
 
     <h2>The standard cash memo format</h2>
@@ -97,7 +96,7 @@
 
     <h2>Cash memo vs invoice vs receipt</h2>
     <p>
-        The three are often confused, but the distinction is simple. An <strong>invoice</strong> asks for payment: it
+        An <strong>invoice</strong> asks for payment: it
         is issued for credit sales and payment follows later. A <strong>cash memo</strong> records a spot sale: payment
         happened at the counter and nothing is outstanding. A <strong>receipt</strong> acknowledges a payment against an
         earlier invoice. If you sell on credit, read our
@@ -149,7 +148,7 @@
         words, then print it on A4 or an 80 mm thermal printer, or share it on WhatsApp. For a <strong>cash
         purchase</strong> where the seller gives no bill, record a cash memo in your own books: it goes straight into
         your expenses, with the GST input tracked for GSTR-3B. <a href="{{ route('register') }}">Create a free account</a>
-        and make your first bill in about a minute.
+        and make your first bill.
     </p>
 
     <h2>Frequently asked questions</h2>

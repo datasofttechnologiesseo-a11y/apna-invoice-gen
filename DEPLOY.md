@@ -218,6 +218,58 @@ or data change is involved.
 
 ## Subsequent deploys
 
+The easy way is `bash deploy.sh` on the server. It finds the PHP version the
+website runs on (from this site's nginx config, or `DEPLOY_PHP_VERSION=8.2` in
+`.env` if you want to set it yourself), runs Composer and artisan with that
+PHP, and stops before going live if the installed packages don't load.
+
+It also protects users from a bad deploy:
+
+- Before migrating it backs up the database to
+  `storage/app/deploy-backups/` (the five most recent are kept). MySQL needs
+  `mysqldump` on the server. No backup, no migration; set
+  `DEPLOY_SKIP_DB_BACKUP=true` in `.env` only if you take your own dump first.
+- If any step fails, the version that was running before is put back
+  automatically. If a migration failed part way, the database is restored
+  from that backup first.
+- After going live it opens `/up` and `/login`. A 5xx there puts the previous
+  version back. If the server can't reach its own URL it only warns; open the
+  site and check it yourself.
+
+Migrations must stay additive (new columns, new tables, data fixes that only
+fill in). That is what lets the old code run on the new schema when a deploy
+is rolled back after going live.
+
+### A deploy failed
+
+Read the last `[WARN]`/`[ERROR]` lines of the deploy output.
+
+- **"The previous version is live again"**: users are on the old version and
+  nothing is lost. Fix the error shown above it and deploy again.
+- **"The site stays in maintenance mode"**: the script could not undo things
+  by itself. Users see the "back soon" page. In the app folder:
+
+  ```bash
+  git log -1 --oneline                       # what is checked out now
+  git reset --hard <previous commit>         # the one the deploy printed as "A -> B"
+  php8.2 $(which composer) install --no-dev --optimize-autoloader
+  # only if a migration failed part way (the message names the file):
+  gunzip -c storage/app/deploy-backups/db-<stamp>.sql.gz | mysql -u <user> -p <database>
+  php8.2 artisan optimize:clear && php8.2 artisan optimize
+  sudo systemctl restart php8.2-fpm
+  php8.2 artisan up
+  ```
+
+- **"Could not back up the database"**: nothing was changed. Install the MySQL
+  client (`sudo apt install mysql-client`) and deploy again.
+
+By hand:
+
+> **Never run `composer update` on the server.** Always `composer install`,
+> which installs the exact versions in `composer.lock`. An update run with a
+> newer command-line PHP than the website uses is what takes the whole site
+> down with "Composer detected issues in your platform".
+
 ```bash
 git pull
 composer install --optimize-autoloader --no-dev
@@ -232,6 +284,26 @@ new release dir, run the above, and swap the symlink. Otherwise a ~1s
 window during `optimize:clear`/`cache` is expected.
 
 ## Troubleshooting quick-refs
+
+- **Every page shows "Composer detected issues in your platform: Your
+  Composer dependencies require a PHP version >= 8.4.1"**: the `vendor`
+  folder on the server doesn't match `composer.lock`. Usually someone ran
+  `composer update` there with a newer command-line PHP, which pulled in
+  Symfony 8 (needs PHP 8.4). The lock file only needs PHP 8.2. Fix, in the
+  app folder:
+
+  ```bash
+  php -v                                   # command-line PHP
+  ls /run/php/                             # phpX.Y-fpm.sock = the website's PHP
+  git checkout -- composer.lock
+  php8.2 $(which composer) install --no-dev --optimize-autoloader   # use the website's version
+  php8.2 artisan optimize:clear && php8.2 artisan optimize
+  sudo systemctl restart php8.2-fpm
+  ```
+
+  Or just run `bash deploy.sh`, which does the same. `composer.json` pins
+  Composer's platform to PHP 8.2, so a future `composer update` can't pull
+  in 8.4-only packages again (unless `--ignore-platform-reqs` is used; don't).
 
 - **"Page expired (419)"** after login: session cookie domain mismatch.
   Check `SESSION_DOMAIN` matches your actual domain, and `APP_URL` is set.

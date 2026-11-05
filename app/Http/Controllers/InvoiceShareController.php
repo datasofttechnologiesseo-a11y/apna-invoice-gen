@@ -103,6 +103,12 @@ class InvoiceShareController extends Controller
             ['reason' => $data['cancellation_reason'], 'grand_total' => $invoice->grand_total]
         );
 
+        // Cancelled from the invoice list: stay on the list (same page and filters).
+        if ($request->input('return_to') === 'list') {
+            return redirect()->back()
+                ->with('status', "Invoice {$invoice->invoice_number} cancelled. The record is kept for GST audit.");
+        }
+
         return redirect()->route('invoices.show', $invoice)
             ->with('status', 'Invoice cancelled. The record is kept for GST audit.');
     }
@@ -198,6 +204,35 @@ class InvoiceShareController extends Controller
     private function publicUrl(Invoice $invoice): string
     {
         return self::makePublicUrl($invoice);
+    }
+
+    /**
+     * The share panel's "Add mobile": saves the customer's mobile without
+     * leaving the invoice, so the WhatsApp button appears right away. Only
+     * the customer master changes; an issued invoice keeps the details it
+     * was issued with (customer_snapshot).
+     */
+    public function saveCustomerPhone(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $this->authorizeOwner($request, $invoice);
+        $customer = $invoice->customer;
+        abort_unless($customer, 404);
+
+        $request->merge(['customer_phone' => preg_replace('/[\s\-()]/', '', (string) $request->input('customer_phone'))]);
+        $data = $request->validate([
+            'customer_phone' => ['required', 'string', 'max:20', 'regex:/^\+?\d{10,15}$/'],
+        ], [
+            'customer_phone.required' => 'Enter the customer\'s mobile number.',
+            'customer_phone.regex' => 'Enter a 10-digit mobile number, or the number with its country code.',
+        ]);
+
+        $before = $customer->phone;
+        $customer->update(['phone' => $data['customer_phone']]);
+        \App\Models\AuditLog::record('customer.updated', "Mobile added for {$customer->name} from invoice " . $invoice->displayNumber(),
+            $customer, ['phone' => ['from' => $before, 'to' => $data['customer_phone']]]);
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('status', 'Mobile saved. Send the invoice on WhatsApp now.');
     }
 
     private function authorizeOwner(Request $request, Invoice $invoice): void

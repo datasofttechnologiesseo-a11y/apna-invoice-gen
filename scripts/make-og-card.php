@@ -80,6 +80,30 @@ function renderCard(array $card, string $out, string $fontBold, string $fontReg,
         imageline($im, 0, $y, $W, $y, $c);
     }
 
+    // ---- A real screen of the product on the right, when the card has one ----
+    $screenFile = isset($card['screen']) ? __DIR__ . '/../public/brand/screens/' . $card['screen'] : null;
+    $hasScreen = $screenFile && is_file($screenFile) && function_exists('imagecreatefromwebp');
+    if ($hasScreen) {
+        $shot = imagecreatefromwebp($screenFile);
+        $sw = imagesx($shot);
+        $sh = imagesy($shot);
+        // Leave out the dark sidebar so the screen reads at thumbnail size.
+        $cropX = (int) round($sw * 0.155);
+        $cropW = $sw - $cropX;
+        $cropH = (int) min($sh, round($cropW * 0.78));
+        $tw = 560;
+        $th = (int) round($cropH * $tw / $cropW);
+        $x0 = $W - $tw - 40;
+        $y0 = (int) round(($H - $th) / 2) - 6;
+        // Soft shadow, white frame, then the screen.
+        $shadow = imagecolorallocatealpha($im, 0, 0, 0, 90);
+        imagefilledrectangle($im, $x0 - 2, $y0 + 10, $x0 + $tw + 14, $y0 + $th + 18, $shadow);
+        imagefilledrectangle($im, $x0 - 8, $y0 - 8, $x0 + $tw + 8, $y0 + $th + 8, imagecolorallocate($im, 255, 255, 255));
+        imagecopyresampled($im, $shot, $x0, $y0, $cropX, 0, $tw, $th, $cropW, $cropH);
+        imagedestroy($shot);
+        $maxTextWidth = $x0 - $margin - 36;
+    }
+
     // ---- Soft accent glow (gold), top-right ----
     $glow = imagecreatetruecolor($W, $H);
     imagealphablending($glow, false);
@@ -91,15 +115,26 @@ function renderCard(array $card, string $out, string $fontBold, string $fontReg,
         $col = imagecolorallocatealpha($glow, 245, 180, 60, max(0, min(127, $alpha)));
         imagefilledellipse($glow, $W - 120, 90, $i, $i, $col);
     }
-    imagecopy($im, $glow, 0, 0, 0, 0, $W, $H);
+    if (! $hasScreen) {
+        imagecopy($im, $glow, 0, 0, 0, 0, $W, $H);
+    }
     imagedestroy($glow);
 
     $white = imagecolorallocate($im, 255, 255, 255);
     $gold = imagecolorallocate($im, 245, 185, 66);
     $slate = imagecolorallocate($im, 203, 213, 225);
 
-    // ---- Brand wordmark (top-left) ----
-    imagettftext($im, 30, 0, $margin, 96, $white, $fontBold, 'Apna Invoice');
+    // ---- Brand: the logo mark and the name (top-left) ----
+    $mark = __DIR__ . '/../public/brand/icon-192.png';
+    if (is_file($mark)) {
+        $m = imagecreatefrompng($mark);
+        imagealphablending($im, true);
+        imagecopyresampled($im, $m, $margin, 50, 0, 0, 60, 60, imagesx($m), imagesy($m));
+        imagedestroy($m);
+        imagettftext($im, 30, 0, $margin + 76, 94, $white, $fontBold, 'Apna Invoice');
+    } else {
+        imagettftext($im, 30, 0, $margin, 96, $white, $fontBold, 'Apna Invoice');
+    }
 
     // ---- Eyebrow ----
     fitText($im, $card['eyebrow'], 17, $margin, 168, $gold, $fontBold, $maxTextWidth);
@@ -108,14 +143,14 @@ function renderCard(array $card, string $out, string $fontBold, string $fontReg,
     // The glow sits top-right, so a headline never runs under it at this size.
     $y = 268;
     foreach (array_slice($card['headline'], 0, 2) as $line) {
-        fitText($im, $line, 62, $margin, $y, $white, $fontBold, $maxTextWidth);
+        fitText($im, $line, $hasScreen ? 50 : 62, $margin, $y, $white, $fontBold, $maxTextWidth);
         $y += 84;
     }
 
     // ---- Tagline ----
     $y = 432;
     foreach (array_slice($card['tagline'], 0, 2) as $line) {
-        fitText($im, $line, 25, $margin, $y, $slate, $fontReg, $maxTextWidth);
+        fitText($im, $line, $hasScreen ? 21 : 25, $margin, $y, $slate, $fontReg, $maxTextWidth);
         $y += 42;
     }
 
@@ -146,70 +181,75 @@ function renderCard(array $card, string $out, string $fontBold, string $fontReg,
  * a WhatsApp thread.
  */
 $cards = [
-    // The default card, referenced by config/seo.php. Unchanged.
+    // The default card (config/seo.php), used by the home page and any page without its own.
     'og-card' => [
-        'eyebrow' => 'FREE  ·  GST READY  ·  MADE IN INDIA',
-        'headline' => ['Free GST invoices', 'in 60 seconds.'],
-        'tagline' => [
-            'Auto CGST / SGST / IGST  ·  HSN & SAC  ·  UPI QR',
-            'Share on WhatsApp.  No card. Unlimited during beta.',
-        ],
+        'eyebrow' => 'FREE GST BILLING SOFTWARE  ·  INDIA',
+        'headline' => ['GST invoices,', 'returns and stock.'],
+        'tagline' => ['Invoices, purchases, bank and GSTR-1.', 'Free during beta. No card.'],
+        'screen' => 'invoice-view.webp',
+    ],
+    'og/features' => [
+        'eyebrow' => 'FEATURES',
+        'headline' => ['Everything a GST', 'business bills with.'],
+        'tagline' => ['Invoices, stock, bank matching,', 'GSTR-1, 2B match and 3B.'],
+        'screen' => 'dashboard.webp',
     ],
     'og/gst-calculator' => [
-        'eyebrow' => 'FREE TOOL  ·  NO SIGN-UP NEEDED',
+        'eyebrow' => 'FREE TOOL  ·  NO SIGN-UP',
         'headline' => ['GST calculator', 'for India.'],
-        'tagline' => [
-            'Add or remove GST at 5, 12, 18 and 28%.',
-            'CGST / SGST or IGST, split automatically.',
-        ],
+        'tagline' => ['Add or remove GST at 5%, 18% or 40%.', 'CGST and SGST, or IGST, worked out for you.'],
     ],
     'og/gst-invoice-format' => [
-        'eyebrow' => 'RULE 46  ·  FORMAT + FREE TEMPLATE',
-        'headline' => ['GST invoice format,', 'done properly.'],
-        'tagline' => [
-            'Every mandatory field, explained in plain English.',
-            'Make one free, no card, no watermark.',
-        ],
+        'eyebrow' => 'RULE 46  ·  FORMAT AND TEMPLATE',
+        'headline' => ['GST invoice format', 'and what it must show.'],
+        'tagline' => ['Every detail the law asks for, field by field.', 'Make one free, with no watermark.'],
     ],
     'og/billing-software' => [
-        'eyebrow' => 'FREE DURING BETA  ·  MADE IN INDIA',
+        'eyebrow' => 'FREE DURING BETA',
         'headline' => ['Free billing software', 'for Indian business.'],
-        'tagline' => [
-            'Invoices, customers, products, P&L and GST returns.',
-            'No per-invoice charge. No feature locks.',
-        ],
+        'tagline' => ['Invoices, purchases, stock, P&L', 'and GST returns.'],
+        'screen' => 'invoice-form.webp',
     ],
     'og/cash-memo-format' => [
-        'eyebrow' => 'CASH MEMO  ·  FORMAT + FREE MAKER',
+        'eyebrow' => 'CASH MEMO  ·  FORMAT AND MAKER',
         'headline' => ['Cash memo format,', 'ready to print.'],
-        'tagline' => [
-            'For sales without GST, and for purchase vouchers.',
-            'Make one free in under a minute.',
-        ],
+        'tagline' => ['For cash purchases where the seller gives no bill.', 'Make one free.'],
     ],
     'og/credit-note-format' => [
-        'eyebrow' => 'SECTION 34  ·  FORMAT + RULES',
+        'eyebrow' => 'SECTION 34  ·  FORMAT AND RULES',
         'headline' => ['GST credit note', 'format and rules.'],
-        'tagline' => [
-            'Returns, rate corrections and post-sale discounts.',
-            'GSTR-1 compliant, with the 30 November deadline.',
-        ],
+        'tagline' => ['Returns, rate corrections and discounts after sale.', 'With the 30 November time limit.'],
     ],
     'og/pricing' => [
-        'eyebrow' => 'PRICING  ·  NO CARD REQUIRED',
+        'eyebrow' => 'PRICING  ·  NO CARD',
         'headline' => ['Free during beta.', 'Beta users keep it.'],
-        'tagline' => [
-            'Unlimited invoices, customers and PDF exports.',
-            'For Indian freelancers, MSMEs, SMEs and startups.',
-        ],
+        'tagline' => ['No limit on invoices, customers or users.', 'For shops, traders, service firms and CAs.'],
     ],
     'og/how-to-use' => [
-        'eyebrow' => 'STEP BY STEP  ·  UNDER TWO MINUTES',
+        'eyebrow' => 'STEP BY STEP GUIDE',
         'headline' => ['How to make a', 'GST invoice free.'],
-        'tagline' => [
-            'Set up your business, add a customer, bill them.',
-            'Then share it on WhatsApp in one tap.',
-        ],
+        'tagline' => ['Set up, bill, share on WhatsApp,', 'get paid and file on time.'],
+        'screen' => 'invoice-form.webp',
+    ],
+    'og/faq' => [
+        'eyebrow' => 'QUESTIONS AND ANSWERS',
+        'headline' => ['Apna Invoice', 'FAQ.'],
+        'tagline' => ['Price, GSTIN, IGST, e-way bills, GSTR-1,', 'phone use and backups, answered plainly.'],
+    ],
+    'og/about' => [
+        'eyebrow' => 'ABOUT US',
+        'headline' => ['Made in India', 'for small businesses.'],
+        'tagline' => ['GST billing by Datasoft Technologies.', 'Free during beta.'],
+    ],
+    'og/contact' => [
+        'eyebrow' => 'CONTACT',
+        'headline' => ['Talk to the', 'Apna Invoice team.'],
+        'tagline' => ['WhatsApp, phone or email.', 'Our team in India replies within one business day.'],
+    ],
+    'og/blog' => [
+        'eyebrow' => 'GUIDES',
+        'headline' => ['GST and billing', 'guides.'],
+        'tagline' => ['Invoices, HSN codes, GSTR-1, GSTR-3B', 'and getting paid on time.'],
     ],
 ];
 

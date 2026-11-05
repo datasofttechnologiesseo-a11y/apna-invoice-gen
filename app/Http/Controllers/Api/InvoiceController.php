@@ -566,6 +566,7 @@ class InvoiceController extends Controller
             'tds_amount' => ['nullable', 'numeric', 'min:0', 'lt:amount'],
             'tds_section' => ['nullable', 'string', 'max:16'],
             'tds_rate' => ['nullable', 'numeric', 'min:0', 'max:30'],
+            'confirm_duplicate' => ['nullable', 'boolean'],
         ]);
 
         if ($invoice->company->isBooksLockedOn($data['received_at'])) {
@@ -590,6 +591,12 @@ class InvoiceController extends Controller
             // reference does not (same rule as the website).
             if ($duplicate = $invoice->duplicatePaymentReference($data['reference_number'] ?? null)) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['reference_number' => $duplicate]);
+            }
+            // A retry of a payment with no reference (same amount, method and
+            // date a moment ago) is refused unless confirm_duplicate is sent.
+            if (empty($data['confirm_duplicate'])
+                && ($repeat = $invoice->recentDuplicatePayment((float) $data['amount'], $data['method'], $data['received_at']))) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['confirm_duplicate' => $repeat]);
             }
 
             $company->increment('receipt_counter');

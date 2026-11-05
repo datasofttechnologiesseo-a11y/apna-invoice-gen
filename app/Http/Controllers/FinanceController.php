@@ -579,6 +579,9 @@ class FinanceController extends Controller
             if (array_sum($itcBelowNil) > 0) {
                 csv_put($out, $heads('Add: net ITC below nil [4(C)]', $itcBelowNil));
             }
+            if (($data['itc_carry_in']['total'] ?? 0) > 0) {
+                csv_put($out, $heads('ITC brought forward from earlier periods', $data['itc_carry_in']));
+            }
             csv_put($out, $heads('Paid through ITC (s.49(5) / Rule 88A order)', $data['itc_used']));
             csv_put($out, $heads('Reverse charge on inward supplies [3.1(d)] - cash only', $d));
             csv_put($out, $heads('Net cash payable', $data['netCash']));
@@ -950,7 +953,7 @@ class FinanceController extends Controller
             'ytd' => [
                 $fyStart,
                 $now->copy()->endOfDay(),
-                'Financial Year to Date · FY ' . $fyStart->format('Y') . '–' . $fyEnd->format('y') . ' (till ' . $now->format('d M Y') . ')',
+                'Financial year to date · FY ' . $fyStart->format('Y') . '–' . $fyEnd->format('y') . ' (till ' . $now->format('d M Y') . ')',
                 $key,
             ],
             'custom' => [

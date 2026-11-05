@@ -27,6 +27,46 @@
             {{-- Period selector --}}
             @include('finance.partials.return-period', ['period' => $period, 'due' => $dueDate, 'return' => 'GSTR-3B'])
 
+            {{-- ─── Cash to pay: the figure the return is filed for ─── --}}
+            @php
+                $cashTotal = (float) $netCash['total'];
+                $carriedTotal = (float) ($itc_carried['total'] ?? 0);
+                $split = fn (array $v) => 'IGST ₹' . rupees($v['igst']) . ' · CGST ₹' . rupees($v['cgst']) . ' · SGST ₹' . rupees($v['sgst']);
+                $docLine = collect([
+                    [$invoiceCount, 'invoice'],
+                    [$expenseCount, 'expense'],
+                    [$cashMemoCount, 'cash memo'],
+                ])->map(fn ($d) => $d[0] . ' ' . \Illuminate\Support\Str::plural($d[1], $d[0]))->join(', ', ' and ');
+            @endphp
+            <section class="bg-white rounded-xl ring-1 {{ $cashTotal > 0 ? 'ring-brand-200' : 'ring-money-200' }} overflow-hidden" aria-labelledby="g3b-cash">
+                <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                    <div class="min-w-0">
+                        @if ($cashTotal > 0)
+                            <h2 id="g3b-cash" class="text-sm font-semibold text-gray-600">Cash to pay</h2>
+                            <div class="mt-0.5 font-display text-3xl sm:text-4xl font-extrabold text-gray-900 tabular-nums">₹{{ rupees($cashTotal) }}</div>
+                            <div class="mt-1 text-sm text-gray-600 tabular-nums">{{ $split($netCash) }}</div>
+                        @else
+                            <h2 id="g3b-cash" class="font-display text-xl sm:text-2xl font-extrabold text-money-800">Nothing to pay in cash</h2>
+                            @if ($carriedTotal > 0)
+                                <div class="mt-1 text-sm text-gray-700 tabular-nums">ITC carried forward to next period <strong class="text-gray-900">₹{{ rupees($carriedTotal) }}</strong></div>
+                                <div class="text-sm text-gray-600 tabular-nums">{{ $split($itc_carried) }}</div>
+                            @else
+                                <div class="mt-1 text-sm text-gray-600">Credit covers the tax for this period.</div>
+                            @endif
+                        @endif
+                    </div>
+                    <div class="text-sm sm:text-right shrink-0">
+                        <div class="text-gray-600">Due by <strong class="text-gray-900">{{ $dueDate->format('d M Y') }}</strong></div>
+                        <a href="#section-61" class="inline-flex items-center min-h-[40px] sm:min-h-0 font-semibold text-brand-700 hover:underline print:hidden">See how it is worked out (Section 6.1)</a>
+                    </div>
+                </div>
+                <div class="px-4 sm:px-5 py-2.5 bg-gray-50 border-t border-gray-100 text-xs text-gray-600 flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-x-4 gap-y-1">
+                    <span>From {{ $docLine }} in the period.</span>
+                    <span>Ties to GSTR-1: outward supplies come from the same figures.
+                        <a href="{{ route('finance.gstr1', $period->query()) }}" class="font-semibold text-brand-700 hover:underline print:hidden">Open GSTR-1 for {{ $periodLabel }}</a></span>
+                </div>
+            </section>
+
             {{-- Notice - what this is, and what it isn't --}}
             <div class="p-4 rounded-xl bg-brand-50 border border-brand-200 text-sm text-brand-900 leading-relaxed">
                 <div class="flex items-start gap-3">
@@ -35,22 +75,6 @@
                         Computed from your invoices, expenses and cash memos for the period, in the GSTR-3B layout.
                         Nothing is filed with GSTN. Verify against GSTR-1 and your ITC ledger before filing on the portal.
                     </div>
-                </div>
-            </div>
-
-            {{-- ─── Counters strip ─── --}}
-            <div class="grid grid-cols-3 gap-3">
-                <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                    <div class="text-xs font-medium text-gray-600">Invoices in period</div>
-                    <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $invoiceCount }}</div>
-                </div>
-                <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                    <div class="text-xs font-medium text-gray-600">Expenses in period</div>
-                    <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $expenseCount }}</div>
-                </div>
-                <div class="p-3 sm:p-4 rounded-xl bg-white ring-1 ring-gray-200 text-center">
-                    <div class="text-xs font-medium text-gray-600">Cash memos</div>
-                    <div class="mt-1 font-display text-xl font-extrabold text-gray-900 tabular-nums">{{ $cashMemoCount }}</div>
                 </div>
             </div>
 
@@ -292,7 +316,7 @@
                 $cellNum = 'px-2.5 sm:px-5 py-3 text-right tabular-nums whitespace-nowrap';
                 $cellLabel = 'px-2.5 sm:px-5 py-3';
             @endphp
-            <section class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden" aria-labelledby="g3b-61">
+            <section id="section-61" class="bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden scroll-mt-20" aria-labelledby="g3b-61">
                 <div class="px-4 sm:px-5 py-3.5 border-b border-gray-200">
                     <div class="text-xs font-semibold text-brand-700">Section 6.1</div>
                     <h2 id="g3b-61" class="font-display text-base sm:text-lg font-bold text-gray-900">Payment of tax</h2>
@@ -327,6 +351,14 @@
                                     <td class="{{ $cellLabel }} text-gray-700">Add: net ITC below nil <span class="text-xs text-gray-500">(4(C), credit reversed beyond this month's credit)</span></td>
                                     @foreach (['igst', 'cgst', 'sgst'] as $head)
                                         <td class="{{ $cellNum }}">+{{ rupees(max(0, -(float) $itc[$head])) }}</td>
+                                    @endforeach
+                                </tr>
+                            @endif
+                            @if (($itc_carry_in['total'] ?? 0) > 0)
+                                <tr>
+                                    <td class="{{ $cellLabel }} text-gray-700">ITC brought forward <span class="text-xs text-gray-500">(unused credit from earlier periods, used before cash)</span></td>
+                                    @foreach (['igst', 'cgst', 'sgst'] as $head)
+                                        <td class="{{ $cellNum }} text-gray-700">{{ rupees($itc_carry_in[$head]) }}</td>
                                     @endforeach
                                 </tr>
                             @endif

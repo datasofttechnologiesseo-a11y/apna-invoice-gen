@@ -209,6 +209,9 @@ Route::prefix('/')->name('pages.')->group(function () {
     Route::get('/manuals/apna-invoice-quick-start.pdf', [ManualController::class, 'quickStart'])
         ->name('manuals.quick-start');
     Route::view('/pricing', 'pages.pricing')->name('pricing');
+    // Landing page for paid ads: one goal (sign up), headline matched to the
+    // ad group with ?for=. Not in the sitemap and noindex (it repeats the home page).
+    Route::view('/start', 'pages.start')->name('start');
     Route::view('/faq', 'pages.faq')->name('faq');
     Route::view('/about', 'pages.about')->name('about');
     Route::view('/press', 'pages.press')->name('press');
@@ -342,6 +345,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:10,1,web-invoices-invoice-share-email')
         ->name('invoices.share.email');
     Route::get('invoices/{invoice}/share/link', [InvoiceShareController::class, 'publicLink'])->name('invoices.share.link');
+    // Share panel: save the customer's mobile in place so WhatsApp can be used.
+    Route::post('invoices/{invoice}/customer-phone', [InvoiceShareController::class, 'saveCustomerPhone'])
+        ->middleware('throttle:20,1')
+        ->name('invoices.customer-phone');
     Route::post('invoices/{invoice}/cancel', [InvoiceShareController::class, 'cancel'])->name('invoices.cancel');
 
     // Payment reminders — hard cap to prevent spam against a single customer.
@@ -458,6 +465,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('super-admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/users', [\App\Http\Controllers\Admin\DashboardController::class, 'users'])->name('users');
+        // Before /users/{user}, or "export" would be read as a user id.
+        Route::get('/users/export', [\App\Http\Controllers\Admin\DashboardController::class, 'exportUsers'])->name('users.export');
         Route::get('/users/{user}', [\App\Http\Controllers\Admin\DashboardController::class, 'userDetail'])->name('users.show');
         Route::post('/users/{user}/impersonate', [\App\Http\Controllers\Admin\DashboardController::class, 'impersonate'])->name('users.impersonate');
         Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Admin\DashboardController::class, 'resetPassword'])->name('users.reset-password');

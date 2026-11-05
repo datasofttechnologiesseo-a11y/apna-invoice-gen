@@ -138,19 +138,19 @@ class MoneySafetyRegressionTest extends TestCase
         $this->travel(5)->minutes();
         $this->customer->update(['state_id' => $this->ka->id]);
 
-        $this->actingAs($this->user)->post(route('invoices.finalize', $inv))->assertSessionHas('error');
-        $this->assertTrue($inv->fresh()->isDraft());
-
-        // Saved again, it is recomputed as IGST and issues.
-        $this->actingAs($this->user)->put(route('invoices.update', $inv), [
-            'customer_id' => $this->customer->id, 'invoice_date' => now()->toDateString(), 'due_date' => now()->toDateString(),
-            'items' => [['description' => 'Widget', 'hsn_sac' => '84733010', 'quantity' => 1, 'rate' => 1000, 'gst_rate' => 18]],
-        ]);
-        $this->actingAs($this->user)->post(route('invoices.finalize', $inv));
+        // Issuing works the draft out again as IGST (no "open it and save it
+        // again" round trip) and says so.
+        $this->actingAs($this->user)->post(route('invoices.finalize', $inv))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('status', fn ($s) => str_contains($s, 'so IGST was charged'));
         $inv->refresh();
         $this->assertFalse($inv->isDraft());
+        $this->assertTrue((bool) $inv->is_interstate);
+        $this->assertEqualsWithDelta(0.0, (float) $inv->total_cgst, 0.001);
         $this->assertEqualsWithDelta(180.0, (float) $inv->total_igst, 0.001);
+        $this->assertEqualsWithDelta(1180.0, (float) $inv->grand_total, 0.001);
         $this->assertSame($this->ka->id, (int) $inv->place_of_supply_state_id);
+        $this->assertEqualsWithDelta(180.0, (float) $inv->items()->sum('igst_amount'), 0.001, 'the lines carry IGST too');
     }
 
     public function test_credit_notes_never_reverse_more_tax_than_the_invoice_charged(): void

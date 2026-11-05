@@ -6,18 +6,12 @@
 ])
 
 {{--
-    Mobile-first floating action button. Common mobile-app pattern:
-    a primary brand-coloured circle in the bottom-right thumb zone, hidden
-    on lg+ where the regular page-header CTA already exists.
+    Retired (Nov 2026). This was the phone floating "+" button. The phone
+    tab bar (components/mobile-tab-bar) now has a "New" item that opens the
+    whole create list, and the page headers keep their own "New ..." button,
+    so a third floating control only covered the last row of each list.
 
-    Self-contained - no Alpine, no JS, no z-index conflicts with the existing
-    nav (z-10) or admin sidebar overlay (z-30/40). Sits at z-30 so it's above
-    table content but below modals.
+    Kept so the pages that still use <x-quick-action-fab /> need no change;
+    it renders nothing. The props stay accepted for the same reason.
 --}}
-<a href="{{ $href }}"
-   aria-label="{{ $label }}"
-   class="quick-fab lg:hidden fixed bottom-5 right-5 z-30 inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-700 hover:bg-accent-800 text-white shadow-lg ring-4 ring-white/60 active:scale-95 transition transform">
-    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-    </svg>
-</a>
+

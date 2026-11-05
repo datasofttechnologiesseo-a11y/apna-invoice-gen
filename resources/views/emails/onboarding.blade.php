@@ -23,13 +23,25 @@
                             <p>{{ $line }}</p>
                         @endforeach
 
+                        @if (! empty($steps))
+                            @if (! empty($stepsIntro))
+                                <p style="margin-bottom: 6px;">{{ $stepsIntro }}</p>
+                            @endif
+                            <ol style="margin-top: 0; padding-left: 22px;">
+                                @foreach ($steps as $step)
+                                    <li style="margin-bottom: 4px;">{{ $step }}</li>
+                                @endforeach
+                            </ol>
+                        @endif
+
                         <div style="text-align: center; margin: 28px 0 8px;">
                             <a href="{{ $ctaUrl }}" style="display: inline-block; padding: 13px 28px; background: {{ $brand }}; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px;">{{ $ctaLabel }}</a>
                         </div>
 
                         <p style="margin-top: 28px; color: #6b7280; font-size: 13px;">
-                            Need help? Reply to this email.
+                            Need help? Reply to this email and our team will get back to you.
                         </p>
+                        <p style="margin-bottom: 0;">Regards,<br>Team Apna Invoice</p>
                     </td>
                 </tr>
                 <tr>

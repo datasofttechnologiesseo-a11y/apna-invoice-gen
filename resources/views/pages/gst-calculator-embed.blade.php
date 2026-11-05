@@ -12,6 +12,9 @@
          is the point of handing the embed out. --}}
     <meta name="robots" content="noindex, follow">
     <title>GST Calculator · Apna Invoice</title>
+    <link rel="icon" href="/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
+    <link rel="icon" type="image/png" sizes="48x48" href="/brand/favicon-48.png?v=3">
+    <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png?v=3">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>body { background: transparent; }</style>
 </head>

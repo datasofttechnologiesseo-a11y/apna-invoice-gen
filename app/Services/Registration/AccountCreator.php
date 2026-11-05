@@ -54,6 +54,10 @@ class AccountCreator
                 $forced['google_id'] = $reg['google_id'];
                 $forced['avatar'] = $reg['avatar'] ?? null;
             }
+            // The ad click / UTM tags the visitor arrived with (CaptureAttribution).
+            if (is_array($attribution = $request->session()->get('attribution'))) {
+                $forced['signup_attribution'] = $attribution;
+            }
             if ($forced !== []) {
                 $user->forceFill($forced)->save();
             }
@@ -74,6 +78,12 @@ class AccountCreator
 
         event(new Registered($user));
         Auth::login($user);
+
+        // The first page after sign-up reports the sign-up to GA4 and Google
+        // Ads (partials/google-analytics pulls this). Put, not flashed: the
+        // first redirect after sign-up may not render a page.
+        $request->session()->put('analytics_signup', ! empty($reg['google_id']) ? 'google' : 'email');
+        $request->session()->forget('attribution');
 
         // Kick off the activation sequence with a welcome email. Failures here
         // must never block sign-up, so OnboardingMailer swallows its own errors.

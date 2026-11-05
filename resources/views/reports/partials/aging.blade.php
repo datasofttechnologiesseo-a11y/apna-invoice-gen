@@ -45,7 +45,7 @@
 
     {{-- Desktop table --}}
     <div class="hidden md:block bg-white rounded-xl ring-1 ring-gray-200 overflow-hidden printable">
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto">{{-- relative: keeps the sr-only header label inside the scroller --}}
             <table class="w-full text-sm">
                 <thead class="bg-gray-50">
                     <tr>

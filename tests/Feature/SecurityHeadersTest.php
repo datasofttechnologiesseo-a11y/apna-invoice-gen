@@ -32,10 +32,11 @@ class SecurityHeadersTest extends TestCase
         $csp = $this->get('/')->headers->get('Content-Security-Policy');
 
         // Alpine evaluates expressions, so removing 'unsafe-eval' takes every
-        // interactive screen down. Fonts and Turnstile are third-party origins
-        // the app genuinely depends on.
+        // interactive screen down. Turnstile is a third-party origin the app
+        // genuinely depends on; fonts are served from the site itself.
         $this->assertStringContainsString("'unsafe-eval'", $csp);
-        $this->assertStringContainsString('https://fonts.bunny.net', $csp);
+        $this->assertStringContainsString("font-src 'self' data:;", $csp);
+        $this->assertStringNotContainsString('fonts.bunny.net', $csp);
         $this->assertStringContainsString('https://challenges.cloudflare.com', $csp);
         $this->assertStringContainsString("object-src 'none'", $csp);
         $this->assertStringContainsString("frame-ancestors 'self'", $csp);

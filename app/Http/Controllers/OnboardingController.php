@@ -94,7 +94,7 @@ class OnboardingController extends Controller
 
         if ($request->hasFile('logo')) {
             if ($company->logo_path) {
-                Storage::disk('public')->delete($company->logo_path);
+                \App\Support\BrandImage::delete($company->logo_path);
             }
             $data['logo_path'] = \App\Support\BrandImage::storeLogo($request->file('logo'));
         }
@@ -179,11 +179,13 @@ class OnboardingController extends Controller
         $user = $request->user();
         $company = $user->ensureCompany();
         $hasCustomer = $user->customers()->exists();
+        // The customer added in setup, so the first invoice opens with it chosen.
+        $customer = $company->customers()->latest('id')->first();
 
         if (! $company->isOnboarded()) {
             $company->update(['onboarded_at' => now()]);
         }
 
-        return view('onboarding.done', compact('company', 'hasCustomer'));
+        return view('onboarding.done', compact('company', 'hasCustomer', 'customer'));
     }
 }

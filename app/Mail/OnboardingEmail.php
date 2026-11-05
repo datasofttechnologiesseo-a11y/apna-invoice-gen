@@ -39,6 +39,8 @@ class OnboardingEmail extends Mailable
                 'user' => $this->user,
                 'heading' => $this->stageConfig['heading'] ?? 'Apna Invoice',
                 'lines' => $this->stageConfig['lines'] ?? [],
+                'stepsIntro' => $this->stageConfig['steps_intro'] ?? null,
+                'steps' => $this->stageConfig['steps'] ?? [],
                 'ctaLabel' => $this->stageConfig['cta'] ?? 'Open Apna Invoice',
                 'ctaUrl' => route($route),
             ],

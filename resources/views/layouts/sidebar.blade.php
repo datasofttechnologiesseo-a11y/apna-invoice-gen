@@ -127,7 +127,7 @@
     <div class="h-14 shrink-0 flex items-center gap-2 px-2 border-b border-white/10">
         <a href="{{ route('dashboard') }}" class="flex-1 min-w-0 flex items-center justify-center rounded-md bg-white h-11 px-2 shadow-sm" aria-label="Apna Invoice dashboard">
             <x-brand-logo x-show="!collapsed || drawer" class="h-9 w-auto max-w-full" />
-            <img x-show="collapsed && !drawer" x-cloak src="{{ asset('brand/favicon-96.png') }}" alt="Apna Invoice" class="w-8 h-8" width="32" height="32">
+            <img x-show="collapsed && !drawer" x-cloak src="{{ asset('brand/favicon-96.webp') }}" alt="Apna Invoice" class="w-8 h-8" width="32" height="32">
         </a>
         <button type="button" @click="drawer = false" class="ml-auto lg:hidden p-2 rounded hover:bg-white/10" aria-label="Close menu">
             <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>

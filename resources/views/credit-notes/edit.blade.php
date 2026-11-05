@@ -154,7 +154,7 @@
                                :class="hasLines && 'bg-gray-100 text-gray-700'">
                         <p id="amount-hint" class="text-xs text-gray-500 mt-1">
                             <span x-show="hasLines" x-cloak>Worked out from the quantities above. Clear them to type an amount.</span>
-                            <span x-show="!hasLines">The taxable value and GST are split from the amount automatically.</span>
+                            <span x-show="!hasLines">The taxable value and GST are worked out from the amount.</span>
                         </p>
                         <x-input-error :messages="$errors->get('amount')" for="amount" class="mt-1" />
                     </div>

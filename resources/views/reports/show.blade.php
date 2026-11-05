@@ -23,6 +23,20 @@
         return $fmt($col, $value);
     };
     $filterKeys = ['from', 'to', 'search', 'page'];
+    // Stock summary: stock on hand today is a period of its own, so it gets
+    // a preset, and the status column shows as a pill.
+    $isStock = $key === 'stock-summary';
+    $stockBadge = function (array $row) {
+        $closing = (float) ($row['closing'] ?? 0);
+        $status = $row['status'] ?? '';
+
+        return match (true) {
+            $closing < 0 => ['overdue', 'Negative stock'],
+            $closing == 0.0 => ['overdue', 'Out of stock'],
+            $status === 'Low' => ['partially_paid', 'Low stock'],
+            default => null,
+        };
+    };
 @endphp
 <x-app-layout :title="$screenTitle">
     <x-slot name="header">
@@ -72,6 +86,12 @@
                 @endforeach
                 @if ($report->usesDates())
                     <div class="w-full flex flex-wrap gap-1.5" role="group" aria-label="Period">
+                        @if ($isStock)
+                            @php $active = ! request()->filled('from') && ! request()->filled('to'); @endphp
+                            <a href="{{ route('reports.show', array_merge(request()->except(['from', 'to', 'page']), ['report' => $key])) }}"
+                               @if ($active) aria-current="true" @endif
+                               @class(['inline-flex items-center h-9 px-3 rounded-md text-sm font-medium ring-1 ring-inset transition', 'bg-brand-700 text-white ring-brand-700' => $active, 'bg-white text-gray-700 ring-gray-300 hover:bg-gray-50' => ! $active])>As on today</a>
+                        @endif
                         @foreach ($presets as $pk => $p)
                             @php $active = request('from') === $p['from']->toDateString() && request('to') === $p['to']->toDateString(); @endphp
                             <a href="{{ route('reports.show', array_merge(request()->except(['from', 'to', 'page']), ['report' => $key, 'from' => $p['from']->toDateString(), 'to' => $p['to']->toDateString()])) }}"
@@ -124,6 +144,13 @@
                                         <td class="px-3 py-2 whitespace-nowrap {{ $numeric($col) ? 'text-right tabular-nums' : '' }} {{ $text === '–' ? 'text-gray-400' : '' }}">
                                             @if ($i === 0 && ! empty($row['_url']))
                                                 <a href="{{ $row['_url'] }}" class="text-brand-700 font-medium hover:underline">{{ $text }}</a>
+                                            @elseif ($isStock && $col['key'] === 'status')
+                                                @php $badge = $stockBadge($row); @endphp
+                                                @if ($badge)
+                                                    <x-status-badge :status="$badge[0]" :label="$badge[1]" />
+                                                @else
+                                                    <span class="text-gray-500">In stock</span>
+                                                @endif
                                             @else
                                                 {{ $text }}
                                             @endif

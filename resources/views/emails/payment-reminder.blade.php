@@ -33,7 +33,7 @@
                     <td style="padding: 28px 32px; font-size: 14px; line-height: 1.6; color: #333;">
                         <p>Hi {{ $cust->name }},</p>
                         @if ($daysPastDue < 0)
-                            <p>This is a friendly reminder that invoice <strong>{{ $invoice->invoice_number }}</strong>
+                            <p>This is a reminder that invoice <strong>{{ $invoice->invoice_number }}</strong>
                                 is due on <strong>{{ $dueOn }}</strong>.
                                 If you have already paid, please ignore this reminder.</p>
                         @elseif ($daysPastDue === 0)
