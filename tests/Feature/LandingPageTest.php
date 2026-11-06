@@ -78,12 +78,58 @@ class LandingPageTest extends TestCase
 
     public function test_a_sign_up_that_leaves_out_the_captcha_is_refused(): void
     {
-        config(['captcha.secret_key' => 'test-secret']);
+        config(['captcha.secret_key' => 'test-secret', 'captcha.site_key' => 'test-site-key']);
         $this->from('/start')->post(route('register'), [
             'name' => 'Bot', 'phone' => '9876543210', 'email' => 'bot@example.in',
             'password' => 'Str0ng-pass-123', 'terms_accepted' => true,
         ])->assertRedirect('/start')->assertSessionHasErrors('cf-turnstile-response');
         $this->assertDatabaseMissing('users', ['email' => 'bot@example.in']);
+    }
+
+    public function test_without_turnstile_keys_on_the_server_people_can_still_log_in_and_sign_up(): void
+    {
+        // A live server with no captcha keys shows no captcha widget, so no
+        // answer is ever sent. That must never lock people out. (November
+        // 2026: login refused every user, with the message hidden because
+        // it belongs to the widget that was not on the page.)
+        $missing = [[null, null], ['only-secret', null], [null, 'only-site-key']];
+
+        // The rule as production runs it: it passes, and logs the gap.
+        \Illuminate\Support\Facades\Log::spy();
+        $this->app->detectEnvironment(fn () => 'production');
+        foreach ($missing as [$secret, $site]) {
+            config(['captcha.secret_key' => $secret, 'captcha.site_key' => $site]);
+            $failed = false;
+            (new \App\Rules\TurnstileValid('1.2.3.4'))->validate('cf-turnstile-response', null, function () use (&$failed) { $failed = true; });
+            $this->assertFalse($failed, 'missing captcha keys must not block the form');
+        }
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('error')->times(3);
+        $this->app->detectEnvironment(fn () => 'testing');
+
+        // And a real login goes through each time.
+        foreach ($missing as [$secret, $site]) {
+            config(['captcha.secret_key' => $secret, 'captcha.site_key' => $site]);
+            $user = User::factory()->create(['password' => bcrypt('Str0ng-pass-123')]);
+            $this->post(route('login'), ['email' => $user->email, 'password' => 'Str0ng-pass-123'])
+                ->assertSessionHasNoErrors();
+            $this->assertAuthenticatedAs($user);
+            auth()->logout();
+        }
+
+        $this->from('/start')->post(route('register'), [
+            'name' => 'Ravi Kumar', 'phone' => '9876543210', 'email' => 'ravi.nokeys@example.in',
+            'password' => 'Str0ng-pass-123', 'terms_accepted' => true,
+        ])->assertSessionHasNoErrors()->assertRedirect(route('register.verify'));
+    }
+
+    public function test_with_turnstile_keys_set_login_needs_the_captcha(): void
+    {
+        config(['captcha.secret_key' => 'test-secret', 'captcha.site_key' => 'test-site-key']);
+        $user = User::factory()->create(['password' => bcrypt('Str0ng-pass-123')]);
+
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'Str0ng-pass-123'])
+            ->assertSessionHasErrors('cf-turnstile-response');
+        $this->assertGuest();
     }
 
     public function test_signed_in_visitors_see_the_dashboard_link_instead_of_the_form(): void
