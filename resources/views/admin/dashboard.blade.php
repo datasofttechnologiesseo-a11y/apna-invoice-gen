@@ -3,7 +3,7 @@
     <div class="space-y-6">
 
         {{-- Headline KPIs, each one links to its list --}}
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
             @php
                 $tiles = [
                     ['label' => 'Total users',    'value' => number_format($stats['users']['total']),     'sub' => '+' . $stats['users']['new_week'] . ' this week',     'href' => route('admin.users'),     'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 'color' => 'brand'],
@@ -179,20 +179,21 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 text-xs text-gray-500">
                         <tr>
-                            <th class="px-5 py-2 text-left font-semibold">User</th>
-                            <th class="px-5 py-2 text-right font-semibold">Invoices</th>
-                            <th class="px-5 py-2 text-right font-semibold">Revenue</th>
+                            <th class="px-4 sm:px-5 py-2 text-left font-semibold">User</th>
+                            <th class="px-3 sm:px-5 py-2 text-right font-semibold">Invoices</th>
+                            <th class="px-4 sm:px-5 py-2 text-right font-semibold">Revenue</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @forelse ($topUsers as $u)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-5 py-3">
-                                    <a href="{{ route('admin.users.show', $u) }}" class="text-brand-700 hover:underline font-medium break-words">{{ $u->name }}</a>
-                                    <div class="text-xs text-gray-500 break-all">{{ $u->email }}</div>
+                                {{-- max-w-0 + w-full lets the name and email shorten with "…" instead of breaking mid-word on a phone. --}}
+                                <td class="px-4 sm:px-5 py-3 max-w-0 w-full">
+                                    <a href="{{ route('admin.users.show', $u) }}" class="block truncate py-2 -my-2 text-brand-700 hover:underline font-medium" title="{{ $u->name }}">{{ $u->name }}</a>
+                                    <div class="text-xs text-gray-500 truncate" title="{{ $u->email }}">{{ $u->email }}</div>
                                 </td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums">{{ $u->invoices_count }}</td>
-                                <td class="px-5 py-3 text-right font-mono tabular-nums whitespace-nowrap">₹{{ rupees((float) $u->revenue) }}</td>
+                                <td class="px-3 sm:px-5 py-3 text-right font-mono tabular-nums">{{ $u->invoices_count }}</td>
+                                <td class="px-4 sm:px-5 py-3 text-right font-mono tabular-nums whitespace-nowrap">₹{{ rupees((float) $u->revenue) }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="px-5 py-10 text-center text-gray-500">No invoices yet.</td></tr>
@@ -212,7 +213,7 @@
                             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-500 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">{{ strtoupper(substr($u->name, 0, 1)) }}</div>
                             <div class="flex-1 min-w-0">
                                 <div class="font-medium text-gray-900 flex items-center gap-1.5 min-w-0">
-                                    <a href="{{ route('admin.users.show', $u) }}" class="hover:underline truncate">{{ $u->name }}</a>
+                                    <a href="{{ route('admin.users.show', $u) }}" class="hover:underline truncate py-2 -my-2">{{ $u->name }}</a>
                                     @if ($u->isSuperAdmin())<span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-danger-100 text-danger-700 font-semibold">Super admin</span>@endif
                                 </div>
                                 <div class="text-xs text-gray-500 truncate">{{ $u->email }}</div>
