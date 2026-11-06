@@ -44,6 +44,20 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_a_refused_login_always_says_why_on_the_page(): void
+    {
+        $user = User::factory()->create();
+
+        // Wrong password: the message shows under the email field.
+        $this->from('/login')->post('/login', ['email' => $user->email, 'password' => 'wrong-password'])->assertRedirect('/login');
+        $this->get('/login')->assertSee(trans('auth.failed'));
+
+        // A captcha message with no widget on the page still shows.
+        config(['captcha.site_key' => null]);
+        $this->withSession(['errors' => (new \Illuminate\Support\ViewErrorBag)->put('default', new \Illuminate\Support\MessageBag(['cf-turnstile-response' => 'Captcha check failed.']))])
+            ->get('/login')->assertSee('Captcha check failed.');
+    }
+
     public function test_users_can_logout(): void
     {
         $user = User::factory()->create();

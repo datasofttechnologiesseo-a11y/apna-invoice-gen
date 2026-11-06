@@ -124,4 +124,15 @@ class UserExportTest extends TestCase
             ->assertSee('Download')
             ->assertSee(route('admin.users.export', ['format' => 'csv']), false);
     }
+
+    public function test_every_admin_page_has_the_logo_and_the_downloads_in_the_sidebar(): void
+    {
+        foreach (['admin.dashboard', 'admin.invoices', 'admin.companies'] as $page) {
+            $this->actingAs($this->admin)->get(route($page))->assertOk()
+                ->assertSee('brand/apna-invoice-logo-sm.webp', false)
+                ->assertSee('Download user data')
+                ->assertSee(e(route('admin.users.export', ['format' => 'xlsx'])), false)
+                ->assertSee(e(route('admin.users.export', ['format' => 'csv', 'scope' => 'all'])), false);
+        }
+    }
 }
