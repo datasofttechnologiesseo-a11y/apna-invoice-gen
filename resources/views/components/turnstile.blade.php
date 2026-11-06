@@ -14,4 +14,10 @@
             <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         @endpush
     @endonce
+@else
+    {{-- No widget on the page, but a captcha message must never be silent:
+         a form refused with nothing shown looks like a broken button. --}}
+    @error('cf-turnstile-response')
+        <p class="mt-4 text-sm text-danger-600" role="alert">{{ $message }}</p>
+    @enderror
 @endif
