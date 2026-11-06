@@ -54,22 +54,24 @@
     <aside
         class="w-64 bg-gray-900 text-gray-300 flex flex-col flex-shrink-0 fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 lg:static lg:transform-none"
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
-        <div class="p-5 border-b border-gray-800 flex items-center justify-between">
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 min-w-0">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-danger-500 to-accent-500 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                </div>
-                <div class="min-w-0">
-                    <div class="font-display font-extrabold text-white leading-tight truncate">Apna Invoice</div>
-                    <div class="text-xs text-gray-400 leading-tight">Admin panel</div>
-                </div>
-            </a>
-            <button type="button" @click="sidebarOpen = false" class="lg:hidden p-2.5 -mr-2 text-gray-400 hover:text-white" aria-label="Close menu">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
+        {{-- The real logo on a white card, as in the app's own sidebar, with
+             the panel named under it so nobody mistakes it for their books. --}}
+        <div class="px-3 pt-3 pb-3 border-b border-gray-800">
+            <div class="flex items-center gap-2">
+                <a href="{{ route('admin.dashboard') }}" class="flex-1 min-w-0 flex items-center justify-center rounded-md bg-white h-11 px-2 shadow-sm" aria-label="Apna Invoice admin panel">
+                    <x-brand-logo class="h-9 w-auto max-w-full" />
+                </a>
+                <button type="button" @click="sidebarOpen = false" class="lg:hidden p-2.5 -mr-1 text-gray-400 hover:text-white" aria-label="Close menu">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="mt-2.5 flex items-center gap-1.5 px-1 text-xs font-semibold text-accent-400">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                Admin panel
+            </div>
         </div>
 
-        <nav class="flex-1 p-3 space-y-0.5">
+        <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
             @foreach ($navItems as $item)
                 <a href="{{ $item['href'] }}" @click="sidebarOpen = false" @class([
                     'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition',
@@ -82,6 +84,22 @@
                     <span>{{ $item['label'] }}</span>
                 </a>
             @endforeach
+
+            {{-- User data for the admin, one click from any admin page. --}}
+            <div class="mt-2 pt-3 border-t border-gray-800">
+                <p class="px-3 pb-1.5 text-xs font-semibold text-gray-500">Download user data</p>
+                @foreach ([
+                    ['Verified users', 'Excel', ['format' => 'xlsx']],
+                    ['Verified users', 'CSV', ['format' => 'csv']],
+                    ['All users', 'Excel', ['format' => 'xlsx', 'scope' => 'all']],
+                    ['All users', 'CSV', ['format' => 'csv', 'scope' => 'all']],
+                ] as [$who, $type, $query])
+                    <a href="{{ route('admin.users.export', $query) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                        <svg class="w-5 h-5 flex-shrink-0 text-gray-500 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+                        <span>{{ $who }} <span class="text-gray-500 group-hover:text-gray-400">· {{ $type }}</span></span>
+                    </a>
+                @endforeach
+            </div>
 
             <div class="mt-2 pt-2 border-t border-gray-800 space-y-0.5">
                 <a href="{{ route('dashboard') }}" @click="sidebarOpen = false" class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition">
