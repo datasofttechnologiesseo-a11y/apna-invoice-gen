@@ -26,13 +26,16 @@ class TurnstileValid implements ValidationRule
     {
         $secret = config('captcha.secret_key');
 
-        // Captcha not configured — dev/test/staging pass-through. In production
-        // we refuse to silently disable bot protection: that would mean a
-        // forgotten env var quietly leaves auth endpoints wide open.
-        if (empty($secret)) {
+        // The widget is on the form only when the site key is set (see
+        // components/turnstile), and a token can be checked only with the
+        // secret. With either key missing there is no captcha to answer, so
+        // the request goes through: refusing it would lock every user out of
+        // login, sign-up and password reset (it did, in November 2026, on a
+        // server without the keys). In production the gap is logged so it is
+        // seen and fixed.
+        if (empty($secret) || empty(config('captcha.site_key'))) {
             if (app()->environment('production')) {
-                Log::error('Turnstile keys missing in production — refusing to accept form submission.');
-                $fail(__('Captcha is misconfigured. Please contact support.'));
+                Log::error('Turnstile is not configured (TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY are both needed). Forms are accepted without a captcha.');
             }
             return;
         }

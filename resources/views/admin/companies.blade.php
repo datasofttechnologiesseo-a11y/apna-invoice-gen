@@ -9,10 +9,10 @@
     </x-slot:action>
 
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      {{-- Phones: one card per company --}}
-      <ul class="sm:hidden divide-y divide-gray-100">
+      {{-- Phones, tablets and small laptops: cards (two a row from 768px). --}}
+      <ul class="xl:hidden grid md:grid-cols-2 gap-px bg-gray-100">
           @forelse ($companies as $co)
-              <li class="p-4">
+              <li class="p-4 bg-white">
                   <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
                           <div class="font-medium text-gray-900 break-words">{{ $co->name }}</div>
@@ -53,12 +53,12 @@
                   </dl>
               </li>
           @empty
-              <li class="px-4 py-12 text-center text-gray-500">No companies match.</li>
+              <li class="px-4 py-12 text-center text-gray-500 bg-white md:col-span-2">No companies match.</li>
           @endforelse
       </ul>
 
-      {{-- Tablets and up: the full table --}}
-      <div class="hidden sm:block overflow-x-auto">
+      {{-- Wide screens: the full table. --}}
+      <div class="hidden xl:block overflow-x-auto">
         <table class="w-full text-sm min-w-[800px]">
             <thead class="bg-gray-50 text-xs text-gray-500">
                 <tr>
