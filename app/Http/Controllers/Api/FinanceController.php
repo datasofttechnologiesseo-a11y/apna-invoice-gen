@@ -163,6 +163,8 @@ class FinanceController extends Controller
             'all' => $summarise($invoices),
             // Table-wise GSTR-1 and the net figures GSTR-3B 3.1 takes from it.
             'tables' => $built['tables'],
+            // Table 12, HSN/SAC-wise rows (B2B / B2C), net of credit notes.
+            'hsn' => $built['hsn'],
             'gstr3b_outward' => $built['summary'],
         ]);
     }
@@ -202,6 +204,25 @@ class FinanceController extends Controller
     public function gstr1Csv(Request $request)
     {
         return app(WebInvoice::class)->gstr1Csv($request);
+    }
+
+    /**
+     * GSTR-1 for the portal (Prepare Offline > Upload) and the offline-tool
+     * workbook, for ?month=YYYY-MM&frequency=monthly|quarterly as on the web.
+     * The JSON needs the business's GSTIN (422 without it).
+     */
+    public function gstr1Json(Request $request)
+    {
+        if (! $request->user()->ensureCompany()->gstin) {
+            return response()->json(['message' => 'GSTIN is not set. Add it in Company settings to download the GSTR-1 file.'], 422);
+        }
+
+        return app(WebFinance::class)->gstr1Json($request);
+    }
+
+    public function gstr1Xlsx(Request $request)
+    {
+        return app(WebFinance::class)->gstr1Xlsx($request);
     }
 
     // ---- Shared compute helpers (copied from the web controller) ----------

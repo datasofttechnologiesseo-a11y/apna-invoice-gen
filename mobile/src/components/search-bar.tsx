@@ -5,7 +5,7 @@ import { colors, fonts } from '@/theme';
 
 import { Icon } from './icon';
 
-/** Search field for the gradient header. Calls onSearch 300 ms after typing stops. */
+/** Search field for list headers. Calls onSearch 300 ms after typing stops. */
 export function SearchBar({ placeholder, onSearch, autoFocus }: { placeholder: string; onSearch: (q: string) => void; autoFocus?: boolean }) {
   const [text, setText] = useState('');
   useEffect(() => {
@@ -14,12 +14,12 @@ export function SearchBar({ placeholder, onSearch, autoFocus }: { placeholder: s
   }, [text, onSearch]);
   return (
     <View style={styles.box}>
-      <Icon name="search" size={18} color={colors.onDarkMuted} />
+      <Icon name="search" size={18} color={colors.textMuted} />
       <TextInput
         value={text}
         onChangeText={setText}
         placeholder={placeholder}
-        placeholderTextColor="#B8C7D6"
+        placeholderTextColor={colors.textMuted}
         style={styles.input}
         returnKeyType="search"
         autoFocus={autoFocus}
@@ -29,7 +29,7 @@ export function SearchBar({ placeholder, onSearch, autoFocus }: { placeholder: s
       />
       {text ? (
         <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setText('')} hitSlop={10}>
-          <Icon name="close-circle" size={18} color={colors.onDarkMuted} />
+          <Icon name="close-circle" size={18} color={colors.textMuted} />
         </Pressable>
       ) : null}
     </View>
@@ -37,6 +37,6 @@ export function SearchBar({ placeholder, onSearch, autoFocus }: { placeholder: s
 }
 
 const styles = StyleSheet.create({
-  box: { height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.12)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 },
-  input: { flex: 1, color: colors.onDark, fontFamily: fonts.medium, fontSize: 15, paddingVertical: 10 },
+  box: { height: 48, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 },
+  input: { flex: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 15, paddingVertical: 10 },
 });

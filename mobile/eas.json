@@ -37,6 +37,10 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_WEB_URL": "https://apnainvoice.com"
+      },
+      "android": {
+        "credentialsSource": "local",
+        "buildType": "app-bundle"
       }
     }
   },

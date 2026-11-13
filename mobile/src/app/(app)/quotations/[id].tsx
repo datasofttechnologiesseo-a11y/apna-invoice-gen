@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Href, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, View } from 'react-native';
 
@@ -6,13 +6,14 @@ import { ApiError } from '@/api/client';
 import { AppText } from '@/components/app-text';
 import { Card, ErrorState, KeyValue, Loading } from '@/components/blocks';
 import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
+import { documentsApi } from '@/api/workspace';
+import { BarAction, Screen } from '@/components/screen';
+import { downloadAndShare , openWhatsApp } from '@/utils/share';
 import { QuotePill } from '@/components/status-pill';
 import { TextField } from '@/components/text-field';
 import { useQuotation, useQuotationAction } from '@/hooks/queries';
 import { colors, fonts } from '@/theme';
 import { date, money } from '@/utils/format';
-import { openWhatsApp } from '@/utils/share';
 
 export default function QuotationDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,16 +23,28 @@ export default function QuotationDetail() {
   const [reason, setReason] = useState('');
   const qt = q.data;
 
-  if (q.isLoading) return <Screen nav="back" title="Quotation"><Loading /></Screen>;
-  if (q.error || !qt) return <Screen nav="back" title="Quotation"><ErrorState message={(q.error as Error)?.message ?? 'Not found'} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isLoading) return <Screen hero nav="back" title="Quotation"><Loading /></Screen>;
+  if (q.error || !qt) return <Screen hero nav="back" title="Quotation"><ErrorState message={(q.error as Error)?.message ?? 'Not found'} onRetry={() => q.refetch()} /></Screen>;
 
   const fail = (e: unknown) => Alert.alert('Could not finish', (e as ApiError).message);
 
   return (
     <Screen
+      hero
       nav="back"
       title={qt.display_number}
       subtitle={qt.subject ?? 'Quotation'}
+      right={
+        <>
+          {qt.can.edit ? <BarAction hero icon="create-outline" label="Edit quotation" onPress={() => router.push(`/quotations/${qt.id}/edit` as Href)} /> : null}
+          <BarAction
+            hero
+            icon="document-outline"
+            label="Share quotation PDF"
+            onPress={() => downloadAndShare(documentsApi.quotationPdfPath(qt.id), `${qt.display_number.replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`).catch((e) => Alert.alert('Could not share', (e as Error).message))}
+          />
+        </>
+      }
       onRefresh={() => q.refetch()}
       refreshing={q.isRefetching}
       headerExtra={

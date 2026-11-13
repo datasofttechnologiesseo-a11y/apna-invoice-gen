@@ -26,7 +26,9 @@ export type ActiveCompany = {
   default_currency?: string;
 };
 
-export type Me = { user: User; active_company: ActiveCompany | null; role?: string | null };
+/** App areas the user's team role opens (from /me; owner = all true). */
+export type Can = Partial<Record<'invoices_delete' | 'invoices_cancel' | 'quotations_delete' | 'customers_delete' | 'products_delete' | 'purchases' | 'vendors' | 'expenses' | 'cash_memos' | 'gst' | 'reports' | 'dashboard' | 'company_settings' | 'team', boolean>>;
+export type Me = { user: User; active_company: ActiveCompany | null; role?: string | null; can?: Can };
 export type AuthResponse = { token: string; user: User; active_company: ActiveCompany | null };
 
 export type Customer = {
@@ -57,6 +59,8 @@ export type Product = {
   track_stock: boolean;
   stock: number | null;
   low_stock_level: number | null;
+  opening_stock?: number | null;
+  purchase_rate?: number | null;
   is_active: boolean;
   description: string | null;
 };
@@ -166,10 +170,31 @@ export type Quotation = QuotationListItem & {
   whatsapp_link: string | null;
 };
 
+type Window = { label: string; full: string; from: string; to: string };
+
+export type DashboardTarget = { screen: 'invoices' | 'invoice' | 'quotations' | 'gstr1' | 'gstr3b' | 'gstr2b' | 'expenses' | 'items' | 'customers' | 'settings' | 'team' | 'purchases'; params?: Record<string, string | number> };
+
 export type Dashboard = {
-  company: { id: number; name: string };
-  kpis: { outstanding: number; overdue: number; revenue_fy: number; revenue_this_month: number };
+  company: { id: number; name: string; gstin?: string | null };
+  kpis: {
+    outstanding: number;
+    overdue: number;
+    revenue_fy: number;
+    revenue_this_month: number;
+    collected_this_month?: number;
+    expenses_this_month?: number;
+    today_issued?: number;
+    today_collected?: number;
+  };
   counts: { invoices: number; drafts: number; customers: number; products: number; quotations_awaiting: number };
+  status_breakdown?: { status: 'paid' | 'partially_paid' | 'unpaid' | 'overdue' | 'draft' | 'cancelled'; count: number; amount: number }[];
+  sales?: { monthly: (Window & { billed: number; collected: number })[]; yearly: (Window & { billed: number; collected: number })[] };
+  purchases?: { monthly: (Window & { spend: number; gst: number })[]; yearly: (Window & { spend: number; gst: number })[] };
+  spend_by_category?: { key: string; label: string; amount: number; color: string }[];
+  aging?: { bucket: string; label: string; amount: number; count: number }[];
+  top_debtors?: { customer_id: number; name: string; amount: number; oldest_due_date: string | null; overdue_days?: number }[];
+  gst?: { label: string; month_query: Record<string, string> | null; gstr1_due: string; gstr3b_due: string; gstr2b_uploaded: boolean; cash: number; invoices: number } | null;
+  action_items?: { tone: 'danger' | 'accent' | 'info'; icon: string; title: string; sub: string; cta: string; target: DashboardTarget }[];
   recent_invoices: InvoiceListItem[];
 };
 

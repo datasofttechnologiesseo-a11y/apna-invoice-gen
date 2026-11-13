@@ -4,7 +4,6 @@ import { View } from 'react-native';
 
 import type { InvoiceFilter } from '@/api/endpoints';
 import { Chips, EmptyState } from '@/components/blocks';
-import { Button } from '@/components/button';
 import { InvoiceRow } from '@/components/invoice-row';
 import { PagedList } from '@/components/paged-list';
 import { Screen } from '@/components/screen';
@@ -34,9 +33,8 @@ export default function Invoices() {
     <Screen
       scroll={false}
       title="Invoices"
-      right={<Button kind="accent" size="md" icon="add" accessibilityLabel="New invoice" onPress={() => router.push('/invoices/new')} />}
       headerExtra={<SearchBar placeholder="Search customer or invoice no." onSearch={setSearch} autoFocus={params.focus === 'search'} />}
-      collapsible={<Chips dark value={status} options={FILTERS} onChange={setStatus} />}
+      collapsible={<Chips value={status} options={FILTERS} onChange={setStatus} />}
     >
       <PagedList
         query={q}

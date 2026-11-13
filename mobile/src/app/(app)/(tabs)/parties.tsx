@@ -23,7 +23,6 @@ export default function Parties() {
       title="Parties"
       headerExtra={
         <Segmented
-            dark
             value={tab}
             onChange={setTab}
             options={[

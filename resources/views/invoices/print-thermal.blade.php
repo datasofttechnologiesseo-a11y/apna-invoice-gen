@@ -144,6 +144,9 @@
 </head>
 <body>
 
+{{-- $embedded: the mobile app prints this HTML itself (GET /api/invoices/{id}/print),
+     so it gets neither the browser toolbar nor the auto-print. --}}
+@unless ($embedded ?? false)
 <div class="no-print">
     <div style="font-size:11px; color:#4b5563; margin-bottom:6px;">
         Preview is enlarged. It prints at 80&nbsp;mm width.
@@ -152,6 +155,7 @@
     <a href="{{ route('invoices.show', $invoice) }}">Back</a>
     <a href="{{ route('invoices.print', $invoice) }}">A4 view</a>
 </div>
+@endunless
 
 @php
     $c = $invoice->company;
@@ -336,9 +340,11 @@
 {{-- Auto-print on load - kirana counter workflow: click "Thermal print" →
      receipt prints → done. Short delay so the user can see the preview if
      they want to cancel. --}}
+@unless ($embedded ?? false)
 <script>
     window.addEventListener('load', () => setTimeout(() => window.print(), 350));
 </script>
+@endunless
 
 </body>
 </html>

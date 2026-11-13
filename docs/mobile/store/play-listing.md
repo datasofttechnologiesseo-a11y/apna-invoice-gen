@@ -91,7 +91,9 @@ App: "Apna Invoice: GST Billing App" · package com.apnainvoice.app · app ID 49
 | Data safety: collected Name, Email, Phone, Address, Other info (GSTIN), Other financial info; nothing shared; encrypted in transit; deletion URL /privacy | 💾 draft — submits after Target audience |
 | Sign in details (app access) | ❌ needs a reviewer login on production — owner to create and enter |
 | Target audience (18+) | 🔒 unlocks after Sign in details |
-| App bundle / release, countries | later |
+| Internal testing: email list "Apna Invoice internal testers" (4 testers) | ✅ |
+| Internal testing release 1.0.0 (versionCode 3), AAB signed with the local upload key, EAS build 235916d0 | ✅ live 2026-11-13 · opt-in https://play.google.com/apps/internaltest/4699935807055177433 |
+| Closed/open testing, production release, countries | later |
 
 To do on the website: add a public page (e.g. https://apnainvoice.com/delete-account) with the account-deletion steps,
 what is deleted and what is kept (GST records up to 7 years), then point the Data safety "Delete account URL" to it.

@@ -166,10 +166,10 @@ export function Chips<T extends string>({
             onPress={() => onChange(o.value)}
             style={[
               styles.chip,
-              { backgroundColor: on ? colors.amber : dark ? 'rgba(255,255,255,0.14)' : colors.surface },
+              { backgroundColor: on ? (dark ? colors.amber : colors.navy) : dark ? 'rgba(255,255,255,0.14)' : colors.surface, borderWidth: on || dark ? 0 : 1, borderColor: colors.border },
             ]}
           >
-            <AppText style={{ fontFamily: on ? fonts.bold : fonts.semibold, fontSize: 13 }} color={on ? colors.navy : dark ? colors.onDark : colors.text}>
+            <AppText style={{ fontFamily: on ? fonts.bold : fonts.semibold, fontSize: 13 }} color={on ? (dark ? colors.navy : colors.onDark) : dark ? colors.onDark : colors.textBody}>
               {o.label}
             </AppText>
           </Pressable>
@@ -182,7 +182,7 @@ export function Chips<T extends string>({
 /** Two-to-four way switch (Customers / Vendors …). */
 export function Segmented<T extends string>({ value, options, onChange, dark }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; dark?: boolean }) {
   return (
-    <View style={[styles.seg, { backgroundColor: dark ? 'rgba(255,255,255,0.12)' : colors.ground }]} accessibilityRole="tablist">
+    <View style={[styles.seg, { backgroundColor: dark ? 'rgba(255,255,255,0.12)' : colors.slateTint }]} accessibilityRole="tablist">
       {options.map((o) => {
         const on = o.value === value;
         return (

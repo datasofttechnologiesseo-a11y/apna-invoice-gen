@@ -1,10 +1,10 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Href, router, useLocalSearchParams } from 'expo-router';
 import { Linking, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Card, ErrorState, Loading } from '@/components/blocks';
 import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
+import { BarAction, Screen } from '@/components/screen';
 import { useLedger } from '@/hooks/queries';
 import { colors, fonts, shadow } from '@/theme';
 import { date, money } from '@/utils/format';
@@ -15,17 +15,19 @@ export default function Ledger() {
   const q = useLedger(Number(id));
   const l = q.data;
 
-  if (q.isLoading) return <Screen nav="back" title="Customer"><Loading /></Screen>;
-  if (q.error || !l) return <Screen nav="back" title="Customer"><ErrorState message={(q.error as Error)?.message ?? 'Not found'} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isLoading) return <Screen hero nav="back" title="Customer"><Loading /></Screen>;
+  if (q.error || !l) return <Screen hero nav="back" title="Customer"><ErrorState message={(q.error as Error)?.message ?? 'Not found'} onRetry={() => q.refetch()} /></Screen>;
 
   const c = l.customer;
   const phone = c.phone?.replace(/\D/g, '').slice(-10);
 
   return (
     <Screen
+      hero
       nav="back"
       title={c.name}
       subtitle={[c.gstin, c.city, c.state?.name].filter(Boolean).join(' · ')}
+      right={<BarAction hero icon="create-outline" label="Edit customer" onPress={() => router.push(`/parties/${c.id}/edit` as Href)} />}
       onRefresh={() => q.refetch()}
       refreshing={q.isRefetching}
       headerExtra={

@@ -65,6 +65,15 @@ class ApiSurfaceGuardTest extends TestCase
             ['POST',   "/api/quotations/{$q->id}/convert"],
             ['POST',   "/api/quotations/{$q->id}/send"],
             ['DELETE', "/api/quotations/{$q->id}"],
+            ['POST',   '/api/team'],
+            ['PATCH',  '/api/team/1'],
+            ['DELETE', '/api/team/1'],
+            ['POST',   '/api/team/1/resend'],
+            ['POST',   '/api/team/leave/1'],
+            ['POST',   '/api/notifications/seen'],
+            ['POST',   "/api/invoices/{$inv->id}/duplicate"],
+            ['PUT',    '/api/cash-memos/1'],
+            ['POST',   "/api/companies/{$co->id}/branding"],
         ];
 
         foreach ($routes as [$verb, $uri]) {
@@ -90,6 +99,9 @@ class ApiSurfaceGuardTest extends TestCase
             ['POST',   "/api/quotations/{$theirs['quotation']->id}/convert"],
             ['DELETE', "/api/quotations/{$theirs['quotation']->id}"],
             ['POST',   "/api/companies/{$theirs['company']->id}/switch"],
+            ['POST',   "/api/invoices/{$theirs['invoice']->id}/duplicate"],
+            ['POST',   "/api/companies/{$theirs['company']->id}/branding"],
+            ['PUT',    "/api/companies/{$theirs['company']->id}"],
         ] as [$verb, $uri]) {
             $res = $this->json($verb, $uri);
             $this->assertContains($res->getStatusCode(), [403, 404],

@@ -4,16 +4,20 @@ import { Alert, StyleSheet, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { invoicesApi } from '@/api/endpoints';
+import { documentsApi } from '@/api/workspace';
+import { ActionSheet, SheetAction } from '@/components/action-sheet';
 import { AppText } from '@/components/app-text';
 import { Card, ErrorState, IconTile, KeyValue, Loading, Row, SectionTitle } from '@/components/blocks';
 import { Button } from '@/components/button';
 import { Icon, IconName } from '@/components/icon';
-import { Screen } from '@/components/screen';
+import { BarAction, Screen } from '@/components/screen';
 import { invoiceStatus, Pill } from '@/components/status-pill';
 import { TextField } from '@/components/text-field';
 import { useInvoice, useInvoiceAction } from '@/hooks/queries';
+import { useDuplicateInvoice } from '@/hooks/workspace';
 import { colors, fonts, shadow } from '@/theme';
 import { date, money } from '@/utils/format';
+import { thermalSlip } from '@/utils/print';
 import { downloadAndShare, openWhatsApp } from '@/utils/share';
 
 function Action({ icon, label, onPress, primary, busy }: { icon: IconName; label: string; onPress: () => void; primary?: boolean; busy?: boolean }) {
@@ -33,10 +37,12 @@ export default function InvoiceDetail() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [more, setMore] = useState(false);
+  const dup = useDuplicateInvoice();
   const inv = q.data;
 
-  if (q.isLoading) return <Screen nav="back" title="Invoice"><Loading /></Screen>;
-  if (q.error || !inv) return <Screen nav="back" title="Invoice"><ErrorState message={(q.error as Error)?.message ?? 'Not found'} onRetry={() => q.refetch()} /></Screen>;
+  if (q.isLoading) return <Screen hero nav="back" title="Invoice"><Loading /></Screen>;
+  if (q.error || !inv) return <Screen hero nav="back" title="Invoice"><ErrorState message={(q.error as Error)?.message ?? 'Not found'} onRetry={() => q.refetch()} /></Screen>;
 
   const st = invoiceStatus(inv.status, inv.due_date, inv.effective_balance);
   const isDraft = inv.status === 'draft';
@@ -67,11 +73,38 @@ export default function InvoiceDetail() {
       else Alert.alert('Reminder', r.message ?? 'Reminder sent.');
     });
 
+  const fileBase = inv.display_number.replace(/\W+/g, '-');
+  const duplicate = () =>
+    dup.mutate(inv.id, {
+      // the copy is a new draft: open its form to check the date and details
+      onSuccess: (copy) => router.push(`/invoices/new?id=${copy.id}`),
+      onError: (e) => Alert.alert('Could not duplicate', (e as ApiError).message),
+    });
+  const slip = (mode: 'print' | 'pdf') => run(mode === 'print' ? 'print' : 'slip', () => thermalSlip(inv.id, `${fileBase}-thermal.pdf`, mode));
+  const receipt = (p: { id: number; receipt_number: string }) =>
+    run(`receipt-${p.id}`, () => downloadAndShare(documentsApi.receiptPath(p.id), `receipt-${p.receipt_number.replace(/\W+/g, '-')}.pdf`));
+
+  const moreActions: SheetAction[] = [
+    ...(isDraft
+      ? [{ key: 'edit', label: 'Edit draft', icon: 'create-outline' as const, onPress: () => router.push(`/invoices/new?id=${inv.id}`) }]
+      : inv.can.soft_edit
+        ? [{ key: 'edit', label: 'Edit details', hint: 'Due date, notes, terms, transport', icon: 'create-outline' as const, onPress: () => router.push(`/invoices/${inv.id}/edit`) }]
+        : []),
+    { key: 'duplicate', label: 'Duplicate', hint: 'Copy into a new draft', icon: 'copy-outline', onPress: duplicate },
+    ...(!isDraft && !isCancelled
+      ? [{ key: 'credit', label: 'Credit note', hint: 'Return, discount or correction', icon: 'return-down-back-outline' as const, onPress: () => router.push(`/invoices/${inv.id}/credit-note`) }]
+      : []),
+    { key: 'print', label: 'Thermal print', hint: '80 mm receipt printer', icon: 'print-outline', onPress: () => slip('print') },
+    { key: 'slip', label: 'Share thermal slip as PDF', icon: 'receipt-outline', onPress: () => slip('pdf') },
+  ];
+
   return (
     <Screen
+      hero
       nav="back"
       title={inv.display_number}
       subtitle={inv.document_title}
+      right={<BarAction hero icon="ellipsis-horizontal" label="More actions" onPress={() => setMore(true)} />}
       onRefresh={() => q.refetch()}
       refreshing={q.isRefetching}
       headerExtra={
@@ -177,6 +210,15 @@ export default function InvoiceDetail() {
                 leading={<IconTile icon="checkmark" bg={colors.greenTint} fg={colors.greenText} size={34} />}
                 title={`${money(p.amount)} · ${p.method_label}`}
                 subtitle={`${p.receipt_number} · ${date(p.received_at)}${p.reference_number ? ` · ${p.reference_number}` : ''}`}
+                onPress={busy ? undefined : () => receipt(p)}
+                accessibilityLabel={`${money(p.amount)} by ${p.method_label}, ${date(p.received_at)}. Share receipt ${p.receipt_number}`}
+                trailing={
+                  busy === `receipt-${p.id}` ? (
+                    <AppText variant="small" color={colors.textMuted}>Opening…</AppText>
+                  ) : (
+                    <Icon name="share-outline" size={20} color={colors.tealDark} />
+                  )
+                }
               />
             ))}
           </Card>
@@ -209,14 +251,8 @@ export default function InvoiceDetail() {
           <Button label="Cancel invoice" kind="danger" icon="close-circle-outline" size="md" onPress={() => setCancelOpen(true)} />
         )
       ) : null}
-      {!isDraft ? (
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', paddingHorizontal: 4 }}>
-          <Icon name="information-circle-outline" size={16} color={colors.textMuted} />
-          <AppText variant="small" color={colors.textMuted} style={{ flex: 1 }}>
-            Credit notes, duplicate and thermal print are on the web for now.
-          </AppText>
-        </View>
-      ) : null}
+
+      <ActionSheet visible={more} title={inv.display_number} subtitle={`${inv.customer.name} · ${money(inv.grand_total)}`} actions={moreActions} onClose={() => setMore(false)} />
     </Screen>
   );
 }

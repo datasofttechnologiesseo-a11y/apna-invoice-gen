@@ -30,7 +30,9 @@ const SLIDES = [
 
 export default function Welcome() {
   const { seenWelcome, markWelcomeSeen } = useAuth();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  // Square art that never pushes the text and button off short screens.
+  const art = Math.min(width - 30, 380, height * 0.4);
   const insets = useSafeAreaInsets();
   const [page, setPage] = useState(0);
   const pager = useRef<ScrollViewInstance>(null);
@@ -60,7 +62,7 @@ export default function Welcome() {
       <ScrollView ref={pager} horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={onScroll} style={{ flexGrow: 0 }}>
         {SLIDES.map((s) => (
           <View key={s.title} style={{ width, alignItems: 'center' }}>
-            <Image source={s.image} style={{ width: Math.min(width - 30, 380), aspectRatio: 1 }} contentFit="cover" accessibilityLabel={s.title} />
+            <Image source={s.image} style={{ width: art, height: art }} contentFit="cover" accessibilityLabel={s.title} />
           </View>
         ))}
       </ScrollView>

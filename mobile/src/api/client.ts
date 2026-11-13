@@ -42,15 +42,16 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
   let res: Response;
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method,
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !isForm ? { 'Content-Type': 'application/json' } : {}),
         ...(memoryToken ? { Authorization: `Bearer ${memoryToken}` } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(0, 'Cannot reach Apna Invoice. Check your internet connection and try again.');
@@ -84,7 +85,20 @@ export async function api<T>(method: Method, path: string, body?: unknown): Prom
 export const get = <T>(path: string) => api<T>('GET', path);
 export const post = <T>(path: string, body: unknown = {}) => api<T>('POST', path, body);
 export const put = <T>(path: string, body: unknown) => api<T>('PUT', path, body);
+export const patch = <T>(path: string, body: unknown) => api<T>('PATCH', path, body);
 export const del = <T>(path: string, body?: unknown) => api<T>('DELETE', path, body);
+
+/**
+ * Multipart upload (logo, GSTR-2B file, attachments). `file` is a picked asset:
+ * { uri, name, type }. Extra fields go alongside it.
+ */
+export function upload<T>(path: string, field: string, file: { uri: string; name: string; type: string }, fields: Record<string, string> = {}) {
+  const form = new FormData();
+  // React Native's FormData accepts { uri, name, type } for files
+  form.append(field, file as unknown as Blob);
+  for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  return api<T>('POST', path, form);
+}
 
 /** Query string from an object, skipping empty values. */
 export function qs(params: Record<string, string | number | undefined | null>): string {

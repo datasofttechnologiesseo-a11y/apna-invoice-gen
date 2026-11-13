@@ -31,7 +31,7 @@ export default function Quotations() {
       scroll={false}
       title="Quotations"
       headerExtra={<SearchBar placeholder="Search customer or quote no." onSearch={setSearch} />}
-      collapsible={<Chips dark value={status} options={FILTERS} onChange={setStatus} />}
+      collapsible={<Chips value={status} options={FILTERS} onChange={setStatus} />}
     >
       <PagedList
         query={q}

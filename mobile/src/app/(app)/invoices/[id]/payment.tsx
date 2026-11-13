@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Alert, Pressable, TextInput, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
+import { documentsApi } from '@/api/workspace';
 import { AppText } from '@/components/app-text';
 import { Card, Chips, Loading } from '@/components/blocks';
 import { Button } from '@/components/button';
@@ -11,6 +12,7 @@ import { TextField } from '@/components/text-field';
 import { useInvoice, useRecordPayment } from '@/hooks/queries';
 import { colors, fonts } from '@/theme';
 import { addDays, date, money, today } from '@/utils/format';
+import { downloadAndShare } from '@/utils/share';
 
 /** Same methods as config/payment_methods.php on the web. */
 const METHODS = [
@@ -57,7 +59,18 @@ export default function RecordPayment() {
           onPress={() =>
             save.mutate(
               { amount: value, method, received_at: on, reference_number: ref.trim() || undefined },
-              { onSuccess: () => router.back() },
+              {
+                onSuccess: (res) => {
+                  router.back();
+                  const p = res?.data;
+                  if (!p?.id) return;
+                  // offer the receipt right away, as the web does after saving a payment
+                  Alert.alert('Payment saved', `${money(p.amount)} recorded · receipt ${p.receipt_number}.`, [
+                    { text: 'Done', style: 'cancel' },
+                    { text: 'Share receipt', onPress: () => downloadAndShare(documentsApi.receiptPath(p.id), `receipt-${p.receipt_number.replace(/\W+/g, '-')}.pdf`) },
+                  ]);
+                },
+              },
             )
           }
         />

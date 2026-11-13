@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts } from '@/theme';
 
 import { AppText } from './app-text';
+import { CreateFab } from './create-sheet';
 import { Icon, IconName } from './icon';
 
 const ICONS: Record<string, [IconName, IconName]> = {
@@ -20,51 +21,72 @@ const ICONS: Record<string, [IconName, IconName]> = {
 /** Navy floating bar; the active tab rises into an amber bubble (design direction B). */
 export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const current = state.routes[state.index]?.name;
   return (
-    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.bar}>
-        {state.routes.map((route, i) => {
-          const focused = state.index === i;
-          const { options } = descriptors[route.key]!;
-          const label = (options.title ?? route.name) as string;
-          const [on, off] = ICONS[route.name] ?? ['ellipse', 'ellipse-outline'];
-          return (
-            <Pressable
-              key={route.key}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: focused }}
-              accessibilityLabel={label}
-              onPress={() => {
-                const e = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-                if (!focused && !e.defaultPrevented) {
-                  Haptics.selectionAsync().catch(() => {});
-                  navigateToTab(route.key);
-                }
-              }}
-              style={styles.item}
-            >
-              {focused ? (
-                <Animated.View key="on" entering={ZoomIn.springify().damping(14).stiffness(260)} style={styles.bubble}>
-                  <Icon name={on} size={22} color={colors.navy} />
-                </Animated.View>
-              ) : (
-                <Animated.View key="off" entering={FadeIn.duration(180)}>
-                  <Icon name={off} size={22} color="#B8C7D6" />
-                </Animated.View>
-              )}
-              <AppText style={{ fontFamily: focused ? fonts.bold : fonts.semibold, fontSize: 11 }} color={focused ? colors.onDark : '#B8C7D6'} numberOfLines={1}>
-                {label}
-              </AppText>
-            </Pressable>
-          );
-        })}
+    <>
+      <CreateFab visible={current !== 'more'} />
+      <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View style={styles.bar}>
+          {state.routes.map((route, i) => {
+            const focused = state.index === i;
+            const { options } = descriptors[route.key]!;
+            const label = (options.title ?? route.name) as string;
+            const [on, off] = ICONS[route.name] ?? ['ellipse', 'ellipse-outline'];
+            return (
+              <Pressable
+                key={route.key}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: focused }}
+                accessibilityLabel={label}
+                onPress={() => {
+                  const e = emitter.emit({
+                    type: 'tabPress',
+                    target: route.key,
+                    canPreventDefault: true,
+                  });
+                  if (!focused && !e.defaultPrevented) {
+                    Haptics.selectionAsync().catch(() => {});
+                    navigateToTab(route.key);
+                  }
+                }}
+                style={styles.item}
+              >
+                {focused ? (
+                  <Animated.View key="on" entering={ZoomIn.springify().damping(14).stiffness(260)} style={styles.bubble}>
+                    <Icon name={on} size={22} color={colors.navy} />
+                  </Animated.View>
+                ) : (
+                  <Animated.View key="off" entering={FadeIn.duration(180)}>
+                    <Icon name={off} size={22} color="#B8C7D6" />
+                  </Animated.View>
+                )}
+                <AppText
+                  style={{
+                    fontFamily: focused ? fonts.bold : fonts.semibold,
+                    fontSize: 11,
+                  }}
+                  color={focused ? colors.onDark : '#B8C7D6'}
+                  numberOfLines={1}
+                >
+                  {label}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12 },
+  wrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 12,
+  },
   bar: {
     height: 68,
     borderRadius: 26,
@@ -77,7 +99,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 16,
   },
-  item: { flex: 1, height: 68, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  item: {
+    flex: 1,
+    height: 68,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
   bubble: {
     marginTop: -34,
     width: 54,

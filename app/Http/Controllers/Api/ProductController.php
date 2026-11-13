@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Services\ProductRules;
+
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\StockMovementResource;
 use App\Models\Company;
 use App\Models\Product;
+use App\Services\StockLedger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,6 +27,7 @@ class ProductController extends Controller
                   ->orWhereLiteralLike('hsn_sac', $s);
             }))
             ->when($request->kind, fn ($q, $k) => $q->where('kind', $k))
+            ->tap(fn ($q) => ProductRules::stockFilter($q, $request->stock))
             ->when($request->boolean('only_inactive'), fn ($q) => $q->where('is_active', false))
             ->when(! $request->boolean('only_inactive'), fn ($q) => $q->where('is_active', true))
             ->orderBy('name')
@@ -72,9 +77,9 @@ class ProductController extends Controller
         $data = $this->validated($request, $company->id);
         $data['user_id'] = $user->id;
         $data['company_id'] = $company->id;
-        $data['hsn_sac'] = $data['hsn_sac'] ?? '';
 
-        $product = Product::create($data);
+        // refresh(): column defaults (is_active, opening_stock) come back as stored
+        $product = Product::create(ProductRules::prepare($data))->refresh();
 
         return (new ProductResource($product))->response()->setStatusCode(201);
     }
@@ -90,8 +95,7 @@ class ProductController extends Controller
     {
         $this->authorizeProduct($request, $product);
         $data = $this->validated($request, $product->company_id, $product->id);
-        $data['hsn_sac'] = $data['hsn_sac'] ?? '';
-        $product->update($data);
+        $product->update(ProductRules::prepare($data));
 
         return new ProductResource($product);
     }
@@ -117,6 +121,53 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product deleted.', 'archived' => false]);
     }
 
+    /** Put an archived item back in the catalogue (same as the web Restore). */
+    public function restore(Request $request, Product $product): JsonResponse
+    {
+        $this->authorizeProduct($request, $product);
+        $product->update(['is_active' => true]);
+
+        return response()->json([
+            'message' => "'{$product->name}' restored. It will appear on new invoices again.",
+            'data' => new ProductResource($product),
+        ]);
+    }
+
+    /** Stock history of one item, latest first, with the running balance. */
+    public function stock(Request $request, Product $product, StockLedger $ledger): JsonResponse
+    {
+        $this->authorizeProduct($request, $product);
+        $history = $ledger->history($product);
+
+        return response()->json([
+            'product' => new ProductResource($product),
+            'opening_stock' => (float) $product->opening_stock,
+            'on_hand' => $history['on_hand'],
+            'movements' => StockMovementResource::collection($history['rows']),
+        ]);
+    }
+
+    /**
+     * Manual stock adjustment: direction in | out | count, quantity, moved_on,
+     * reason. Same rules as the web (StockLedger::applyAdjustment).
+     */
+    public function adjustStock(Request $request, Product $product, StockLedger $ledger): JsonResponse
+    {
+        $this->authorizeProduct($request, $product);
+        abort_unless($product->track_stock, 422, 'Turn on stock tracking for this item first.');
+        $direction = is_string($request->input('direction')) ? $request->input('direction') : null;
+        $data = $request->validate($ledger->adjustmentRules($direction), $ledger->adjustmentMessages($direction));
+
+        $done = $ledger->applyAdjustment($product, $data, $request->user());
+
+        return response()->json([
+            'message' => $done['message'],
+            'changed' => $done['movement'] !== null,
+            'movement' => $done['movement'] ? new StockMovementResource($done['movement']) : null,
+            'on_hand' => $ledger->onHand($product),
+        ], $done['movement'] ? 201 : 200);
+    }
+
     private function authorizeProduct(Request $request, Product $product): void
     {
         abort_unless($product->user_id === $request->user()->id, 403);
@@ -124,27 +175,12 @@ class ProductController extends Controller
 
     private function validated(Request $request, int $companyId, ?int $ignoreId = null): array
     {
-        $uqcCodes = collect(config('uqc_units.codes'))->pluck('code')->all();
-        $gstRates = config('gst.allowed_values');
+        return $request->validate(ProductRules::rules($companyId, $ignoreId));
+    }
 
-        $company = Company::find($companyId);
-        $hsnRequired = ! empty($company?->gstin);
-
-        return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'sku' => [
-                'nullable', 'string', 'max:60',
-                Rule::unique('products', 'sku')
-                    ->where(fn ($q) => $q->where('company_id', $companyId))
-                    ->ignore($ignoreId),
-            ],
-            'kind' => ['required', 'in:goods,service'],
-            'hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'regex:/^[0-9]{4,8}$/'],
-            'unit' => ['required', 'string', Rule::in($uqcCodes)],
-            'rate' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-            'gst_rate' => ['required', 'numeric', Rule::in($gstRates)],
-            'is_active' => ['nullable', 'boolean'],
-            'description' => ['nullable', 'string', 'max:1000'],
-        ]);
+    /** Units (UQC) the item form can pick from. */
+    public function units(): JsonResponse
+    {
+        return response()->json(['data' => ProductRules::units()]);
     }
 }

@@ -31,7 +31,9 @@ class DashboardActionItemsTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Company $company;
+
     private Customer $customer;
 
     protected function setUp(): void
@@ -118,7 +120,9 @@ class DashboardActionItemsTest extends TestCase
         // The structural guard. Rendering proves today's three tones resolve;
         // this catches a fourth being added later with a name the view does not
         // know, which is the exact shape of the bug that shipped.
-        $controller = file_get_contents(app_path('Http/Controllers/DashboardController.php'));
+        // The items are built in App\Services\DashboardSummary (shared with
+        // the mobile API); the web controller only adds the hrefs.
+        $controller = file_get_contents(app_path('Services/DashboardSummary.php'));
         $view = file_get_contents(resource_path('views/dashboard.blade.php'));
 
         preg_match_all("/'tone'\s*=>\s*'([a-z_]+)'/", $controller, $emitted);
@@ -129,7 +133,7 @@ class DashboardActionItemsTest extends TestCase
 
         $missing = array_diff(array_unique($emitted[1]), $known[1]);
         $this->assertSame([], array_values($missing),
-            'DashboardController emits tone(s) the dashboard view cannot resolve: '
-            . implode(', ', $missing));
+            'DashboardSummary emits tone(s) the dashboard view cannot resolve: '
+            .implode(', ', $missing));
     }
 }

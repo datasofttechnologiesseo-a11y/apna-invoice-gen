@@ -135,6 +135,13 @@ class ExpenseController extends Controller
         return response()->json(['message' => 'Expense deleted.']);
     }
 
+    public function show(Request $request, Expense $expense): ExpenseResource
+    {
+        $this->authorize($request, $expense);
+
+        return new ExpenseResource($expense);
+    }
+
     private function authorize(Request $request, Expense $expense): void
     {
         abort_unless($expense->user_id === $request->user()->id, 403);

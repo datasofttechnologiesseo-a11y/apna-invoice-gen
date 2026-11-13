@@ -76,4 +76,12 @@ class CashMemo extends Model
     {
         return (float) $this->total_igst > 0;
     }
+
+    /** The memo's single GST rate, rebuilt from the stored split (used by the web edit form and the API). */
+    public function gstRate(): float
+    {
+        $tax = (float) $this->total_cgst + (float) $this->total_sgst + (float) $this->total_igst;
+
+        return (float) $this->taxable_value > 0 ? round($tax / (float) $this->taxable_value * 100, 2) : 0.0;
+    }
 }

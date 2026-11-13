@@ -39,8 +39,8 @@ the API version is in `app/Http/Controllers/Api/`. Both must call the **same ser
 | Feature | Endpoint | Status |
 |---|---|---|
 | KPIs, recent invoices | `GET dashboard` | ✅ — check it has the same action items / charts as the web dashboard |
-| Notifications | — | ❌ (web `NotificationController`) |
-| Global search | — | ❌ (web `search/suggest`) |
+| Notifications | `GET notifications`, `POST notifications/seen` | ✅ |
+| Global search | `GET search/suggest?q=&scope=invoices\|customers` | ✅ |
 
 ## Customers & products
 
@@ -50,8 +50,8 @@ the API version is in `app/Http/Controllers/Api/`. Both must call the **same ser
 | Customer ledger | `GET customers/{id}/ledger` | ✅ |
 | Products CRUD | `apiResource products` | ✅ |
 | Product search (invoice picker) | `GET products/search` | ✅ |
-| Restore deleted product | — | ❌ |
-| Stock / inventory movements | — | ❌ (web `products/{id}/stock`, `StockLedger`) |
+| Restore archived product | `POST products/{id}/restore` | ✅ |
+| Stock ledger / adjust / count | `GET|POST products/{id}/stock` | ✅ |
 | Bulk import (CSV/XLSX) | — | ❌ (web `ImportController`) |
 
 ## Invoices & payments
@@ -66,11 +66,12 @@ the API version is in `app/Http/Controllers/Api/`. Both must call the **same ser
 | Public share link | `GET invoices/{id}/share-link` | ✅ |
 | Payment reminder (email / WhatsApp / SMS) | `POST invoices/{id}/remind` | ✅ |
 | Record payment / reverse payment | `POST invoices/{id}/payments`, `DELETE payments/{id}` | ✅ |
-| Payment receipt PDF | — | ❌ (web `payments/{id}/receipt`) |
-| Duplicate invoice | — | ❌ (web `invoices/{id}/duplicate`) |
+| Payment receipt PDF | `GET payments/{id}/receipt` | ✅ |
+| Duplicate invoice | `POST invoices/{id}/duplicate` | ✅ |
+| Invoice templates (+ sample PDF) | `GET invoice-templates`, `GET invoice-templates/{key}/preview` | ✅ |
 | Invoice style / template picker | `style` field accepted on save; no list endpoint | 🟡 (web `invoices/templates`) |
 | Email share with custom message | — | ❌ (optional; share sheet may be enough) |
-| Thermal 80mm print | — | ❌ (optional) |
+| Thermal 80mm print | `GET invoices/{id}/print` (JSON `html` for expo-print) | ✅ |
 | Transport / e-way / ship-to / reverse-charge fields | accepted by API validation | ✅ (app must expose them) |
 
 ## Credit notes
@@ -88,7 +89,7 @@ the API version is in `app/Http/Controllers/Api/`. Both must call the **same ser
 | CRUD | `GET/POST/PUT/DELETE quotations` | ✅ |
 | Send / accept / decline / convert | `POST quotations/{id}/send|accept|decline|convert` | ✅ |
 | Share link | `GET quotations/{id}/share-link` | ✅ |
-| Quotation PDF (authed) | — | ❌ (web `quotations/{id}/pdf`; app can use share link meanwhile) |
+| Quotation PDF (authed) | `GET quotations/{id}/pdf` | ✅ |
 
 ## Finance
 
@@ -98,27 +99,29 @@ the API version is in `app/Http/Controllers/Api/`. Both must call the **same ser
 | Aging + CSV/PDF | `GET finance/aging[/export/csv|pdf]` | ✅ |
 | GSTR-3B + CSV/PDF | `GET finance/gstr3b[/export/csv|pdf]` | ✅ |
 | GSTR-1 + CSV | `GET finance/gstr1[/export/csv]` | ✅ |
-| GSTR-1 JSON / XLSX (portal upload) | — | ❌ (web has both) |
-| GSTR-2B upload & match | — | ❌ |
+| GSTR-1 JSON / XLSX (portal upload) | `GET finance/gstr1/export/json\|xlsx?month=YYYY-MM&frequency=` | ✅ (HSN rows also in `GET finance/gstr1` → `hsn`) |
+| GSTR-2B upload & match + CSV | `GET|POST finance/gstr2b`, `GET finance/gstr2b/export` | ✅ |
 | Expenses CRUD + CSV/PDF | `expenses`, `finance/expenses/export/*` | ✅ |
-| Expense voucher PDF | — | ❌ (web `finance/expenses/{id}/pdf`) |
+| Expense voucher PDF | `GET expenses/{id}/pdf` | ✅ |
+| Cash memo edit | `PUT cash-memos/{id}` | ✅ |
 | Cash memos list/create/show/delete/PDF | `cash-memos/*` | ✅ |
 | Cash memo exports | — | ❌ |
-| Reports hub (web `/reports/{report}/{format}`) | — | ❌ |
+| Reports hub | `GET reports`, `GET reports/{key}?from=&to=`, `GET reports/{key}/export/xlsx\|csv\|pdf` | ✅ |
 | Bank reconciliation | — | ❌ |
 
-## Purchases (web only today)
+## Purchases
 
 | Feature | Endpoint | Status |
 |---|---|---|
-| Purchase bills | — | ❌ (web `PurchaseBillController`) |
-| Vendors | — | ❌ (web `VendorController`) |
+| Purchase bills CRUD + payments | `purchases`, `purchases/{id}/payments[/{paymentId}]` | ✅ |
+| Vendors CRUD + search | `vendors` | ✅ |
 
 ## Team, growth, utilities
 
 | Feature | Endpoint | Status |
 |---|---|---|
-| Team invite / roles / remove / leave | — | ❌ (web `TeamController`; API already *enforces* roles) |
+| Team invite / roles / remove / leave | `GET/POST team`, `PATCH/DELETE team/{id}`, `POST team/{id}/resend`, `POST team/leave/{id}` | ✅ |
+| Company logo / signature | `POST companies/{id}/branding` (multipart) | ✅ |
 | Referrals | `GET referrals` | ✅ |
 | Blog (public) | `GET blog`, `GET blog/{slug}` | ✅ |
 | Backups (info / download / email / toggle) | `backup/*` | ✅ |

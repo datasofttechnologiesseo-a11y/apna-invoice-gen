@@ -27,22 +27,26 @@ export function PagedList<T extends { id: number }>({
   tabBar?: boolean;
 }) {
   const insets = useSafeAreaInsets();
-  const onScroll = useScreenScroll();
-  if (query.isLoading) return <Loading />;
-  if (query.error) return <ErrorState message={(query.error as Error).message} onRetry={() => query.refetch()} />;
+  const { topInset, onScroll, onScrollEnd } = useScreenScroll();
+  if (query.isLoading) return <View style={{ flex: 1, paddingTop: topInset }}><Loading /></View>;
+  if (query.error) return <View style={{ flex: 1, paddingTop: topInset }}><ErrorState message={(query.error as Error).message} onRetry={() => query.refetch()} /></View>;
   const items = query.data?.pages.flatMap((p) => p.data) ?? [];
   return (
     <FlashList
       data={items}
       keyExtractor={(i) => String(i.id)}
       renderItem={({ item }) => <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>{renderItem(item)}</View>}
-      contentContainerStyle={{ paddingTop: 14, paddingBottom: (tabBar ? TAB_BAR_HEIGHT : 0) + insets.bottom + 24 }}
+      contentContainerStyle={{ paddingTop: topInset + 6, paddingBottom: (tabBar ? TAB_BAR_HEIGHT : 0) + insets.bottom + 24 }}
       onEndReached={() => query.hasNextPage && !query.isFetchingNextPage && query.fetchNextPage()}
       onEndReachedThreshold={0.4}
-      refreshControl={<RefreshControl refreshing={query.isRefetching && !query.isFetchingNextPage} onRefresh={() => void query.refetch()} tintColor={colors.teal} />}
+      refreshControl={<RefreshControl refreshing={query.isRefetching && !query.isFetchingNextPage} onRefresh={() => void query.refetch()} tintColor={colors.teal} progressViewOffset={topInset} />}
+      ListHeaderComponent={query.isRefetching && !query.isFetchingNextPage ? <ActivityIndicator color={colors.teal} style={{ marginBottom: 10 }} /> : null}
       ListEmptyComponent={empty}
       ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator color={colors.teal} style={{ margin: 16 }} /> : null}
       onScroll={onScroll}
+      onScrollEndDrag={onScrollEnd}
+      onMomentumScrollEnd={onScrollEnd}
+      scrollIndicatorInsets={{ top: topInset }}
       scrollEventThrottle={16}
       keyboardDismissMode="on-drag"
       showsVerticalScrollIndicator

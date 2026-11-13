@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 class ReportController extends Controller
 {
     /** On-screen rows before the page asks you to export instead. */
-    private const SCREEN_LIMIT = 500;
+    public const SCREEN_LIMIT = 500;
 
     /** Reports hub: every report, grouped, with one-click period exports. */
     public function index(Request $request)
@@ -26,35 +26,15 @@ class ReportController extends Controller
         return view('reports.index', [
             'company' => $company,
             'groups' => $groups,
-            'presets' => $this->presets(),
+            'presets' => self::presets(),
         ]);
     }
 
     /** One report on screen, with period presets and the export toolbar. */
     public function show(Request $request, ReportExporter $exporter, string $report)
     {
-        $instance = $this->make($request, $report);
-        $rows = [];
-        $truncated = false;
-        foreach ($instance->rows() as $row) {
-            if (count($rows) >= self::SCREEN_LIMIT) {
-                $truncated = true;
-                break;
-            }
-            $rows[] = $row;
-        }
-        $columns = $instance->columns();
-        // Totals on screen cover every row, not just the ones shown.
-        $totals = null;
-        if (collect($columns)->contains(fn ($c) => ! empty($c['total']))) {
-            $totals = [];
-            $all = $truncated ? iterator_to_array((function () use ($instance) { yield from $instance->rows(); })(), false) : $rows;
-            foreach ($columns as $c) {
-                if (! empty($c['total'])) {
-                    $totals[$c['key']] = round(array_sum(array_map(fn ($r) => (float) ($r[$c['key']] ?? 0), $all)), 2);
-                }
-            }
-        }
+        $instance = self::make($request, $report);
+        ['columns' => $columns, 'rows' => $rows, 'totals' => $totals, 'truncated' => $truncated] = $exporter->screen($instance, self::SCREEN_LIMIT);
 
         return view('reports.show', [
             'key' => $report,
@@ -64,7 +44,7 @@ class ReportController extends Controller
             'totals' => $totals,
             'truncated' => $truncated,
             'limit' => self::SCREEN_LIMIT,
-            'presets' => $this->presets(),
+            'presets' => self::presets(),
             // On screen, amounts show in whole rupees; unit prices keep paise.
             // The PDF, print and Excel versions keep exact paise.
             'fmt' => fn (array $col, mixed $value) => ($col['type'] ?? 'text') === 'money' && empty($col['unit_price']) && $value !== null && $value !== ''
@@ -98,7 +78,7 @@ class ReportController extends Controller
     }
 
     /** Indian business periods: month, quarter and April-March financial year. */
-    private function presets(): array
+    public static function presets(): array
     {
         $today = now();
         $fyStart = $today->copy()->setDate($today->month >= 4 ? $today->year : $today->year - 1, 4, 1)->startOfDay();
@@ -118,7 +98,8 @@ class ReportController extends Controller
         ];
     }
 
-    private function make(Request $request, string $report): Report
+    /** The report named in the URL, for the open business; 404 for an unknown key. */
+    public static function make(Request $request, string $report): Report
     {
         $class = config('reports.registry.' . $report);
         abort_unless($class && is_subclass_of($class, Report::class), 404);
@@ -129,7 +110,7 @@ class ReportController extends Controller
     public function export(Request $request, ReportExporter $exporter, string $report, string $format)
     {
         abort_unless(in_array($format, ['xlsx', 'csv', 'pdf', 'print'], true), 404);
-        $instance = $this->make($request, $report);
+        $instance = self::make($request, $report);
 
         \App\Models\AuditLog::record('report.exported', $instance->title() . ' · ' . strtoupper($format), null);
 

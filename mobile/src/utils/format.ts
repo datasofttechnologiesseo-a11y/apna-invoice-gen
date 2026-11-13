@@ -16,10 +16,12 @@ export function money(value: number | string | null | undefined, opts: { paise?:
 /** Compact ₹ for tight spots: 286400 → "₹2.9L", 12345678 → "₹1.2Cr". */
 export function moneyShort(value: number | null | undefined): string {
   const n = Number(value ?? 0);
-  if (Math.abs(n) >= 1e7) return `₹${(n / 1e7).toFixed(1)}Cr`;
-  if (Math.abs(n) >= 1e5) return `₹${(n / 1e5).toFixed(1)}L`;
-  if (Math.abs(n) >= 1e3) return `₹${(n / 1e3).toFixed(1)}K`;
-  return money(n);
+  const a = Math.abs(n);
+  const f = (x: number, unit: string) => `${n < 0 ? '−' : ''}₹${x >= 100 ? Math.round(x) : x.toFixed(x >= 10 ? 1 : 2).replace(/\.?0+$/, '')}${unit}`;
+  if (a >= 1e7) return f(a / 1e7, 'Cr');
+  if (a >= 1e5) return f(a / 1e5, 'L');
+  if (a >= 1e3) return f(a / 1e3, 'K');
+  return money(n, { paise: false });
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
