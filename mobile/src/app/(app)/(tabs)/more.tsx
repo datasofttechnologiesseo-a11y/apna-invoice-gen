@@ -316,7 +316,7 @@ export default function More() {
         ]}
       />
       <AppText variant="small" color={colors.textMuted} align="center" style={{ marginTop: 8 }}>
-        Apna Invoice {version} · Made in India
+        Apna Invoice {version} · {Updates.updateId ? `update ${Updates.updateId.slice(0, 8)}` : 'built-in'} · Made in India
       </AppText>
     </Screen>
   );
