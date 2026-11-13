@@ -15,8 +15,9 @@ import { colors, fonts } from '@/theme';
 
 export default function SignIn() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Dev builds only: pre-fill a local test login from mobile/.env (git-ignored).
+  const [email, setEmail] = useState(__DEV__ ? (process.env.EXPO_PUBLIC_DEV_EMAIL ?? '') : '');
+  const [password, setPassword] = useState(__DEV__ ? (process.env.EXPO_PUBLIC_DEV_PASSWORD ?? '') : '');
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});

@@ -8,6 +8,7 @@ import type { Paginated } from '@/api/types';
 import { colors, TAB_BAR_HEIGHT } from '@/theme';
 
 import { ErrorState, Loading } from './blocks';
+import { useScreenScroll } from './screen';
 
 /**
  * Infinite, pull-to-refresh list for any paginated endpoint. Every list screen
@@ -26,6 +27,7 @@ export function PagedList<T extends { id: number }>({
   tabBar?: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const onScroll = useScreenScroll();
   if (query.isLoading) return <Loading />;
   if (query.error) return <ErrorState message={(query.error as Error).message} onRetry={() => query.refetch()} />;
   const items = query.data?.pages.flatMap((p) => p.data) ?? [];
@@ -40,6 +42,8 @@ export function PagedList<T extends { id: number }>({
       refreshControl={<RefreshControl refreshing={query.isRefetching && !query.isFetchingNextPage} onRefresh={() => void query.refetch()} tintColor={colors.teal} />}
       ListEmptyComponent={empty}
       ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator color={colors.teal} style={{ margin: 16 }} /> : null}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
       keyboardDismissMode="on-drag"
       showsVerticalScrollIndicator
     />

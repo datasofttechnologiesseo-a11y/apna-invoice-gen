@@ -22,19 +22,17 @@ export default function Parties() {
       scroll={false}
       title="Parties"
       headerExtra={
-        <View style={{ gap: 12 }}>
-          <Segmented
+        <Segmented
             dark
             value={tab}
             onChange={setTab}
             options={[
               { value: 'customers', label: 'Customers' },
               { value: 'vendors', label: 'Vendors' },
-            ]}
-          />
-          {tab === 'customers' ? <SearchBar placeholder="Name, phone or GSTIN" onSearch={setSearch} /> : null}
-        </View>
+          ]}
+        />
       }
+      collapsible={tab === 'customers' ? <SearchBar placeholder="Name, phone or GSTIN" onSearch={setSearch} /> : undefined}
     >
       {tab === 'customers' ? (
         <PagedList

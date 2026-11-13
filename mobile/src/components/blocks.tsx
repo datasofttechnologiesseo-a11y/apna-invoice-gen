@@ -8,6 +8,7 @@ import { initials } from '@/utils/format';
 import { AppText } from './app-text';
 import { Button } from './button';
 import { Icon, IconName } from './icon';
+import { PressableScale } from './pressable-scale';
 
 export function Card({ children, style, raised }: { children: ReactNode; style?: ViewStyle; raised?: boolean }) {
   return <View style={[styles.card, raised ? shadow.card : null, style]}>{children}</View>;
@@ -69,12 +70,13 @@ export function Row({
   accessibilityLabel?: string;
 }) {
   return (
-    <Pressable
+    <PressableScale
       disabled={!onPress}
+      scaleTo={0.97}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, divider ? styles.rowDivider : null, { opacity: pressed ? 0.7 : 1 }]}
+      style={[styles.row, divider ? styles.rowDivider : null]}
     >
       {leading}
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
@@ -88,7 +90,7 @@ export function Row({
         ) : null}
       </View>
       {trailing}
-    </Pressable>
+    </PressableScale>
   );
 }
 

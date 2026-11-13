@@ -1,0 +1,38 @@
+Apna Invoice is GST billing made simple for Indian shops, traders, service businesses and freelancers. Make a proper GST tax invoice on your phone in under a minute, send it on WhatsApp, and always know who owes you money. The same account works on apnainvoice.com, so your CA sees exactly what you see.
+
+GST INVOICES IN SECONDS
+• Pick a customer, add items from your saved list, and issue — invoice numbers are given automatically
+• CGST + SGST or IGST is worked out for you from the customer's state
+• GST slabs 0%, 5%, 12%, 18%, 28% and 40%, HSN/SAC codes, units
+• Transport details, e-way bill number, terms and notes
+• Original, duplicate and triplicate PDF copies, exactly as on the web
+
+GET PAID FASTER
+• Share the invoice PDF or a secure link on WhatsApp in one tap
+• Record payments by UPI, cash, NEFT, IMPS, RTGS, cheque or card
+• Part payments and balance due are tracked automatically
+• Send polite payment reminders for overdue invoices
+• See outstanding and overdue amounts on your home screen
+
+QUOTATIONS THAT TURN INTO INVOICES
+• Track quotations as draft, sent, accepted or declined
+• Convert an accepted quotation into an invoice in one tap
+
+CUSTOMERS AND LEDGER
+• Search customers by name, phone or GSTIN
+• Customer ledger with every invoice, payment and running balance
+• Call or WhatsApp a customer straight from their ledger
+
+ONE ACCOUNT, PHONE AND WEB
+• Everything syncs with apnainvoice.com
+• Purchases, expenses, stock, GSTR-1, GSTR-3B, HSN summary and reports are on the web, and are coming to the app
+• Team access for your accountant or billing staff, with roles
+
+SAFE AND PRIVATE
+• Your data is encrypted in transit and stored securely
+• No ads and no tracking
+• Delete your account any time from inside the app
+
+Made in India for Indian businesses. Free during beta.
+
+Need help? Visit https://apnainvoice.com/contact

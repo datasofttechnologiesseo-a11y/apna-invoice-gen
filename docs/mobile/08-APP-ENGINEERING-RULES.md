@@ -60,3 +60,14 @@ labels on icon buttons, ₹ with lakh/crore grouping, dates "13 Nov 2026", Hindi
 
 Every web change follows `05-WEB-MOBILE-SYNC.md` via the `mobile-sync` skill. A new web page
 gets a row in `07-WEB-FEATURE-INVENTORY.md` and a screen (or "web-only" reason) before release.
+
+## Header, status bar and motion (2026-11-13)
+
+- `<Screen collapsible={…}>` holds header parts that slide away as the list scrolls (filter chips on
+  Invoices/Quotations, search on Parties). `headerExtra` stays visible. Lists report scroll through
+  `useScreenScroll()` — `PagedList` already does.
+- `Screen` draws a fixed brand backdrop behind the status bar and re-applies the bar style on focus,
+  so the light icons never sit on white content (Android edge-to-edge). `app.json → androidStatusBar`
+  is the native fallback (needs a new build).
+- Taps use `PressableScale` (spring, UI thread) — `Button` and `Row` already do. Shared values are
+  written with `.set()` (React Compiler rule).

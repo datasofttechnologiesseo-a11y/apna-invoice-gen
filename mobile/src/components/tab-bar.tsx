@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, fonts } from '@/theme';
@@ -43,11 +44,13 @@ export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTab
               style={styles.item}
             >
               {focused ? (
-                <View style={styles.bubble}>
+                <Animated.View key="on" entering={ZoomIn.springify().damping(14).stiffness(260)} style={styles.bubble}>
                   <Icon name={on} size={22} color={colors.navy} />
-                </View>
+                </Animated.View>
               ) : (
-                <Icon name={off} size={22} color="#B8C7D6" />
+                <Animated.View key="off" entering={FadeIn.duration(180)}>
+                  <Icon name={off} size={22} color="#B8C7D6" />
+                </Animated.View>
               )}
               <AppText style={{ fontFamily: focused ? fonts.bold : fonts.semibold, fontSize: 11 }} color={focused ? colors.onDark : '#B8C7D6'} numberOfLines={1}>
                 {label}

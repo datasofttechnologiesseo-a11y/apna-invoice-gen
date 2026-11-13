@@ -30,12 +30,8 @@ export default function Quotations() {
     <Screen
       scroll={false}
       title="Quotations"
-      headerExtra={
-        <View style={{ gap: 12 }}>
-          <SearchBar placeholder="Search customer or quote no." onSearch={setSearch} />
-          <Chips dark value={status} options={FILTERS} onChange={setStatus} />
-        </View>
-      }
+      headerExtra={<SearchBar placeholder="Search customer or quote no." onSearch={setSearch} />}
+      collapsible={<Chips dark value={status} options={FILTERS} onChange={setStatus} />}
     >
       <PagedList
         query={q}

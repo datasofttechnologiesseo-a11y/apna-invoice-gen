@@ -35,12 +35,8 @@ export default function Invoices() {
       scroll={false}
       title="Invoices"
       right={<Button kind="accent" size="md" icon="add" accessibilityLabel="New invoice" onPress={() => router.push('/invoices/new')} />}
-      headerExtra={
-        <View style={{ gap: 12 }}>
-          <SearchBar placeholder="Search customer or invoice no." onSearch={setSearch} autoFocus={params.focus === 'search'} />
-          <Chips dark value={status} options={FILTERS} onChange={setStatus} />
-        </View>
-      }
+      headerExtra={<SearchBar placeholder="Search customer or invoice no." onSearch={setSearch} autoFocus={params.focus === 'search'} />}
+      collapsible={<Chips dark value={status} options={FILTERS} onChange={setStatus} />}
     >
       <PagedList
         query={q}
