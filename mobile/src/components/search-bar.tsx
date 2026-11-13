@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, TextInputInstance, View } from 'react-native';
 
+import { useDelayedFocus } from '@/hooks/use-delayed-focus';
 import { colors, fonts } from '@/theme';
 
 import { Icon } from './icon';
@@ -8,6 +9,8 @@ import { Icon } from './icon';
 /** Search field for list headers. Calls onSearch 300 ms after typing stops. */
 export function SearchBar({ placeholder, onSearch, autoFocus }: { placeholder: string; onSearch: (q: string) => void; autoFocus?: boolean }) {
   const [text, setText] = useState('');
+  const input = useRef<TextInputInstance>(null);
+  useDelayedFocus(input, autoFocus);
   useEffect(() => {
     const t = setTimeout(() => onSearch(text.trim()), 300);
     return () => clearTimeout(t);
@@ -16,13 +19,13 @@ export function SearchBar({ placeholder, onSearch, autoFocus }: { placeholder: s
     <View style={styles.box}>
       <Icon name="search" size={18} color={colors.textMuted} />
       <TextInput
+        ref={input}
         value={text}
         onChangeText={setText}
         placeholder={placeholder}
         placeholderTextColor={colors.textMuted}
         style={styles.input}
         returnKeyType="search"
-        autoFocus={autoFocus}
         accessibilityLabel={placeholder}
         autoCorrect={false}
         maxFontSizeMultiplier={1.4}

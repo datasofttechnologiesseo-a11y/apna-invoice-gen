@@ -1,8 +1,9 @@
 import { FlashList } from '@shopify/flash-list';
-import { ReactElement, ReactNode, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, TextInput, TextInputInstance, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useDelayedFocus } from '@/hooks/use-delayed-focus';
 import { colors, fonts } from '@/theme';
 
 import { AppText } from './app-text';
@@ -67,6 +68,8 @@ export function PickerSheet<T>({
 /** Lives inside the Modal, so it unmounts (and clears) every time the sheet closes. */
 function SearchInput({ placeholder, loading, onSearch }: { placeholder: string; loading?: boolean; onSearch: (q: string) => void }) {
   const [text, setText] = useState('');
+  const input = useRef<TextInputInstance>(null);
+  useDelayedFocus(input, true);
   useEffect(() => {
     const t = setTimeout(() => onSearch(text.trim()), 250);
     return () => clearTimeout(t);
@@ -74,7 +77,7 @@ function SearchInput({ placeholder, loading, onSearch }: { placeholder: string; 
   return (
     <View style={styles.search}>
       <Icon name="search" size={18} color={colors.textMuted} />
-      <TextInput value={text} onChangeText={setText} placeholder={placeholder} placeholderTextColor="#8A94A6" style={styles.input} autoFocus autoCorrect={false} accessibilityLabel={placeholder} />
+      <TextInput ref={input} value={text} onChangeText={setText} placeholder={placeholder} placeholderTextColor="#8A94A6" style={styles.input} autoCorrect={false} accessibilityLabel={placeholder} />
       {loading ? <ActivityIndicator color={colors.teal} /> : null}
     </View>
   );

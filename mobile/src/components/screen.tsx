@@ -2,9 +2,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { createContext, ReactNode, useCallback, useContext, useMemo, useRef, useState } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent, Platform, RefreshControl, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, gradient, space, TAB_BAR_HEIGHT } from '@/theme';
@@ -90,7 +90,12 @@ export function Screen({
   const insets = useSafeAreaInsets();
   const bottomPad = (tabBar ? TAB_BAR_HEIGHT + insets.bottom : 0) + (footer ? 8 : insets.bottom + space.xl);
   const fg = hero ? colors.onDark : colors.text;
-  const scrollY = useSharedValue(0);
+  const scrollY = useSharedValue(0); // list screens: set by the list's onScroll
+  // Form/detail screens: read the keyboard-aware scroll view's offset through its
+  // ref. Never pass onScroll to KeyboardAwareScrollView — it replaces the
+  // library's own handler and breaks focusing/typing in inputs.
+  const formRef = useAnimatedRef<Animated.ScrollView>();
+  const formY = useScrollViewOffset(formRef);
   const hidden = useSharedValue(0); // 0…collapseH: how far the collapsible part has slid away
   const collapseH = useSharedValue(0);
   const lastY = useRef(0);
@@ -124,7 +129,7 @@ export function Screen({
   const ctx = useMemo(() => ({ topInset: headerH, onScroll, onScrollEnd }), [headerH, onScroll, onScrollEnd]);
 
   const compactStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [36, 72], [0, 1], Extrapolation.CLAMP),
+    opacity: interpolate(formY.value, [36, 72], [0, 1], Extrapolation.CLAMP),
   }));
   const collapseStyle = useAnimatedStyle(() => {
     const h = collapseH.value || 1;
@@ -172,11 +177,13 @@ export function Screen({
   const body = scroll ? (
     <>
       <KeyboardAwareScrollView
+        ref={formRef as never} // forwarded to the underlying Reanimated ScrollView
         bottomOffset={footer ? 120 : 24}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
+        // Android treats "interactive" as dismiss-on-scroll, so the scroll that brings a
+        // focused field into view would close the keyboard — keep it iOS-only.
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
         refreshControl={refresh}
-        onScroll={onScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: bottomPad }}
         showsVerticalScrollIndicator
