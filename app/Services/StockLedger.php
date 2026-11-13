@@ -110,6 +110,80 @@ class StockLedger
         return $this->post($product->company_id, $product, $quantity, 'adjustment', null, $date, $note, $user);
     }
 
+    /**
+     * Stock history of one item, latest first, each movement with the running
+     * balance after it, and the stock on hand at the end.
+     *
+     * @return array{rows: \Illuminate\Support\Collection<int, array{movement: StockMovement, balance: float}>, on_hand: float}
+     */
+    public function history(Product $product): array
+    {
+        $movements = $product->stockMovements()->with('source')->orderBy('moved_on')->orderBy('id')->get();
+        $running = (float) $product->opening_stock;
+        $rows = $movements->map(function ($m) use (&$running) {
+            $running = round($running + (float) $m->quantity, 3);
+
+            return ['movement' => $m, 'balance' => $running];
+        })->reverse()->values();
+
+        return ['rows' => $rows, 'on_hand' => $running];
+    }
+
+    /** Rules for a manual adjustment: in, out, or a physical count. */
+    public function adjustmentRules(?string $direction): array
+    {
+        return [
+            'direction' => ['required', 'in:in,out,count'],
+            // A count can be zero (the shelf is empty); adding or removing nothing cannot.
+            'quantity' => ['required', 'numeric', $direction === 'count' ? 'min:0' : 'min:0.001', 'max:999999999'],
+            'moved_on' => ['required', 'date', 'before_or_equal:today'],
+            'reason' => ['required', 'string', 'max:200'],
+        ];
+    }
+
+    public function adjustmentMessages(?string $direction): array
+    {
+        return [
+            'quantity.min' => $direction === 'count' ? 'The count cannot be below zero.' : 'Enter a quantity above zero.',
+        ];
+    }
+
+    /**
+     * Add or remove stock by hand (damage, a return), or enter a physical
+     * count: the shop counts the shelf and the books are set to that number,
+     * the difference posted as one adjustment. Input is validated against
+     * adjustmentRules(); a date in the closed period is refused.
+     *
+     * @return array{movement: ?StockMovement, message: string}
+     */
+    public function applyAdjustment(Product $product, array $data, ?User $user = null): array
+    {
+        $company = $product->company;
+        if ($company && $company->isBooksLockedOn($data['moved_on'])) {
+            throw new \App\Exceptions\BooksLockedException("Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the adjustment after that.", 'moved_on');
+        }
+        $unit = $product->unit;
+        $num = fn (float $v) => 0 + round($v, 3);
+
+        if ($data['direction'] === 'count') {
+            $counted = round((float) $data['quantity'], 3);
+            $books = $this->onHand($product, $data['moved_on']);
+            $qty = round($counted - $books, 3);
+            if (abs($qty) < 0.0005) {
+                return ['movement' => null, 'message' => "Stock already matches the count: {$num($counted)} {$unit}. Nothing changed."];
+            }
+            $movement = $this->adjust($product, $data['moved_on'], $qty,
+                $data['reason'] . ": counted {$num($counted)}, books showed {$num($books)}", $user);
+
+            return ['movement' => $movement, 'message' => 'Count saved. ' . ($qty > 0 ? 'Added ' : 'Removed ') . $num(abs($qty)) . " {$unit} to match. In stock now: " . $num($product->stockOnHand()) . '.'];
+        }
+
+        $qty = (float) $data['quantity'] * ($data['direction'] === 'out' ? -1 : 1);
+        $movement = $this->adjust($product, $data['moved_on'], $qty, $data['reason'], $user);
+
+        return ['movement' => $movement, 'message' => ($qty > 0 ? 'Added ' : 'Removed ') . $num(abs($qty)) . ' ' . $unit . '. In stock now: ' . $num($product->stockOnHand()) . '.'];
+    }
+
     /** Stock on hand for one item, optionally as on a date. */
     public function onHand(Product $product, Carbon|string|null $asOn = null): float
     {

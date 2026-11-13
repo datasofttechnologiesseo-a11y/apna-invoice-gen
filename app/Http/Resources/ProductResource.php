@@ -22,6 +22,8 @@ class ProductResource extends JsonResource
             'track_stock' => (bool) $this->track_stock,
             'stock' => $this->track_stock ? $this->stockOnHand() : null,
             'low_stock_level' => $this->low_stock_level !== null ? (float) $this->low_stock_level : null,
+            'opening_stock' => $this->opening_stock !== null ? (float) $this->opening_stock : null,
+            'purchase_rate' => $this->purchase_rate !== null ? (float) $this->purchase_rate : null,
             'is_active' => (bool) $this->is_active,
             'description' => $this->description,
         ];

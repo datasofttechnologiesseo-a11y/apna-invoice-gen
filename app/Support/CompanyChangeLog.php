@@ -33,8 +33,11 @@ final class CompanyChangeLog
         'invoice_number_format' => 'number format',
     ];
 
-    /** Call after fill() and before save(). */
-    public static function record(Company $company): void
+    /**
+     * Call after fill() and before save(). $imageChanges are the words for a
+     * logo or signature change ("logo replaced"), as the web settings log them.
+     */
+    public static function record(Company $company, array $imageChanges = []): void
     {
         $bank = [];
         $other = [];
@@ -54,9 +57,9 @@ final class CompanyChangeLog
             }
         }
 
-        if ($other) {
-            $what = collect(array_keys($other))->map(fn ($f) => self::LABELS[$f])->unique()->implode(', ');
-            AuditLog::record('company.updated', "{$company->name}: {$what}", $company, $other);
+        if ($other || $imageChanges) {
+            $what = collect(array_keys($other))->map(fn ($f) => self::LABELS[$f])->merge($imageChanges)->unique()->implode(', ');
+            AuditLog::record('company.updated', "{$company->name}: {$what}", $company, $other ?: null);
         }
         if ($bank) {
             $what = collect(array_keys($bank))->map(fn ($f) => self::BANK_FIELDS[$f])->unique()->implode(', ');

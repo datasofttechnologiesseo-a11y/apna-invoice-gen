@@ -1,72 +1,113 @@
-import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { API_BASE_URL, TOKEN_STORAGE_KEY } from '../config';
 
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { Accept: 'application/json' },
-  timeout: 20000,
-});
+import { API_URL } from '@/config';
 
-let inMemoryToken: string | null = null;
+const TOKEN_KEY = 'apna.token';
 
-export async function loadToken(): Promise<string | null> {
-  if (inMemoryToken) return inMemoryToken;
-  inMemoryToken = await SecureStore.getItemAsync(TOKEN_STORAGE_KEY);
-  return inMemoryToken;
-}
-
-export async function setToken(token: string | null): Promise<void> {
-  inMemoryToken = token;
-  if (token) {
-    await SecureStore.setItemAsync(TOKEN_STORAGE_KEY, token);
-  } else {
-    await SecureStore.deleteItemAsync(TOKEN_STORAGE_KEY);
-  }
-}
-
-// Attach the bearer token to every request.
-api.interceptors.request.use(async (config) => {
-  const token = await loadToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Callback the AuthProvider registers so a 401 anywhere forces a logout.
+let memoryToken: string | null = null;
 let onUnauthorized: (() => void) | null = null;
-export function setUnauthorizedHandler(fn: (() => void) | null) {
+
+export const tokenStore = {
+  async load() {
+    memoryToken = await SecureStore.getItemAsync(TOKEN_KEY);
+    return memoryToken;
+  },
+  async save(token: string) {
+    memoryToken = token;
+    await SecureStore.setItemAsync(TOKEN_KEY, token);
+  },
+  async clear() {
+    memoryToken = null;
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
+  },
+  get: () => memoryToken,
+};
+
+export function setUnauthorizedHandler(fn: () => void) {
   onUnauthorized = fn;
 }
 
-api.interceptors.response.use(
-  (res) => res,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      onUnauthorized?.();
+/** Every failed request becomes one of these — screens show `message`, forms show `fieldErrors`. */
+export class ApiError extends Error {
+  status: number;
+  fieldErrors: Record<string, string>;
+  constructor(status: number, message: string, fieldErrors: Record<string, string> = {}) {
+    super(message);
+    this.status = status;
+    this.fieldErrors = fieldErrors;
+  }
+}
+
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  let res: Response;
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers: {
+        Accept: 'application/json',
+        ...(body !== undefined && !isForm ? { 'Content-Type': 'application/json' } : {}),
+        ...(memoryToken ? { Authorization: `Bearer ${memoryToken}` } : {}),
+      },
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, 'Cannot reach Apna Invoice. Check your internet connection and try again.');
+  }
+
+  const text = await res.text();
+  let json: any = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+
+  if (!res.ok) {
+    if (res.status === 401 && memoryToken) onUnauthorized?.();
+    const fieldErrors: Record<string, string> = {};
+    if (json?.errors && typeof json.errors === 'object') {
+      for (const [k, v] of Object.entries(json.errors)) fieldErrors[k] = Array.isArray(v) ? String(v[0]) : String(v);
     }
-    return Promise.reject(error);
-  },
-);
+    const message =
+      res.status === 429
+        ? 'Too many tries. Please wait a minute and try again.'
+        : res.status === 403
+          ? json?.message || 'Your role does not allow this. Ask the business owner.'
+          : json?.message || `Something went wrong (${res.status}). Please try again.`;
+    throw new ApiError(res.status, message, fieldErrors);
+  }
+  return json as T;
+}
+
+export const get = <T>(path: string) => api<T>('GET', path);
+export const post = <T>(path: string, body: unknown = {}) => api<T>('POST', path, body);
+export const put = <T>(path: string, body: unknown) => api<T>('PUT', path, body);
+export const patch = <T>(path: string, body: unknown) => api<T>('PATCH', path, body);
+export const del = <T>(path: string, body?: unknown) => api<T>('DELETE', path, body);
 
 /**
- * Normalise an axios error into a human message. Laravel returns
- * `{ message, errors: { field: [msg] } }` for 422 validation failures.
+ * Multipart upload (logo, GSTR-2B file, attachments). `file` is a picked asset:
+ * { uri, name, type }. Extra fields go alongside it.
  */
-export function apiErrorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { message?: string; errors?: Record<string, string[]> }
-      | undefined;
-    if (data?.errors) {
-      const first = Object.values(data.errors)[0];
-      if (first && first.length) return first[0];
-    }
-    if (data?.message) return data.message;
-    if (error.code === 'ECONNABORTED') return 'Request timed out. Check your connection.';
-    if (!error.response) return 'Cannot reach the server. Check the API URL and that it is running.';
-    return `Request failed (${error.response.status}).`;
-  }
-  return 'Something went wrong.';
+export function upload<T>(path: string, field: string, file: { uri: string; name: string; type: string }, fields: Record<string, string> = {}) {
+  const form = new FormData();
+  // React Native's FormData accepts { uri, name, type } for files
+  form.append(field, file as unknown as Blob);
+  for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  return api<T>('POST', path, form);
+}
+
+/** Query string from an object, skipping empty values. */
+export function qs(params: Record<string, string | number | undefined | null>): string {
+  const parts = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
+  return parts.length ? `?${parts.join('&')}` : '';
+}
+
+export function authHeader(): Record<string, string> {
+  return memoryToken ? { Authorization: `Bearer ${memoryToken}` } : {};
 }

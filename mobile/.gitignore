@@ -36,6 +36,15 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+example
+
 # generated native folders
 /ios
 /android
+
+# local API overrides
+.env
+
+# Android upload key — never commit (back it up somewhere safe)
+credentials.json
+credentials/

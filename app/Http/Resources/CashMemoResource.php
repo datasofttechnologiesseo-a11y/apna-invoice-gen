@@ -26,6 +26,8 @@ class CashMemoResource extends JsonResource
             'total_igst' => (float) $this->total_igst,
             'round_off' => (float) $this->round_off,
             'grand_total' => (float) $this->grand_total,
+            'itc_eligible' => (bool) $this->itc_eligible,
+            'gst_rate' => $this->gstRate(),
             'is_interstate' => $this->isInterstate(),
             'payment_mode' => $this->payment_mode,
             'reference_number' => $this->reference_number,

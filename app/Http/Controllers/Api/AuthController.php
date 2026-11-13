@@ -113,8 +113,30 @@ class AuthController extends Controller
                 'composition_dealer' => (bool) $company->composition_dealer,
                 'default_currency' => $company->default_currency,
             ] : null,
+            // The member's role in the active business ('owner' for their own),
+            // and which areas it opens — so the app hides what the server would refuse.
+            'role' => \App\Support\Team::membership()?->role ?? 'owner',
+            'can' => collect(self::AREAS)->map(fn (string $route) => \App\Support\Team::can($route))->all(),
         ]);
     }
+
+    /** App areas → the web route whose role rule decides them (CompanyMember::RULES). */
+    private const AREAS = [
+        'invoices_delete' => 'invoices.destroy',
+        'invoices_cancel' => 'invoices.cancel',
+        'quotations_delete' => 'quotations.destroy',
+        'customers_delete' => 'customers.destroy',
+        'products_delete' => 'products.destroy',
+        'purchases' => 'purchases.index',
+        'vendors' => 'vendors.index',
+        'expenses' => 'finance.expenses',
+        'cash_memos' => 'finance.cash-memos.index',
+        'gst' => 'finance.gstr1',
+        'reports' => 'reports.index',
+        'dashboard' => 'dashboard',
+        'company_settings' => 'company.edit',
+        'team' => 'team.index',
+    ];
 
     public function logout(Request $request): JsonResponse
     {

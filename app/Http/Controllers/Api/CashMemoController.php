@@ -8,6 +8,7 @@ use App\Http\Resources\CashMemoResource;
 use App\Models\AuditLog;
 use App\Models\CashMemo;
 use App\Models\Expense;
+use App\Services\CashMemoBook;
 use App\Support\NumberToWords;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -132,6 +133,31 @@ class CashMemoController extends Controller
         return (new CashMemoResource($memo->load('items')))->response()->setStatusCode(201);
     }
 
+    /**
+     * Edit a memo: the web edit form's fields and rules (CashMemoBook). The
+     * linked expense entry follows. itc_eligible keeps its current value when
+     * it is not sent.
+     */
+    public function update(Request $request, CashMemo $cashMemo): CashMemoResource|JsonResponse
+    {
+        $this->authorize($request, $cashMemo);
+        $company = $cashMemo->company;
+        $book = app(CashMemoBook::class);
+        $data = $request->validate($book->rules($cashMemo->company_id, $cashMemo->id));
+        $data['itc_eligible'] = $request->has('itc_eligible') ? $request->boolean('itc_eligible') : (bool) ($cashMemo->itc_eligible ?? true);
+
+        // Books-lock guards BOTH the existing date and the new date.
+        if ($company->isBooksLockedOn($cashMemo->memo_date) || $company->isBooksLockedOn($data['memo_date'])) {
+            return response()->json([
+                'message' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. This cash memo cannot be edited.",
+            ], 422);
+        }
+
+        $memo = $book->update($cashMemo, $data);
+
+        return new CashMemoResource($memo->load(['items', 'company.state']));
+    }
+
     public function destroy(Request $request, CashMemo $cashMemo): JsonResponse
     {
         $this->authorize($request, $cashMemo);
@@ -207,43 +233,9 @@ class CashMemoController extends Controller
         ]);
     }
 
-    /** Derive subtotal, discount, GST split, round-off, grand total from input. */
+    /** Derive subtotal, discount, GST split, round-off, grand total from input (shared with the web). */
     private function compute(array $data): array
     {
-        $subtotal = 0.0;
-        foreach ($data['items'] as $row) {
-            $subtotal += (float) $row['quantity'] * (float) $row['rate'];
-        }
-
-        $discount = (float) ($data['discount'] ?? 0);
-        $taxable = max(0, $subtotal - $discount);
-
-        $rate = (float) ($data['gst_rate'] ?? 0);
-        $gstAmount = round($taxable * $rate / 100, 2);
-
-        $cgst = $sgst = $igst = 0.0;
-        if ($rate > 0) {
-            if (! empty($data['is_interstate'])) {
-                $igst = $gstAmount;
-            } else {
-                $cgst = round($gstAmount / 2, 2);
-                $sgst = $gstAmount - $cgst;
-            }
-        }
-
-        $preRound = $taxable + $cgst + $sgst + $igst;
-        $grandTotal = round($preRound);
-        $roundOff = round($grandTotal - $preRound, 2);
-
-        return [
-            'subtotal' => round($subtotal, 2),
-            'discount' => round($discount, 2),
-            'taxable_value' => round($taxable, 2),
-            'total_cgst' => $cgst,
-            'total_sgst' => $sgst,
-            'total_igst' => $igst,
-            'round_off' => $roundOff,
-            'grand_total' => $grandTotal,
-        ];
+        return app(CashMemoBook::class)->compute($data);
     }
 }

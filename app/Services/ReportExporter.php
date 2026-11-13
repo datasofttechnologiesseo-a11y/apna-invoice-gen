@@ -27,6 +27,32 @@ class ReportExporter
     private const INR_FORMAT = '[>=10000000]##\,##\,##\,##0.00;[>=100000]##\,##\,##0.00;##,##0.00';
     private const QTY_FORMAT = '#,##0.###';
 
+    /**
+     * What the on-screen report shows (web page and mobile app): the first
+     * $limit rows, and totals that cover every row, not just the ones shown.
+     *
+     * @return array{columns: array, rows: array, totals: ?array, truncated: bool}
+     */
+    public function screen(Report $report, int $limit): array
+    {
+        $rows = [];
+        $truncated = false;
+        foreach ($report->rows() as $row) {
+            if (count($rows) >= $limit) {
+                $truncated = true;
+                break;
+            }
+            $rows[] = $row;
+        }
+        $columns = $report->columns();
+        $totals = null;
+        if (collect($columns)->contains(fn ($c) => ! empty($c['total']))) {
+            $totals = $this->totals($columns, $truncated ? $this->materialise($report) : $rows) ?? [];
+        }
+
+        return ['columns' => $columns, 'rows' => $rows, 'totals' => $totals, 'truncated' => $truncated];
+    }
+
     public function xlsx(Report $report): StreamedResponse
     {
         $columns = $report->columns();

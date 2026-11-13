@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ProductRules;
+
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -37,13 +39,7 @@ class ProductController extends Controller
             // Stock on hand for items that track it, in the same query.
             ->withSum('stockMovements', 'quantity')
             // Stock filters use the real stock on hand: opening stock plus every movement.
-            ->when(in_array($request->stock, ['low', 'out'], true), function ($q) use ($request) {
-                $onHand = '(products.opening_stock + COALESCE((SELECT SUM(sm.quantity) FROM stock_movements sm WHERE sm.product_id = products.id), 0))';
-                $q->where('track_stock', true);
-                $request->stock === 'out'
-                    ? $q->whereRaw("{$onHand} <= 0")
-                    : $q->whereNotNull('low_stock_level')->whereRaw("{$onHand} > 0")->whereRaw("{$onHand} <= products.low_stock_level");
-            })
+            ->tap(fn ($q) => ProductRules::stockFilter($q, $request->stock))
             ->when($request->search, fn ($q, $s) => $q->where(function ($w) use ($s) {
                 $w->whereLiteralLike('name', $s)
                   ->orWhereLiteralLike('sku', $s)
@@ -101,13 +97,7 @@ class ProductController extends Controller
         $data = $this->validated($request, $company->id);
         $data['user_id'] = $user->id;
         $data['company_id'] = $company->id;
-        // DB column is NOT NULL — coerce missing HSN to empty string. Validation
-        // already enforced "required" for GST-registered suppliers; if we land
-        // here without HSN, the user is un-registered and the field is optional.
-        $data['hsn_sac'] = $data['hsn_sac'] ?? '';
-        if (array_key_exists('track_stock', $data)) {
-            $data = $this->stockFields($data);
-        }
+        $data = ProductRules::prepare($data);
 
         $product = Product::create($data);
         return redirect()->route('products.index')
@@ -126,11 +116,7 @@ class ProductController extends Controller
     {
         $this->authorize($request, $product);
         $data = $this->validated($request, $product->company_id, $product->id);
-        // Same NOT-NULL coercion as store() — see comment there.
-        $data['hsn_sac'] = $data['hsn_sac'] ?? '';
-        if (array_key_exists('track_stock', $data)) {
-            $data = $this->stockFields($data);
-        }
+        $data = ProductRules::prepare($data);
         $product->update($data);
         return redirect()->route('products.index')
             ->with('status', "Item '{$product->name}' updated.");
@@ -140,67 +126,30 @@ class ProductController extends Controller
     public function stock(Request $request, Product $product): View
     {
         $this->authorize($request, $product);
-        $movements = $product->stockMovements()->with('source')->orderBy('moved_on')->orderBy('id')->get();
-        $running = (float) $product->opening_stock;
-        $rows = $movements->map(function ($m) use (&$running) {
-            $running = round($running + (float) $m->quantity, 3);
-
-            return ['movement' => $m, 'balance' => $running];
-        })->reverse()->values();
+        $history = app(\App\Services\StockLedger::class)->history($product);
 
         return view('products.stock', [
             'product' => $product,
-            'rows' => $rows,
-            'onHand' => $running,
+            'rows' => $history['rows'],
+            'onHand' => $history['on_hand'],
         ]);
     }
 
     /**
      * Add or remove stock by hand (damage, a return), or enter a physical
-     * count: the shop counts the shelf and the books are set to that number,
-     * the difference posted as one adjustment.
+     * count (see StockLedger::applyAdjustment).
      */
     public function adjustStock(Request $request, Product $product): RedirectResponse
     {
         $this->authorize($request, $product);
         abort_unless($product->track_stock, 422, 'Turn on stock tracking for this item first.');
-        $data = $request->validate([
-            'direction' => ['required', 'in:in,out,count'],
-            // A count can be zero (the shelf is empty); adding or removing nothing cannot.
-            'quantity' => ['required', 'numeric', $request->input('direction') === 'count' ? 'min:0' : 'min:0.001', 'max:999999999'],
-            'moved_on' => ['required', 'date', 'before_or_equal:today'],
-            'reason' => ['required', 'string', 'max:200'],
-        ], [
-            'quantity.min' => $request->input('direction') === 'count' ? 'The count cannot be below zero.' : 'Enter a quantity above zero.',
-        ]);
-        $company = $product->company;
-        if ($company && $company->isBooksLockedOn($data['moved_on'])) {
-            return back()->withInput()->withErrors(['moved_on' => "Books are locked up to {$company->books_locked_until->format('d M Y')}. Date the adjustment after that."]);
-        }
         $ledger = app(\App\Services\StockLedger::class);
-        $unit = $product->unit;
-        $num = fn (float $v) => 0 + round($v, 3);
+        $direction = $request->input('direction');
+        $data = $request->validate($ledger->adjustmentRules(is_string($direction) ? $direction : null), $ledger->adjustmentMessages(is_string($direction) ? $direction : null));
 
-        if ($data['direction'] === 'count') {
-            $counted = round((float) $data['quantity'], 3);
-            $books = $ledger->onHand($product, $data['moved_on']);
-            $qty = round($counted - $books, 3);
-            if (abs($qty) < 0.0005) {
-                return redirect()->route('products.stock', $product)
-                    ->with('status', "Stock already matches the count: {$num($counted)} {$unit}. Nothing changed.");
-            }
-            $ledger->adjust($product, $data['moved_on'], $qty,
-                $data['reason'] . ": counted {$num($counted)}, books showed {$num($books)}", $request->user());
+        $done = $ledger->applyAdjustment($product, $data, $request->user());
 
-            return redirect()->route('products.stock', $product)
-                ->with('status', 'Count saved. ' . ($qty > 0 ? 'Added ' : 'Removed ') . $num(abs($qty)) . " {$unit} to match. In stock now: " . $num($product->stockOnHand()) . '.');
-        }
-
-        $qty = (float) $data['quantity'] * ($data['direction'] === 'out' ? -1 : 1);
-        $ledger->adjust($product, $data['moved_on'], $qty, $data['reason'], $request->user());
-
-        return redirect()->route('products.stock', $product)
-            ->with('status', ($qty > 0 ? 'Added ' : 'Removed ') . $num(abs($qty)) . ' ' . $unit . '. In stock now: ' . $num($product->stockOnHand()) . '.');
+        return redirect()->route('products.stock', $product)->with('status', $done['message']);
     }
 
     public function destroy(Request $request, Product $product): RedirectResponse
@@ -333,52 +282,6 @@ class ProductController extends Controller
 
     private function validated(Request $request, int $companyId, ?int $ignoreId = null): array
     {
-        $uqcCodes = collect(config('uqc_units.codes'))->pluck('code')->all();
-        $gstRates = config('gst.allowed_values');
-
-        // HSN is required only if the supplier (company) is GST-registered —
-        // Rule 46(g) doesn't apply to non-registered dealers, so forcing the
-        // field would just be friction. Unregistered shopkeepers can still
-        // add an HSN if they want; it just won't block save when missing.
-        $company = \App\Models\Company::find($companyId);
-        $hsnRequired = ! empty($company?->gstin);
-
-        return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'sku' => [
-                'nullable', 'string', 'max:60',
-                Rule::unique('products', 'sku')
-                    ->where(fn ($q) => $q->where('company_id', $companyId))
-                    ->ignore($ignoreId),
-            ],
-            'kind' => ['required', 'in:goods,service'],
-            // HSN: 4/6/8 digits (goods). SAC: 6 digits starting with 99 (service).
-            // Allow either to keep the form simple; shopkeepers commonly enter 4.
-            // Required only when supplier is GST-registered (see above).
-            'hsn_sac' => [$hsnRequired ? 'required' : 'nullable', 'string', 'regex:/^[0-9]{4,8}$/'],
-            'unit' => ['required', 'string', Rule::in($uqcCodes)],
-            'rate' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-            'gst_rate' => ['required', 'numeric', Rule::in($gstRates)],
-            'is_active' => ['nullable', 'boolean'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            // Stock (optional). Services never track stock.
-            'track_stock' => ['nullable', 'boolean'],
-            'opening_stock' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
-            'low_stock_level' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
-            'purchase_rate' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
-        ]);
-    }
-
-    /** Stock fields as stored: services and untracked items keep the defaults. */
-    private function stockFields(array $data): array
-    {
-        $track = ($data['kind'] ?? 'goods') === 'goods' && ! empty($data['track_stock']);
-        $data['track_stock'] = $track;
-        $data['opening_stock'] = $track ? (float) ($data['opening_stock'] ?? 0) : ($data['opening_stock'] ?? 0);
-        if (array_key_exists('low_stock_level', $data) && $data['low_stock_level'] === '') {
-            $data['low_stock_level'] = null;
-        }
-
-        return $data;
+        return $request->validate(ProductRules::rules($companyId, $ignoreId));
     }
 }

@@ -27,6 +27,9 @@ class ExpenseResource extends JsonResource
             // A cash-memo-linked expense is managed via its memo; flag so the app
             // can disable edit/delete and point the user there instead.
             'cash_memo_id' => $this->cash_memo_id,
+            // Same for one written by a purchase bill: edit the bill instead.
+            'purchase_bill_id' => $this->purchase_bill_id,
+            'itc_eligible' => (bool) $this->itc_eligible,
         ];
     }
 }

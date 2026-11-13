@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\TeamInviteMail;
-use App\Models\AuditLog;
 use App\Models\CompanyMember;
+use App\Services\TeamManager;
 use App\Support\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -20,13 +17,15 @@ use Illuminate\View\View;
  */
 class TeamController extends Controller
 {
+    public function __construct(private readonly TeamManager $team) {}
+
     public function index(Request $request): View
     {
         $company = $this->ownedCompany($request);
 
         return view('team.index', [
             'company' => $company,
-            'members' => $company->members()->with('user')->orderByRaw('accepted_at IS NULL')->orderBy('email')->get(),
+            'members' => $this->team->members($company),
             'roles' => CompanyMember::ROLES,
         ]);
     }
@@ -40,87 +39,37 @@ class TeamController extends Controller
             return $this->resend($request, $company);
         }
 
-        // Emails are stored lower case, so the duplicate check compares lower
-        // case too ("CA@x.in" after "ca@x.in" is the same person).
-        if (is_string($request->input('email'))) {
-            $request->merge(['email' => mb_strtolower(trim($request->input('email')))]);
-        }
-        $data = $request->validate([
-            'email' => ['required', 'email', 'max:255',
-                Rule::unique('company_members', 'email')->where(fn ($q) => $q->where('company_id', $company->id))],
-            'role' => ['required', Rule::in(array_keys(CompanyMember::ROLES))],
-        ], ['email.unique' => 'This person is already invited to this business.']);
-        $email = mb_strtolower(trim($data['email']));
-        if ($email === mb_strtolower($request->user()->email)) {
-            return back()->withErrors(['email' => 'This is your own email. You already own this business.'])->withInput();
-        }
+        [$member, $sent] = $this->team->invite($company, $request->user(), $request->only('email', 'role'));
 
-        $member = $company->members()->create([
-            'email' => $email, 'role' => $data['role'], 'token' => CompanyMember::newToken(), 'invited_by' => $request->user()->id,
-        ]);
-        try {
-            Mail::to($email)->send(new TeamInviteMail($member->setRelation('company', $company), $request->user()->name));
-            $sent = true;
-        } catch (\Throwable) {
-            $sent = false;
-        }
-        AuditLog::record('team.invited', "Invited {$email} as {$member->roleLabel()}", null);
-
-        return back()->with('status', ($sent ? "Invitation emailed to {$email}." : "Invitation created for {$email}.")
+        return back()->with('status', ($sent ? "Invitation emailed to {$member->email}." : "Invitation created for {$member->email}.")
             . ' The invite link below can also be shared.');
     }
 
     /**
-     * Send the same invitation again to someone who has not joined yet. Once
-     * every five minutes per invitation, so a double tap or an impatient
-     * owner cannot flood the person's inbox (the route is throttled too).
+     * Send the same invitation again to someone who has not joined yet (at
+     * most once every five minutes per invitation; the route is throttled too).
      */
     private function resend(Request $request, $company): RedirectResponse
     {
         $member = $company->members()->whereKey((int) $request->input('resend'))->first();
         abort_unless($member, 404);
-        if ($member->isAccepted()) {
-            return back()->with('info', "{$member->email} has already joined.");
-        }
 
-        $key = 'team-invite-resend:' . $member->id;
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            $minutes = max(1, (int) ceil(RateLimiter::availableIn($key) / 60));
+        $result = $this->team->resend($company, $member, $request->user());
+        $flash = ['accepted' => 'info', 'throttled' => 'warning', 'sent' => 'status', 'failed' => 'error'][$result['status']];
 
-            return back()->with('warning', "The invitation to {$member->email} was sent a moment ago. You can send it again in {$minutes} " . \Illuminate\Support\Str::plural('minute', $minutes) . '.');
-        }
-        RateLimiter::hit($key, 300);
-
-        try {
-            Mail::to($member->email)->send(new TeamInviteMail($member->setRelation('company', $company), $request->user()->name));
-            $sent = true;
-        } catch (\Throwable) {
-            $sent = false;
-        }
-        AuditLog::record('team.invite_resent', "Invitation sent again to {$member->email}", null);
-
-        return $sent
-            ? back()->with('status', "Invitation emailed again to {$member->email}.")
-            : back()->with('error', "The email to {$member->email} could not be sent. Share the invite link instead.");
+        return back()->with($flash, TeamManager::resendMessage($member, $result));
     }
 
     public function update(Request $request, CompanyMember $member): RedirectResponse
     {
-        $company = $this->ownedCompany($request);
-        abort_unless($member->company_id === $company->id, 403);
-        $data = $request->validate(['role' => ['required', Rule::in(array_keys(CompanyMember::ROLES))]]);
-        $member->update(['role' => $data['role']]);
-        AuditLog::record('team.role_changed', "{$member->email} is now {$member->roleLabel()}", null);
+        $this->team->changeRole($this->ownedCompany($request), $member, $request->only('role'));
 
         return back()->with('status', "{$member->email} is now {$member->roleLabel()}.");
     }
 
     public function destroy(Request $request, CompanyMember $member): RedirectResponse
     {
-        $company = $this->ownedCompany($request);
-        abort_unless($member->company_id === $company->id, 403);
-        $member->delete();
-        AuditLog::record('team.removed', "Removed {$member->email} from the team", null);
+        $this->team->remove($this->ownedCompany($request), $member);
 
         return back()->with('status', "{$member->email} no longer has access.");
     }
@@ -187,10 +136,7 @@ class TeamController extends Controller
     /** A member leaves a business they were invited into. */
     public function leave(Request $request, CompanyMember $member): RedirectResponse
     {
-        $user = Team::realUser();
-        abort_unless((int) $member->user_id === (int) $user->id, 403);
-        $member->delete();
-        $user->forceFill(['active_company_id' => $user->companies()->orderBy('id')->value('id')])->save();
+        $this->team->leave(Team::realUser(), $member);
 
         return redirect()->route('companies.index')->with('status', "You have left {$member->company?->name}.");
     }

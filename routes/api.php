@@ -35,6 +35,7 @@ Route::prefix('auth')->group(function () {
 // Static lookup — states list is needed on the login/onboarding screens too,
 // so keep it outside the auth wall.
 Route::get('states', [StateController::class, 'index']);
+Route::get('units', [ProductController::class, 'units']);
 
 // Public blog (read-only; no auth) — same content as the website /blog.
 Route::get('blog', [BlogController::class, 'index']);
@@ -122,6 +123,7 @@ Route::middleware(['auth:sanctum', 'team'])->group(function () {
     // Expenses (P&L cost side; cash-memo-linked ones are read-only here)
     Route::get('expenses', [ExpenseController::class, 'index']);
     Route::post('expenses', [ExpenseController::class, 'store']);
+    Route::get('expenses/{expense}', [ExpenseController::class, 'show']);
     Route::match(['put', 'patch'], 'expenses/{expense}', [ExpenseController::class, 'update']);
     Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy']);
 
@@ -143,4 +145,8 @@ Route::middleware(['auth:sanctum', 'team'])->group(function () {
     Route::post('quotations/{quotation}/decline', [QuotationController::class, 'decline']);
     Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convert']);
     Route::get('quotations/{quotation}/share-link', [QuotationController::class, 'shareLink']);
+
+    // Mobile parity modules (one file per area so they stay easy to find)
+    require __DIR__.'/api/purchases.php';
+    require __DIR__.'/api/workspace.php';
 });

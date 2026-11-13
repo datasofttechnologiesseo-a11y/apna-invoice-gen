@@ -17,7 +17,7 @@ class NotificationController extends Controller
      */
     public function seen(Request $request): JsonResponse
     {
-        $request->user()->forceFill(['notifications_seen_at' => now()])->save();
+        app(\App\Services\NotificationFeed::class)->markSeen($request->user());
 
         return response()->json(['ok' => true]);
     }
