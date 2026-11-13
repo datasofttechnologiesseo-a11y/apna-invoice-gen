@@ -1,28 +1,24 @@
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
-
 /**
- * Base URL of the Laravel API.
- *
- * Resolution order:
- *   1. `expo.extra.apiBaseUrl` in app.json (set this for real devices / prod).
- *   2. Platform-aware localhost default for the local `php artisan serve`:
- *        - Android emulator reaches the host machine at 10.0.2.2
- *        - iOS simulator / web can use 127.0.0.1
- *
- * NOTE: a *physical* phone running Expo Go cannot reach 127.0.0.1 / 10.0.2.2 —
- * it must use your computer's LAN IP (e.g. http://192.168.1.50:8741). Put that
- * in app.json → expo.extra.apiBaseUrl, or override here.
+ * Where the app talks to. Override with EXPO_PUBLIC_API_URL in mobile/.env
+ * (e.g. your Mac's LAN IP when testing on a real phone, or a staging server).
+ * The iOS simulator reaches the Mac's localhost directly.
  */
-const DEV_PORT = 8741;
+const DEV_URL = 'http://127.0.0.1:8741';
+const PROD_URL = 'https://apnainvoice.com';
 
-function defaultDevHost(): string {
-  if (Platform.OS === 'android') return `http://10.0.2.2:${DEV_PORT}`;
-  return `http://127.0.0.1:${DEV_PORT}`;
-}
+export const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL || (__DEV__ ? DEV_URL : PROD_URL)).replace(/\/$/, '');
+export const API_URL = (process.env.EXPO_PUBLIC_API_URL || `${WEB_URL}/api`).replace(/\/$/, '');
 
-const configured = (Constants.expoConfig?.extra as { apiBaseUrl?: string } | undefined)?.apiBaseUrl;
+export const LINKS = {
+  privacy: `${WEB_URL}/privacy`,
+  terms: `${WEB_URL}/terms`,
+  refund: `${WEB_URL}/refund`,
+  contact: `${WEB_URL}/contact`,
+  forgotPassword: `${WEB_URL}/forgot-password`,
+  web: WEB_URL,
+};
 
-export const API_BASE_URL = `${(configured && configured.length > 0 ? configured : defaultDevHost()).replace(/\/$/, '')}/api`;
-
-export const TOKEN_STORAGE_KEY = 'apna_invoice_token';
+/** Features that need API work before they can be switched on (see docs/mobile/07). */
+export const FEATURES = {
+  googleSignIn: false,
+};

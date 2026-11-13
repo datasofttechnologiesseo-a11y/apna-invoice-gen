@@ -1,65 +1,56 @@
-# Apna Invoice — Mobile App (Expo / React Native)
+# Welcome to your Expo app 👋
 
-Cross-platform mobile client for the Apna Invoice Laravel backend. Talks to the
-JSON API (`routes/api.php`) using Sanctum token auth.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Open it in Expo Go
+## Get started
 
-You need **two things running at once**: the Laravel API and the Expo dev server.
+1. Install dependencies
 
-### 1. Start the API so your phone can reach it
+   ```bash
+   npm install
+   ```
 
-From the project root (`D:\projects\apna-invoice-gen`):
+2. Start the app
 
-```powershell
-php artisan serve --host=0.0.0.0 --port=8741
+   ```bash
+   npx expo start
+   ```
+
+In the output, you'll find options to open the app in a
+
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+
+You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Get a fresh project
+
+When you're ready, run:
+
+```bash
+npm run reset-project
 ```
 
-`--host=0.0.0.0` is important — it makes the API reachable from other devices on
-your Wi-Fi (not just `localhost`). Your phone and PC must be on the **same Wi-Fi**.
+This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
 
-> The app is pre-configured to call `http://192.168.1.35:8741` (this PC's LAN IP,
-> set in `app.json` → `expo.extra.apiBaseUrl`). If your PC's IP changes, update
-> that value. Find it with `ipconfig` (look for "IPv4 Address").
+### Other setup steps
 
-### 2. Start Expo and open on your phone
+- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
+- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
+- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
 
-```powershell
-cd mobile
-npx expo start
-```
+## Learn more
 
-- Install **Expo Go** from the Play Store / App Store.
-- Scan the QR code shown in the terminal with Expo Go (Android) or the Camera app (iOS).
-- The app loads over Wi-Fi.
+To learn more about developing your project with Expo, look at the following resources:
 
-### Emulator / simulator (no physical phone)
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-- Android emulator: press `a` in the Expo terminal. (The app falls back to
-  `10.0.2.2` automatically if you clear `apiBaseUrl`.)
-- iOS simulator (macOS only): press `i`.
+## Join the community
 
-## First run
+Join our community of developers creating universal apps.
 
-1. Tap **Create an account** → register. A company is created for you automatically.
-2. Go to **Settings** to confirm the company; add your **state** etc. later via the
-   web app (mobile company-edit is on the roadmap).
-3. **Customers** → add a customer (state is required for GST).
-4. **Products** → add a product.
-5. **Invoices → + New** → pick customer, add line items → **Save draft** →
-   open it → **Issue invoice** → **Record payment**.
-
-## Troubleshooting
-
-- **"Cannot reach the server"** — API not running, wrong IP in `app.json`, or phone
-  on a different network. Re-check `ipconfig` and that you used `--host=0.0.0.0`.
-- **Stuck on splash** — a stored token failed to validate; it auto-clears and drops
-  to the login screen.
-
-## Scripts
-
-```powershell
-npm start            # expo start
-npm run android      # expo start --android
-npx tsc --noEmit     # typecheck
-```
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
